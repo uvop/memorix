@@ -1,25 +1,22 @@
 {
-    "folders": [
-      {
-        "name": "codegen",
-        "path": "codegen"
-      },
-      {
-        "name": "development-image",
-        "path": "development-image"
-      },
-      {
-        "name": "client-js",
-        "path": "clients/js"
-      },
-    ],
-    "settings": {
-      "search.followSymlinks": false
+  "folders": [
+    {
+      "name": "codegen",
+      "path": "codegen"
     },
-    "extensions": {
-      "recommendations": [
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-      ]
+    {
+      "name": "development-image",
+      "path": "development-image"
+    },
+    {
+      "name": "client-js",
+      "path": "clients/js"
     }
+  ],
+  "settings": {
+    "search.followSymlinks": false
+  },
+  "extensions": {
+    "recommendations": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
   }
+}
