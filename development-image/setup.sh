@@ -23,7 +23,6 @@ cd $HOME/dev
 if [ ! -d "$HOME/dev/memorix" ] 
 then
     echo "Directory 'memorix' doesn't exist, starting setup" 
-    cd $HOME/dev/bb
     git clone git@github.com:uvop/memorix.git
     cd memorix
     ./install.sh
