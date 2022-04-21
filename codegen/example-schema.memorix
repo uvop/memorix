@@ -1,0 +1,23 @@
+GetSet {
+    user: User
+}
+
+PubSub {
+    userAdded: User
+}
+
+Queue {
+    handleUser: User
+}
+
+Message {
+    addUser(user: User): string
+}
+
+Flow?
+
+Model User {
+    id: number
+    name: string
+    age?: number
+}

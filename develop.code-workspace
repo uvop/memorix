@@ -1,0 +1,21 @@
+{
+    "folders": [
+      {
+        "name": "codegen",
+        "path": "codegen"
+      },
+      {
+        "name": "client-js",
+        "path": "clients/js"
+      },
+    ],
+    "settings": {
+      "search.followSymlinks": false
+    },
+    "extensions": {
+      "recommendations": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+      ]
+    }
+  }
