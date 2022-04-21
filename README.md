@@ -8,6 +8,7 @@
   - Open `develop.code-workspace` with VSCode
 - Docker (any)
   - Install docker
+  - **Windows** - Run `git config --global core.autocrlf false` before cloning.
   - Run `docker build ./development-image -t memorix-dev`
   - Run `docker create -p 127.0.0.1:2022:22/tcp --name memorix-app memorix-dev`
   - Run `docker start memorix-app`
