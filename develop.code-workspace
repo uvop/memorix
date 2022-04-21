@@ -5,6 +5,10 @@
         "path": "codegen"
       },
       {
+        "name": "development-image",
+        "path": "development-image"
+      },
+      {
         "name": "client-js",
         "path": "clients/js"
       },
