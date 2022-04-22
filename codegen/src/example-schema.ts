@@ -1,17 +1,25 @@
 export interface Api {
   cache: {
-    setUser1(key: string, user: User): Promise<void>;
+    setUser1(key: string, payload: User): Promise<void>;
     setUser2(key: { id: string }): Promise<void>;
     getUser1(key: string): Promise<User>;
     getUser2(key: { id: string }): Promise<User>;
   };
 
   pubsub: {
-    addUser(key: string, user: User): Promise<User>;
+    publishUserAdded(key: string, payload: User): Promise<void>;
+    subscribeUserAdded(
+      key: string,
+      handler: (payload: User) => Promise<void> | void
+    ): Promise<void>;
   };
 
   queue: {
-    handleUser(key: string, user: User): Promise<string>;
+    queueAddUser(key: string, payload: User): Promise<string>;
+    dequeueAddUser(
+      key: string,
+      handler: (payload: User) => Promise<string> | string
+    ): Promise<void>;
   };
 }
 
