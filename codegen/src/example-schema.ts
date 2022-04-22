@@ -11,7 +11,7 @@ export interface Api {
     subscribeUserAdded(
       key: string,
       handler: (payload: User) => Promise<void> | void
-    ): Promise<void>;
+    ): Promise<Unsubscribe>;
   };
 
   queue: {
@@ -19,7 +19,7 @@ export interface Api {
     dequeueAddUser(
       key: string,
       handler: (payload: User) => Promise<string> | string
-    ): Promise<void>;
+    ): Promise<Unsubscribe>;
   };
 }
 
@@ -28,3 +28,5 @@ export interface User {
   name: string;
   age?: number;
 }
+
+type Unsubscribe = () => void;
