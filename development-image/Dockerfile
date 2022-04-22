@@ -28,7 +28,7 @@ RUN apt-get -y install curl zsh git keychain zip
 RUN export NVM_DIR=$HOME/.nvm \
   && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
 ENV NVM_DIR $HOME/.nvm
-ENV NODE_VERSION 14.19.0
+ENV NODE_VERSION 16.14.2
 RUN export NVM_DIR=$HOME/.nvm \
   && . $NVM_DIR/nvm.sh \
   && nvm install $NODE_VERSION \
