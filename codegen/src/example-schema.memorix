@@ -1,23 +1,70 @@
-GetSet {
-    user: User
+Cache {
+    user1 {
+        parameter: string
+        model: User
+    }
+    user2 {
+        parameter: {
+            id: string
+        }
+        model: User
+    }
 }
+
+setUser1('11', { name: 'uv' })
+=
+redis.set('user1_${id}', { name: 'uv' })
+
+setUser2({ id: '11' }, { name: 'uv' })
+=
+redis.set('user2_id:${id}', { name: 'uv' })
+
+await getUser1('11')
+await getUser2({ id: '11' })
+=
+await redis.get('user_${id}')
+
+============================================================================
 
 PubSub {
-    userAdded: User
+    addUser {
+        parameter: string
+        model: User
+        returns: string
+    }
 }
+
+const id = await publishAddUser('11', { name: 'uv' })
+=
+await redis.publish('addUser_${'11'}', { name: 'uv' })
+redis.subscribe('addUser_${'11'}.finished', (id) => {
+    ...
+    redis.ubsubscribe('addUser_${'11'}.finished');
+})
+
+
+subscribeAddUser('11', (user) => {})
+=
+redis.subscribe('userAdded_${11}', (user) => {
+    ...
+    await redis.publish('addUser_${11}.finished', '11')
+})
 
 Queue {
-    handleUser: User
+    handleUser {
+        parameter: string
+        model: User
+        returns: string
+    }
 }
 
-Message {
-    addUser(user: User): string
-}
+// Same as publish, but has heartbeat, real queue on cache
+queueHandleUser
+dequeueHandleUser
 
-Flow?
 
 Model User {
     id: number
     name: string
-    age?: number
+    age: number?
 }
