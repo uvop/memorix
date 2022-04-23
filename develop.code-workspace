@@ -5,18 +5,31 @@
       "path": "codegen"
     },
     {
-      "name": "development-image",
-      "path": "development-image"
-    },
-    {
       "name": "client-js",
       "path": "clients/js"
+    },
+    {
+      "name": "app-frontend",
+      "path": "app/frontend"
+    },
+    {
+      "name": "app-backend",
+      "path": "app/backend"
+    },
+    {
+      "name": "development-image",
+      "path": "development-image"
     }
   ],
   "settings": {
     "search.followSymlinks": false
   },
   "extensions": {
-    "recommendations": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "kumar-harsh.graphql-for-vscode",
+      "prisma.prisma"
+    ]
   }
 }

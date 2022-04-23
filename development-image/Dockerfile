@@ -1,4 +1,3 @@
-# This Dockerfile is used to build an headles vnc-ue image based on r2ue-uhd
 FROM ubuntu:18.04
 
 ### Envrionment config-
@@ -64,4 +63,7 @@ COPY ./setup.sh $HOME/setup.sh
 RUN chmod +x $HOME/setup.sh
 
 EXPOSE 22
+EXPOSE 5432
+EXPOSE 6379
+
 ENTRYPOINT $DOCKER_SCRIPTS/entrypoint.sh

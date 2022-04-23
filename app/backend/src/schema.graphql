@@ -1,0 +1,11 @@
+type Query {
+  test: Boolean!
+}
+
+type Mutation {
+  echo(message: String!): Boolean!
+}
+
+type Subscription {
+  listenToEchoes: String!
+}
