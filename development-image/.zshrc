@@ -8,8 +8,5 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
-export ANDROID_SDK_ROOT=$HOME/android-sdk
-export PATH="PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/cmdline-tools/tools/bin"
-
-export DATABASE_URL=postgresql://postgres:uv@localhost:5432/default?schema=public
+export DATABASE_URL=postgresql://postgres:uv@localhost:5432/memorix?schema=public
 export REDIS_URL=redis://localhost:6379/0
