@@ -1,4 +1,4 @@
 yarn install
 
 yarn migrate:dev
-yarn codegen
+yarn codegen:prisma
