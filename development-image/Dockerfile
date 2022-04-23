@@ -45,6 +45,8 @@ RUN apt-get update && apt-get -y install --no-install-recommends yarn
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)"-pgdg main | tee  /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive"  apt -y install postgresql-11
+RUN echo "listen_addresses = '*'" >> /etc/postgresql/11/main/postgresql.conf
+RUN echo $'host    all             all              0.0.0.0/0              md5\nhost    all             all              ::/0                   md5' >> /etc/postgresql/11/main/pg_hba.conf
 
 # Install Redis
 RUN wget http://download.redis.io/releases/redis-6.2.4.tar.gz -O $HOME/redis-6.2.4.tar.gz

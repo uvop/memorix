@@ -1,0 +1,52 @@
+schema: http://localhost:8080/graphql
+documents: "src/**/*.graphql"
+generates:
+  ./src/graphql/introspection-result.generated.ts:
+    plugins:
+      - fragment-matcher
+      - add: "/* tslint-disable */"
+      - add: "/* eslint-disable */"
+      - add: "// @ts-nocheck"
+  ./src/graphql/schema.graphql:
+    plugins:
+      - schema-ast
+    config:
+      skipDocumentValidation: true
+      includeDirectives: true
+  ./src/graphql/types.generated.ts:
+    plugins:
+      - add: "/* tslint-disable */"
+      - add: "/* eslint-disable */"
+      - add: "// @ts-nocheck"
+      - typescript
+      - typescript-resolvers
+    config:
+      skipDocumentValidation: true
+      useIndexSignature: true
+  ./src/:
+    preset: near-operation-file
+    presetConfig:
+      baseTypesPath: ./graphql/types.generated.generated
+      extension: .generated.tsx
+    plugins:
+      - add:
+          content: "/* tslint-disable */"
+          placement: "prepend"
+      - add:
+          content: "/* eslint-disable */"
+          placement: "prepend"
+      - add:
+          content: "// @ts-nocheck"
+          placement: "prepend"
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      skipDocumentValidation: true
+      withHooks: true
+      withHOC: true
+      withComponent: true
+      withMutationFn: false
+      withResultType: false
+      reactApolloVersion: 2
+config:
+  skipDocumentsValidation: true

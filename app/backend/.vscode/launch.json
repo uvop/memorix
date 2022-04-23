@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run codegen",
+      "name": "Run app backend",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "node",
@@ -13,7 +13,7 @@
         "-r",
         "ts-node/register/transpile-only"
       ],
-      "args": ["src/index.ts"],
+      "args": ["src/start.ts"],
       "cwd": "${workspaceRoot}",
       "internalConsoleOptions": "openOnSessionStart",
       "skipFiles": ["<node_internals>/**", "node_modules/**"]

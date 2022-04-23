@@ -2,7 +2,7 @@ import { ApolloServer } from "apollo-server";
 import { createContext } from "./context";
 import { schema } from "./schema";
 
-const { PORT = 5000 } = process.env;
+const { PORT = 8080 } = process.env;
 
 const start = async () => {
   const ctx = createContext();
