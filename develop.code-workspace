@@ -28,7 +28,7 @@
     "recommendations": [
       "esbenp.prettier-vscode",
       "dbaeumer.vscode-eslint",
-      "kumar-harsh.graphql-for-vscode",
+      "GraphQL.vscode-graphql",
       "prisma.prisma"
     ]
   }
