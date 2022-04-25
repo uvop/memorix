@@ -1,23 +1,36 @@
 {
   "name": "@memorix/codegen",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
   "description": "",
   "license": "ISC",
   "author": "",
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc --project tsconfig.json",
+    "dev": "jest --watch",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:err": "npm run lint -- --quiet",
     "lint:fix": "npm run lint -- --fix",
     "start": "ts-node -r tsconfig-paths/register src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "typecheck": "tsc --noEmit"
   },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "diagnostics": {
+          "warnOnly": true
+        }
+      }
+    },
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  },
   "devDependencies": {
+    "@types/jest": "^27.4.1",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
     "eslint": "^6.8.0",
@@ -26,7 +39,9 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-prettier": "^3.1.4",
+    "jest": "^27.4.1",
     "prettier": "^2.1.2",
+    "ts-jest": "^27.1.4",
     "ts-node": "^10.7.0",
     "tsconfig-paths": "^3.14.1",
     "typescript": "^4.6.3"
