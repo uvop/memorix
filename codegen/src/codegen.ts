@@ -2,6 +2,10 @@ export enum Languages {
   typescript,
 }
 
+export const assertUnreachable: (x: never) => never = () => {
+  throw new Error("Didn't expect to get here");
+};
+
 type CodegenFn = (params: { schema: string; language?: Languages }) => string;
 
 type PropertyType = {
@@ -122,7 +126,7 @@ const getIndicesOf = (str: string, searchStr: string) => {
     return [];
   }
 
-  const indices = [];
+  const indices: number[] = [];
   let startIndex = 0;
   let index = str.indexOf(searchStr, startIndex);
   while (index > -1) {
@@ -135,38 +139,95 @@ const getIndicesOf = (str: string, searchStr: string) => {
 };
 
 enum BlockTypes {
-  Model = "Model",
+  model = "Model",
+  cache = "Cache",
 }
 
-const getBlocks: (schema: string) => {
-  type: BlockTypes;
+type BlockModel = {
+  type: BlockTypes.model;
   name: string;
   scope: string;
-}[] = (schema) => {
-  const ModelIndices = getIndicesOf(schema, BlockTypes.Model);
+};
+type BlockCache = {
+  type: BlockTypes.cache;
+  scope: string;
+};
 
-  return ModelIndices.map((modelIndex, i) => {
-    const nextModelIndex = ModelIndices[i + 1];
+type Block = BlockModel | BlockCache;
+
+const getBlocks: (schema: string) => Block[] = (schema) => {
+  const modelIndices = getIndicesOf(schema, BlockTypes.model);
+  const cacheIndices = getIndicesOf(schema, BlockTypes.cache);
+
+  if (cacheIndices.length > 1) {
+    throw new Error("More than 1 cache can't be defined.");
+  }
+
+  return [
+    ...cacheIndices.map((i) => ({ type: BlockTypes.cache, index: i })),
+    ...modelIndices.map((i) => ({ type: BlockTypes.model, index: i })),
+  ].map((x, i) => {
+    const modelIndex = x.index;
+    const nextModelIndex = modelIndices[i + 1];
     const blockSchema = schema.substring(modelIndex, nextModelIndex);
 
-    const match = /Model (?<name>[^{ ]+)(?<scope>[^]*)/g.exec(blockSchema);
+    switch (x.type) {
+      case BlockTypes.model: {
+        const match = /Model (?<name>[^{ ]+)(?<scope>[^]*)/g.exec(blockSchema);
 
-    if (!match) {
-      throw new Error(`Couldn't run regex on block schema:
-      ${blockSchema}`);
+        if (!match) {
+          throw new Error(`Couldn't run regex on model schema:
+        ${blockSchema}`);
+        }
+        return {
+          type: BlockTypes.model,
+          name: match.groups.name,
+          scope: match.groups.scope.trim(),
+        };
+      }
+      case BlockTypes.cache: {
+        const match = /Cache (?<scope>[^]*)/g.exec(blockSchema);
+
+        if (!match) {
+          throw new Error(`Couldn't run regex on cache schema:
+        ${blockSchema}`);
+        }
+
+        return {
+          type: BlockTypes.cache,
+          scope: match.groups.scope.trim(),
+        };
+      }
+
+      default:
+        assertUnreachable(x.type);
     }
-    return {
-      type: BlockTypes.Model,
-      name: match.groups.name,
-      scope: match.groups.scope.trim(),
-    };
   });
 };
 
 export const codegen: CodegenFn = ({ schema }) => {
   const blocks = getBlocks(schema);
 
-  return blocks
-    .map((b) => `export interface ${b.name} ${scopeToTs(b.scope)}`)
-    .join("\n\n");
+  const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
+  const hasApi = hasCache;
+
+  return `${
+    hasApi
+      ? `import { ${[]
+          .concat(hasCache ? ["cacheGet", "cacheSet"] : [])
+          .join(", ")} } from "@memorix/client-js";`
+      : ""
+  }${blocks
+    .filter((b) => b.type === BlockTypes.model)
+    .map((b: BlockModel) => `export interface ${b.name} ${scopeToTs(b.scope)}`)
+    .join("\n\n")}${
+    hasApi
+      ? `\n\nexport const api = {
+${blocks
+  .filter((b) => b.type === BlockTypes.cache)
+  .map((b: BlockCache) => ``)
+  .join("\n\n")}
+}`
+      : ""
+  }`;
 };
