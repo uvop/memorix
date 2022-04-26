@@ -1,0 +1,21 @@
+Cache {
+    adminId {
+        payload: string?
+    }
+    user {
+        key: string
+        payload: User
+    }
+}
+
+Task {
+    runAlgo {
+        payload: string
+        returns: string
+    }
+}
+
+Model User {
+    name: string
+    age: number?
+}
