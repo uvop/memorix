@@ -6,9 +6,9 @@ type CodegenFn = (params: { schema: string; language?: Languages }) => string;
 
 type PropertyType = {
   name: string;
-  optional: boolean;
-  isValueAScope: boolean;
   value: string;
+  isOptional: boolean;
+  isValueAScope: boolean;
 };
 
 const getPropertiesOfScope: (scope: string) => PropertyType[] = (scope) => {
@@ -27,7 +27,6 @@ const getPropertiesOfScope: (scope: string) => PropertyType[] = (scope) => {
     const newLineIndex = partOfScopeForValue.indexOf("\n");
     const endOfLineIndex =
       newLineIndex === -1 ? partOfScopeForValue.length - 1 : newLineIndex + 1;
-    const optionalIndex = partOfScopeForValue.indexOf("?");
     const newScopeIndex = partOfScopeForValue.indexOf("{");
 
     if (newScopeIndex !== -1 && newScopeIndex < endOfLineIndex) {
@@ -46,34 +45,44 @@ const getPropertiesOfScope: (scope: string) => PropertyType[] = (scope) => {
           newScopeIndexEnd += nextBracketOpen + 1;
         }
       }
+
       const value = partOfScopeForValue
-        .substring(newScopeIndex, newScopeIndex + newScopeIndexEnd + 1)
+        .substring(newScopeIndex, newScopeIndex + newScopeIndexEnd - 1)
         .trim();
+
+      const partOfAfterScopeEnd = partOfScopeForValue.substring(
+        newScopeIndex + newScopeIndexEnd - 1
+      );
+      const newLineAfterScopeEndIndex = partOfAfterScopeEnd.indexOf("\n");
+      const endOfLineAfterScopeEndIndex =
+        newLineAfterScopeEndIndex === -1
+          ? partOfAfterScopeEnd.length - 1
+          : newLineAfterScopeEndIndex + 1;
+      const optionalAfterScopeEndIndex = partOfAfterScopeEnd.indexOf("?");
+
+      const isOptional =
+        optionalAfterScopeEndIndex !== -1 &&
+        optionalAfterScopeEndIndex <= endOfLineAfterScopeEndIndex;
+
       properties.push({
         name,
         value,
+        isOptional,
         isValueAScope: true,
-        optional: false,
       });
       index += newScopeIndex + newScopeIndexEnd + 1;
-    } else if (optionalIndex !== -1 && optionalIndex <= endOfLineIndex) {
-      const value = partOfScopeForValue.substring(0, optionalIndex).trim();
-
-      properties.push({
-        name,
-        optional: true,
-        value,
-        isValueAScope: false,
-      });
-
-      index += endOfLineIndex + 1;
     } else {
-      const value = partOfScopeForValue.substring(0, endOfLineIndex + 1).trim();
+      const optionalIndex = partOfScopeForValue.indexOf("?");
+      const isOptional =
+        optionalIndex !== -1 && optionalIndex <= endOfLineIndex;
+      const value = partOfScopeForValue
+        .substring(0, isOptional ? optionalIndex : endOfLineIndex + 1)
+        .trim();
 
       properties.push({
         name,
-        optional: false,
         value,
+        isOptional,
         isValueAScope: false,
       });
       index += endOfLineIndex + 1;
@@ -99,7 +108,7 @@ const scopeToTs: (scope: string, level?: number) => string = (
 ${nextSpaces}${properties
     .map(
       (prop) =>
-        `${prop.name}${prop.optional ? "?" : ""}: ${
+        `${prop.name}${prop.isOptional ? "?" : ""}: ${
           prop.isValueAScope ? scopeToTs(prop.value, level + 1) : prop.value
         };`
     )

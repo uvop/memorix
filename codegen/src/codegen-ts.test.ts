@@ -82,7 +82,7 @@ export interface User {
                 name: string?
                 mama: {
                   sick: boolean
-                }
+                }?
                 age: number
               }
           }
@@ -94,7 +94,7 @@ export interface User {
     id: number;
     papa: {
         name?: string;
-        mama: {
+        mama?: {
             sick: boolean;
         };
         age: number;
