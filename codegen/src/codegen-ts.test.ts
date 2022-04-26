@@ -19,7 +19,7 @@ describe("ts codegen", () => {
         )
       ).toBe(
         `
-export interface User {
+export type User = {
     id: number;
     name: string;
     age?: number;
@@ -42,11 +42,11 @@ export interface User {
         )
       ).toBe(
         `
-export interface User1 {
+export type User1 = {
     id: number;
 }
 
-export interface User2 {
+export type User2 = {
     name: string;
     age?: number;
 }
@@ -67,7 +67,7 @@ export interface User2 {
         )
       ).toBe(
         `
-export interface User {
+export type User = {
     id: number;
     papa: {
         name?: string;
@@ -94,7 +94,7 @@ export interface User {
         )
       ).toBe(
         `
-export interface User {
+export type User = {
     id: number;
     papa: {
         name?: string;
@@ -127,7 +127,7 @@ import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
     cache = {
-        user = this.getCacheItem<number, string>("user"),
+        user: this.getCacheItem<number, string>("user"),
     }
 }
   `.trim()
@@ -154,7 +154,7 @@ import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
     cache = {
-        user = this.getCacheItem<number, {
+        user: this.getCacheItem<number, {
             name: string;
             age?: number;
         } | undefined>("user"),
@@ -183,10 +183,48 @@ import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
     cache = {
-        user = this.getCacheItem<undefined, {
+        user: this.getCacheItem<never, {
             name: string;
             age?: number;
         } | undefined>("user"),
+    }
+}
+  `.trim()
+      );
+    });
+    it("can generate also with model", () => {
+      expect(
+        codegenTs(
+          `
+          Cache {
+            adminId {
+                payload: string?
+            }
+            user {
+                key: string
+                payload: User
+            }
+          }
+        
+          Model User {
+            name: string
+            age: number?
+          }
+          `
+        )
+      ).toBe(
+        `
+import { BaseMemorixApi } from "@memorix/client-js";
+
+export type User = {
+    name: string;
+    age?: number;
+}
+
+export class MemorixApi extends BaseMemorixApi {
+    cache = {
+        adminId: this.getCacheItem<never, string | undefined>("adminId"),
+        user: this.getCacheItem<string, User>("user"),
     }
 }
   `.trim()

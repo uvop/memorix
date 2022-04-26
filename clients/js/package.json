@@ -13,10 +13,12 @@
     "lint:err": "npm run lint -- --quiet",
     "lint:fix": "npm run lint -- --fix",
     "start": "ts-node -r tsconfig-paths/register src/index.ts",
+    "generate-example-schema": "ts-node -r tsconfig-paths/register src/generate-example-schema.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^17.0.28",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
     "eslint": "^6.8.0",

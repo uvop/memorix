@@ -21,6 +21,5 @@
     "noUnusedLocals": true,
     "resolveJsonModule": true,
     "skipLibCheck": true
-  },
-  "include": ["src"]
+  }
 }

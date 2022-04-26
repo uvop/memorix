@@ -13,5 +13,6 @@ export const codegenByLanguage: CodegenByLanguageFn = (scope, language) => {
       return codegenTs(scope);
     default:
       assertUnreachable(language);
+      return "";
   }
 };

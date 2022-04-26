@@ -12,6 +12,9 @@ export const getNamespaces: (content: string) => NamespaceType[] = (
   while (index < content.length) {
     const contentFromIndex = content.substring(index);
     const scopeIndex = contentFromIndex.indexOf("{");
+    if (scopeIndex === -1) {
+      break;
+    }
     const name = contentFromIndex.substring(0, scopeIndex).trim();
 
     let unclosedBracketCount = 1;
@@ -30,7 +33,7 @@ export const getNamespaces: (content: string) => NamespaceType[] = (
     }
 
     const scope = contentFromIndex.substring(scopeIndex, scopeEndIndex);
-    index += scopeIndex + scopeEndIndex + 1;
+    index += scopeEndIndex;
     namespaces.push({
       name,
       scope,

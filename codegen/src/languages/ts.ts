@@ -26,32 +26,30 @@ ${nextSpaces}${properties
 ${spaces}}`;
 };
 
-const capitalizeFirstLetter = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
 const blockToTs: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `export interface ${b.name} ${scopeToTs(b.scope)}`;
+      return `export type ${b.name} = ${scopeToTs(b.scope)}`;
     case BlockTypes.cache: {
       const spaces = Array.from({ length: 2 })
         .map(() => "    ")
         .join("");
 
-      return `${b.values.map((v) => {
-        return `${spaces}${v.name} = this.getCacheItem<${
-          v.key
-            ? `${
-                v.key.isValueAScope ? scopeToTs(v.key.value, 2) : v.key.value
-              }${v.key.isOptional ? " | undefined" : ""}`
-            : "undefined"
-        }, ${
-          v.payload.isValueAScope
-            ? scopeToTs(v.payload.value, 2)
-            : v.payload.value
-        }${v.payload.isOptional ? " | undefined" : ""}>("${v.name}"),`;
-      })}`;
+      return `${b.values
+        .map((v) => {
+          return `${spaces}${v.name}: this.getCacheItem<${
+            v.key
+              ? `${
+                  v.key.isValueAScope ? scopeToTs(v.key.value, 2) : v.key.value
+                }${v.key.isOptional ? " | undefined" : ""}`
+              : "never"
+          }, ${
+            v.payload.isValueAScope
+              ? scopeToTs(v.payload.value, 2)
+              : v.payload.value
+          }${v.payload.isOptional ? " | undefined" : ""}>("${v.name}"),`;
+        })
+        .join("\n")}`;
     }
     default:
       assertUnreachable(b);
