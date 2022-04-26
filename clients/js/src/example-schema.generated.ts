@@ -10,4 +10,7 @@ export class MemorixApi extends BaseMemorixApi {
     adminId: this.getCacheItem<never, string | undefined>("adminId"),
     user: this.getCacheItem<string, User>("user"),
   };
+  task = {
+    runAlgo: this.getTaskItem<never, string, string>("runAlgo"),
+  };
 }

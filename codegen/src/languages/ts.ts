@@ -1,41 +1,36 @@
 import { Block, BlockTypes, getBlocks } from "src/block";
 import { getProperties } from "src/property";
-import { assertUnreachable, removeBracketsOfScope } from "src/utilities";
+import {
+  assertUnreachable,
+  getTabs,
+  removeBracketsOfScope,
+} from "src/utilities";
 
 const scopeToTs: (scope: string, level?: number) => string = (
   scope,
   level = 0
 ) => {
   const properties = getProperties(removeBracketsOfScope(scope));
-  const spaces = Array.from({ length: level })
-    .map(() => "    ")
-    .join("");
-  const nextSpaces = Array.from({ length: level + 1 })
-    .map(() => "    ")
-    .join("");
 
   return `{
-${nextSpaces}${properties
+${getTabs(level + 1)}${properties
     .map(
       (prop) =>
         `${prop.name}${prop.isOptional ? "?" : ""}: ${
           prop.isValueAScope ? scopeToTs(prop.value, level + 1) : prop.value
         };`
     )
-    .join(`\n${nextSpaces}`)}
-${spaces}}`;
+    .join(`\n${getTabs(level + 1)}`)}
+${getTabs(level)}}`;
 };
 
 const blockToTs: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `export type ${b.name} = ${scopeToTs(b.scope)}`;
+      return `export type ${b.name} = ${scopeToTs(b.scope)};`;
     case BlockTypes.cache:
     case BlockTypes.pubsub:
     case BlockTypes.task: {
-      const spaces = Array.from({ length: 2 })
-        .map(() => "    ")
-        .join("");
       const itemFn = {
         [BlockTypes.cache]: "getCacheItem",
         [BlockTypes.pubsub]: "getPubsubItem",
@@ -45,7 +40,7 @@ const blockToTs: (block: Block) => string = (b) => {
 
       return `${b.values
         .map((v) => {
-          return `${spaces}${v.name}: this.${itemFn}<${
+          return `${getTabs(2)}${v.name}: this.${itemFn}<${
             v.key
               ? `${
                   v.key.isValueAScope ? scopeToTs(v.key.value, 2) : v.key.value
@@ -86,7 +81,7 @@ export const codegenTs: (schema: string) => string = (schema) => {
   const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
   const hasApi = hasCache || hasPubsub || hasTask;
 
-  return []
+  const code = []
     .concat(
       hasApi
         ? `import { ${[]
@@ -100,34 +95,35 @@ export const codegenTs: (schema: string) => string = (schema) => {
         ? `export class MemorixApi extends BaseMemorixApi {
 ${
   hasCache
-    ? `    cache = {
+    ? `${getTabs(1)}cache = {
 ${blocks
   .filter((b) => b.type === BlockTypes.cache)
   .map(blockToTs)
   .join("\n\n")}
-    };`
+${getTabs(1)}};`
     : ""
 }${
             hasPubsub
-              ? `    pubsub = {
+              ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
 ${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
   .map(blockToTs)
   .join("\n\n")}
-    };`
+${getTabs(1)}};`
               : ""
           }${
             hasTask
-              ? `    task = {
+              ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
 ${blocks
   .filter((b) => b.type === BlockTypes.task)
   .map(blockToTs)
   .join("\n\n")}
-    };`
+${getTabs(1)}};`
               : ""
           }
 }`
         : []
     )
     .join("\n\n");
+  return `${code}\n`;
 };

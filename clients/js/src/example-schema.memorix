@@ -8,6 +8,13 @@ Cache {
     }
 }
 
+Task {
+    runAlgo {
+        payload: string
+        returns: string
+    }
+}
+
 Model User {
     name: string
     age: number?

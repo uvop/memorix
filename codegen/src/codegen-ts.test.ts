@@ -2,7 +2,7 @@ import { codegen } from "./codegen";
 import { Languages } from "./languages";
 
 const codegenTs = (schema: string) =>
-  codegen({ schema, language: Languages.typescript });
+  codegen({ schema, language: Languages.typescript }).trim();
 
 describe("ts codegen", () => {
   describe("model", () => {
@@ -20,10 +20,10 @@ describe("ts codegen", () => {
       ).toBe(
         `
 export type User = {
-    id: number;
-    name: string;
-    age?: number;
-}
+  id: number;
+  name: string;
+  age?: number;
+};
   `.trim()
       );
     });
@@ -43,13 +43,13 @@ export type User = {
       ).toBe(
         `
 export type User1 = {
-    id: number;
-}
+  id: number;
+};
 
 export type User2 = {
-    name: string;
-    age?: number;
-}
+  name: string;
+  age?: number;
+};
   `.trim()
       );
     });
@@ -68,11 +68,11 @@ export type User2 = {
       ).toBe(
         `
 export type User = {
-    id: number;
-    papa: {
-        name?: string;
-    };
-}
+  id: number;
+  papa: {
+    name?: string;
+  };
+};
   `.trim()
       );
     });
@@ -95,15 +95,15 @@ export type User = {
       ).toBe(
         `
 export type User = {
-    id: number;
-    papa: {
-        name?: string;
-        mama?: {
-            sick: boolean;
-        };
-        age: number;
+  id: number;
+  papa: {
+    name?: string;
+    mama?: {
+      sick: boolean;
     };
-}
+    age: number;
+  };
+};
   `.trim()
       );
     });
@@ -126,9 +126,9 @@ export type User = {
 import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
-    cache = {
-        user: this.getCacheItem<number, string>("user"),
-    }
+  cache = {
+    user: this.getCacheItem<number, string>("user"),
+  };
 }
   `.trim()
       );
@@ -153,12 +153,12 @@ export class MemorixApi extends BaseMemorixApi {
 import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
-    cache = {
-        user: this.getCacheItem<number, {
-            name: string;
-            age?: number;
-        } | undefined>("user"),
-    }
+  cache = {
+    user: this.getCacheItem<number, {
+      name: string;
+      age?: number;
+    } | undefined>("user"),
+  };
 }
   `.trim()
       );
@@ -182,12 +182,12 @@ export class MemorixApi extends BaseMemorixApi {
 import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
-    cache = {
-        user: this.getCacheItem<never, {
-            name: string;
-            age?: number;
-        } | undefined>("user"),
-    }
+  cache = {
+    user: this.getCacheItem<never, {
+      name: string;
+      age?: number;
+    } | undefined>("user"),
+  };
 }
   `.trim()
       );
@@ -217,15 +217,15 @@ export class MemorixApi extends BaseMemorixApi {
 import { BaseMemorixApi } from "@memorix/client-js";
 
 export type User = {
-    name: string;
-    age?: number;
-}
+  name: string;
+  age?: number;
+};
 
 export class MemorixApi extends BaseMemorixApi {
-    cache = {
-        adminId: this.getCacheItem<never, string | undefined>("adminId"),
-        user: this.getCacheItem<string, User>("user"),
-    }
+  cache = {
+    adminId: this.getCacheItem<never, string | undefined>("adminId"),
+    user: this.getCacheItem<string, User>("user"),
+  };
 }
   `.trim()
       );
@@ -249,9 +249,9 @@ export class MemorixApi extends BaseMemorixApi {
 import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
-    pubsub = {
-        message: this.getPubsubItem<number, string>("message"),
-    }
+  pubsub = {
+    message: this.getPubsubItem<number, string>("message"),
+  };
 }
   `.trim()
       );
@@ -276,9 +276,9 @@ export class MemorixApi extends BaseMemorixApi {
 import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
-    task = {
-        doIt: this.getTaskItem<number, string, boolean>("doIt"),
-    }
+  task = {
+    doIt: this.getTaskItem<number, string, boolean>("doIt"),
+  };
 }
   `.trim()
       );
