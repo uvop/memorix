@@ -30,14 +30,22 @@ const blockToTs: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
       return `export type ${b.name} = ${scopeToTs(b.scope)}`;
-    case BlockTypes.cache: {
+    case BlockTypes.cache:
+    case BlockTypes.pubsub:
+    case BlockTypes.task: {
       const spaces = Array.from({ length: 2 })
         .map(() => "    ")
         .join("");
+      const itemFn = {
+        [BlockTypes.cache]: "getCacheItem",
+        [BlockTypes.pubsub]: "getPubsubItem",
+        [BlockTypes.task]: "getTaskItem",
+      }[b.type];
+      const hasReturns = b.type === BlockTypes.task;
 
       return `${b.values
         .map((v) => {
-          return `${spaces}${v.name}: this.getCacheItem<${
+          return `${spaces}${v.name}: this.${itemFn}<${
             v.key
               ? `${
                   v.key.isValueAScope ? scopeToTs(v.key.value, 2) : v.key.value
@@ -47,7 +55,19 @@ const blockToTs: (block: Block) => string = (b) => {
             v.payload.isValueAScope
               ? scopeToTs(v.payload.value, 2)
               : v.payload.value
-          }${v.payload.isOptional ? " | undefined" : ""}>("${v.name}"),`;
+          }${v.payload.isOptional ? " | undefined" : ""}${
+            hasReturns
+              ? `, ${
+                  v.returns
+                    ? `${
+                        v.returns.isValueAScope
+                          ? scopeToTs(v.returns.value, 2)
+                          : v.returns.value
+                      }${v.returns.isOptional ? " | undefined" : ""}`
+                    : "never"
+                }`
+              : ""
+          }>("${v.name}"),`;
         })
         .join("\n")}`;
     }
@@ -61,13 +81,16 @@ export const codegenTs: (schema: string) => string = (schema) => {
   const blocks = getBlocks(schema);
 
   const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
-  const hasApi = hasCache;
+  const hasPubsub =
+    blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
+  const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
+  const hasApi = hasCache || hasPubsub || hasTask;
 
   return []
     .concat(
       hasApi
         ? `import { ${[]
-            .concat(hasCache ? ["BaseMemorixApi"] : [])
+            .concat(hasApi ? ["BaseMemorixApi"] : [])
             .join(", ")} } from "@memorix/client-js";`
         : []
     )
@@ -84,7 +107,25 @@ ${blocks
   .join("\n\n")}
     }`
     : ""
-}
+}${
+            hasPubsub
+              ? `    pubsub = {
+${blocks
+  .filter((b) => b.type === BlockTypes.pubsub)
+  .map(blockToTs)
+  .join("\n\n")}
+    }`
+              : ""
+          }${
+            hasTask
+              ? `    task = {
+${blocks
+  .filter((b) => b.type === BlockTypes.task)
+  .map(blockToTs)
+  .join("\n\n")}
+    }`
+              : ""
+          }
 }`
         : []
     )

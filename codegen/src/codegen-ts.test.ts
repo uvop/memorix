@@ -231,4 +231,57 @@ export class MemorixApi extends BaseMemorixApi {
       );
     });
   });
+  describe("pubsub", () => {
+    it("can generate with inline types", () => {
+      expect(
+        codegenTs(
+          `
+            PubSub {
+              message {
+                key: number
+                payload: string
+              }
+            }
+          `
+        )
+      ).toBe(
+        `
+import { BaseMemorixApi } from "@memorix/client-js";
+
+export class MemorixApi extends BaseMemorixApi {
+    pubsub = {
+        message: this.getPubsubItem<number, string>("message"),
+    }
+}
+  `.trim()
+      );
+    });
+  });
+  describe("task", () => {
+    it("can generate with inline types", () => {
+      expect(
+        codegenTs(
+          `
+            Task {
+              doIt {
+                key: number
+                payload: string
+                returns: boolean
+              }
+            }
+          `
+        )
+      ).toBe(
+        `
+import { BaseMemorixApi } from "@memorix/client-js";
+
+export class MemorixApi extends BaseMemorixApi {
+    task = {
+        doIt: this.getTaskItem<number, string, boolean>("doIt"),
+    }
+}
+  `.trim()
+      );
+    });
+  });
 });
