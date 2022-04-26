@@ -5,7 +5,7 @@ const codegenTs = (schema: string) =>
   codegen({ schema, language: Languages.typescript });
 
 describe("ts codegen", () => {
-  describe.only("model", () => {
+  describe("model", () => {
     it("can generate from model", () => {
       expect(
         codegenTs(
@@ -116,7 +116,7 @@ export interface User {
             Cache {
               user {
                 key: number
-                payload: User
+                payload: string
               }
             }
           `
@@ -127,12 +127,66 @@ import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
     cache = {
-        getUser(key: number) {
-            return this.cacheGet<string>("user", key, options);
-        },
-        setUser(key: number, payload: string) {
-            return this.cacheSet("user", key, payload);
-        },
+        user = this.getCacheItem<number, string>("user"),
+    }
+}
+  `.trim()
+      );
+    });
+    it("can generate with inline object type", () => {
+      expect(
+        codegenTs(
+          `
+            Cache {
+              user {
+                key: number
+                payload: {
+                  name: string
+                  age: number?
+                }?
+              }
+            }
+          `
+        )
+      ).toBe(
+        `
+import { BaseMemorixApi } from "@memorix/client-js";
+
+export class MemorixApi extends BaseMemorixApi {
+    cache = {
+        user = this.getCacheItem<number, {
+            name: string;
+            age?: number;
+        } | undefined>("user"),
+    }
+}
+  `.trim()
+      );
+    });
+    it("can generate with no key", () => {
+      expect(
+        codegenTs(
+          `
+            Cache {
+              user {
+                payload: {
+                  name: string
+                  age: number?
+                }?
+              }
+            }
+          `
+        )
+      ).toBe(
+        `
+import { BaseMemorixApi } from "@memorix/client-js";
+
+export class MemorixApi extends BaseMemorixApi {
+    cache = {
+        user = this.getCacheItem<undefined, {
+            name: string;
+            age?: number;
+        } | undefined>("user"),
     }
 }
   `.trim()

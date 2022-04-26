@@ -1,16 +1,16 @@
 import { assertUnreachable } from "src/utilities";
-import { scopeToTs } from "./ts";
+import { codegenTs } from "./ts";
 
 export enum Languages {
   typescript,
 }
 
-type ScopeToLanguageFn = (scope: string, language: Languages) => string;
+type CodegenByLanguageFn = (schema: string, language: Languages) => string;
 
-export const scopeToLanguage: ScopeToLanguageFn = (scope, language) => {
+export const codegenByLanguage: CodegenByLanguageFn = (scope, language) => {
   switch (language) {
     case Languages.typescript:
-      return scopeToTs(scope);
+      return codegenTs(scope);
     default:
       assertUnreachable(language);
   }

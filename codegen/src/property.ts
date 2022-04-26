@@ -1,4 +1,4 @@
-type PropertyType = {
+export type PropertyType = {
   name: string;
   value: string;
   isOptional: boolean;
