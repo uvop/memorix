@@ -105,7 +105,7 @@ ${blocks
   .filter((b) => b.type === BlockTypes.cache)
   .map(blockToTs)
   .join("\n\n")}
-    }`
+    };`
     : ""
 }${
             hasPubsub
@@ -114,7 +114,7 @@ ${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
   .map(blockToTs)
   .join("\n\n")}
-    }`
+    };`
               : ""
           }${
             hasTask
@@ -123,7 +123,7 @@ ${blocks
   .filter((b) => b.type === BlockTypes.task)
   .map(blockToTs)
   .join("\n\n")}
-    }`
+    };`
               : ""
           }
 }`
