@@ -1,0 +1,14 @@
+Cache {
+    adminId {
+        payload: string?
+    }
+    user {
+        key: string
+        payload: User
+    }
+}
+
+Model User {
+    name: string
+    age: number?
+}
