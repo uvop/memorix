@@ -1,19 +1,22 @@
-import "jest";
 import { codegen } from "./codegen";
+import { Languages } from "./languages";
+
+const codegenTs = (schema: string) =>
+  codegen({ schema, language: Languages.typescript });
 
 describe("ts codegen", () => {
   describe("model", () => {
     it("can generate from model", () => {
       expect(
-        codegen({
-          schema: `
+        codegenTs(
+          `
             Model User {
                 id: number
                 name: string
                 age: number?
             }
-          `,
-        })
+          `
+        )
       ).toBe(
         `
 export interface User {
@@ -26,8 +29,8 @@ export interface User {
     });
     it("can generate from 2 models", () => {
       expect(
-        codegen({
-          schema: `
+        codegenTs(
+          `
             Model User1 {
                 id: number
             }
@@ -35,8 +38,8 @@ export interface User {
                 name: string
                 age: number?
             }
-          `.trim(),
-        })
+          `.trim()
+        )
       ).toBe(
         `
 export interface User1 {
@@ -52,16 +55,16 @@ export interface User2 {
     });
     it("can generate from model within model", () => {
       expect(
-        codegen({
-          schema: `
+        codegenTs(
+          `
             Model User {
                 id: number
                 papa: {
-                  name: string?
+                    name: string?
                 }
             }
-          `.trim(),
-        })
+          `.trim()
+        )
       ).toBe(
         `
 export interface User {
@@ -75,20 +78,20 @@ export interface User {
     });
     it("can generate from model within model within a model", () => {
       expect(
-        codegen({
-          schema: `
+        codegenTs(
+          `
             Model User {
                 id: number
                 papa: {
-                  name: string?
-                  mama: {
-                    sick: boolean
-                  }?
-                  age: number
+                    name: string?
+                    mama: {
+                        sick: boolean
+                    }?
+                    age: number
                 }
             }
-          `.trim(),
-        })
+          `.trim()
+        )
       ).toBe(
         `
 export interface User {
@@ -105,19 +108,19 @@ export interface User {
       );
     });
   });
-  describe("cache", () => {
+  describe.skip("cache", () => {
     it("can generate with inline types", () => {
       expect(
-        codegen({
-          schema: `
+        codegenTs(
+          `
             Cache {
-              user: {
+              user {
                 key: number
-                payload: string
+                payload: User
               }
             }
-          `,
-        })
+          `
+        )
       ).toBe(
         `
 import { cacheGet, cacheSet } from "@memorix/client-js";
@@ -125,7 +128,7 @@ import { cacheGet, cacheSet } from "@memorix/client-js";
 export const api = {
     cache: {
         getUser(key: number) {
-            return cacheGet("user", key) as string;
+            return cacheGet<string>("user", key, options);
         },
         setUser(key: number, payload: string) {
             return cacheSet("user", key, payload);
