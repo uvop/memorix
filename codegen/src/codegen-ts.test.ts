@@ -5,7 +5,7 @@ const codegenTs = (schema: string) =>
   codegen({ schema, language: Languages.typescript });
 
 describe("ts codegen", () => {
-  describe("model", () => {
+  describe.only("model", () => {
     it("can generate from model", () => {
       expect(
         codegenTs(
@@ -108,7 +108,7 @@ export interface User {
       );
     });
   });
-  describe.skip("cache", () => {
+  describe("cache", () => {
     it("can generate with inline types", () => {
       expect(
         codegenTs(
@@ -123,17 +123,17 @@ export interface User {
         )
       ).toBe(
         `
-import { cacheGet, cacheSet } from "@memorix/client-js";
+import { BaseMemorixApi } from "@memorix/client-js";
 
-export const api = {
-    cache: {
+export class MemorixApi extends BaseMemorixApi {
+    cache = {
         getUser(key: number) {
-            return cacheGet<string>("user", key, options);
+            return this.cacheGet<string>("user", key, options);
         },
         setUser(key: number, payload: string) {
-            return cacheSet("user", key, payload);
+            return this.cacheSet("user", key, payload);
         },
-    },
+    }
 }
   `.trim()
       );

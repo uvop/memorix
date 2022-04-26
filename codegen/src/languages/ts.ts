@@ -1,10 +1,11 @@
-import { getPropertiesOfScope } from "src/scope";
+import { getProperties } from "src/property";
+import { removeBracketsOfScope } from "src/utilities";
 
 export const scopeToTs: (scope: string, level?: number) => string = (
   scope,
   level = 0
 ) => {
-  const properties = getPropertiesOfScope(scope);
+  const properties = getProperties(removeBracketsOfScope(scope));
   const spaces = Array.from({ length: level })
     .map(() => "    ")
     .join("");

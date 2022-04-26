@@ -1,5 +1,7 @@
-import { BlockCache, BlockModel, BlockTypes, getBlocks } from "./blocks";
+import { BlockCache, BlockModel, BlockTypes, getBlocks } from "./block";
 import { Languages, scopeToLanguage } from "./languages";
+import { getNamespaces } from "./namespace";
+import { removeBracketsOfScope } from "./utilities";
 
 type CodegenFn = (params: { schema: string; language?: Languages }) => string;
 
@@ -16,7 +18,7 @@ export const codegen: CodegenFn = ({
     .concat(
       hasApi
         ? `import { ${[]
-            .concat(hasCache ? ["cacheGet", "cacheSet"] : [])
+            .concat(hasCache ? ["BaseMemorixApi"] : [])
             .join(", ")} } from "@memorix/client-js";`
         : []
     )
@@ -30,11 +32,21 @@ export const codegen: CodegenFn = ({
     )
     .concat(
       hasApi
-        ? `export const api = {
+        ? `export class MemorixApi extends BaseMemorixApi {
+${
+  hasCache
+    ? `
+    cache = {
 ${blocks
   .filter((b) => b.type === BlockTypes.cache)
-  .map((b: BlockCache) => `${b.type}`)
+  .map(
+    (b: BlockCache) =>
+      `${getNamespaces(removeBracketsOfScope(b.scope))[0].name}`
+  )
   .join("\n\n")}
+    }`
+    : ""
+}
 }`
         : []
     )
