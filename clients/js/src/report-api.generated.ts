@@ -13,26 +13,40 @@ export enum Languages {
   typescript = "typescript",
 }
 
-export class MemorixApi extends BaseReportApi {
+export class ReportApi extends BaseReportApi {
   task = {
-    registerDevice: this.getTaskItem<never, {
-      schema: string;
-      language: Languages;
-    }, string>("registerDevice"),
-    deregisterDevice: this.getTaskItem<never, string, never>("deregisterDevice"),
-    sendEvent: this.getTaskItem<never, {
-      deviceId: string;
-      type: EventTypes;
-      traceId: string;
-      data: {
-        identifier: string;
-        args: any;
-      };
-    }, never>("sendEvent"),
-    sendEventEnd: this.getTaskItem<never, {
-      deviceId: string;
-      type: EventTypes;
-      traceId: string;
-    }, never>("sendEventEnd"),
+    registerDevice: this.getTaskItem<
+      never,
+      {
+        schema: string;
+        language: Languages;
+      },
+      string
+    >("registerDevice"),
+    deregisterDevice: this.getTaskItem<never, string, never>(
+      "deregisterDevice"
+    ),
+    sendEvent: this.getTaskItem<
+      never,
+      {
+        deviceId: string;
+        type: EventTypes;
+        traceId: string;
+        data: {
+          identifier: string;
+          args: any;
+        };
+      },
+      never
+    >("sendEvent"),
+    sendEventEnd: this.getTaskItem<
+      never,
+      {
+        deviceId: string;
+        type: EventTypes;
+        traceId: string;
+      },
+      never
+    >("sendEventEnd"),
   };
 }

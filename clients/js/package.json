@@ -18,7 +18,7 @@
     "codegen-example": "cd ../../codegen && yarn generate-schema ../clients/js/src/example-schema.memorix",
     "codegen-report": "yarn codegen-report-1 && yarn codegen-report-replace-1 && yarn codegen-report-replace-2",
     "codegen-report-1": "(cd ../../codegen && yarn generate-schema ../report-schema/schema.memorix ../clients/js/src/report-api.generated.ts)",
-    "codegen-report-replace-1": "sed -i '' 's|BaseMemorixApi|BaseReportApi|g' ./src/report-api.generated.ts",
+    "codegen-report-replace-1": "sed -i '' 's|MemorixApi|ReportApi|g' ./src/report-api.generated.ts",
     "codegen-report-replace-2": "sed -i '' 's|@memorix/client-js|./BaseReportApi|g' ./src/report-api.generated.ts"
   },
   "devDependencies": {
