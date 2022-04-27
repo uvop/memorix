@@ -15,7 +15,6 @@
     "lint:err": "npm run lint -- --quiet",
     "lint:fix": "npm run lint -- --fix",
     "generate-schema": "ts-node -r tsconfig-paths/register src/generate-schema.ts",
-    "example": "npm run generate-schema -- ../clients/js/src/example-schema.memorix",
     "test": "jest",
     "typecheck": "tsc --noEmit"
   },

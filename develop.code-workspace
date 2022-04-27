@@ -1,6 +1,10 @@
 {
   "folders": [
     {
+      "name": "report-schema",
+      "path": "report-schema"
+    },
+    {
       "name": "codegen",
       "path": "codegen"
     },
