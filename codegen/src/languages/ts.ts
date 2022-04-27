@@ -1,24 +1,23 @@
 import { Block, BlockTypes, getBlocks } from "src/block";
-import { getProperties } from "src/property";
-import {
-  assertUnreachable,
-  getTabs,
-  removeBracketsOfScope,
-} from "src/utilities";
+import { PropertyType } from "src/property";
+import { assertUnreachable, getTabs } from "src/utilities";
 
-const scopeToTs: (scope: string, level?: number) => string = (
-  scope,
+const valueToTs: (value: string | PropertyType[], level?: number) => string = (
+  value,
   level = 0
 ) => {
-  const properties = getProperties(removeBracketsOfScope(scope));
+  if (typeof value === "string") {
+    return value;
+  }
 
   return `{
-${getTabs(level + 1)}${properties
+${getTabs(level + 1)}${value
     .map(
       (prop) =>
-        `${prop.name}${prop.isOptional ? "?" : ""}: ${
-          prop.isValueAScope ? scopeToTs(prop.value, level + 1) : prop.value
-        };`
+        `${prop.name}${prop.isOptional ? "?" : ""}: ${valueToTs(
+          prop.value,
+          level + 1
+        )};`
     )
     .join(`\n${getTabs(level + 1)}`)}
 ${getTabs(level)}}`;
@@ -27,7 +26,11 @@ ${getTabs(level)}}`;
 const blockToTs: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `export type ${b.name} = ${scopeToTs(b.scope)};`;
+      return `export type ${b.name} = ${valueToTs(b.properties)};`;
+    case BlockTypes.enum:
+      return `export enum ${b.name} {
+${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
+}`;
     case BlockTypes.cache:
     case BlockTypes.pubsub:
     case BlockTypes.task: {
@@ -42,23 +45,19 @@ const blockToTs: (block: Block) => string = (b) => {
         .map((v) => {
           return `${getTabs(2)}${v.name}: this.${itemFn}<${
             v.key
-              ? `${
-                  v.key.isValueAScope ? scopeToTs(v.key.value, 2) : v.key.value
-                }${v.key.isOptional ? " | undefined" : ""}`
+              ? `${valueToTs(v.key.value, 2)}${
+                  v.key.isOptional ? " | undefined" : ""
+                }`
               : "never"
-          }, ${
-            v.payload.isValueAScope
-              ? scopeToTs(v.payload.value, 2)
-              : v.payload.value
-          }${v.payload.isOptional ? " | undefined" : ""}${
+          }, ${valueToTs(v.payload.value, 2)}${
+            v.payload.isOptional ? " | undefined" : ""
+          }${
             hasReturns
               ? `, ${
                   v.returns
-                    ? `${
-                        v.returns.isValueAScope
-                          ? scopeToTs(v.returns.value, 2)
-                          : v.returns.value
-                      }${v.returns.isOptional ? " | undefined" : ""}`
+                    ? `${valueToTs(v.returns.value, 2)}${
+                        v.returns.isOptional ? " | undefined" : ""
+                      }`
                     : "never"
                 }`
               : ""
@@ -89,6 +88,7 @@ export const codegenTs: (schema: string) => string = (schema) => {
             .join(", ")} } from "@memorix/client-js";`
         : []
     )
+    .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToTs))
     .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToTs))
     .concat(
       hasApi
@@ -99,7 +99,7 @@ ${
 ${blocks
   .filter((b) => b.type === BlockTypes.cache)
   .map(blockToTs)
-  .join("\n\n")}
+  .join("\n")}
 ${getTabs(1)}};`
     : ""
 }${
@@ -108,7 +108,7 @@ ${getTabs(1)}};`
 ${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
   .map(blockToTs)
-  .join("\n\n")}
+  .join("\n")}
 ${getTabs(1)}};`
               : ""
           }${
@@ -117,7 +117,7 @@ ${getTabs(1)}};`
 ${blocks
   .filter((b) => b.type === BlockTypes.task)
   .map(blockToTs)
-  .join("\n\n")}
+  .join("\n")}
 ${getTabs(1)}};`
               : ""
           }

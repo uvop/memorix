@@ -1,8 +1,9 @@
+import { removeBracketsOfScope } from "./utilities";
+
 export type PropertyType = {
   name: string;
-  value: string;
+  value: string | PropertyType[];
   isOptional: boolean;
-  isValueAScope: boolean;
 };
 
 export const getProperties: (content: string) => PropertyType[] = (content) => {
@@ -40,7 +41,7 @@ export const getProperties: (content: string) => PropertyType[] = (content) => {
         }
       }
 
-      const value = contentAfterName
+      const scope = contentAfterName
         .substring(scopeIndex, scopeIndex + scopeEndIndex - 1)
         .trim();
 
@@ -60,9 +61,8 @@ export const getProperties: (content: string) => PropertyType[] = (content) => {
 
       properties.push({
         name,
-        value,
+        value: getProperties(removeBracketsOfScope(scope)),
         isOptional,
-        isValueAScope: true,
       });
       index += scopeIndex + scopeEndIndex + 1;
     } else {
@@ -77,7 +77,6 @@ export const getProperties: (content: string) => PropertyType[] = (content) => {
         name,
         value,
         isOptional,
-        isValueAScope: false,
       });
       index += endOfLineIndex + 1;
     }

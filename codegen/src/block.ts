@@ -4,6 +4,7 @@ import { removeBracketsOfScope } from "./utilities";
 
 export enum BlockTypes {
   model = "Model",
+  enum = "Enum",
   cache = "Cache",
   pubsub = "PubSub",
   task = "Task",
@@ -12,7 +13,13 @@ export enum BlockTypes {
 export type BlockModel = {
   type: BlockTypes.model;
   name: string;
-  scope: string;
+  properties: PropertyType[];
+};
+
+export type BlockEnum = {
+  type: BlockTypes.enum;
+  name: string;
+  values: string[];
 };
 
 export type BlockCache = {
@@ -41,19 +48,26 @@ export type BlockTask = {
   }[];
 };
 
-export type Block = BlockModel | BlockCache | BlockPubsub | BlockTask;
+export type Block =
+  | BlockModel
+  | BlockEnum
+  | BlockCache
+  | BlockPubsub
+  | BlockTask;
 
 export const getBlocks: (schema: string) => Block[] = (schema) => {
   const namespaces = getNamespaces(schema);
 
   const blocks = namespaces.map<Block>((n) => {
-    const blockType =
+    const isNamelessNamespace =
       [BlockTypes.cache, BlockTypes.pubsub, BlockTypes.task].indexOf(
         n.name as BlockTypes
-      ) !== -1
-        ? (n.name as BlockTypes)
-        : BlockTypes.model;
-    if (blockType !== BlockTypes.model) {
+      ) !== -1;
+    if (isNamelessNamespace) {
+      const blockType = n.name as
+        | BlockTypes.cache
+        | BlockTypes.pubsub
+        | BlockTypes.task;
       const cacheNamespaces = getNamespaces(removeBracketsOfScope(n.scope));
 
       return {
@@ -77,16 +91,30 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
         }),
       };
     }
-    const match = /Model (?<name>.*)/g.exec(n.name);
+    const match = /(?<type>(Model|Enum)) (?<name>.*)/g.exec(n.name);
 
     if (!match) {
       throw new Error(`Invalid namespace "${n.name}"`);
     }
 
+    const blockType = match.groups.type as BlockTypes.model | BlockTypes.enum;
+    const name = match.groups.name.trim() as string;
+
+    if (blockType === BlockTypes.enum) {
+      return {
+        type: blockType,
+        name,
+        values: removeBracketsOfScope(n.scope)
+          .split("\n")
+          .map((x) => x.trim())
+          .filter((x) => x.length > 0),
+      };
+    }
+
     return {
       type: blockType,
-      name: match.groups.name.trim() as string,
-      scope: n.scope,
+      name,
+      properties: getProperties(removeBracketsOfScope(n.scope)),
     };
   });
 

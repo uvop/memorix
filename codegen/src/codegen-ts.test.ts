@@ -284,4 +284,27 @@ export class MemorixApi extends BaseMemorixApi {
       );
     });
   });
+  describe("enum", () => {
+    it("can generate", () => {
+      expect(
+        codegenTs(
+          `
+            Enum Animals {
+              dog
+              cat
+              person
+            }
+          `
+        )
+      ).toBe(
+        `
+export enum Animals {
+  dog = "dog",
+  cat = "cat",
+  person = "person",
+}
+  `.trim()
+      );
+    });
+  });
 });

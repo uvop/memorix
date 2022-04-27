@@ -8,14 +8,42 @@ Cache {
     }
 }
 
+Enum Animals {
+    dog
+    cat
+    person
+}
+
 Task {
     runAlgo {
+        payload: string
+        returns: Animals
+    }
+}
+
+Model User {
+    name: string
+    age: number?
+}
+
+Cache {
+    adminId2 {
+        payload: string?
+    }
+    user2 {
+        key: string
+        payload: User2
+    }
+}
+
+Task {
+    runAlgo2 {
         payload: string
         returns: string
     }
 }
 
-Model User {
+Model User2 {
     name: string
     age: number?
 }
