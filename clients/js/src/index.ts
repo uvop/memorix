@@ -1,1 +1,3 @@
-console.log("client-js");
+import { BaseMemorixApi } from "./BaseMemorixApi";
+
+export { BaseMemorixApi };
