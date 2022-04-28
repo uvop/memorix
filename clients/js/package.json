@@ -22,6 +22,7 @@
     "codegen-report-replace-2": "sed -i '' 's|@memorix/client-js|./BaseReportApi|g' ./src/report-api.generated.ts"
   },
   "devDependencies": {
+    "@types/ioredis": "^4.28.10",
     "@types/node": "^17.0.28",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
@@ -35,5 +36,8 @@
     "ts-node": "^10.7.0",
     "tsconfig-paths": "^3.14.1",
     "typescript": "^4.6.3"
+  },
+  "dependencies": {
+    "ioredis": "^5.0.4"
   }
 }
