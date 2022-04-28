@@ -63,7 +63,7 @@ export class MemorixBaseApi {
           this.redisSub.on("message", (group, payload) => {
             if (hashedKey === group) {
               // console.log(`got payload ${payload} in key ${group}`);
-              callback(payload);
+              callback(JSON.parse(payload));
             }
           });
         });
@@ -103,7 +103,7 @@ export class MemorixBaseApi {
               // console.log(`got payload ${payload} in key ${group}`);
               this.redisSub.unsubscribe(`returns_${hashedKey}`);
 
-              resolve(returnedPayload);
+              resolve(JSON.parse(returnedPayload));
             }
           });
         });
@@ -129,7 +129,7 @@ export class MemorixBaseApi {
           this.redisSub.on("message", (group, payload) => {
             if (hashedKey === group) {
               // console.log(`got payload ${payload} in key ${group}`);
-              const returnedPayload = callback(payload);
+              const returnedPayload = callback(JSON.parse(payload));
 
               this.redis.publish(
                 `returns_${hashedKey}`,

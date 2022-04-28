@@ -22,7 +22,12 @@
     "migrate:dev": "prisma migrate dev",
     "start": "NODE_PATH=dist/ node ./dist/src/start.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "codegen-report": "yarn codegen-report-1 && yarn codegen-report-replace-1 && yarn codegen-report-replace-2 && yarn codegen-report-replace-3",
+    "codegen-report-1": "(cd ../../codegen && yarn generate-schema ../report-schema/schema.memorix ../app/backend/src/report-api.generated.ts)",
+    "codegen-report-replace-1": "sed -i '' 's|MemorixApi|MemorixReportApi|g' ./src/report-api.generated.ts",
+    "codegen-report-replace-2": "sed -i '' 's|@memorix/client-js|./MemorixBaseApi|g' ./src/report-api.generated.ts",
+    "codegen-report-replace-3": "sed -i '' 's|MemorixClientApi|MemorixBaseApi|g' ./src/report-api.generated.ts"
   },
   "dependencies": {
     "@graphql-tools/schema": "^7.1.5",

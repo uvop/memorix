@@ -76,7 +76,7 @@ export class MemorixClientApi extends MemorixBaseApi {
     );
 
     return {
-      subscribe: async (...args) => {
+      subscribe: (...args) => {
         const key = args.length === 1 ? undefined : args[0];
         const callback = args.length === 1 ? args[0] : args[1];
 
@@ -95,7 +95,7 @@ export class MemorixClientApi extends MemorixBaseApi {
           });
         });
 
-        const result = pubsubItem.subscribe(key, (memorixPayload) => {
+        return pubsubItem.subscribe(key, (memorixPayload) => {
           this.deviceIdPromise.then((deviceId) => {
             this.reporter.task.sendEventEnd.queue({
               deviceId,
@@ -104,12 +104,10 @@ export class MemorixClientApi extends MemorixBaseApi {
             });
           });
 
-          return callback(memorixPayload.payload);
+          callback(memorixPayload.payload);
         });
-
-        return result;
       },
-      publish: async (...args) => {
+      publish: (...args) => {
         const key = args.length === 1 ? undefined : args[0];
         const payload = args.length === 1 ? args[0] : args[1];
 
@@ -127,7 +125,7 @@ export class MemorixClientApi extends MemorixBaseApi {
           });
         });
 
-        await pubsubItem.publish(key, {
+        return pubsubItem.publish(key, {
           traceId,
           payload,
         });
