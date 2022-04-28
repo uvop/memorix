@@ -57,10 +57,10 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
       return `${b.values
         .map((v) => {
           return `${getTabs(2)}${v.name}: this.${itemFn}<${
-            v.key ? `${valueToTs(v.key, 2)}` : "never"
+            v.key ? `${valueToTs(v.key, 2)}` : "undefined"
           }, ${valueToTs(v.payload, 2)}${
             hasReturns
-              ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "never"}`
+              ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
               : ""
           }>("${v.name}"),`;
         })

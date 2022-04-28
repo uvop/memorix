@@ -210,7 +210,7 @@ import { BaseMemorixApi } from "@memorix/client-js";
 
 export class MemorixApi extends BaseMemorixApi {
   cache = {
-    user: this.getCacheItem<never, {
+    user: this.getCacheItem<undefined, {
       name: string;
       age?: number;
     } | undefined>("user"),
@@ -250,7 +250,7 @@ export type User = {
 
 export class MemorixApi extends BaseMemorixApi {
   cache = {
-    adminId: this.getCacheItem<never, string | undefined>("adminId"),
+    adminId: this.getCacheItem<undefined, string | undefined>("adminId"),
     user: this.getCacheItem<string, User>("user"),
   };
 }
