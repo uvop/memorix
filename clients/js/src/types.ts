@@ -23,3 +23,19 @@ export type PubsubItem<Key, Payload> = {
       : [key: Key, payload: Payload]
   ): Promise<void>;
 };
+
+export type TaskDequeueCallback<Returns> = (returns: Returns) => void;
+export type TaskQueueCallback<Payload, Returns> = (payload: Payload) => Returns;
+
+export type TaskItem<Key, Payload, Returns> = {
+  queue(
+    ...args: Key extends undefined
+      ? [payload: Payload, callback: TaskDequeueCallback<Returns>]
+      : [key: Key, payload: Payload, callback: TaskDequeueCallback<Returns>]
+  ): Promise<void>;
+  dequeue(
+    ...args: Key extends undefined
+      ? [callback: TaskQueueCallback<Payload, Returns>]
+      : [key: Key, callback: TaskQueueCallback<Payload, Returns>]
+  ): Promise<void>;
+};

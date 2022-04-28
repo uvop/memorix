@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { CacheItem, PubsubItem } from "./types";
+import { CacheItem, PubsubItem, TaskItem } from "./types";
 import { hashKey } from "./utils/hashKey";
 
 export class MemorixBaseApi {
@@ -64,6 +64,79 @@ export class MemorixBaseApi {
             if (hashedKey === group) {
               // console.log(`got payload ${payload} in key ${group}`);
               callback(payload);
+            }
+          });
+        });
+      },
+    };
+  }
+
+  getTaskItem<Key, Payload, Returns>(
+    identifier: string
+  ): TaskItem<Key, Payload, Returns> {
+    const hashPubsubKey = (key: Key | undefined) => {
+      return hashKey(key ? [identifier, key] : [identifier]);
+    };
+
+    return {
+      queue: async (...args) => {
+        const key = args.length === 2 ? undefined : args[0];
+        const payload = args.length === 2 ? args[0] : args[1];
+        const callback = args.length === 2 ? args[1] : args[2];
+        const hashedKey = hashPubsubKey(key);
+
+        await this.redis.publish(hashedKey, JSON.stringify(payload));
+
+        return new Promise((resolve, reject) => {
+          this.redisSub.subscribe(`returns_${hashedKey}`, (err, count) => {
+            if (err) {
+              console.error("Failed to subscribe: %s", err.message);
+              reject(err);
+            } else {
+              console.log(
+                `Subscribed successfully! This client is currently subscribed to ${count} channels.`
+              );
+              resolve();
+            }
+          });
+
+          this.redisSub.on("message", (group, returnedPayload) => {
+            if (hashedKey === group) {
+              // console.log(`got payload ${payload} in key ${group}`);
+              callback(returnedPayload);
+
+              this.redisSub.unsubscribe(`returns_${hashedKey}`);
+            }
+          });
+        });
+      },
+      dequeue: async (...args) => {
+        const key = args.length === 1 ? undefined : args[0];
+        const callback = args.length === 1 ? args[0] : args[1];
+        const hashedKey = hashPubsubKey(key);
+
+        return new Promise((resolve, reject) => {
+          this.redisSub.subscribe(hashedKey, (err, count) => {
+            if (err) {
+              console.error("Failed to subscribe: %s", err.message);
+              reject(err);
+            } else {
+              console.log(
+                `Subscribed successfully! This client is currently subscribed to ${count} channels.`
+              );
+              resolve();
+            }
+          });
+
+          this.redisSub.on("message", (group, payload) => {
+            if (hashedKey === group) {
+              // console.log(`got payload ${payload} in key ${group}`);
+              const returnedPayload = callback(payload);
+
+              this.redis.publish(
+                `returns_${hashedKey}`,
+                JSON.stringify(returnedPayload)
+              );
             }
           });
         });
