@@ -11,6 +11,7 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
   [SubKey in K]: Maybe<T[SubKey]>;
 };
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = {
   [X in Exclude<keyof T, K>]?: T[X];
 } & { [P in K]-?: NonNullable<T[P]> };
@@ -26,6 +27,7 @@ export type Scalars = {
 export type Query = {
   __typename?: "Query";
   test: Scalars["Boolean"];
+  schema: Schema;
 };
 
 export type Mutation = {
@@ -40,6 +42,70 @@ export type MutationEchoArgs = {
 export type Subscription = {
   __typename?: "Subscription";
   listenToEchoes: Scalars["String"];
+  connectedDevices: Array<ConnectedDevice>;
+};
+
+export enum Language {
+  Typescript = "TYPESCRIPT",
+}
+
+export enum EventType {
+  Get = "GET",
+  Set = "SET",
+}
+
+export type ConnectedDevice = {
+  __typename?: "ConnectedDevice";
+  id: Scalars["ID"];
+  language: Language;
+  secondsConnected: Scalars["Int"];
+};
+
+export type Schema = {
+  __typename?: "Schema";
+  models: Array<SchemaModel>;
+  cache: Array<SchemaCache>;
+};
+
+export type SchemaModel = {
+  __typename?: "SchemaModel";
+  id: Scalars["ID"];
+  name: Scalars["String"];
+  object: SchemaObject;
+};
+
+export type SchemaObject = {
+  __typename?: "SchemaObject";
+  properties: Array<SchemaProperty>;
+};
+
+export type SchemaValue = {
+  __typename?: "SchemaValue";
+  typeName: Scalars["String"];
+};
+
+export type PropertyValue = SchemaValue | SchemaObject;
+
+export type SchemaProperty = {
+  __typename?: "SchemaProperty";
+  name: Scalars["String"];
+  isOptional: Scalars["Boolean"];
+  value: PropertyValue;
+};
+
+export type SchemaCache = {
+  __typename?: "SchemaCache";
+  id: Scalars["ID"];
+  name: Scalars["String"];
+  key?: Maybe<PropertyValue>;
+  payload: PropertyValue;
+};
+
+export type Event = {
+  __typename?: "Event";
+  id: Scalars["ID"];
+  type: EventType;
+  refId: Scalars["ID"];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -168,6 +234,26 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars["String"]>;
   Subscription: ResolverTypeWrapper<{}>;
+  Language: Language;
+  EventType: EventType;
+  ConnectedDevice: ResolverTypeWrapper<ConnectedDevice>;
+  ID: ResolverTypeWrapper<Scalars["ID"]>;
+  Int: ResolverTypeWrapper<Scalars["Int"]>;
+  Schema: ResolverTypeWrapper<Schema>;
+  SchemaModel: ResolverTypeWrapper<SchemaModel>;
+  SchemaObject: ResolverTypeWrapper<SchemaObject>;
+  SchemaValue: ResolverTypeWrapper<SchemaValue>;
+  PropertyValue: ResolversTypes["SchemaValue"] | ResolversTypes["SchemaObject"];
+  SchemaProperty: ResolverTypeWrapper<
+    Omit<SchemaProperty, "value"> & { value: ResolversTypes["PropertyValue"] }
+  >;
+  SchemaCache: ResolverTypeWrapper<
+    Omit<SchemaCache, "key" | "payload"> & {
+      key?: Maybe<ResolversTypes["PropertyValue"]>;
+      payload: ResolversTypes["PropertyValue"];
+    }
+  >;
+  Event: ResolverTypeWrapper<Event>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -177,6 +263,24 @@ export type ResolversParentTypes = {
   Mutation: {};
   String: Scalars["String"];
   Subscription: {};
+  ConnectedDevice: ConnectedDevice;
+  ID: Scalars["ID"];
+  Int: Scalars["Int"];
+  Schema: Schema;
+  SchemaModel: SchemaModel;
+  SchemaObject: SchemaObject;
+  SchemaValue: SchemaValue;
+  PropertyValue:
+    | ResolversParentTypes["SchemaValue"]
+    | ResolversParentTypes["SchemaObject"];
+  SchemaProperty: Omit<SchemaProperty, "value"> & {
+    value: ResolversParentTypes["PropertyValue"];
+  };
+  SchemaCache: Omit<SchemaCache, "key" | "payload"> & {
+    key?: Maybe<ResolversParentTypes["PropertyValue"]>;
+    payload: ResolversParentTypes["PropertyValue"];
+  };
+  Event: Event;
 };
 
 export type QueryResolvers<
@@ -184,6 +288,7 @@ export type QueryResolvers<
   ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"]
 > = {
   test?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  schema?: Resolver<ResolversTypes["Schema"], ParentType, ContextType>;
 };
 
 export type MutationResolvers<
@@ -208,12 +313,130 @@ export type SubscriptionResolvers<
     ParentType,
     ContextType
   >;
+  connectedDevices?: SubscriptionResolver<
+    Array<ResolversTypes["ConnectedDevice"]>,
+    "connectedDevices",
+    ParentType,
+    ContextType
+  >;
+};
+
+export type ConnectedDeviceResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["ConnectedDevice"] = ResolversParentTypes["ConnectedDevice"]
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
+  secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SchemaResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["Schema"] = ResolversParentTypes["Schema"]
+> = {
+  models?: Resolver<
+    Array<ResolversTypes["SchemaModel"]>,
+    ParentType,
+    ContextType
+  >;
+  cache?: Resolver<
+    Array<ResolversTypes["SchemaCache"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SchemaModelResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["SchemaModel"] = ResolversParentTypes["SchemaModel"]
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  object?: Resolver<ResolversTypes["SchemaObject"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SchemaObjectResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["SchemaObject"] = ResolversParentTypes["SchemaObject"]
+> = {
+  properties?: Resolver<
+    Array<ResolversTypes["SchemaProperty"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SchemaValueResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["SchemaValue"] = ResolversParentTypes["SchemaValue"]
+> = {
+  typeName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PropertyValueResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["PropertyValue"] = ResolversParentTypes["PropertyValue"]
+> = {
+  __resolveType: TypeResolveFn<
+    "SchemaValue" | "SchemaObject",
+    ParentType,
+    ContextType
+  >;
+};
+
+export type SchemaPropertyResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["SchemaProperty"] = ResolversParentTypes["SchemaProperty"]
+> = {
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  isOptional?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes["PropertyValue"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SchemaCacheResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["SchemaCache"] = ResolversParentTypes["SchemaCache"]
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  key?: Resolver<
+    Maybe<ResolversTypes["PropertyValue"]>,
+    ParentType,
+    ContextType
+  >;
+  payload?: Resolver<ResolversTypes["PropertyValue"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type EventResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["Event"] = ResolversParentTypes["Event"]
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes["EventType"], ParentType, ContextType>;
+  refId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = Context> = {
   Query?: QueryResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
+  ConnectedDevice?: ConnectedDeviceResolvers<ContextType>;
+  Schema?: SchemaResolvers<ContextType>;
+  SchemaModel?: SchemaModelResolvers<ContextType>;
+  SchemaObject?: SchemaObjectResolvers<ContextType>;
+  SchemaValue?: SchemaValueResolvers<ContextType>;
+  PropertyValue?: PropertyValueResolvers<ContextType>;
+  SchemaProperty?: SchemaPropertyResolvers<ContextType>;
+  SchemaCache?: SchemaCacheResolvers<ContextType>;
+  Event?: EventResolvers<ContextType>;
 };
 
 /**

@@ -1,0 +1,28 @@
+query schemaDetails {
+  schema {
+    models {
+      id
+      name
+      object {
+        properties {
+          name
+          isOptional
+        }
+      }
+    }
+    cache {
+      id
+      name
+      key {
+        ... on SchemaValue {
+          typeName
+        }
+      }
+      payload {
+        ... on SchemaValue {
+          typeName
+        }
+      }
+    }
+  }
+}

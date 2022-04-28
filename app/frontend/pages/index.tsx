@@ -1,10 +1,18 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import { Chat } from "src/Chat";
 import styles from "styles/Home.module.css";
+import { useEffect } from "react";
+import Router from "next/router";
 
 const Home: NextPage = () => {
+  useEffect(() => {
+    const { pathname } = Router;
+    if (pathname == "/") {
+      Router.push("/dashboard");
+    }
+  });
+
   return (
     <div className={styles.container}>
       <Head>
@@ -22,8 +30,6 @@ const Home: NextPage = () => {
           Get started by editing{" "}
           <code className={styles.code}>pages/index.tsx</code>
         </p>
-
-        <Chat />
 
         <div className={styles.grid}>
           <a href="https://nextjs.org/docs" className={styles.card}>

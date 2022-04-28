@@ -4,14 +4,71 @@ schema {
   subscription: Subscription
 }
 
+type ConnectedDevice {
+  id: ID!
+  language: Language!
+  secondsConnected: Int!
+}
+
+type Event {
+  id: ID!
+  type: EventType!
+  refId: ID!
+}
+
+enum EventType {
+  GET
+  SET
+}
+
+enum Language {
+  TYPESCRIPT
+}
+
 type Mutation {
   echo(message: String!): Boolean!
 }
 
+union PropertyValue = SchemaValue | SchemaObject
+
 type Query {
   test: Boolean!
+  schema: Schema!
+}
+
+type Schema {
+  models: [SchemaModel!]!
+  cache: [SchemaCache!]!
+}
+
+type SchemaCache {
+  id: ID!
+  name: String!
+  key: PropertyValue
+  payload: PropertyValue!
+}
+
+type SchemaModel {
+  id: ID!
+  name: String!
+  object: SchemaObject!
+}
+
+type SchemaObject {
+  properties: [SchemaProperty!]!
+}
+
+type SchemaProperty {
+  name: String!
+  isOptional: Boolean!
+  value: PropertyValue!
+}
+
+type SchemaValue {
+  typeName: String!
 }
 
 type Subscription {
   listenToEchoes: String!
+  connectedDevices: [ConnectedDevice!]!
 }

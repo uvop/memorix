@@ -1,5 +1,8 @@
 import { ApolloProvider } from "./apollo/ApolloProvider";
+import { MuiProvider } from "./MuiProvider";
 
 export const Provider = ({ children }: { children?: React.ReactNode }) => (
-  <ApolloProvider>{children}</ApolloProvider>
+  <ApolloProvider>
+    <MuiProvider>{children}</MuiProvider>
+  </ApolloProvider>
 );

@@ -1,5 +1,6 @@
 type Query {
   test: Boolean!
+  schema: Schema!
 }
 
 type Mutation {
@@ -8,4 +9,60 @@ type Mutation {
 
 type Subscription {
   listenToEchoes: String!
+  connectedDevices: [ConnectedDevice!]!
+}
+
+enum Language {
+  TYPESCRIPT
+}
+
+enum EventType {
+  GET
+  SET
+}
+
+type ConnectedDevice {
+  id: ID!
+  language: Language!
+  secondsConnected: Int!
+}
+
+type Schema {
+  models: [SchemaModel!]!
+  cache: [SchemaCache!]!
+}
+
+type SchemaModel {
+  id: ID!
+  name: String!
+  object: SchemaObject!
+}
+
+type SchemaObject {
+  properties: [SchemaProperty!]!
+}
+
+type SchemaValue {
+  typeName: String!
+}
+
+union PropertyValue = SchemaValue | SchemaObject
+
+type SchemaProperty {
+  name: String!
+  isOptional: Boolean!
+  value: PropertyValue!
+}
+
+type SchemaCache {
+  id: ID!
+  name: String!
+  key: PropertyValue
+  payload: PropertyValue!
+}
+
+type Event {
+  id: ID!
+  type: EventType!
+  refId: ID!
 }

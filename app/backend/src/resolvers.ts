@@ -1,9 +1,49 @@
-import { Resolvers } from "./schema-resolvers-generated";
+import { Language, Resolvers } from "./schema-resolvers-generated";
 
 export const resolvers: Resolvers = {
+  PropertyValue: {
+    // eslint-disable-next-line no-underscore-dangle
+    __resolveType(res) {
+      if ("properties" in res) {
+        return "SchemaObject";
+      }
+
+      return "SchemaValue";
+    },
+  },
   Query: {
     test() {
       return true;
+    },
+    schema() {
+      return {
+        models: [
+          {
+            id: "1",
+            name: "User",
+            object: {
+              properties: [
+                {
+                  name: "name",
+                  isOptional: true,
+                  value: {
+                    typeName: "string",
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        cache: [
+          {
+            id: "2",
+            name: "admin",
+            payload: {
+              typeName: "User",
+            },
+          },
+        ],
+      };
     },
   },
   Mutation: {
@@ -35,6 +75,27 @@ export const resolvers: Resolvers = {
             });
             yield message.content;
           }
+        })();
+      },
+      resolve(res) {
+        return res;
+      },
+    },
+    connectedDevices: {
+      subscribe() {
+        return (async function* () {
+          yield [
+            {
+              id: "3",
+              language: Language.Typescript,
+              secondsConnected: 7,
+            },
+            {
+              id: "4",
+              language: Language.Typescript,
+              secondsConnected: 10,
+            },
+          ];
         })();
       },
       resolve(res) {
