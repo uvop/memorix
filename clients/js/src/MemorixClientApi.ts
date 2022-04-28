@@ -15,12 +15,10 @@ export class MemorixClientApi extends MemorixBaseApi {
     super();
 
     this.reporter = new MemorixReportApi();
-    this.reporter.pubsub.registerDevice.publish({
+    this.deviceIdPromise = this.reporter.task.registerDevice.queue({
       schema,
       language: Languages.typescript,
     });
-
-    this.deviceIdPromise = Promise.resolve("Test");
   }
 
   getCacheItem<Key, Payload>(identifier: string): CacheItem<Key, Payload> {
@@ -33,7 +31,7 @@ export class MemorixClientApi extends MemorixBaseApi {
         const memorixPayload = await cacheItem.get(...args);
 
         this.deviceIdPromise.then((deviceId) => {
-          this.reporter.pubsub.sendEvent.publish({
+          this.reporter.task.sendEvent.queue({
             deviceId,
             traceId: memorixPayload?.traceId ?? "EMPTY_GET",
             type: EventTypes.get,
@@ -53,7 +51,7 @@ export class MemorixClientApi extends MemorixBaseApi {
         const traceId = `${Date.now()}`;
 
         this.deviceIdPromise.then((deviceId) => {
-          this.reporter.pubsub.sendEvent.publish({
+          this.reporter.task.sendEvent.queue({
             deviceId,
             traceId,
             type: EventTypes.set,
@@ -86,7 +84,7 @@ export class MemorixClientApi extends MemorixBaseApi {
         const traceId = `${Date.now()}`;
 
         this.deviceIdPromise.then((deviceId) => {
-          this.reporter.pubsub.sendEvent.publish({
+          this.reporter.task.sendEvent.queue({
             deviceId,
             traceId,
             type: EventTypes.set,
@@ -99,7 +97,7 @@ export class MemorixClientApi extends MemorixBaseApi {
 
         const result = pubsubItem.subscribe(key, (memorixPayload) => {
           this.deviceIdPromise.then((deviceId) => {
-            this.reporter.pubsub.sendEventEnd.publish({
+            this.reporter.task.sendEventEnd.queue({
               deviceId,
               traceId: memorixPayload.traceId,
               type: EventTypes.subscribe,
@@ -118,7 +116,7 @@ export class MemorixClientApi extends MemorixBaseApi {
         const traceId = `${Date.now()}`;
 
         this.deviceIdPromise.then((deviceId) => {
-          this.reporter.pubsub.sendEvent.publish({
+          this.reporter.task.sendEvent.queue({
             deviceId,
             traceId,
             type: EventTypes.set,

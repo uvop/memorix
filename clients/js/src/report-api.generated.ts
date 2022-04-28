@@ -14,16 +14,19 @@ export enum Languages {
 }
 
 export class MemorixReportApi extends MemorixBaseApi {
-  pubsub = {
-    registerDevice: this.getPubsubItem<
+  task = {
+    registerDevice: this.getTaskItem<
       undefined,
       {
         schema: string;
         language: Languages;
-      }
+      },
+      string
     >("registerDevice"),
-    deregisterDevice: this.getPubsubItem<undefined, string>("deregisterDevice"),
-    sendEvent: this.getPubsubItem<
+    deregisterDevice: this.getTaskItem<undefined, string, never>(
+      "deregisterDevice"
+    ),
+    sendEvent: this.getTaskItem<
       undefined,
       {
         deviceId: string;
@@ -33,15 +36,17 @@ export class MemorixReportApi extends MemorixBaseApi {
           identifier: string;
           args: any;
         };
-      }
+      },
+      never
     >("sendEvent"),
-    sendEventEnd: this.getPubsubItem<
+    sendEventEnd: this.getTaskItem<
       undefined,
       {
         deviceId: string;
         type: EventTypes;
         traceId: string;
-      }
+      },
+      never
     >("sendEventEnd"),
   };
 }

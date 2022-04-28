@@ -41,3 +41,8 @@ export type TaskItem<Key, Payload, Returns> = {
       : [key: Key, callback: TaskDequeueCallback<Payload, Returns>]
   ): Promise<void>;
 };
+
+export type MemorixPayload<Payload> = {
+  traceId: string;
+  payload: Payload;
+};
