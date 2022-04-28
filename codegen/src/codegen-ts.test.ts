@@ -150,9 +150,9 @@ export type User = {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-js";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
     user: this.getCacheItem<number, string>("user"),
   };
@@ -177,9 +177,9 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-js";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
     user: this.getCacheItem<number, {
       name: string;
@@ -206,9 +206,9 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-js";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
     user: this.getCacheItem<undefined, {
       name: string;
@@ -241,14 +241,14 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-js";
 
 export type User = {
   name: string;
   age?: number;
 };
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
     adminId: this.getCacheItem<undefined, string | undefined>("adminId"),
     user: this.getCacheItem<string, User>("user"),
@@ -273,9 +273,9 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-js";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   pubsub = {
     message: this.getPubsubItem<number, string>("message"),
   };
@@ -300,9 +300,9 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-js";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   task = {
     doIt: this.getTaskItem<number, string, boolean>("doIt"),
   };

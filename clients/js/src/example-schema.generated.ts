@@ -1,4 +1,4 @@
-import { BaseMemorixApi } from "src";
+import { MemorixClientApi } from "src";
 
 export enum Animals {
   dog = "dog",
@@ -16,7 +16,7 @@ export type User2 = {
   age?: number;
 };
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
     adminId: this.getCacheItem<undefined, string>("adminId"),
     user: this.getCacheItem<string, User>("user"),

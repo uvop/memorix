@@ -85,7 +85,7 @@ export const codegenTs: (schema: string) => string = (schema) => {
     .concat(
       hasApi
         ? `import { ${[]
-            .concat(hasApi ? ["BaseMemorixApi"] : [])
+            .concat(hasApi ? ["MemorixClientApi"] : [])
             .join(", ")} } from "@memorix/client-js";`
         : []
     )
@@ -93,7 +93,7 @@ export const codegenTs: (schema: string) => string = (schema) => {
     .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToTs))
     .concat(
       hasApi
-        ? `export class MemorixApi extends BaseMemorixApi {
+        ? `export class MemorixApi extends MemorixClientApi {
 ${
   hasCache
     ? `${getTabs(1)}cache = {

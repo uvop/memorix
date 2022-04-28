@@ -2,7 +2,7 @@ import Redis from "ioredis";
 import { CacheItem, PubsubItem } from "./types";
 import { hashKey } from "./utils/hashKey";
 
-export class BaseMemorixApi {
+export class MemorixBaseApi {
   readonly redis = new Redis(process.env.REDIS_ENV!);
 
   readonly redisSub = new Redis(process.env.REDIS_ENV!);

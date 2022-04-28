@@ -1,7 +1,7 @@
-import { BaseMemorixApi } from "./BaseMemorixApi";
+import { MemorixClientApi } from "./MemorixClientApi";
 
 const init = async () => {
-  const api = new BaseMemorixApi();
+  const api = new MemorixClientApi();
   const { get, set } = api.getCacheItem<string, string>("memo");
   set("key", "success");
   const cachedData = await get("key");
@@ -21,4 +21,4 @@ const init = async () => {
 
 init();
 
-export { BaseMemorixApi };
+export { MemorixClientApi };
