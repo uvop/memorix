@@ -80,9 +80,8 @@ export class MemorixBaseApi {
 
     return {
       queue: async (...args) => {
-        const key = args.length === 2 ? undefined : args[0];
-        const payload = args.length === 2 ? args[0] : args[1];
-        const callback = args.length === 2 ? args[1] : args[2];
+        const key = args.length === 1 ? undefined : args[0];
+        const payload = args.length === 1 ? args[0] : args[1];
         const hashedKey = hashPubsubKey(key);
 
         await this.redis.publish(hashedKey, JSON.stringify(payload));
@@ -96,16 +95,15 @@ export class MemorixBaseApi {
               console.log(
                 `Subscribed successfully! This client is currently subscribed to ${count} channels.`
               );
-              resolve();
             }
           });
 
           this.redisSub.on("message", (group, returnedPayload) => {
             if (hashedKey === group) {
               // console.log(`got payload ${payload} in key ${group}`);
-              callback(returnedPayload);
-
               this.redisSub.unsubscribe(`returns_${hashedKey}`);
+
+              resolve(returnedPayload);
             }
           });
         });
