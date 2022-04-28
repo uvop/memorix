@@ -9,7 +9,7 @@ export type CacheItem<Key, Payload> = {
   ): Promise<void>;
 };
 
-export type PubsubCallback<Payload> = (payload: Payload) => Promise<void>;
+export type PubsubCallback<Payload> = (payload: Payload) => void;
 
 export type PubsubItem<Key, Payload> = {
   subscribe(
