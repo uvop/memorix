@@ -2,6 +2,7 @@
 import Redis from "ioredis";
 
 import { CacheItem } from "./types";
+import { hashKey } from "./utils/hashKey";
 
 export class BaseMemorixApi {
   redis: Redis;
@@ -11,19 +12,22 @@ export class BaseMemorixApi {
   }
 
   getCacheItem<Key, Payload>(identifier: string): CacheItem<Key, Payload> {
-    console.log(identifier);
+    const hashCacheKey = (key: Key | undefined) =>
+      hashKey(key ? [identifier, key] : [identifier]);
 
     return {
       set: async (...args) => {
         const key = args.length === 1 ? undefined : args[0];
         const payload = args.length === 1 ? args[0] : args[1];
-        const hashedKey = key ? identifier + key : identifier;
+
+        const hashedKey = hashCacheKey(key);
+
         await this.redis.set(hashedKey, JSON.stringify(payload));
         return Promise.resolve();
       },
       get: async (...[key]) => {
-        console.log(key);
-        const hashedKey = key ? identifier + key : identifier;
+        const hashedKey = hashCacheKey(key);
+
         const found = await this.redis.get(hashedKey);
         if (found) {
           return JSON.parse(found);
