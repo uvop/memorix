@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { CacheItem } from "./types";
+import { CacheItem, PubsubItem } from "./types";
 import { hashKey } from "./utils/hashKey";
 
 export class BaseMemorixApi {
@@ -24,6 +24,27 @@ export class BaseMemorixApi {
           return JSON.parse(found) as Payload;
         }
         return null;
+      },
+    };
+  }
+
+  getPubsubItem<Key, Payload>(identifier: string): PubsubItem<Key, Payload> {
+    const hashPubsubKey = (key: Key | undefined) => {
+      return hashKey(key ? [identifier, key] : [identifier]);
+    };
+
+    return {
+      publish: async (...args) => {
+        const key = args.length === 1 ? undefined : args[0];
+        const payload = args.length === 1 ? args[0] : args[1];
+        const hashedKey = hashPubsubKey(key);
+        console.log(this);
+      },
+      subscribe: async (...args) => {
+        const key = args.length === 1 ? undefined : args[0];
+        const callback = args.length === 1 ? args[0] : args[1];
+        const hashedKey = hashPubsubKey(key);
+        console.log(this);
       },
     };
   }
