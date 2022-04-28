@@ -5,6 +5,8 @@ import { hashKey } from "./utils/hashKey";
 export class BaseMemorixApi {
   readonly redis = new Redis(process.env.REDIS_ENV!);
 
+  readonly redisSub = new Redis(process.env.REDIS_ENV!);
+
   getCacheItem<Key, Payload>(identifier: string): CacheItem<Key, Payload> {
     const hashCacheKey = (key: Key | undefined) => {
       return hashKey(key ? [identifier, key] : [identifier]);
@@ -38,13 +40,33 @@ export class BaseMemorixApi {
         const key = args.length === 1 ? undefined : args[0];
         const payload = args.length === 1 ? args[0] : args[1];
         const hashedKey = hashPubsubKey(key);
-        console.log(this);
+        await this.redis.publish(hashedKey, JSON.stringify(payload));
       },
       subscribe: async (...args) => {
         const key = args.length === 1 ? undefined : args[0];
         const callback = args.length === 1 ? args[0] : args[1];
         const hashedKey = hashPubsubKey(key);
-        console.log(this);
+
+        return new Promise((resolve, reject) => {
+          this.redisSub.subscribe(hashedKey, (err, count) => {
+            if (err) {
+              console.error("Failed to subscribe: %s", err.message);
+              reject(err);
+            } else {
+              console.log(
+                `Subscribed successfully! This client is currently subscribed to ${count} channels.`
+              );
+              resolve();
+            }
+          });
+
+          this.redisSub.on("message", (group, payload) => {
+            if (hashedKey === group) {
+              // console.log(`got payload ${payload} in key ${group}`);
+              callback(payload);
+            }
+          });
+        });
       },
     };
   }
