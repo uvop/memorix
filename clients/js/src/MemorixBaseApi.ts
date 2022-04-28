@@ -3,9 +3,9 @@ import { CacheItem, PubsubItem, TaskItem } from "./types";
 import { hashKey } from "./utils/hashKey";
 
 export class MemorixBaseApi {
-  readonly redis = new Redis(process.env.REDIS_ENV!);
+  private readonly redis = new Redis(process.env.REDIS_ENV!);
 
-  readonly redisSub = new Redis(process.env.REDIS_ENV!);
+  private readonly redisSub = new Redis(process.env.REDIS_ENV!);
 
   getCacheItem<Key, Payload>(identifier: string): CacheItem<Key, Payload> {
     const hashCacheKey = (key: Key | undefined) => {

@@ -1,4 +1,4 @@
-import { BaseReportApi } from "./BaseReportApi";
+import { MemorixBaseApi } from "./MemorixBaseApi";
 
 export enum EventTypes {
   get = "get",
@@ -13,21 +13,18 @@ export enum Languages {
   typescript = "typescript",
 }
 
-export class ReportApi extends BaseReportApi {
-  task = {
-    registerDevice: this.getTaskItem<
-      never,
+export class MemorixReportApi extends MemorixBaseApi {
+  pubsub = {
+    registerDevice: this.getPubsubItem<
+      undefined,
       {
         schema: string;
         language: Languages;
-      },
-      string
+      }
     >("registerDevice"),
-    deregisterDevice: this.getTaskItem<never, string, never>(
-      "deregisterDevice"
-    ),
-    sendEvent: this.getTaskItem<
-      never,
+    deregisterDevice: this.getPubsubItem<undefined, string>("deregisterDevice"),
+    sendEvent: this.getPubsubItem<
+      undefined,
       {
         deviceId: string;
         type: EventTypes;
@@ -36,17 +33,15 @@ export class ReportApi extends BaseReportApi {
           identifier: string;
           args: any;
         };
-      },
-      never
+      }
     >("sendEvent"),
-    sendEventEnd: this.getTaskItem<
-      never,
+    sendEventEnd: this.getPubsubItem<
+      undefined,
       {
         deviceId: string;
         type: EventTypes;
         traceId: string;
-      },
-      never
+      }
     >("sendEventEnd"),
   };
 }
