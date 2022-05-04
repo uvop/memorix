@@ -1,32 +1,45 @@
 import { Block, BlockTypes, getBlocks } from "src/block";
-import { PropertyType } from "src/property";
+import { ValueType, ValueTypes } from "src/value";
 import { assertUnreachable, getTabs } from "src/utilities";
 
-const valueToTs: (value: string | PropertyType[], level?: number) => string = (
-  value,
-  level = 0
-) => {
-  if (typeof value === "string") {
-    return value;
+const valueToTs: (
+  value: ValueType,
+  level?: number,
+  isParentObject?: boolean
+) => string = (value, level = 0, isParentObject = false) => {
+  let valueTs;
+  if (value.type === ValueTypes.simple) {
+    valueTs = `${value.name}`;
+  } else if (value.type === ValueTypes.array) {
+    valueTs = `Array<${valueToTs(value.value, level)}>`;
+  } else {
+    valueTs = `{
+${getTabs(level + 1)}${value.properties
+      .map(
+        (prop) =>
+          `${prop.name}${prop.value.isOptional ? "?" : ""}: ${valueToTs(
+            prop.value,
+            level + 1,
+            true
+          )};`
+      )
+      .join(`\n${getTabs(level + 1)}`)}
+${getTabs(level)}}`;
   }
 
-  return `{
-${getTabs(level + 1)}${value
-    .map(
-      (prop) =>
-        `${prop.name}${prop.isOptional ? "?" : ""}: ${valueToTs(
-          prop.value,
-          level + 1
-        )};`
-    )
-    .join(`\n${getTabs(level + 1)}`)}
-${getTabs(level)}}`;
+  return `${valueTs}${
+    value.isOptional && !isParentObject ? " | undefined" : ""
+  }`;
 };
 
 const blockToTs: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `export type ${b.name} = ${valueToTs(b.properties)};`;
+      return `export type ${b.name} = ${valueToTs({
+        type: ValueTypes.object,
+        isOptional: false,
+        properties: b.properties,
+      })};`;
     case BlockTypes.enum:
       return `export enum ${b.name} {
 ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
@@ -44,22 +57,10 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
       return `${b.values
         .map((v) => {
           return `${getTabs(2)}${v.name}: this.${itemFn}<${
-            v.key
-              ? `${valueToTs(v.key.value, 2)}${
-                  v.key.isOptional ? " | undefined" : ""
-                }`
-              : "never"
-          }, ${valueToTs(v.payload.value, 2)}${
-            v.payload.isOptional ? " | undefined" : ""
-          }${
+            v.key ? `${valueToTs(v.key, 2)}` : "never"
+          }, ${valueToTs(v.payload, 2)}${
             hasReturns
-              ? `, ${
-                  v.returns
-                    ? `${valueToTs(v.returns.value, 2)}${
-                        v.returns.isOptional ? " | undefined" : ""
-                      }`
-                    : "never"
-                }`
+              ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "never"}`
               : ""
           }>("${v.name}"),`;
         })

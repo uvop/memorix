@@ -107,6 +107,33 @@ export type User = {
   `.trim()
       );
     });
+    it("can generate from model with array", () => {
+      expect(
+        codegenTs(
+          `
+            Model User {
+                id: number
+                names: [string]
+                children: [{
+                  id: number
+                  name: string?
+                }?]?
+            }
+          `
+        )
+      ).toBe(
+        `
+export type User = {
+  id: number;
+  names: Array<string>;
+  children?: Array<{
+    id: number;
+    name?: string;
+  } | undefined>;
+};
+  `.trim()
+      );
+    });
   });
   describe("cache", () => {
     it("can generate with inline types", () => {

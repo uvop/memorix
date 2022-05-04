@@ -1,5 +1,10 @@
 import { getNamespaces } from "./namespace";
-import { getProperties, PropertyType } from "./property";
+import {
+  getValueFromString,
+  ValueType,
+  PropertyType,
+  ValueTypes,
+} from "./value";
 import { removeBracketsOfScope } from "./utilities";
 
 export enum BlockTypes {
@@ -26,25 +31,25 @@ export type BlockCache = {
   type: BlockTypes.cache;
   values: {
     name: string;
-    key?: PropertyType;
-    payload: PropertyType;
+    key?: ValueType;
+    payload: ValueType;
   }[];
 };
 export type BlockPubsub = {
   type: BlockTypes.pubsub;
   values: {
     name: string;
-    key?: PropertyType;
-    payload: PropertyType;
+    key?: ValueType;
+    payload: ValueType;
   }[];
 };
 export type BlockTask = {
   type: BlockTypes.task;
   values: {
     name: string;
-    key?: PropertyType;
-    payload: PropertyType;
-    returns?: PropertyType;
+    key?: ValueType;
+    payload: ValueType;
+    returns?: ValueType;
   }[];
 };
 
@@ -73,19 +78,23 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
       return {
         type: blockType,
         values: cacheNamespaces.map((cn) => {
-          const properties = getProperties(removeBracketsOfScope(cn.scope));
-          const payload = properties.find((p) => p.name === "payload");
+          const value = getValueFromString(cn.scope);
+          if (value.type !== ValueTypes.object) {
+            throw new Error(`Expected object under "${blockType}.${cn.name}"`);
+          }
+
+          const payload = value.properties.find((p) => p.name === "payload");
           if (!payload) {
             throw new Error(`Couldn't find "payload" under Cache.${cn.name}`);
           }
 
           return {
             name: cn.name,
-            key: properties.find((p) => p.name === "key"),
-            payload,
+            key: value.properties.find((p) => p.name === "key")?.value,
+            payload: payload.value,
             returns:
               blockType === BlockTypes.task
-                ? properties.find((p) => p.name === "returns")
+                ? value.properties.find((p) => p.name === "returns")?.value
                 : undefined,
           };
         }),
@@ -111,10 +120,15 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
       };
     }
 
+    const value = getValueFromString(n.scope);
+    if (value.type !== ValueTypes.object) {
+      throw new Error(`Expected object under "${blockType}.${n.name}"`);
+    }
+
     return {
       type: blockType,
       name,
-      properties: getProperties(removeBracketsOfScope(n.scope)),
+      properties: value.properties,
     };
   });
 
