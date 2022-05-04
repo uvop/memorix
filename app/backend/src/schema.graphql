@@ -1,3 +1,5 @@
+scalar SchemaValue
+
 type Query {
   test: Boolean!
   schema: Schema!
@@ -30,39 +32,34 @@ type ConnectedDevice {
 type Schema {
   models: [SchemaModel!]!
   cache: [SchemaCache!]!
+  pubsub: [SchemaPubsub!]!
+  task: [SchemaTask!]!
 }
 
 type SchemaModel {
   id: ID!
   name: String!
-  object: SchemaObject!
-}
-
-type SchemaObject {
-  properties: [SchemaProperty!]!
-}
-
-type SchemaValue {
-  typeName: String!
-}
-
-union PropertyValue = SchemaValue | SchemaObject
-
-type SchemaProperty {
-  name: String!
-  isOptional: Boolean!
-  value: PropertyValue!
+  value: SchemaValue!
 }
 
 type SchemaCache {
   id: ID!
   name: String!
-  key: PropertyValue
-  payload: PropertyValue!
+  key: SchemaValue
+  payload: SchemaValue!
 }
 
-type Event {
+type SchemaPubsub {
   id: ID!
-  type: EventType!
-  refId: ID!
+  name: String!
+  key: SchemaValue
+  payload: SchemaValue!
+}
+
+type SchemaTask {
+  id: ID!
+  name: String!
+  key: SchemaValue
+  payload: SchemaValue!
+  returns: SchemaValue
 }

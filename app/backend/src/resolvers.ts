@@ -1,48 +1,51 @@
-import { Language, Resolvers } from "./schema-resolvers-generated";
+import { BlockTypes, getBlocks } from "@memorix/codegen/block";
+import fs from "fs";
+import path from "path";
+import { Language, Resolvers, Schema } from "./schema-resolvers-generated";
 
 export const resolvers: Resolvers = {
-  PropertyValue: {
-    // eslint-disable-next-line no-underscore-dangle
-    __resolveType(res) {
-      if ("properties" in res) {
-        return "SchemaObject";
-      }
+  // SchemaValueData: {
+  //   // eslint-disable-next-line no-underscore-dangle
+  //   __resolveType(res) {
+  //     if ("name" in res) {
+  //       return "SchemaValueDataSimple";
+  //     }
+  //     if ("propertyValueIds" in res) {
+  //       return "SchemaValueDataObject";
+  //     }
 
-      return "SchemaValue";
-    },
-  },
+  //     return "SchemaValueDataArray";
+  //   },
+  // },
   Query: {
     test() {
       return true;
     },
-    schema() {
+    async schema() {
+      const schemaPath = path.resolve(__dirname, "r2-schema.memorix");
+      const schema = await (await fs.promises.readFile(schemaPath)).toString();
+      const blocks = getBlocks(schema);
+
       return {
-        models: [
-          {
-            id: "1",
-            name: "User",
-            object: {
-              properties: [
-                {
-                  name: "name",
-                  isOptional: true,
-                  value: {
-                    typeName: "string",
-                  },
-                },
-              ],
-            },
-          },
-        ],
-        cache: [
-          {
-            id: "2",
-            name: "admin",
-            payload: {
-              typeName: "User",
-            },
-          },
-        ],
+        models: [],
+        cache: blocks.reduce<Schema["cache"]>((agg, b) => {
+          if (b.type !== BlockTypes.cache) {
+            return agg;
+          }
+          return [
+            ...agg,
+            ...b.values.map((bc) => {
+              return {
+                id: bc.name,
+                name: bc.name,
+                key: bc.key,
+                payload: bc.payload,
+              };
+            }),
+          ];
+        }, []),
+        pubsub: [],
+        task: [],
       };
     },
   },

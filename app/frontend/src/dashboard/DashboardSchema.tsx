@@ -10,6 +10,12 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useSchemaDetailsQuery } from "./DashboardSchema.generated";
 import { Check, Clear } from "@mui/icons-material";
 
+export enum ValueTypes {
+  simple,
+  object,
+  array,
+}
+
 export const DashboardSchema = () => {
   const { loading, data } = useSchemaDetailsQuery();
 
@@ -28,7 +34,7 @@ export const DashboardSchema = () => {
           <Typography>Models</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          {data.schema.models.map((m) => (
+          {/* {data.schema.models.map((m) => (
             <Accordion key={m.id}>
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
@@ -49,7 +55,7 @@ export const DashboardSchema = () => {
                 ))}
               </AccordionDetails>
             </Accordion>
-          ))}
+          ))} */}
         </AccordionDetails>
       </Accordion>
       <Accordion>
@@ -71,13 +77,11 @@ export const DashboardSchema = () => {
                 <Typography>{c.name}</Typography>
               </AccordionSummary>
               <AccordionDetails>
-                {c.key && c.key.__typename === "SchemaValue" && (
-                  <Typography variant="h6">key: {c.key.typeName}</Typography>
+                {c.key && c.key.type === ValueTypes.simple && (
+                  <Typography variant="h6">key: {c.key.name}</Typography>
                 )}
-                {c.payload.__typename === "SchemaValue" && (
-                  <Typography variant="h6">
-                    payload: {c.payload.typeName}
-                  </Typography>
+                {c.payload.type === ValueTypes.object && (
+                  <Typography variant="h6">payload: Object</Typography>
                 )}
               </AccordionDetails>
             </Accordion>

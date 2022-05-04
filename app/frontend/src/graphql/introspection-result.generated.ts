@@ -15,20 +15,7 @@
       }
       const result: IntrospectionResultData = {
   "__schema": {
-    "types": [
-      {
-        "kind": "UNION",
-        "name": "PropertyValue",
-        "possibleTypes": [
-          {
-            "name": "SchemaValue"
-          },
-          {
-            "name": "SchemaObject"
-          }
-        ]
-      }
-    ]
+    "types": []
   }
 };
       export default result;

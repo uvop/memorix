@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "paths": {
+      "@memorix/client-js/*": ["../../clients/js/src/*"],
+      "@memorix/codegen/*": ["../../codegen/src/*"]
+    },
     "outDir": "dist",
-    "rootDir": ".",
     "incremental": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -21,6 +24,5 @@
     "noUnusedLocals": true,
     "resolveJsonModule": true,
     "skipLibCheck": true
-  },
-  "include": ["src"]
+  }
 }

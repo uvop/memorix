@@ -10,12 +10,6 @@ type ConnectedDevice {
   secondsConnected: Int!
 }
 
-type Event {
-  id: ID!
-  type: EventType!
-  refId: ID!
-}
-
 enum EventType {
   GET
   SET
@@ -29,8 +23,6 @@ type Mutation {
   echo(message: String!): Boolean!
 }
 
-union PropertyValue = SchemaValue | SchemaObject
-
 type Query {
   test: Boolean!
   schema: Schema!
@@ -39,34 +31,39 @@ type Query {
 type Schema {
   models: [SchemaModel!]!
   cache: [SchemaCache!]!
+  pubsub: [SchemaPubsub!]!
+  task: [SchemaTask!]!
 }
 
 type SchemaCache {
   id: ID!
   name: String!
-  key: PropertyValue
-  payload: PropertyValue!
+  key: SchemaValue
+  payload: SchemaValue!
 }
 
 type SchemaModel {
   id: ID!
   name: String!
-  object: SchemaObject!
+  value: SchemaValue!
 }
 
-type SchemaObject {
-  properties: [SchemaProperty!]!
-}
-
-type SchemaProperty {
+type SchemaPubsub {
+  id: ID!
   name: String!
-  isOptional: Boolean!
-  value: PropertyValue!
+  key: SchemaValue
+  payload: SchemaValue!
 }
 
-type SchemaValue {
-  typeName: String!
+type SchemaTask {
+  id: ID!
+  name: String!
+  key: SchemaValue
+  payload: SchemaValue!
+  returns: SchemaValue
 }
+
+scalar SchemaValue
 
 type Subscription {
   listenToEchoes: String!

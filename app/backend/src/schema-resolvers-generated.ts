@@ -1,5 +1,9 @@
 /* eslint-disable */
-import { GraphQLResolveInfo } from "graphql";
+import {
+  GraphQLResolveInfo,
+  GraphQLScalarType,
+  GraphQLScalarTypeConfig,
+} from "graphql";
 import { Context } from "./context";
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -11,7 +15,6 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
   [SubKey in K]: Maybe<T[SubKey]>;
 };
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = {
   [X in Exclude<keyof T, K>]?: T[X];
 } & { [P in K]-?: NonNullable<T[P]> };
@@ -22,6 +25,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  SchemaValue: any;
 };
 
 export type Query = {
@@ -65,47 +69,40 @@ export type Schema = {
   __typename?: "Schema";
   models: Array<SchemaModel>;
   cache: Array<SchemaCache>;
+  pubsub: Array<SchemaPubsub>;
+  task: Array<SchemaTask>;
 };
 
 export type SchemaModel = {
   __typename?: "SchemaModel";
   id: Scalars["ID"];
   name: Scalars["String"];
-  object: SchemaObject;
-};
-
-export type SchemaObject = {
-  __typename?: "SchemaObject";
-  properties: Array<SchemaProperty>;
-};
-
-export type SchemaValue = {
-  __typename?: "SchemaValue";
-  typeName: Scalars["String"];
-};
-
-export type PropertyValue = SchemaValue | SchemaObject;
-
-export type SchemaProperty = {
-  __typename?: "SchemaProperty";
-  name: Scalars["String"];
-  isOptional: Scalars["Boolean"];
-  value: PropertyValue;
+  value: Scalars["SchemaValue"];
 };
 
 export type SchemaCache = {
   __typename?: "SchemaCache";
   id: Scalars["ID"];
   name: Scalars["String"];
-  key?: Maybe<PropertyValue>;
-  payload: PropertyValue;
+  key?: Maybe<Scalars["SchemaValue"]>;
+  payload: Scalars["SchemaValue"];
 };
 
-export type Event = {
-  __typename?: "Event";
+export type SchemaPubsub = {
+  __typename?: "SchemaPubsub";
   id: Scalars["ID"];
-  type: EventType;
-  refId: Scalars["ID"];
+  name: Scalars["String"];
+  key?: Maybe<Scalars["SchemaValue"]>;
+  payload: Scalars["SchemaValue"];
+};
+
+export type SchemaTask = {
+  __typename?: "SchemaTask";
+  id: Scalars["ID"];
+  name: Scalars["String"];
+  key?: Maybe<Scalars["SchemaValue"]>;
+  payload: Scalars["SchemaValue"];
+  returns?: Maybe<Scalars["SchemaValue"]>;
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -229,6 +226,7 @@ export type DirectiveResolverFn<
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  SchemaValue: ResolverTypeWrapper<Scalars["SchemaValue"]>;
   Query: ResolverTypeWrapper<{}>;
   Boolean: ResolverTypeWrapper<Scalars["Boolean"]>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -241,23 +239,14 @@ export type ResolversTypes = {
   Int: ResolverTypeWrapper<Scalars["Int"]>;
   Schema: ResolverTypeWrapper<Schema>;
   SchemaModel: ResolverTypeWrapper<SchemaModel>;
-  SchemaObject: ResolverTypeWrapper<SchemaObject>;
-  SchemaValue: ResolverTypeWrapper<SchemaValue>;
-  PropertyValue: ResolversTypes["SchemaValue"] | ResolversTypes["SchemaObject"];
-  SchemaProperty: ResolverTypeWrapper<
-    Omit<SchemaProperty, "value"> & { value: ResolversTypes["PropertyValue"] }
-  >;
-  SchemaCache: ResolverTypeWrapper<
-    Omit<SchemaCache, "key" | "payload"> & {
-      key?: Maybe<ResolversTypes["PropertyValue"]>;
-      payload: ResolversTypes["PropertyValue"];
-    }
-  >;
-  Event: ResolverTypeWrapper<Event>;
+  SchemaCache: ResolverTypeWrapper<SchemaCache>;
+  SchemaPubsub: ResolverTypeWrapper<SchemaPubsub>;
+  SchemaTask: ResolverTypeWrapper<SchemaTask>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  SchemaValue: Scalars["SchemaValue"];
   Query: {};
   Boolean: Scalars["Boolean"];
   Mutation: {};
@@ -268,20 +257,15 @@ export type ResolversParentTypes = {
   Int: Scalars["Int"];
   Schema: Schema;
   SchemaModel: SchemaModel;
-  SchemaObject: SchemaObject;
-  SchemaValue: SchemaValue;
-  PropertyValue:
-    | ResolversParentTypes["SchemaValue"]
-    | ResolversParentTypes["SchemaObject"];
-  SchemaProperty: Omit<SchemaProperty, "value"> & {
-    value: ResolversParentTypes["PropertyValue"];
-  };
-  SchemaCache: Omit<SchemaCache, "key" | "payload"> & {
-    key?: Maybe<ResolversParentTypes["PropertyValue"]>;
-    payload: ResolversParentTypes["PropertyValue"];
-  };
-  Event: Event;
+  SchemaCache: SchemaCache;
+  SchemaPubsub: SchemaPubsub;
+  SchemaTask: SchemaTask;
 };
+
+export interface SchemaValueScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["SchemaValue"], any> {
+  name: "SchemaValue";
+}
 
 export type QueryResolvers<
   ContextType = Context,
@@ -345,6 +329,12 @@ export type SchemaResolvers<
     ParentType,
     ContextType
   >;
+  pubsub?: Resolver<
+    Array<ResolversTypes["SchemaPubsub"]>,
+    ParentType,
+    ContextType
+  >;
+  task?: Resolver<Array<ResolversTypes["SchemaTask"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -354,48 +344,7 @@ export type SchemaModelResolvers<
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  object?: Resolver<ResolversTypes["SchemaObject"], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SchemaObjectResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaObject"] = ResolversParentTypes["SchemaObject"]
-> = {
-  properties?: Resolver<
-    Array<ResolversTypes["SchemaProperty"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SchemaValueResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaValue"] = ResolversParentTypes["SchemaValue"]
-> = {
-  typeName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PropertyValueResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["PropertyValue"] = ResolversParentTypes["PropertyValue"]
-> = {
-  __resolveType: TypeResolveFn<
-    "SchemaValue" | "SchemaObject",
-    ParentType,
-    ContextType
-  >;
-};
-
-export type SchemaPropertyResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaProperty"] = ResolversParentTypes["SchemaProperty"]
-> = {
-  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  isOptional?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
-  value?: Resolver<ResolversTypes["PropertyValue"], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes["SchemaValue"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -405,38 +354,49 @@ export type SchemaCacheResolvers<
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  key?: Resolver<
-    Maybe<ResolversTypes["PropertyValue"]>,
-    ParentType,
-    ContextType
-  >;
-  payload?: Resolver<ResolversTypes["PropertyValue"], ParentType, ContextType>;
+  key?: Resolver<Maybe<ResolversTypes["SchemaValue"]>, ParentType, ContextType>;
+  payload?: Resolver<ResolversTypes["SchemaValue"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type EventResolvers<
+export type SchemaPubsubResolvers<
   ContextType = Context,
-  ParentType extends ResolversParentTypes["Event"] = ResolversParentTypes["Event"]
+  ParentType extends ResolversParentTypes["SchemaPubsub"] = ResolversParentTypes["SchemaPubsub"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes["EventType"], ParentType, ContextType>;
-  refId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  key?: Resolver<Maybe<ResolversTypes["SchemaValue"]>, ParentType, ContextType>;
+  payload?: Resolver<ResolversTypes["SchemaValue"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SchemaTaskResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["SchemaTask"] = ResolversParentTypes["SchemaTask"]
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  key?: Resolver<Maybe<ResolversTypes["SchemaValue"]>, ParentType, ContextType>;
+  payload?: Resolver<ResolversTypes["SchemaValue"], ParentType, ContextType>;
+  returns?: Resolver<
+    Maybe<ResolversTypes["SchemaValue"]>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = Context> = {
+  SchemaValue?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   ConnectedDevice?: ConnectedDeviceResolvers<ContextType>;
   Schema?: SchemaResolvers<ContextType>;
   SchemaModel?: SchemaModelResolvers<ContextType>;
-  SchemaObject?: SchemaObjectResolvers<ContextType>;
-  SchemaValue?: SchemaValueResolvers<ContextType>;
-  PropertyValue?: PropertyValueResolvers<ContextType>;
-  SchemaProperty?: SchemaPropertyResolvers<ContextType>;
   SchemaCache?: SchemaCacheResolvers<ContextType>;
-  Event?: EventResolvers<ContextType>;
+  SchemaPubsub?: SchemaPubsubResolvers<ContextType>;
+  SchemaTask?: SchemaTaskResolvers<ContextType>;
 };
 
 /**

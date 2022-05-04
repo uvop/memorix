@@ -20,9 +20,12 @@ generates:
       - add: "// @ts-nocheck"
       - typescript
       - typescript-resolvers
+      - add: "import { type ValueType } from 'src/value';"
     config:
       skipDocumentValidation: true
       useIndexSignature: true
+      scalars:
+        SchemaValue: ValueType
   ./src/:
     preset: near-operation-file
     presetConfig:

@@ -1,0 +1,8 @@
+Cache {
+    user {
+        key: number
+        payload: {
+            name: string
+        }
+    }
+}

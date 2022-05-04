@@ -18,26 +18,9 @@ export type SchemaDetailsQuery = (
   { __typename?: 'Query' }
   & { schema: (
     { __typename?: 'Schema' }
-    & { models: Array<(
-      { __typename?: 'SchemaModel' }
-      & Pick<Types.SchemaModel, 'id' | 'name'>
-      & { object: (
-        { __typename?: 'SchemaObject' }
-        & { properties: Array<(
-          { __typename?: 'SchemaProperty' }
-          & Pick<Types.SchemaProperty, 'name' | 'isOptional'>
-        )> }
-      ) }
-    )>, cache: Array<(
+    & { cache: Array<(
       { __typename?: 'SchemaCache' }
-      & Pick<Types.SchemaCache, 'id' | 'name'>
-      & { key?: Types.Maybe<(
-        { __typename?: 'SchemaValue' }
-        & Pick<Types.SchemaValue, 'typeName'>
-      ) | { __typename?: 'SchemaObject' }>, payload: (
-        { __typename?: 'SchemaValue' }
-        & Pick<Types.SchemaValue, 'typeName'>
-      ) | { __typename?: 'SchemaObject' } }
+      & Pick<Types.SchemaCache, 'id' | 'name' | 'key' | 'payload'>
     )> }
   ) }
 );
@@ -46,29 +29,11 @@ export type SchemaDetailsQuery = (
 export const SchemaDetailsDocument = gql`
     query schemaDetails {
   schema {
-    models {
-      id
-      name
-      object {
-        properties {
-          name
-          isOptional
-        }
-      }
-    }
     cache {
       id
       name
-      key {
-        ... on SchemaValue {
-          typeName
-        }
-      }
-      payload {
-        ... on SchemaValue {
-          typeName
-        }
-      }
+      key
+      payload
     }
   }
 }
