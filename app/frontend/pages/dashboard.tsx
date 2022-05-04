@@ -1,33 +1,23 @@
-import { Box, Tab, Tabs } from "@mui/material";
+import { Box, Tab, Tabs, TabsProps } from "@mui/material";
 import type { NextPage } from "next";
 import React, { useCallback, useState } from "react";
 import { DashboardGraph } from "src/dashboard/DashboardGraph";
 import { DashboardSchema } from "src/dashboard/DashboardSchema";
 import { TabPanel } from "src/ui/TabPanel";
 
-enum TabTypes {
-  graph,
-  schema,
+enum TabType {
+  Graph,
+  Timeline,
 }
 
-const tabsOrder = [
-  {
-    type: TabTypes.graph,
-    name: "Graph",
-  },
-  {
-    type: TabTypes.schema,
-    name: "Schema",
-  },
-];
-
 const Dashboard: NextPage = () => {
-  const [tab, setTab] = useState(tabsOrder[0].type);
-  const handleTabsChange = useCallback<
-    NonNullable<React.ComponentProps<typeof Tabs>["onChange"]>
-  >((e, newTab) => {
-    setTab(newTab);
-  }, []);
+  const [tab, setTab] = useState(TabType.Graph);
+  const handleTabsChange = useCallback<NonNullable<TabsProps["onChange"]>>(
+    (e, newTab: TabType) => {
+      setTab(newTab);
+    },
+    []
+  );
 
   return (
     <Box>
@@ -37,15 +27,14 @@ const Dashboard: NextPage = () => {
           onChange={handleTabsChange}
           aria-label="basic tabs example"
         >
-          {tabsOrder.map((t) => (
-            <Tab key={t.type} label={t.name} />
-          ))}
+          <Tab value={TabType.Graph} label="Graph" />
+          <Tab value={TabType.Timeline} label="Timeline" />
         </Tabs>
       </Box>
-      <TabPanel currentValue={tab} value={TabTypes.graph}>
+      <TabPanel currentValue={tab} value={TabType.Graph}>
         <DashboardGraph />
       </TabPanel>
-      <TabPanel currentValue={tab} value={TabTypes.schema}>
+      <TabPanel currentValue={tab} value={TabType.Timeline}>
         <DashboardSchema />
       </TabPanel>
     </Box>
