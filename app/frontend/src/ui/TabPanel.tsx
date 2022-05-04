@@ -16,15 +16,10 @@ export const TabPanel = ({
     <div
       role="tabpanel"
       hidden={currentValue !== value}
-      id={`simple-tabpanel-${value}`}
       aria-labelledby={`simple-tab-${value}`}
       {...other}
     >
-      {currentValue === value && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
+      {currentValue === value && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 };

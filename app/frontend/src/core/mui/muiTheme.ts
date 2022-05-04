@@ -1,6 +1,6 @@
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { createTheme } from "@mui/material";
 
-const theme = createTheme({
+export const muiTheme = createTheme({
   palette: {
     primary: {
       light: "#757ce8",
@@ -16,7 +16,3 @@ const theme = createTheme({
     },
   },
 });
-
-export const MuiProvider = ({ children }: { children?: React.ReactNode }) => (
-  <ThemeProvider theme={theme}>{children}</ThemeProvider>
-);
