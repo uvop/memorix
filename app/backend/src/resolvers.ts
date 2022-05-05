@@ -109,6 +109,26 @@ export const resolvers: Resolvers = {
         return res;
       },
     },
+    schemaOperations: {
+      subscribe() {
+        return (async function* (): AsyncGenerator<
+          Subscription["schemaOperations"],
+          undefined,
+          void
+        > {
+          const operations = await getOperations();
+          yield operations.map((x) => ({
+            platformId: x.platformId,
+            operation: x.base,
+          }));
+
+          return undefined;
+        })();
+      },
+      resolve(res: any) {
+        return res;
+      },
+    },
     schemaLastOperations: {
       subscribe() {
         return (async function* (): AsyncGenerator<
@@ -121,6 +141,29 @@ export const resolvers: Resolvers = {
             platformId: x.platformId,
             operation: x.base,
           }));
+
+          return undefined;
+        })();
+      },
+      resolve(res: any) {
+        return res;
+      },
+    },
+    platformOperations: {
+      subscribe(info, args) {
+        return (async function* (): AsyncGenerator<
+          Subscription["platformOperations"],
+          undefined,
+          void
+        > {
+          const { id: platformId } = args;
+          const operations = await getOperations();
+          yield operations
+            .filter((x) => x.platformId === platformId)
+            .map((x) => ({
+              resourceId: x.resourceId,
+              operation: x.base,
+            }));
 
           return undefined;
         })();
@@ -152,6 +195,29 @@ export const resolvers: Resolvers = {
         return res;
       },
     },
+    resourceOperations: {
+      subscribe(info, args) {
+        return (async function* (): AsyncGenerator<
+          Subscription["resourceOperations"],
+          undefined,
+          void
+        > {
+          const { id: resourceId } = args;
+          const operations = await getOperations();
+          yield operations
+            .filter((x) => x.resourceId === resourceId)
+            .map((x) => ({
+              actionId: x.actionsId,
+              operation: x.base,
+            }));
+
+          return undefined;
+        })();
+      },
+      resolve(res: any) {
+        return res;
+      },
+    },
     resourceLastOperations: {
       subscribe(info, args) {
         return (async function* (): AsyncGenerator<
@@ -167,6 +233,26 @@ export const resolvers: Resolvers = {
               actionId: x.actionsId,
               operation: x.base,
             }));
+
+          return undefined;
+        })();
+      },
+      resolve(res: any) {
+        return res;
+      },
+    },
+    actionOperations: {
+      subscribe(info, args) {
+        return (async function* (): AsyncGenerator<
+          Subscription["actionOperations"],
+          undefined,
+          void
+        > {
+          const { id: actionId } = args;
+          const operations = await getOperations();
+          yield operations
+            .filter((x) => x.actionsId === actionId)
+            .map((x) => x.base);
 
           return undefined;
         })();

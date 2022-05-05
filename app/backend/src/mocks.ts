@@ -157,14 +157,9 @@ export const getSchema: () => Promise<Schema> = async () => {
   const schema = await (await fs.promises.readFile(schemaPath)).toString();
   const blocks = getBlocks(schema);
   const connectedDevices = await getConnectedDevices();
-  const operations = await getOperations();
 
   return {
     connectedDevices: connectedDevices.map((x) => x.base),
-    operations: operations.map((x) => ({
-      platformId: x.platformId,
-      operation: x.base,
-    })),
     platforms: [
       {
         id: "redis",
@@ -189,12 +184,6 @@ export const getSchema: () => Promise<Schema> = async () => {
         connectedDevices: connectedDevices
           .filter((x) => x.platformIds.indexOf("redis") !== -1)
           .map((x) => x.base),
-        operations: operations
-          .filter((x) => x.platformId === "redis")
-          .map((x) => ({
-            resourceId: x.resourceId,
-            operation: x.base,
-          })),
         resources: blocks.reduce<SchemaPlatform["resources"]>((agg, b) => {
           if (b.type === BlockTypes.enum || b.type === BlockTypes.model) {
             return agg;
@@ -219,12 +208,6 @@ export const getSchema: () => Promise<Schema> = async () => {
               id: schemaResourceId,
               type: schemaResourceType,
               actions: [],
-              operations: operations
-                .filter((x) => x.resourceId === schemaResourceId)
-                .map((x) => ({
-                  actionId: x.actionsId,
-                  operation: x.base,
-                })),
               connectedDevices: connectedDevices
                 .filter((x) => x.resourceIds.indexOf(schemaResourceId) !== -1)
                 .map((x) => x.base),
@@ -245,15 +228,11 @@ export const getSchema: () => Promise<Schema> = async () => {
                       type: schemaResourceType,
                       actions: [],
                       connectedDevices: [],
-                      operations: [],
                     },
                     connectedDevices: connectedDevices
                       .filter(
                         (x) => x.actionsIds.indexOf(schemaActionId) !== -1
                       )
-                      .map((x) => x.base),
-                    operations: operations
-                      .filter((x) => x.actionsId === schemaActionId)
                       .map((x) => x.base),
                     key: bv.key,
                     payload: bv.payload,
@@ -273,12 +252,6 @@ export const getSchema: () => Promise<Schema> = async () => {
           .filter((x) => x.platformIds.indexOf("p2p") !== -1)
           .map((x) => x.base),
         resources: [],
-        operations: operations
-          .filter((x) => x.platformId === "p2p")
-          .map((x) => ({
-            resourceId: x.resourceId,
-            operation: x.base,
-          })),
       },
     ],
   };

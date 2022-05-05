@@ -64,12 +64,20 @@ export type Subscription = {
   __typename?: "Subscription";
   listenToEchoes: Scalars["String"];
   schemaLastOperations: Array<SchemaOperation>;
+  schemaOperations: Array<SchemaOperation>;
   platformLastOperations: Array<PlatformOperation>;
+  platformOperations: Array<PlatformOperation>;
   resourceLastOperations: Array<ResourceOperation>;
+  resourceOperations: Array<ResourceOperation>;
   actionLastOperation: ActionOperation;
+  actionOperations: Array<ActionOperation>;
 };
 
 export type SubscriptionPlatformLastOperationsArgs = {
+  id: Scalars["ID"];
+};
+
+export type SubscriptionPlatformOperationsArgs = {
   id: Scalars["ID"];
 };
 
@@ -77,7 +85,15 @@ export type SubscriptionResourceLastOperationsArgs = {
   id: Scalars["ID"];
 };
 
+export type SubscriptionResourceOperationsArgs = {
+  id: Scalars["ID"];
+};
+
 export type SubscriptionActionLastOperationArgs = {
+  id: Scalars["ID"];
+};
+
+export type SubscriptionActionOperationsArgs = {
   id: Scalars["ID"];
 };
 
@@ -98,7 +114,6 @@ export type Schema = {
   __typename?: "Schema";
   platforms: Array<SchemaPlatform>;
   connectedDevices: Array<ConnectedDevice>;
-  operations: Array<SchemaOperation>;
 };
 
 export enum SchemaPlatformType {
@@ -113,7 +128,6 @@ export type SchemaPlatform = {
   models: Array<SchemaModel>;
   resources: Array<SchemaResource>;
   connectedDevices: Array<ConnectedDevice>;
-  operations: Array<PlatformOperation>;
 };
 
 export type SchemaModel = {
@@ -135,7 +149,6 @@ export type SchemaResource = {
   type: SchemaResourceType;
   actions: Array<SchemaAction>;
   connectedDevices: Array<ConnectedDevice>;
-  operations: Array<ResourceOperation>;
 };
 
 export type SchemaAction = {
@@ -147,7 +160,6 @@ export type SchemaAction = {
   payload: Scalars["SchemaValue"];
   returns?: Maybe<Scalars["SchemaValue"]>;
   connectedDevices: Array<ConnectedDevice>;
-  operations: Array<ActionOperation>;
 };
 
 export type SchemaOperation = {
@@ -369,11 +381,7 @@ export type ResolversTypes = {
   SchemaModel: ResolverTypeWrapper<SchemaModel>;
   SchemaResourceType: SchemaResourceType;
   SchemaResource: ResolverTypeWrapper<SchemaResource>;
-  SchemaAction: ResolverTypeWrapper<
-    Omit<SchemaAction, "operations"> & {
-      operations: Array<ResolversTypes["ActionOperation"]>;
-    }
-  >;
+  SchemaAction: ResolverTypeWrapper<SchemaAction>;
   SchemaOperation: ResolverTypeWrapper<
     Omit<SchemaOperation, "operation"> & {
       operation: ResolversTypes["ActionOperation"];
@@ -419,9 +427,7 @@ export type ResolversParentTypes = {
   SchemaPlatform: SchemaPlatform;
   SchemaModel: SchemaModel;
   SchemaResource: SchemaResource;
-  SchemaAction: Omit<SchemaAction, "operations"> & {
-    operations: Array<ResolversParentTypes["ActionOperation"]>;
-  };
+  SchemaAction: SchemaAction;
   SchemaOperation: Omit<SchemaOperation, "operation"> & {
     operation: ResolversParentTypes["ActionOperation"];
   };
@@ -506,12 +512,25 @@ export type SubscriptionResolvers<
     ParentType,
     ContextType
   >;
+  schemaOperations?: SubscriptionResolver<
+    Array<ResolversTypes["SchemaOperation"]>,
+    "schemaOperations",
+    ParentType,
+    ContextType
+  >;
   platformLastOperations?: SubscriptionResolver<
     Array<ResolversTypes["PlatformOperation"]>,
     "platformLastOperations",
     ParentType,
     ContextType,
     RequireFields<SubscriptionPlatformLastOperationsArgs, "id">
+  >;
+  platformOperations?: SubscriptionResolver<
+    Array<ResolversTypes["PlatformOperation"]>,
+    "platformOperations",
+    ParentType,
+    ContextType,
+    RequireFields<SubscriptionPlatformOperationsArgs, "id">
   >;
   resourceLastOperations?: SubscriptionResolver<
     Array<ResolversTypes["ResourceOperation"]>,
@@ -520,12 +539,26 @@ export type SubscriptionResolvers<
     ContextType,
     RequireFields<SubscriptionResourceLastOperationsArgs, "id">
   >;
+  resourceOperations?: SubscriptionResolver<
+    Array<ResolversTypes["ResourceOperation"]>,
+    "resourceOperations",
+    ParentType,
+    ContextType,
+    RequireFields<SubscriptionResourceOperationsArgs, "id">
+  >;
   actionLastOperation?: SubscriptionResolver<
     ResolversTypes["ActionOperation"],
     "actionLastOperation",
     ParentType,
     ContextType,
     RequireFields<SubscriptionActionLastOperationArgs, "id">
+  >;
+  actionOperations?: SubscriptionResolver<
+    Array<ResolversTypes["ActionOperation"]>,
+    "actionOperations",
+    ParentType,
+    ContextType,
+    RequireFields<SubscriptionActionOperationsArgs, "id">
   >;
 };
 
@@ -554,11 +587,6 @@ export type SchemaResolvers<
     ParentType,
     ContextType
   >;
-  operations?: Resolver<
-    Array<ResolversTypes["SchemaOperation"]>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -584,11 +612,6 @@ export type SchemaPlatformResolvers<
   >;
   connectedDevices?: Resolver<
     Array<ResolversTypes["ConnectedDevice"]>,
-    ParentType,
-    ContextType
-  >;
-  operations?: Resolver<
-    Array<ResolversTypes["PlatformOperation"]>,
     ParentType,
     ContextType
   >;
@@ -625,11 +648,6 @@ export type SchemaResourceResolvers<
     ParentType,
     ContextType
   >;
-  operations?: Resolver<
-    Array<ResolversTypes["ResourceOperation"]>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -653,11 +671,6 @@ export type SchemaActionResolvers<
   >;
   connectedDevices?: Resolver<
     Array<ResolversTypes["ConnectedDevice"]>,
-    ParentType,
-    ContextType
-  >;
-  operations?: Resolver<
-    Array<ResolversTypes["ActionOperation"]>,
     ParentType,
     ContextType
   >;

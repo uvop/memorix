@@ -15,9 +15,13 @@ type Mutation {
 
 type Subscription {
   listenToEchoes: String!
+  schemaOperations: [SchemaOperation!]!
   schemaLastOperations: [SchemaOperation!]!
+  platformOperations(id: ID!): [PlatformOperation!]!
   platformLastOperations(id: ID!): [PlatformOperation!]!
+  resourceOperations(id: ID!): [ResourceOperation!]!
   resourceLastOperations(id: ID!): [ResourceOperation!]!
+  actionOperations(id: ID!): [ActionOperation!]!
   actionLastOperation(id: ID!): ActionOperation!
 }
 
@@ -36,7 +40,6 @@ type ConnectedDevice {
 type Schema {
   platforms: [SchemaPlatform!]!
   connectedDevices: [ConnectedDevice!]!
-  operations: [SchemaOperation!]!
 }
 
 enum SchemaPlatformType {
@@ -50,7 +53,6 @@ type SchemaPlatform {
   models: [SchemaModel!]!
   resources: [SchemaResource!]!
   connectedDevices: [ConnectedDevice!]!
-  operations: [PlatformOperation!]!
 }
 
 type SchemaModel {
@@ -70,7 +72,6 @@ type SchemaResource {
   type: SchemaResourceType!
   actions: [SchemaAction!]!
   connectedDevices: [ConnectedDevice!]!
-  operations: [ResourceOperation!]!
 }
 
 type SchemaAction {
@@ -81,7 +82,6 @@ type SchemaAction {
   payload: SchemaValue!
   returns: SchemaValue
   connectedDevices: [ConnectedDevice!]!
-  operations: [ActionOperation!]!
 }
 
 type SchemaOperation {
