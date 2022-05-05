@@ -1,8 +1,12 @@
 scalar SchemaValue
+scalar Json
 
 type Query {
   test: Boolean!
   schema: Schema!
+  platform(id: ID!): SchemaPlatform!
+  resrouce(id: ID!): SchemaResource!
+  action(id: ID!): SchemaAction!
 }
 
 type Mutation {
@@ -11,29 +15,39 @@ type Mutation {
 
 type Subscription {
   listenToEchoes: String!
-  connectedDevices: [ConnectedDevice!]!
+  schema: Schema!
+  platform(id: ID!): SchemaPlatform!
+  resrouce(id: ID!): SchemaResource!
+  action(id: ID!): SchemaAction!
 }
 
 enum Language {
   TYPESCRIPT
+  PYTHON
 }
 
-enum EventType {
-  GET
-  SET
-}
-
-type ConnectedDevice {
+interface ConnectedDevice {
   id: ID!
   language: Language!
   secondsConnected: Int!
 }
 
 type Schema {
+  platforms: [SchemaPlatform!]!
+  connectedDevices: [SchemaConnectedDevice!]!
+}
+
+enum SchemaPlatformType {
+  redis
+  p2p
+}
+
+type SchemaPlatform {
+  id: ID!
+  type: SchemaPlatformType!
   models: [SchemaModel!]!
-  cache: [SchemaCache!]!
-  pubsub: [SchemaPubsub!]!
-  task: [SchemaTask!]!
+  resources: [SchemaResource!]!
+  connectedDevices: [PlatformConnectedDevice!]!
 }
 
 type SchemaModel {
@@ -42,24 +56,145 @@ type SchemaModel {
   value: SchemaValue!
 }
 
-type SchemaCache {
+enum SchemaResourceType {
+  cache
+  pubsub
+  task
+}
+
+type SchemaResource {
+  id: ID!
+  type: SchemaResourceType!
+  actions: [SchemaAction!]!
+  connectedDevices: [ResourceConnectedDevice!]!
+}
+
+type SchemaAction {
   id: ID!
   name: String!
+  resource: SchemaResource!
+  data: SchemaActionData!
+}
+
+union SchemaActionData = SchemaCache | SchemaPubsub | SchemaTask
+
+interface SchemaActionBase {
   key: SchemaValue
   payload: SchemaValue!
 }
 
-type SchemaPubsub {
-  id: ID!
-  name: String!
+type SchemaCache implements SchemaActionBase {
   key: SchemaValue
   payload: SchemaValue!
+  connectedDevices: [CacheConnectedDevice!]!
 }
 
-type SchemaTask {
-  id: ID!
-  name: String!
+type SchemaPubsub implements SchemaActionBase {
+  key: SchemaValue
+  payload: SchemaValue!
+  connectedDevices: [PubsubConnectedDevice!]!
+}
+
+type SchemaTask implements SchemaActionBase {
   key: SchemaValue
   payload: SchemaValue!
   returns: SchemaValue
+  connectedDevices: [TaskConnectedDevice!]!
+}
+
+type SchemaConnectedDevice implements ConnectedDevice {
+  id: ID!
+  language: Language!
+  secondsConnected: Int!
+  graph: [SchemaGraphPlatform!]!
+}
+
+type SchemaGraphPlatform {
+  platformId: ID!
+  resources: [PlatformGraphResource!]!
+}
+
+type PlatformConnectedDevice implements ConnectedDevice {
+  id: ID!
+  language: Language!
+  secondsConnected: Int!
+  graph: [PlatformGraphResource!]!
+}
+
+type PlatformGraphResource {
+  resourceId: ID!
+  actions: [ResourceGraphAction!]!
+}
+
+type ResourceConnectedDevice implements ConnectedDevice {
+  id: ID!
+  language: Language!
+  secondsConnected: Int!
+  graph: [ResourceGraphAction!]!
+}
+
+union ActionOperation = CacheOperation | PubsubOperation | TaskOperation
+
+type ResourceGraphAction {
+  actionId: ID!
+  operations: [ActionOperation!]!
+}
+
+type CacheConnectedDevice implements ConnectedDevice {
+  id: ID!
+  language: Language!
+  secondsConnected: Int!
+  operations: [CacheOperation!]!
+}
+type PubsubConnectedDevice implements ConnectedDevice {
+  id: ID!
+  language: Language!
+  secondsConnected: Int!
+  operations: [PubsubOperation!]!
+}
+type TaskConnectedDevice implements ConnectedDevice {
+  id: ID!
+  language: Language!
+  secondsConnected: Int!
+  operations: [TaskOperation!]!
+}
+
+enum CacheOperationType {
+  get
+  set
+}
+
+type CacheOperation {
+  type: CacheOperationType!
+  timeInMs: Int!
+  createTimeMsAgo: Int!
+  key: Json
+  payload: Json!
+}
+
+enum PubsubOperationType {
+  publish
+  subscribe
+  subscribeCallback
+}
+
+type PubsubOperation {
+  type: PubsubOperationType!
+  timeInMs: Int!
+  createTimeMsAgo: Int!
+  timeCallbackTook: Int
+}
+
+enum TaskOperationType {
+  queue
+  dequeue
+  dequeueCallback
+  queueCallback
+}
+
+type TaskOperation {
+  type: TaskOperationType!
+  timeInMs: Int!
+  createTimeMsAgo: Int!
+  timeCallbackTook: Int
 }

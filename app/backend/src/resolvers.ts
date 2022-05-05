@@ -1,53 +1,127 @@
-import { BlockTypes, getBlocks } from "@memorix/codegen/block";
-import fs from "fs";
-import path from "path";
-import { Language, Resolvers, Schema } from "./schema-resolvers-generated";
+// import { BlockTypes, getBlocks } from "@memorix/codegen/block";
+// import { ValueTypes } from "@memorix/codegen/value";
+// import fs from "fs";
+// import path from "path";
+import { Resolvers } from "./schema-resolvers-generated";
 
 export const resolvers: Resolvers = {
-  // SchemaValueData: {
-  //   // eslint-disable-next-line no-underscore-dangle
-  //   __resolveType(res) {
-  //     if ("name" in res) {
-  //       return "SchemaValueDataSimple";
-  //     }
-  //     if ("propertyValueIds" in res) {
-  //       return "SchemaValueDataObject";
-  //     }
+  SchemaActionData: {
+    // eslint-disable-next-line no-underscore-dangle
+    __resolveType(res) {
+      // if ("cache" in res) {
+      //   return "PlatformDataRedis";
+      // }
 
-  //     return "SchemaValueDataArray";
-  //   },
-  // },
+      return "SchemaCache";
+    },
+  },
+  ActionOperation: {
+    // eslint-disable-next-line no-underscore-dangle
+    __resolveType(res) {
+      // if ("cache" in res) {
+      //   return "PlatformDataRedis";
+      // }
+
+      return "CacheOperation";
+    },
+  },
   Query: {
     test() {
       return true;
     },
-    async schema() {
-      const schemaPath = path.resolve(__dirname, "r2-schema.memorix");
-      const schema = await (await fs.promises.readFile(schemaPath)).toString();
-      const blocks = getBlocks(schema);
+    // async schema() {
+    //   const schemaPath = path.resolve(__dirname, "r2-schema.memorix");
+    //   const schema = await (await fs.promises.readFile(schemaPath)).toString();
+    //   const blocks = getBlocks(schema);
 
-      return {
-        models: [],
-        cache: blocks.reduce<Schema["cache"]>((agg, b) => {
-          if (b.type !== BlockTypes.cache) {
-            return agg;
-          }
-          return [
-            ...agg,
-            ...b.values.map((bc) => {
-              return {
-                id: bc.name,
-                name: bc.name,
-                key: bc.key,
-                payload: bc.payload,
-              };
-            }),
-          ];
-        }, []),
-        pubsub: [],
-        task: [],
-      };
-    },
+    //   return {
+    //     platforms: [
+    //       {
+    //         id: "p2p",
+    //         type: PlatformType.P2p,
+    //         data: {
+    //           models: [],
+    //           pubsub: [],
+    //         },
+    //       },
+    //       {
+    //         id: "redis",
+    //         type: PlatformType.Redis,
+    //         data: {
+    //           models: blocks.reduce<PlatformDataRedis["models"]>((agg, b) => {
+    //             if (b.type !== BlockTypes.model) {
+    //               return agg;
+    //             }
+    //             return [
+    //               ...agg,
+    //               {
+    //                 id: b.name,
+    //                 name: b.name,
+    //                 value: {
+    //                   isOptional: false,
+    //                   type: ValueTypes.object,
+    //                   properties: b.properties,
+    //                 },
+    //               },
+    //             ];
+    //           }, []),
+    //           cache: blocks.reduce<PlatformDataRedis["cache"]>((agg, b) => {
+    //             if (b.type !== BlockTypes.cache) {
+    //               return agg;
+    //             }
+    //             return [
+    //               ...agg,
+    //               ...b.values.map((bc) => {
+    //                 return {
+    //                   id: bc.name,
+    //                   name: bc.name,
+    //                   key: bc.key,
+    //                   payload: bc.payload,
+    //                   operations: [],
+    //                 };
+    //               }),
+    //             ];
+    //           }, []),
+    //           pubsub: blocks.reduce<PlatformDataRedis["pubsub"]>((agg, b) => {
+    //             if (b.type !== BlockTypes.pubsub) {
+    //               return agg;
+    //             }
+    //             return [
+    //               ...agg,
+    //               ...b.values.map((bc) => {
+    //                 return {
+    //                   id: bc.name,
+    //                   name: bc.name,
+    //                   key: bc.key,
+    //                   payload: bc.payload,
+    //                   operations: [],
+    //                 };
+    //               }),
+    //             ];
+    //           }, []),
+    //           task: blocks.reduce<PlatformDataRedis["task"]>((agg, b) => {
+    //             if (b.type !== BlockTypes.task) {
+    //               return agg;
+    //             }
+    //             return [
+    //               ...agg,
+    //               ...b.values.map((bc) => {
+    //                 return {
+    //                   id: bc.name,
+    //                   name: bc.name,
+    //                   key: bc.key,
+    //                   payload: bc.payload,
+    //                   returns: bc.returns,
+    //                   operations: [],
+    //                 };
+    //               }),
+    //             ];
+    //           }, []),
+    //         },
+    //       },
+    //     ],
+    //   };
+    // },
   },
   Mutation: {
     async echo(info, args, ctx) {
@@ -78,27 +152,6 @@ export const resolvers: Resolvers = {
             });
             yield message.content;
           }
-        })();
-      },
-      resolve(res) {
-        return res;
-      },
-    },
-    connectedDevices: {
-      subscribe() {
-        return (async function* () {
-          yield [
-            {
-              id: "3",
-              language: Language.Typescript,
-              secondsConnected: 7,
-            },
-            {
-              id: "4",
-              language: Language.Typescript,
-              secondsConnected: 10,
-            },
-          ];
         })();
       },
       resolve(res) {
