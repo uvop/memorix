@@ -34,16 +34,16 @@ export type Query = {
   __typename?: "Query";
   test: Scalars["Boolean"];
   schema: Schema;
-  platform?: Maybe<SchemaPlatform>;
-  resrouce?: Maybe<SchemaResource>;
-  action?: Maybe<SchemaAction>;
+  platform: SchemaPlatform;
+  resource: SchemaResource;
+  action: SchemaAction;
 };
 
 export type QueryPlatformArgs = {
   id: Scalars["ID"];
 };
 
-export type QueryResrouceArgs = {
+export type QueryResourceArgs = {
   id: Scalars["ID"];
 };
 
@@ -63,21 +63,21 @@ export type MutationEchoArgs = {
 export type Subscription = {
   __typename?: "Subscription";
   listenToEchoes: Scalars["String"];
-  schema: Schema;
-  platform: SchemaPlatform;
-  resrouce: SchemaResource;
-  action: SchemaAction;
+  schemaLastOperations: Array<SchemaOperation>;
+  platformLastOperations: Array<PlatformOperation>;
+  resourceLastOperations: Array<ResourceOperation>;
+  actionLastOperation: ActionOperation;
 };
 
-export type SubscriptionPlatformArgs = {
+export type SubscriptionPlatformLastOperationsArgs = {
   id: Scalars["ID"];
 };
 
-export type SubscriptionResrouceArgs = {
+export type SubscriptionResourceLastOperationsArgs = {
   id: Scalars["ID"];
 };
 
-export type SubscriptionActionArgs = {
+export type SubscriptionActionLastOperationArgs = {
   id: Scalars["ID"];
 };
 
@@ -87,6 +87,7 @@ export enum Language {
 }
 
 export type ConnectedDevice = {
+  __typename?: "ConnectedDevice";
   id: Scalars["ID"];
   name: Scalars["String"];
   language: Language;
@@ -96,7 +97,8 @@ export type ConnectedDevice = {
 export type Schema = {
   __typename?: "Schema";
   platforms: Array<SchemaPlatform>;
-  connectedDevices: Array<SchemaConnectedDevice>;
+  connectedDevices: Array<ConnectedDevice>;
+  operations: Array<SchemaOperation>;
 };
 
 export enum SchemaPlatformType {
@@ -110,7 +112,8 @@ export type SchemaPlatform = {
   type: SchemaPlatformType;
   models: Array<SchemaModel>;
   resources: Array<SchemaResource>;
-  connectedDevices: Array<PlatformConnectedDevice>;
+  connectedDevices: Array<ConnectedDevice>;
+  operations: Array<PlatformOperation>;
 };
 
 export type SchemaModel = {
@@ -131,7 +134,8 @@ export type SchemaResource = {
   id: Scalars["ID"];
   type: SchemaResourceType;
   actions: Array<SchemaAction>;
-  connectedDevices: Array<ResourceConnectedDevice>;
+  connectedDevices: Array<ConnectedDevice>;
+  operations: Array<ResourceOperation>;
 };
 
 export type SchemaAction = {
@@ -139,111 +143,32 @@ export type SchemaAction = {
   id: Scalars["ID"];
   name: Scalars["String"];
   resource: SchemaResource;
-  data: SchemaActionData;
-};
-
-export type SchemaActionData = SchemaCache | SchemaPubsub | SchemaTask;
-
-export type SchemaActionBase = {
-  key?: Maybe<Scalars["SchemaValue"]>;
-  payload: Scalars["SchemaValue"];
-};
-
-export type SchemaCache = SchemaActionBase & {
-  __typename?: "SchemaCache";
-  key?: Maybe<Scalars["SchemaValue"]>;
-  payload: Scalars["SchemaValue"];
-  connectedDevices: Array<CacheConnectedDevice>;
-};
-
-export type SchemaPubsub = SchemaActionBase & {
-  __typename?: "SchemaPubsub";
-  key?: Maybe<Scalars["SchemaValue"]>;
-  payload: Scalars["SchemaValue"];
-  connectedDevices: Array<PubsubConnectedDevice>;
-};
-
-export type SchemaTask = SchemaActionBase & {
-  __typename?: "SchemaTask";
   key?: Maybe<Scalars["SchemaValue"]>;
   payload: Scalars["SchemaValue"];
   returns?: Maybe<Scalars["SchemaValue"]>;
-  connectedDevices: Array<TaskConnectedDevice>;
-};
-
-export type SchemaConnectedDevice = ConnectedDevice & {
-  __typename?: "SchemaConnectedDevice";
-  id: Scalars["ID"];
-  name: Scalars["String"];
-  language: Language;
-  secondsConnected: Scalars["Int"];
-  graph: Array<SchemaGraphPlatform>;
-};
-
-export type SchemaGraphPlatform = {
-  __typename?: "SchemaGraphPlatform";
-  platformId: Scalars["ID"];
-  resources: Array<PlatformGraphResource>;
-};
-
-export type PlatformConnectedDevice = ConnectedDevice & {
-  __typename?: "PlatformConnectedDevice";
-  id: Scalars["ID"];
-  name: Scalars["String"];
-  language: Language;
-  secondsConnected: Scalars["Int"];
-  graph: Array<PlatformGraphResource>;
-};
-
-export type PlatformGraphResource = {
-  __typename?: "PlatformGraphResource";
-  resourceId: Scalars["ID"];
-  actions: Array<ResourceGraphAction>;
-};
-
-export type ResourceConnectedDevice = ConnectedDevice & {
-  __typename?: "ResourceConnectedDevice";
-  id: Scalars["ID"];
-  name: Scalars["String"];
-  language: Language;
-  secondsConnected: Scalars["Int"];
-  graph: Array<ResourceGraphAction>;
-};
-
-export type ActionOperation = CacheOperation | PubsubOperation | TaskOperation;
-
-export type ResourceGraphAction = {
-  __typename?: "ResourceGraphAction";
-  actionId: Scalars["ID"];
+  connectedDevices: Array<ConnectedDevice>;
   operations: Array<ActionOperation>;
 };
 
-export type CacheConnectedDevice = ConnectedDevice & {
-  __typename?: "CacheConnectedDevice";
-  id: Scalars["ID"];
-  name: Scalars["String"];
-  language: Language;
-  secondsConnected: Scalars["Int"];
-  operations: Array<CacheOperation>;
+export type SchemaOperation = {
+  __typename?: "SchemaOperation";
+  platformId: Scalars["ID"];
+  operation: ActionOperation;
 };
 
-export type PubsubConnectedDevice = ConnectedDevice & {
-  __typename?: "PubsubConnectedDevice";
-  id: Scalars["ID"];
-  name: Scalars["String"];
-  language: Language;
-  secondsConnected: Scalars["Int"];
-  operations: Array<PubsubOperation>;
+export type PlatformOperation = {
+  __typename?: "PlatformOperation";
+  resourceId: Scalars["ID"];
+  operation: ActionOperation;
 };
 
-export type TaskConnectedDevice = ConnectedDevice & {
-  __typename?: "TaskConnectedDevice";
-  id: Scalars["ID"];
-  name: Scalars["String"];
-  language: Language;
-  secondsConnected: Scalars["Int"];
-  operations: Array<TaskOperation>;
+export type ResourceOperation = {
+  __typename?: "ResourceOperation";
+  actionId: Scalars["ID"];
+  operation: ActionOperation;
 };
+
+export type ActionOperation = CacheOperation | PubsubOperation | TaskOperation;
 
 export enum CacheOperationType {
   Get = "get",
@@ -253,8 +178,8 @@ export enum CacheOperationType {
 export type CacheOperation = {
   __typename?: "CacheOperation";
   type: CacheOperationType;
-  timeInMs: Scalars["Int"];
-  createTimeMsAgo: Scalars["Int"];
+  connectedDeviceId: Scalars["ID"];
+  createMsAgo: Scalars["Int"];
   key?: Maybe<Scalars["Json"]>;
   payload: Scalars["Json"];
 };
@@ -262,30 +187,48 @@ export type CacheOperation = {
 export enum PubsubOperationType {
   Publish = "publish",
   Subscribe = "subscribe",
-  SubscribeCallback = "subscribeCallback",
 }
 
 export type PubsubOperation = {
   __typename?: "PubsubOperation";
   type: PubsubOperationType;
-  timeInMs: Scalars["Int"];
-  createTimeMsAgo: Scalars["Int"];
-  timeCallbackTook?: Maybe<Scalars["Int"]>;
+  connectedDeviceId: Scalars["ID"];
+  createMsAgo: Scalars["Int"];
+  key?: Maybe<Scalars["Json"]>;
+  payload?: Maybe<Scalars["Json"]>;
+  publishTo?: Maybe<Array<PubsubOperationPublishTo>>;
+};
+
+export type PubsubOperationPublishTo = {
+  __typename?: "PubsubOperationPublishTo";
+  connectedDeviceId: Scalars["ID"];
+  callbackStartedMsAgo: Scalars["Int"];
+  callbackEndedMsAgo?: Maybe<Scalars["Int"]>;
 };
 
 export enum TaskOperationType {
   Queue = "queue",
   Dequeue = "dequeue",
-  DequeueCallback = "dequeueCallback",
-  QueueCallback = "queueCallback",
 }
 
 export type TaskOperation = {
   __typename?: "TaskOperation";
   type: TaskOperationType;
-  timeInMs: Scalars["Int"];
-  createTimeMsAgo: Scalars["Int"];
-  timeCallbackTook?: Maybe<Scalars["Int"]>;
+  connectedDeviceId: Scalars["ID"];
+  createMsAgo: Scalars["Int"];
+  key?: Maybe<Scalars["Json"]>;
+  payload?: Maybe<Scalars["Json"]>;
+  queueTo?: Maybe<TaskOperationQueueTo>;
+};
+
+export type TaskOperationQueueTo = {
+  __typename?: "TaskOperationQueueTo";
+  connectedDeviceId: Scalars["ID"];
+  callbackStartedMsAgo: Scalars["Int"];
+  callbackEndedMsAgo?: Maybe<Scalars["Int"]>;
+  returns?: Maybe<Scalars["Json"]>;
+  returnCallbackStartedMsAgo?: Maybe<Scalars["Int"]>;
+  returnCallbackEndedMsAgo?: Maybe<Scalars["Int"]>;
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -418,13 +361,7 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Scalars["String"]>;
   Subscription: ResolverTypeWrapper<{}>;
   Language: Language;
-  ConnectedDevice:
-    | ResolversTypes["SchemaConnectedDevice"]
-    | ResolversTypes["PlatformConnectedDevice"]
-    | ResolversTypes["ResourceConnectedDevice"]
-    | ResolversTypes["CacheConnectedDevice"]
-    | ResolversTypes["PubsubConnectedDevice"]
-    | ResolversTypes["TaskConnectedDevice"];
+  ConnectedDevice: ResolverTypeWrapper<ConnectedDevice>;
   Int: ResolverTypeWrapper<Scalars["Int"]>;
   Schema: ResolverTypeWrapper<Schema>;
   SchemaPlatformType: SchemaPlatformType;
@@ -433,42 +370,37 @@ export type ResolversTypes = {
   SchemaResourceType: SchemaResourceType;
   SchemaResource: ResolverTypeWrapper<SchemaResource>;
   SchemaAction: ResolverTypeWrapper<
-    Omit<SchemaAction, "data"> & { data: ResolversTypes["SchemaActionData"] }
+    Omit<SchemaAction, "operations"> & {
+      operations: Array<ResolversTypes["ActionOperation"]>;
+    }
   >;
-  SchemaActionData:
-    | ResolversTypes["SchemaCache"]
-    | ResolversTypes["SchemaPubsub"]
-    | ResolversTypes["SchemaTask"];
-  SchemaActionBase:
-    | ResolversTypes["SchemaCache"]
-    | ResolversTypes["SchemaPubsub"]
-    | ResolversTypes["SchemaTask"];
-  SchemaCache: ResolverTypeWrapper<SchemaCache>;
-  SchemaPubsub: ResolverTypeWrapper<SchemaPubsub>;
-  SchemaTask: ResolverTypeWrapper<SchemaTask>;
-  SchemaConnectedDevice: ResolverTypeWrapper<SchemaConnectedDevice>;
-  SchemaGraphPlatform: ResolverTypeWrapper<SchemaGraphPlatform>;
-  PlatformConnectedDevice: ResolverTypeWrapper<PlatformConnectedDevice>;
-  PlatformGraphResource: ResolverTypeWrapper<PlatformGraphResource>;
-  ResourceConnectedDevice: ResolverTypeWrapper<ResourceConnectedDevice>;
+  SchemaOperation: ResolverTypeWrapper<
+    Omit<SchemaOperation, "operation"> & {
+      operation: ResolversTypes["ActionOperation"];
+    }
+  >;
+  PlatformOperation: ResolverTypeWrapper<
+    Omit<PlatformOperation, "operation"> & {
+      operation: ResolversTypes["ActionOperation"];
+    }
+  >;
+  ResourceOperation: ResolverTypeWrapper<
+    Omit<ResourceOperation, "operation"> & {
+      operation: ResolversTypes["ActionOperation"];
+    }
+  >;
   ActionOperation:
     | ResolversTypes["CacheOperation"]
     | ResolversTypes["PubsubOperation"]
     | ResolversTypes["TaskOperation"];
-  ResourceGraphAction: ResolverTypeWrapper<
-    Omit<ResourceGraphAction, "operations"> & {
-      operations: Array<ResolversTypes["ActionOperation"]>;
-    }
-  >;
-  CacheConnectedDevice: ResolverTypeWrapper<CacheConnectedDevice>;
-  PubsubConnectedDevice: ResolverTypeWrapper<PubsubConnectedDevice>;
-  TaskConnectedDevice: ResolverTypeWrapper<TaskConnectedDevice>;
   CacheOperationType: CacheOperationType;
   CacheOperation: ResolverTypeWrapper<CacheOperation>;
   PubsubOperationType: PubsubOperationType;
   PubsubOperation: ResolverTypeWrapper<PubsubOperation>;
+  PubsubOperationPublishTo: ResolverTypeWrapper<PubsubOperationPublishTo>;
   TaskOperationType: TaskOperationType;
   TaskOperation: ResolverTypeWrapper<TaskOperation>;
+  TaskOperationQueueTo: ResolverTypeWrapper<TaskOperationQueueTo>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -481,50 +413,33 @@ export type ResolversParentTypes = {
   Mutation: {};
   String: Scalars["String"];
   Subscription: {};
-  ConnectedDevice:
-    | ResolversParentTypes["SchemaConnectedDevice"]
-    | ResolversParentTypes["PlatformConnectedDevice"]
-    | ResolversParentTypes["ResourceConnectedDevice"]
-    | ResolversParentTypes["CacheConnectedDevice"]
-    | ResolversParentTypes["PubsubConnectedDevice"]
-    | ResolversParentTypes["TaskConnectedDevice"];
+  ConnectedDevice: ConnectedDevice;
   Int: Scalars["Int"];
   Schema: Schema;
   SchemaPlatform: SchemaPlatform;
   SchemaModel: SchemaModel;
   SchemaResource: SchemaResource;
-  SchemaAction: Omit<SchemaAction, "data"> & {
-    data: ResolversParentTypes["SchemaActionData"];
+  SchemaAction: Omit<SchemaAction, "operations"> & {
+    operations: Array<ResolversParentTypes["ActionOperation"]>;
   };
-  SchemaActionData:
-    | ResolversParentTypes["SchemaCache"]
-    | ResolversParentTypes["SchemaPubsub"]
-    | ResolversParentTypes["SchemaTask"];
-  SchemaActionBase:
-    | ResolversParentTypes["SchemaCache"]
-    | ResolversParentTypes["SchemaPubsub"]
-    | ResolversParentTypes["SchemaTask"];
-  SchemaCache: SchemaCache;
-  SchemaPubsub: SchemaPubsub;
-  SchemaTask: SchemaTask;
-  SchemaConnectedDevice: SchemaConnectedDevice;
-  SchemaGraphPlatform: SchemaGraphPlatform;
-  PlatformConnectedDevice: PlatformConnectedDevice;
-  PlatformGraphResource: PlatformGraphResource;
-  ResourceConnectedDevice: ResourceConnectedDevice;
+  SchemaOperation: Omit<SchemaOperation, "operation"> & {
+    operation: ResolversParentTypes["ActionOperation"];
+  };
+  PlatformOperation: Omit<PlatformOperation, "operation"> & {
+    operation: ResolversParentTypes["ActionOperation"];
+  };
+  ResourceOperation: Omit<ResourceOperation, "operation"> & {
+    operation: ResolversParentTypes["ActionOperation"];
+  };
   ActionOperation:
     | ResolversParentTypes["CacheOperation"]
     | ResolversParentTypes["PubsubOperation"]
     | ResolversParentTypes["TaskOperation"];
-  ResourceGraphAction: Omit<ResourceGraphAction, "operations"> & {
-    operations: Array<ResolversParentTypes["ActionOperation"]>;
-  };
-  CacheConnectedDevice: CacheConnectedDevice;
-  PubsubConnectedDevice: PubsubConnectedDevice;
-  TaskConnectedDevice: TaskConnectedDevice;
   CacheOperation: CacheOperation;
   PubsubOperation: PubsubOperation;
+  PubsubOperationPublishTo: PubsubOperationPublishTo;
   TaskOperation: TaskOperation;
+  TaskOperationQueueTo: TaskOperationQueueTo;
 };
 
 export interface SchemaValueScalarConfig
@@ -544,19 +459,19 @@ export type QueryResolvers<
   test?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   schema?: Resolver<ResolversTypes["Schema"], ParentType, ContextType>;
   platform?: Resolver<
-    Maybe<ResolversTypes["SchemaPlatform"]>,
+    ResolversTypes["SchemaPlatform"],
     ParentType,
     ContextType,
     RequireFields<QueryPlatformArgs, "id">
   >;
-  resrouce?: Resolver<
-    Maybe<ResolversTypes["SchemaResource"]>,
+  resource?: Resolver<
+    ResolversTypes["SchemaResource"],
     ParentType,
     ContextType,
-    RequireFields<QueryResrouceArgs, "id">
+    RequireFields<QueryResourceArgs, "id">
   >;
   action?: Resolver<
-    Maybe<ResolversTypes["SchemaAction"]>,
+    ResolversTypes["SchemaAction"],
     ParentType,
     ContextType,
     RequireFields<QueryActionArgs, "id">
@@ -585,32 +500,32 @@ export type SubscriptionResolvers<
     ParentType,
     ContextType
   >;
-  schema?: SubscriptionResolver<
-    ResolversTypes["Schema"],
-    "schema",
+  schemaLastOperations?: SubscriptionResolver<
+    Array<ResolversTypes["SchemaOperation"]>,
+    "schemaLastOperations",
     ParentType,
     ContextType
   >;
-  platform?: SubscriptionResolver<
-    ResolversTypes["SchemaPlatform"],
-    "platform",
+  platformLastOperations?: SubscriptionResolver<
+    Array<ResolversTypes["PlatformOperation"]>,
+    "platformLastOperations",
     ParentType,
     ContextType,
-    RequireFields<SubscriptionPlatformArgs, "id">
+    RequireFields<SubscriptionPlatformLastOperationsArgs, "id">
   >;
-  resrouce?: SubscriptionResolver<
-    ResolversTypes["SchemaResource"],
-    "resrouce",
+  resourceLastOperations?: SubscriptionResolver<
+    Array<ResolversTypes["ResourceOperation"]>,
+    "resourceLastOperations",
     ParentType,
     ContextType,
-    RequireFields<SubscriptionResrouceArgs, "id">
+    RequireFields<SubscriptionResourceLastOperationsArgs, "id">
   >;
-  action?: SubscriptionResolver<
-    ResolversTypes["SchemaAction"],
-    "action",
+  actionLastOperation?: SubscriptionResolver<
+    ResolversTypes["ActionOperation"],
+    "actionLastOperation",
     ParentType,
     ContextType,
-    RequireFields<SubscriptionActionArgs, "id">
+    RequireFields<SubscriptionActionLastOperationArgs, "id">
   >;
 };
 
@@ -618,20 +533,11 @@ export type ConnectedDeviceResolvers<
   ContextType = Context,
   ParentType extends ResolversParentTypes["ConnectedDevice"] = ResolversParentTypes["ConnectedDevice"]
 > = {
-  __resolveType: TypeResolveFn<
-    | "SchemaConnectedDevice"
-    | "PlatformConnectedDevice"
-    | "ResourceConnectedDevice"
-    | "CacheConnectedDevice"
-    | "PubsubConnectedDevice"
-    | "TaskConnectedDevice",
-    ParentType,
-    ContextType
-  >;
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
   secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type SchemaResolvers<
@@ -644,7 +550,12 @@ export type SchemaResolvers<
     ContextType
   >;
   connectedDevices?: Resolver<
-    Array<ResolversTypes["SchemaConnectedDevice"]>,
+    Array<ResolversTypes["ConnectedDevice"]>,
+    ParentType,
+    ContextType
+  >;
+  operations?: Resolver<
+    Array<ResolversTypes["SchemaOperation"]>,
     ParentType,
     ContextType
   >;
@@ -672,7 +583,12 @@ export type SchemaPlatformResolvers<
     ContextType
   >;
   connectedDevices?: Resolver<
-    Array<ResolversTypes["PlatformConnectedDevice"]>,
+    Array<ResolversTypes["ConnectedDevice"]>,
+    ParentType,
+    ContextType
+  >;
+  operations?: Resolver<
+    Array<ResolversTypes["PlatformOperation"]>,
     ParentType,
     ContextType
   >;
@@ -705,7 +621,12 @@ export type SchemaResourceResolvers<
     ContextType
   >;
   connectedDevices?: Resolver<
-    Array<ResolversTypes["ResourceConnectedDevice"]>,
+    Array<ResolversTypes["ConnectedDevice"]>,
+    ParentType,
+    ContextType
+  >;
+  operations?: Resolver<
+    Array<ResolversTypes["ResourceOperation"]>,
     ParentType,
     ContextType
   >;
@@ -723,66 +644,6 @@ export type SchemaActionResolvers<
     ParentType,
     ContextType
   >;
-  data?: Resolver<ResolversTypes["SchemaActionData"], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SchemaActionDataResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaActionData"] = ResolversParentTypes["SchemaActionData"]
-> = {
-  __resolveType: TypeResolveFn<
-    "SchemaCache" | "SchemaPubsub" | "SchemaTask",
-    ParentType,
-    ContextType
-  >;
-};
-
-export type SchemaActionBaseResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaActionBase"] = ResolversParentTypes["SchemaActionBase"]
-> = {
-  __resolveType: TypeResolveFn<
-    "SchemaCache" | "SchemaPubsub" | "SchemaTask",
-    ParentType,
-    ContextType
-  >;
-  key?: Resolver<Maybe<ResolversTypes["SchemaValue"]>, ParentType, ContextType>;
-  payload?: Resolver<ResolversTypes["SchemaValue"], ParentType, ContextType>;
-};
-
-export type SchemaCacheResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaCache"] = ResolversParentTypes["SchemaCache"]
-> = {
-  key?: Resolver<Maybe<ResolversTypes["SchemaValue"]>, ParentType, ContextType>;
-  payload?: Resolver<ResolversTypes["SchemaValue"], ParentType, ContextType>;
-  connectedDevices?: Resolver<
-    Array<ResolversTypes["CacheConnectedDevice"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SchemaPubsubResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaPubsub"] = ResolversParentTypes["SchemaPubsub"]
-> = {
-  key?: Resolver<Maybe<ResolversTypes["SchemaValue"]>, ParentType, ContextType>;
-  payload?: Resolver<ResolversTypes["SchemaValue"], ParentType, ContextType>;
-  connectedDevices?: Resolver<
-    Array<ResolversTypes["PubsubConnectedDevice"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SchemaTaskResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaTask"] = ResolversParentTypes["SchemaTask"]
-> = {
   key?: Resolver<Maybe<ResolversTypes["SchemaValue"]>, ParentType, ContextType>;
   payload?: Resolver<ResolversTypes["SchemaValue"], ParentType, ContextType>;
   returns?: Resolver<
@@ -791,81 +652,51 @@ export type SchemaTaskResolvers<
     ContextType
   >;
   connectedDevices?: Resolver<
-    Array<ResolversTypes["TaskConnectedDevice"]>,
+    Array<ResolversTypes["ConnectedDevice"]>,
+    ParentType,
+    ContextType
+  >;
+  operations?: Resolver<
+    Array<ResolversTypes["ActionOperation"]>,
     ParentType,
     ContextType
   >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type SchemaConnectedDeviceResolvers<
+export type SchemaOperationResolvers<
   ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaConnectedDevice"] = ResolversParentTypes["SchemaConnectedDevice"]
-> = {
-  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
-  secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  graph?: Resolver<
-    Array<ResolversTypes["SchemaGraphPlatform"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type SchemaGraphPlatformResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["SchemaGraphPlatform"] = ResolversParentTypes["SchemaGraphPlatform"]
+  ParentType extends ResolversParentTypes["SchemaOperation"] = ResolversParentTypes["SchemaOperation"]
 > = {
   platformId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  resources?: Resolver<
-    Array<ResolversTypes["PlatformGraphResource"]>,
+  operation?: Resolver<
+    ResolversTypes["ActionOperation"],
     ParentType,
     ContextType
   >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type PlatformConnectedDeviceResolvers<
+export type PlatformOperationResolvers<
   ContextType = Context,
-  ParentType extends ResolversParentTypes["PlatformConnectedDevice"] = ResolversParentTypes["PlatformConnectedDevice"]
-> = {
-  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
-  secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  graph?: Resolver<
-    Array<ResolversTypes["PlatformGraphResource"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PlatformGraphResourceResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["PlatformGraphResource"] = ResolversParentTypes["PlatformGraphResource"]
+  ParentType extends ResolversParentTypes["PlatformOperation"] = ResolversParentTypes["PlatformOperation"]
 > = {
   resourceId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  actions?: Resolver<
-    Array<ResolversTypes["ResourceGraphAction"]>,
+  operation?: Resolver<
+    ResolversTypes["ActionOperation"],
     ParentType,
     ContextType
   >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type ResourceConnectedDeviceResolvers<
+export type ResourceOperationResolvers<
   ContextType = Context,
-  ParentType extends ResolversParentTypes["ResourceConnectedDevice"] = ResolversParentTypes["ResourceConnectedDevice"]
+  ParentType extends ResolversParentTypes["ResourceOperation"] = ResolversParentTypes["ResourceOperation"]
 > = {
-  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
-  secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  graph?: Resolver<
-    Array<ResolversTypes["ResourceGraphAction"]>,
+  actionId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  operation?: Resolver<
+    ResolversTypes["ActionOperation"],
     ParentType,
     ContextType
   >;
@@ -883,67 +714,6 @@ export type ActionOperationResolvers<
   >;
 };
 
-export type ResourceGraphActionResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["ResourceGraphAction"] = ResolversParentTypes["ResourceGraphAction"]
-> = {
-  actionId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  operations?: Resolver<
-    Array<ResolversTypes["ActionOperation"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CacheConnectedDeviceResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["CacheConnectedDevice"] = ResolversParentTypes["CacheConnectedDevice"]
-> = {
-  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
-  secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  operations?: Resolver<
-    Array<ResolversTypes["CacheOperation"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PubsubConnectedDeviceResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["PubsubConnectedDevice"] = ResolversParentTypes["PubsubConnectedDevice"]
-> = {
-  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
-  secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  operations?: Resolver<
-    Array<ResolversTypes["PubsubOperation"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TaskConnectedDeviceResolvers<
-  ContextType = Context,
-  ParentType extends ResolversParentTypes["TaskConnectedDevice"] = ResolversParentTypes["TaskConnectedDevice"]
-> = {
-  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
-  secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  operations?: Resolver<
-    Array<ResolversTypes["TaskOperation"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type CacheOperationResolvers<
   ContextType = Context,
   ParentType extends ResolversParentTypes["CacheOperation"] = ResolversParentTypes["CacheOperation"]
@@ -953,8 +723,8 @@ export type CacheOperationResolvers<
     ParentType,
     ContextType
   >;
-  timeInMs?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  createTimeMsAgo?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  connectedDeviceId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  createMsAgo?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   key?: Resolver<Maybe<ResolversTypes["Json"]>, ParentType, ContextType>;
   payload?: Resolver<ResolversTypes["Json"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -969,9 +739,29 @@ export type PubsubOperationResolvers<
     ParentType,
     ContextType
   >;
-  timeInMs?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  createTimeMsAgo?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  timeCallbackTook?: Resolver<
+  connectedDeviceId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  createMsAgo?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  key?: Resolver<Maybe<ResolversTypes["Json"]>, ParentType, ContextType>;
+  payload?: Resolver<Maybe<ResolversTypes["Json"]>, ParentType, ContextType>;
+  publishTo?: Resolver<
+    Maybe<Array<ResolversTypes["PubsubOperationPublishTo"]>>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PubsubOperationPublishToResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["PubsubOperationPublishTo"] = ResolversParentTypes["PubsubOperationPublishTo"]
+> = {
+  connectedDeviceId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  callbackStartedMsAgo?: Resolver<
+    ResolversTypes["Int"],
+    ParentType,
+    ContextType
+  >;
+  callbackEndedMsAgo?: Resolver<
     Maybe<ResolversTypes["Int"]>,
     ParentType,
     ContextType
@@ -984,9 +774,40 @@ export type TaskOperationResolvers<
   ParentType extends ResolversParentTypes["TaskOperation"] = ResolversParentTypes["TaskOperation"]
 > = {
   type?: Resolver<ResolversTypes["TaskOperationType"], ParentType, ContextType>;
-  timeInMs?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  createTimeMsAgo?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  timeCallbackTook?: Resolver<
+  connectedDeviceId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  createMsAgo?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  key?: Resolver<Maybe<ResolversTypes["Json"]>, ParentType, ContextType>;
+  payload?: Resolver<Maybe<ResolversTypes["Json"]>, ParentType, ContextType>;
+  queueTo?: Resolver<
+    Maybe<ResolversTypes["TaskOperationQueueTo"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type TaskOperationQueueToResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["TaskOperationQueueTo"] = ResolversParentTypes["TaskOperationQueueTo"]
+> = {
+  connectedDeviceId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  callbackStartedMsAgo?: Resolver<
+    ResolversTypes["Int"],
+    ParentType,
+    ContextType
+  >;
+  callbackEndedMsAgo?: Resolver<
+    Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
+  returns?: Resolver<Maybe<ResolversTypes["Json"]>, ParentType, ContextType>;
+  returnCallbackStartedMsAgo?: Resolver<
+    Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
+  returnCallbackEndedMsAgo?: Resolver<
     Maybe<ResolversTypes["Int"]>,
     ParentType,
     ContextType
@@ -1006,24 +827,15 @@ export type Resolvers<ContextType = Context> = {
   SchemaModel?: SchemaModelResolvers<ContextType>;
   SchemaResource?: SchemaResourceResolvers<ContextType>;
   SchemaAction?: SchemaActionResolvers<ContextType>;
-  SchemaActionData?: SchemaActionDataResolvers<ContextType>;
-  SchemaActionBase?: SchemaActionBaseResolvers<ContextType>;
-  SchemaCache?: SchemaCacheResolvers<ContextType>;
-  SchemaPubsub?: SchemaPubsubResolvers<ContextType>;
-  SchemaTask?: SchemaTaskResolvers<ContextType>;
-  SchemaConnectedDevice?: SchemaConnectedDeviceResolvers<ContextType>;
-  SchemaGraphPlatform?: SchemaGraphPlatformResolvers<ContextType>;
-  PlatformConnectedDevice?: PlatformConnectedDeviceResolvers<ContextType>;
-  PlatformGraphResource?: PlatformGraphResourceResolvers<ContextType>;
-  ResourceConnectedDevice?: ResourceConnectedDeviceResolvers<ContextType>;
+  SchemaOperation?: SchemaOperationResolvers<ContextType>;
+  PlatformOperation?: PlatformOperationResolvers<ContextType>;
+  ResourceOperation?: ResourceOperationResolvers<ContextType>;
   ActionOperation?: ActionOperationResolvers<ContextType>;
-  ResourceGraphAction?: ResourceGraphActionResolvers<ContextType>;
-  CacheConnectedDevice?: CacheConnectedDeviceResolvers<ContextType>;
-  PubsubConnectedDevice?: PubsubConnectedDeviceResolvers<ContextType>;
-  TaskConnectedDevice?: TaskConnectedDeviceResolvers<ContextType>;
   CacheOperation?: CacheOperationResolvers<ContextType>;
   PubsubOperation?: PubsubOperationResolvers<ContextType>;
+  PubsubOperationPublishTo?: PubsubOperationPublishToResolvers<ContextType>;
   TaskOperation?: TaskOperationResolvers<ContextType>;
+  TaskOperationQueueTo?: TaskOperationQueueToResolvers<ContextType>;
 };
 
 /**

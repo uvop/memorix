@@ -19,10 +19,7 @@ const getConnectedDevices: () => Promise<
     base: ConnectedDevice;
     platformIds: string[];
     resourceIds: string[];
-    actions: {
-      id: string;
-      operations: ActionOperation[];
-    }[];
+    actionsIds: string[];
   }>
 > = async () => {
   return [
@@ -35,20 +32,7 @@ const getConnectedDevices: () => Promise<
       },
       platformIds: ["p2p", "redis"],
       resourceIds: ["redis_task", "redis_pubsub"],
-      actions: [
-        {
-          id: "redis_task_userAdded",
-          operations: [
-            {
-              __typename: "TaskOperation",
-              type: TaskOperationType.Queue,
-              createTimeMsAgo: 2000,
-              timeInMs: 212,
-              timeCallbackTook: 1000,
-            },
-          ],
-        },
-      ],
+      actionsIds: ["redis_task_registerPr"],
     },
     {
       base: {
@@ -59,7 +43,7 @@ const getConnectedDevices: () => Promise<
       },
       platformIds: ["p2p", "redis"],
       resourceIds: ["redis_task", "redis_pubsub"],
-      actions: [],
+      actionsIds: ["redis_task_registerPr"],
     },
     {
       base: {
@@ -70,7 +54,7 @@ const getConnectedDevices: () => Promise<
       },
       platformIds: ["p2p", "redis"],
       resourceIds: ["redis_task", "redis_pubsub"],
-      actions: [],
+      actionsIds: ["redis_task_registerPr"],
     },
     {
       base: {
@@ -81,7 +65,7 @@ const getConnectedDevices: () => Promise<
       },
       platformIds: ["p2p", "redis"],
       resourceIds: ["redis_task", "redis_pubsub"],
-      actions: [],
+      actionsIds: ["redis_task_registerPr"],
     },
     {
       base: {
@@ -92,7 +76,7 @@ const getConnectedDevices: () => Promise<
       },
       platformIds: ["redis"],
       resourceIds: ["redis_cache", "redis_task", "redis_pubsub"],
-      actions: [],
+      actionsIds: ["redis_task_registerPr"],
     },
     {
       base: {
@@ -103,7 +87,7 @@ const getConnectedDevices: () => Promise<
       },
       platformIds: ["redis"],
       resourceIds: ["redis_cache", "redis_task", "redis_pubsub"],
-      actions: [],
+      actionsIds: [],
     },
     {
       base: {
@@ -114,7 +98,56 @@ const getConnectedDevices: () => Promise<
       },
       platformIds: ["redis"],
       resourceIds: ["redis_cache", "redis_task"],
-      actions: [],
+      actionsIds: [],
+    },
+  ];
+};
+
+export const getOperations: () => Promise<
+  Array<{
+    base: ActionOperation;
+    platformId: string;
+    resourceId: string;
+    actionsId: string;
+  }>
+> = async () => {
+  return [
+    {
+      platformId: "redis",
+      resourceId: "redis_task",
+      actionsId: "redis_task_registerPr",
+      base: {
+        __typename: "TaskOperation",
+        connectedDeviceId: "be1",
+        createMsAgo: 7000,
+        type: TaskOperationType.Dequeue,
+      },
+    },
+    {
+      platformId: "redis",
+      resourceId: "redis_task",
+      actionsId: "redis_task_registerPr",
+      base: {
+        __typename: "TaskOperation",
+        connectedDeviceId: "iot1",
+        createMsAgo: 5000,
+        type: TaskOperationType.Queue,
+        payload: {
+          name: "IOT 1",
+          geo_location: {
+            lat: 32,
+            lng: 34,
+          },
+        },
+        queueTo: {
+          connectedDeviceId: "be1",
+          callbackStartedMsAgo: 4444,
+          callbackEndedMsAgo: 3912,
+          returns: "session_token",
+          returnCallbackStartedMsAgo: 2121,
+          returnCallbackEndedMsAgo: 1122,
+        },
+      },
     },
   ];
 };
@@ -124,24 +157,13 @@ export const getSchema: () => Promise<Schema> = async () => {
   const schema = await (await fs.promises.readFile(schemaPath)).toString();
   const blocks = getBlocks(schema);
   const connectedDevices = await getConnectedDevices();
+  const operations = await getOperations();
 
   return {
-    connectedDevices: connectedDevices.map((x) => ({
-      ...x.base,
-      graph: x.platformIds.map((platformId) => ({
-        platformId,
-        resources: x.resourceIds
-          .filter((y) => y.startsWith(platformId))
-          .map((resourceId) => ({
-            resourceId,
-            actions: x.actions
-              .filter((y) => y.id.startsWith(resourceId))
-              .map((a) => ({
-                actionId: a.id,
-                operations: a.operations,
-              })),
-          })),
-      })),
+    connectedDevices: connectedDevices.map((x) => x.base),
+    operations: operations.map((x) => ({
+      platformId: x.platformId,
+      operation: x.base,
     })),
     platforms: [
       {
@@ -166,19 +188,12 @@ export const getSchema: () => Promise<Schema> = async () => {
         }, []),
         connectedDevices: connectedDevices
           .filter((x) => x.platformIds.indexOf("redis") !== -1)
+          .map((x) => x.base),
+        operations: operations
+          .filter((x) => x.platformId === "redis")
           .map((x) => ({
-            ...x.base,
-            graph: x.resourceIds
-              .filter((y) => y.startsWith("redis"))
-              .map((resourceId) => ({
-                resourceId,
-                actions: x.actions
-                  .filter((y) => y.id.startsWith(resourceId))
-                  .map((a) => ({
-                    actionId: a.id,
-                    operations: a.operations,
-                  })),
-              })),
+            resourceId: x.resourceId,
+            operation: x.base,
           })),
         resources: blocks.reduce<SchemaPlatform["resources"]>((agg, b) => {
           if (b.type === BlockTypes.enum || b.type === BlockTypes.model) {
@@ -188,12 +203,6 @@ export const getSchema: () => Promise<Schema> = async () => {
             [BlockTypes.cache]: SchemaResourceType.Cache,
             [BlockTypes.pubsub]: SchemaResourceType.Pubsub,
             [BlockTypes.task]: SchemaResourceType.Task,
-          }[b.type];
-
-          const actionTypeName = {
-            [BlockTypes.cache]: "SchemaCache",
-            [BlockTypes.pubsub]: "SchemaPubsub",
-            [BlockTypes.task]: "SchemaTask",
           }[b.type];
 
           const schemaResourceId = `redis_${
@@ -210,17 +219,15 @@ export const getSchema: () => Promise<Schema> = async () => {
               id: schemaResourceId,
               type: schemaResourceType,
               actions: [],
+              operations: operations
+                .filter((x) => x.resourceId === schemaResourceId)
+                .map((x) => ({
+                  actionId: x.actionsId,
+                  operation: x.base,
+                })),
               connectedDevices: connectedDevices
                 .filter((x) => x.resourceIds.indexOf(schemaResourceId) !== -1)
-                .map((x) => ({
-                  ...x.base,
-                  graph: x.actions
-                    .filter((a) => a.id.startsWith(schemaResourceId))
-                    .map((a) => ({
-                      actionId: a.id,
-                      operations: a.operations,
-                    })),
-                })),
+                .map((x) => x.base),
             } as SchemaResource);
 
           return [
@@ -228,34 +235,31 @@ export const getSchema: () => Promise<Schema> = async () => {
             {
               ...aggItem,
               actions: aggItem.actions.concat(
-                b.values.map((bv) => ({
-                  id: `${schemaResourceId}_${bv.name}`,
-                  name: bv.name,
-                  resource: {
-                    id: schemaResourceId,
-                    type: schemaResourceType,
-                    actions: [],
-                    connectedDevices: [],
-                  },
-                  data: {
-                    __typename: actionTypeName,
+                b.values.map((bv) => {
+                  const schemaActionId = `${schemaResourceId}_${bv.name}`;
+                  return {
+                    id: schemaActionId,
+                    name: bv.name,
+                    resource: {
+                      id: schemaResourceId,
+                      type: schemaResourceType,
+                      actions: [],
+                      connectedDevices: [],
+                      operations: [],
+                    },
                     connectedDevices: connectedDevices
-                      .filter((x) =>
-                        x.actions.some(
-                          (a) => a.id === `${schemaResourceId}_${bv.name}`
-                        )
+                      .filter(
+                        (x) => x.actionsIds.indexOf(schemaActionId) !== -1
                       )
-                      .map((x) => ({
-                        ...x.base,
-                        operations: x.actions.find(
-                          (a) => a.id === `${schemaResourceId}_${bv.name}`
-                        )!.operations,
-                      })),
+                      .map((x) => x.base),
+                    operations: operations
+                      .filter((x) => x.actionsId === schemaActionId)
+                      .map((x) => x.base),
                     key: bv.key,
                     payload: bv.payload,
                     returns: (bv as any).returns,
-                  },
-                })) as typeof aggItem.actions
+                  };
+                }) as typeof aggItem.actions
               ),
             },
           ];
@@ -265,8 +269,16 @@ export const getSchema: () => Promise<Schema> = async () => {
         id: "p2p",
         type: SchemaPlatformType.P2p,
         models: [],
-        connectedDevices: [],
+        connectedDevices: connectedDevices
+          .filter((x) => x.platformIds.indexOf("p2p") !== -1)
+          .map((x) => x.base),
         resources: [],
+        operations: operations
+          .filter((x) => x.platformId === "p2p")
+          .map((x) => ({
+            resourceId: x.resourceId,
+            operation: x.base,
+          })),
       },
     ],
   };

@@ -1,14 +1,7 @@
-import { getSchema } from "./mocks";
-import { Resolvers } from "./schema-resolvers-generated";
+import { getOperations, getSchema } from "./mocks";
+import { Resolvers, Subscription } from "./schema-resolvers-generated";
 
 export const resolvers: Resolvers = {
-  SchemaActionData: {
-    // eslint-disable-next-line no-underscore-dangle
-    __resolveType(res) {
-      // eslint-disable-next-line no-underscore-dangle
-      return res.__typename!;
-    },
-  },
   ActionOperation: {
     // eslint-disable-next-line no-underscore-dangle
     __resolveType(res) {
@@ -25,40 +18,58 @@ export const resolvers: Resolvers = {
       return schema;
     },
     async platform(info, args) {
+      const platformId = args.id;
       const schema = await getSchema();
+      const platform = schema.platforms.find((x) => x.id === platformId);
 
-      return schema.platforms.find((x) => x.id === args.id) ?? null;
+      if (!platform) {
+        throw new Error(`Couldn't find platform with id "${platformId}".`);
+      }
+
+      return platform;
     },
-    async resrouce(info, args) {
-      const match = /(?<platformId>.*)_(.*)/g.exec(args.id);
+    async resource(info, args) {
+      const resourceId = args.id;
+
+      const match = /(?<platformId>.*)_(.*)/g.exec(resourceId);
       if (!match || !match.groups) {
-        return null;
+        throw new Error(`Couldn't find resource with id "${resourceId}".`);
       }
       const { platformId } = match.groups;
 
       const schema = await getSchema();
+      const resource = schema.platforms
+        .find((x) => x.id === platformId)
+        ?.resources.find((x) => x.id === resourceId);
 
-      return (
-        schema.platforms
-          .find((x) => x.id === platformId)
-          ?.resources.find((x) => x.id === args.id) ?? null
-      );
+      if (!resource) {
+        throw new Error(`Couldn't find resource with id "${resourceId}".`);
+      }
+
+      return resource;
     },
     async action(info, args) {
-      const match = /(?<platformId>.*)_(?<resourceId>.*)_(.*)/g.exec(args.id);
+      const actionId = args.id;
+      const match = /(?<platformId>.*)_(?<resourceName>.*)_(.*)/g.exec(
+        actionId
+      );
       if (!match || !match.groups) {
-        return null;
+        throw new Error(`Couldn't find action with id "${actionId}".`);
       }
-      const { platformId, resourceId } = match.groups;
+      const { platformId, resourceName } = match.groups;
+      const resourceId = `${platformId}_${resourceName}`;
 
       const schema = await getSchema();
+      const action = schema.platforms
+        .find((x) => x.id === platformId)
+        ?.resources.find((x) => x.id === resourceId)
+        ?.actions.find((x) => x.id === actionId);
 
-      return (
-        schema.platforms
-          .find((x) => x.id === platformId)
-          ?.resources.find((x) => x.id === resourceId)
-          ?.actions.find((x) => x.id === args.id) ?? null
-      );
+      if (!action) {
+        throw new Error(`Couldn't find action with id "${actionId}".`);
+      }
+
+      return action;
     },
   },
   Mutation: {
@@ -92,6 +103,98 @@ export const resolvers: Resolvers = {
               yield message.content;
             }
           }
+        })();
+      },
+      resolve(res: any) {
+        return res;
+      },
+    },
+    schemaLastOperations: {
+      subscribe() {
+        return (async function* (): AsyncGenerator<
+          Subscription["schemaLastOperations"],
+          undefined,
+          void
+        > {
+          const operations = await getOperations();
+          yield operations.map((x) => ({
+            platformId: x.platformId,
+            operation: x.base,
+          }));
+
+          return undefined;
+        })();
+      },
+      resolve(res: any) {
+        return res;
+      },
+    },
+    platformLastOperations: {
+      subscribe(info, args) {
+        return (async function* (): AsyncGenerator<
+          Subscription["platformLastOperations"],
+          undefined,
+          void
+        > {
+          const { id: platformId } = args;
+          const operations = await getOperations();
+          yield operations
+            .filter((x) => x.platformId === platformId)
+            .map((x) => ({
+              resourceId: x.resourceId,
+              operation: x.base,
+            }));
+
+          return undefined;
+        })();
+      },
+      resolve(res: any) {
+        return res;
+      },
+    },
+    resourceLastOperations: {
+      subscribe(info, args) {
+        return (async function* (): AsyncGenerator<
+          Subscription["resourceLastOperations"],
+          undefined,
+          void
+        > {
+          const { id: resourceId } = args;
+          const operations = await getOperations();
+          yield operations
+            .filter((x) => x.resourceId === resourceId)
+            .map((x) => ({
+              actionId: x.actionsId,
+              operation: x.base,
+            }));
+
+          return undefined;
+        })();
+      },
+      resolve(res: any) {
+        return res;
+      },
+    },
+    actionLastOperation: {
+      subscribe(info, args) {
+        return (async function* (): AsyncGenerator<
+          Subscription["actionLastOperation"],
+          undefined,
+          void
+        > {
+          const { id: actionId } = args;
+          const operations = await getOperations();
+          const actionOperations = operations
+            .filter((x) => x.actionsId === actionId)
+            .map((x) => x.base);
+
+          if (actionOperations.length === 0) {
+            throw new Error(`Couldn't find op for actionId "${actionId}"`);
+          }
+
+          yield actionOperations[0];
+
+          return undefined;
         })();
       },
       resolve(res: any) {
