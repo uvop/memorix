@@ -31,10 +31,10 @@ const redisPubSub = new RedisPubSub({
 const ioredis = redisPubSub.getPublisher();
 
 const redis = Object.assign(redisPubSub, {
-  get(...args) {
+  get(...args: any[]) {
     return ioredis.get(...args);
   },
-  set(...args) {
+  set(...args: any[]) {
     return ioredis.set(...args);
   },
 });

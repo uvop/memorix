@@ -4,9 +4,9 @@ scalar Json
 type Query {
   test: Boolean!
   schema: Schema!
-  platform(id: ID!): SchemaPlatform!
-  resrouce(id: ID!): SchemaResource!
-  action(id: ID!): SchemaAction!
+  platform(id: ID!): SchemaPlatform
+  resrouce(id: ID!): SchemaResource
+  action(id: ID!): SchemaAction
 }
 
 type Mutation {
@@ -16,9 +16,9 @@ type Mutation {
 type Subscription {
   listenToEchoes: String!
   schema: Schema!
-  platform(id: ID!): SchemaPlatform!
-  resrouce(id: ID!): SchemaResource!
-  action(id: ID!): SchemaAction!
+  platform(id: ID!): SchemaPlatform
+  resrouce(id: ID!): SchemaResource
+  action(id: ID!): SchemaAction
 }
 
 enum Language {
@@ -28,6 +28,7 @@ enum Language {
 
 interface ConnectedDevice {
   id: ID!
+  name: String!
   language: Language!
   secondsConnected: Int!
 }
@@ -104,6 +105,7 @@ type SchemaTask implements SchemaActionBase {
 
 type SchemaConnectedDevice implements ConnectedDevice {
   id: ID!
+  name: String!
   language: Language!
   secondsConnected: Int!
   graph: [SchemaGraphPlatform!]!
@@ -116,6 +118,7 @@ type SchemaGraphPlatform {
 
 type PlatformConnectedDevice implements ConnectedDevice {
   id: ID!
+  name: String!
   language: Language!
   secondsConnected: Int!
   graph: [PlatformGraphResource!]!
@@ -128,6 +131,7 @@ type PlatformGraphResource {
 
 type ResourceConnectedDevice implements ConnectedDevice {
   id: ID!
+  name: String!
   language: Language!
   secondsConnected: Int!
   graph: [ResourceGraphAction!]!
@@ -142,18 +146,21 @@ type ResourceGraphAction {
 
 type CacheConnectedDevice implements ConnectedDevice {
   id: ID!
+  name: String!
   language: Language!
   secondsConnected: Int!
   operations: [CacheOperation!]!
 }
 type PubsubConnectedDevice implements ConnectedDevice {
   id: ID!
+  name: String!
   language: Language!
   secondsConnected: Int!
   operations: [PubsubOperation!]!
 }
 type TaskConnectedDevice implements ConnectedDevice {
   id: ID!
+  name: String!
   language: Language!
   secondsConnected: Int!
   operations: [TaskOperation!]!

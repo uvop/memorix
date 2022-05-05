@@ -34,9 +34,9 @@ export type Query = {
   __typename?: "Query";
   test: Scalars["Boolean"];
   schema: Schema;
-  platform: SchemaPlatform;
-  resrouce: SchemaResource;
-  action: SchemaAction;
+  platform?: Maybe<SchemaPlatform>;
+  resrouce?: Maybe<SchemaResource>;
+  action?: Maybe<SchemaAction>;
 };
 
 export type QueryPlatformArgs = {
@@ -88,6 +88,7 @@ export enum Language {
 
 export type ConnectedDevice = {
   id: Scalars["ID"];
+  name: Scalars["String"];
   language: Language;
   secondsConnected: Scalars["Int"];
 };
@@ -173,6 +174,7 @@ export type SchemaTask = SchemaActionBase & {
 export type SchemaConnectedDevice = ConnectedDevice & {
   __typename?: "SchemaConnectedDevice";
   id: Scalars["ID"];
+  name: Scalars["String"];
   language: Language;
   secondsConnected: Scalars["Int"];
   graph: Array<SchemaGraphPlatform>;
@@ -187,6 +189,7 @@ export type SchemaGraphPlatform = {
 export type PlatformConnectedDevice = ConnectedDevice & {
   __typename?: "PlatformConnectedDevice";
   id: Scalars["ID"];
+  name: Scalars["String"];
   language: Language;
   secondsConnected: Scalars["Int"];
   graph: Array<PlatformGraphResource>;
@@ -201,6 +204,7 @@ export type PlatformGraphResource = {
 export type ResourceConnectedDevice = ConnectedDevice & {
   __typename?: "ResourceConnectedDevice";
   id: Scalars["ID"];
+  name: Scalars["String"];
   language: Language;
   secondsConnected: Scalars["Int"];
   graph: Array<ResourceGraphAction>;
@@ -217,6 +221,7 @@ export type ResourceGraphAction = {
 export type CacheConnectedDevice = ConnectedDevice & {
   __typename?: "CacheConnectedDevice";
   id: Scalars["ID"];
+  name: Scalars["String"];
   language: Language;
   secondsConnected: Scalars["Int"];
   operations: Array<CacheOperation>;
@@ -225,6 +230,7 @@ export type CacheConnectedDevice = ConnectedDevice & {
 export type PubsubConnectedDevice = ConnectedDevice & {
   __typename?: "PubsubConnectedDevice";
   id: Scalars["ID"];
+  name: Scalars["String"];
   language: Language;
   secondsConnected: Scalars["Int"];
   operations: Array<PubsubOperation>;
@@ -233,6 +239,7 @@ export type PubsubConnectedDevice = ConnectedDevice & {
 export type TaskConnectedDevice = ConnectedDevice & {
   __typename?: "TaskConnectedDevice";
   id: Scalars["ID"];
+  name: Scalars["String"];
   language: Language;
   secondsConnected: Scalars["Int"];
   operations: Array<TaskOperation>;
@@ -537,19 +544,19 @@ export type QueryResolvers<
   test?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   schema?: Resolver<ResolversTypes["Schema"], ParentType, ContextType>;
   platform?: Resolver<
-    ResolversTypes["SchemaPlatform"],
+    Maybe<ResolversTypes["SchemaPlatform"]>,
     ParentType,
     ContextType,
     RequireFields<QueryPlatformArgs, "id">
   >;
   resrouce?: Resolver<
-    ResolversTypes["SchemaResource"],
+    Maybe<ResolversTypes["SchemaResource"]>,
     ParentType,
     ContextType,
     RequireFields<QueryResrouceArgs, "id">
   >;
   action?: Resolver<
-    ResolversTypes["SchemaAction"],
+    Maybe<ResolversTypes["SchemaAction"]>,
     ParentType,
     ContextType,
     RequireFields<QueryActionArgs, "id">
@@ -622,6 +629,7 @@ export type ConnectedDeviceResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
   secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
@@ -795,6 +803,7 @@ export type SchemaConnectedDeviceResolvers<
   ParentType extends ResolversParentTypes["SchemaConnectedDevice"] = ResolversParentTypes["SchemaConnectedDevice"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
   secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   graph?: Resolver<
@@ -823,6 +832,7 @@ export type PlatformConnectedDeviceResolvers<
   ParentType extends ResolversParentTypes["PlatformConnectedDevice"] = ResolversParentTypes["PlatformConnectedDevice"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
   secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   graph?: Resolver<
@@ -851,6 +861,7 @@ export type ResourceConnectedDeviceResolvers<
   ParentType extends ResolversParentTypes["ResourceConnectedDevice"] = ResolversParentTypes["ResourceConnectedDevice"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
   secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   graph?: Resolver<
@@ -890,6 +901,7 @@ export type CacheConnectedDeviceResolvers<
   ParentType extends ResolversParentTypes["CacheConnectedDevice"] = ResolversParentTypes["CacheConnectedDevice"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
   secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   operations?: Resolver<
@@ -905,6 +917,7 @@ export type PubsubConnectedDeviceResolvers<
   ParentType extends ResolversParentTypes["PubsubConnectedDevice"] = ResolversParentTypes["PubsubConnectedDevice"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
   secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   operations?: Resolver<
@@ -920,6 +933,7 @@ export type TaskConnectedDeviceResolvers<
   ParentType extends ResolversParentTypes["TaskConnectedDevice"] = ResolversParentTypes["TaskConnectedDevice"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   language?: Resolver<ResolversTypes["Language"], ParentType, ContextType>;
   secondsConnected?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   operations?: Resolver<

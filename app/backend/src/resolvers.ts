@@ -1,127 +1,65 @@
-// import { BlockTypes, getBlocks } from "@memorix/codegen/block";
-// import { ValueTypes } from "@memorix/codegen/value";
-// import fs from "fs";
-// import path from "path";
+import { getSchema } from "./mocks";
 import { Resolvers } from "./schema-resolvers-generated";
 
 export const resolvers: Resolvers = {
   SchemaActionData: {
     // eslint-disable-next-line no-underscore-dangle
     __resolveType(res) {
-      // if ("cache" in res) {
-      //   return "PlatformDataRedis";
-      // }
-
-      return "SchemaCache";
+      // eslint-disable-next-line no-underscore-dangle
+      return res.__typename!;
     },
   },
   ActionOperation: {
     // eslint-disable-next-line no-underscore-dangle
     __resolveType(res) {
-      // if ("cache" in res) {
-      //   return "PlatformDataRedis";
-      // }
-
-      return "CacheOperation";
+      // eslint-disable-next-line no-underscore-dangle
+      return res.__typename!;
     },
   },
   Query: {
     test() {
       return true;
     },
-    // async schema() {
-    //   const schemaPath = path.resolve(__dirname, "r2-schema.memorix");
-    //   const schema = await (await fs.promises.readFile(schemaPath)).toString();
-    //   const blocks = getBlocks(schema);
+    async schema() {
+      const schema = await getSchema();
+      return schema;
+    },
+    async platform(info, args) {
+      const schema = await getSchema();
 
-    //   return {
-    //     platforms: [
-    //       {
-    //         id: "p2p",
-    //         type: PlatformType.P2p,
-    //         data: {
-    //           models: [],
-    //           pubsub: [],
-    //         },
-    //       },
-    //       {
-    //         id: "redis",
-    //         type: PlatformType.Redis,
-    //         data: {
-    //           models: blocks.reduce<PlatformDataRedis["models"]>((agg, b) => {
-    //             if (b.type !== BlockTypes.model) {
-    //               return agg;
-    //             }
-    //             return [
-    //               ...agg,
-    //               {
-    //                 id: b.name,
-    //                 name: b.name,
-    //                 value: {
-    //                   isOptional: false,
-    //                   type: ValueTypes.object,
-    //                   properties: b.properties,
-    //                 },
-    //               },
-    //             ];
-    //           }, []),
-    //           cache: blocks.reduce<PlatformDataRedis["cache"]>((agg, b) => {
-    //             if (b.type !== BlockTypes.cache) {
-    //               return agg;
-    //             }
-    //             return [
-    //               ...agg,
-    //               ...b.values.map((bc) => {
-    //                 return {
-    //                   id: bc.name,
-    //                   name: bc.name,
-    //                   key: bc.key,
-    //                   payload: bc.payload,
-    //                   operations: [],
-    //                 };
-    //               }),
-    //             ];
-    //           }, []),
-    //           pubsub: blocks.reduce<PlatformDataRedis["pubsub"]>((agg, b) => {
-    //             if (b.type !== BlockTypes.pubsub) {
-    //               return agg;
-    //             }
-    //             return [
-    //               ...agg,
-    //               ...b.values.map((bc) => {
-    //                 return {
-    //                   id: bc.name,
-    //                   name: bc.name,
-    //                   key: bc.key,
-    //                   payload: bc.payload,
-    //                   operations: [],
-    //                 };
-    //               }),
-    //             ];
-    //           }, []),
-    //           task: blocks.reduce<PlatformDataRedis["task"]>((agg, b) => {
-    //             if (b.type !== BlockTypes.task) {
-    //               return agg;
-    //             }
-    //             return [
-    //               ...agg,
-    //               ...b.values.map((bc) => {
-    //                 return {
-    //                   id: bc.name,
-    //                   name: bc.name,
-    //                   key: bc.key,
-    //                   payload: bc.payload,
-    //                   returns: bc.returns,
-    //                   operations: [],
-    //                 };
-    //               }),
-    //             ];
-    //           }, []),
-    //         },
-    //       },
-    //     ],
-    //   };
-    // },
+      return schema.platforms.find((x) => x.id === args.id) ?? null;
+    },
+    async resrouce(info, args) {
+      const match = /(?<platformId>.*)_(.*)/g.exec(args.id);
+      if (!match || !match.groups) {
+        return null;
+      }
+      const { platformId } = match.groups;
+
+      const schema = await getSchema();
+
+      return (
+        schema.platforms
+          .find((x) => x.id === platformId)
+          ?.resources.find((x) => x.id === args.id) ?? null
+      );
+    },
+    async action(info, args) {
+      const match = /(?<platformId>.*)_(?<resourceId>.*)_(.*)/g.exec(args.id);
+      if (!match || !match.groups) {
+        return null;
+      }
+      const { platformId, resourceId } = match.groups;
+
+      const schema = await getSchema();
+
+      return (
+        schema.platforms
+          .find((x) => x.id === platformId)
+          ?.resources.find((x) => x.id === resourceId)
+          ?.actions.find((x) => x.id === args.id) ?? null
+      );
+    },
   },
   Mutation: {
     async echo(info, args, ctx) {
@@ -150,11 +88,13 @@ export const resolvers: Resolvers = {
                 id,
               },
             });
-            yield message.content;
+            if (message) {
+              yield message.content;
+            }
           }
         })();
       },
-      resolve(res) {
+      resolve(res: any) {
         return res;
       },
     },
