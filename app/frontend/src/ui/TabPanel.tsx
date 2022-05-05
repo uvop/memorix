@@ -1,6 +1,6 @@
-import { Box, Typography } from "@mui/material";
+import { Box, BoxProps } from "@mui/material";
 
-type Props = {
+type Props = BoxProps & {
   children?: React.ReactNode;
   value: number | string;
   currentValue: number | string;
@@ -13,13 +13,15 @@ export const TabPanel = ({
   ...other
 }: Props) => {
   return (
-    <div
+    <Box
       role="tabpanel"
       hidden={currentValue !== value}
       aria-labelledby={`simple-tab-${value}`}
       {...other}
     >
-      {currentValue === value && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
+      {currentValue === value && (
+        <Box sx={{ p: 3, height: "100%" }}>{children}</Box>
+      )}
+    </Box>
   );
 };

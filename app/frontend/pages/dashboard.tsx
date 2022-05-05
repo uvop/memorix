@@ -20,18 +20,17 @@ const Dashboard: NextPage = () => {
   );
 
   return (
-    <Box>
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs
-          value={tab}
-          onChange={handleTabsChange}
-          aria-label="basic tabs example"
-        >
-          <Tab value={TabType.Graph} label="Graph" />
-          <Tab value={TabType.Timeline} label="Timeline" />
-        </Tabs>
-      </Box>
-      <TabPanel currentValue={tab} value={TabType.Graph}>
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Tabs
+        value={tab}
+        onChange={handleTabsChange}
+        aria-label="basic tabs example"
+        sx={{ borderBottom: 1, borderColor: "divider" }}
+      >
+        <Tab value={TabType.Graph} label="Graph" />
+        <Tab value={TabType.Timeline} label="Timeline" />
+      </Tabs>
+      <TabPanel currentValue={tab} value={TabType.Graph} sx={{ flex: 1 }}>
         <DashboardGraph />
       </TabPanel>
       <TabPanel currentValue={tab} value={TabType.Timeline}>
