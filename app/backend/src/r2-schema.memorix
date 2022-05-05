@@ -6,3 +6,10 @@ Cache {
         }
     }
 }
+
+Task {
+    userAdded {
+        payload: string
+        returns: string
+    }
+}
