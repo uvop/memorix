@@ -22,7 +22,7 @@ type Subscription {
   resourceOperations(id: ID!): [ResourceOperation!]!
   resourceLastOperations(id: ID!): [ResourceOperation!]!
   actionOperations(id: ID!): [ActionOperation!]!
-  actionLastOperation(id: ID!): ActionOperation!
+  actionLastOperations(id: ID!): [ActionOperation!]!
 }
 
 enum Language {
@@ -77,7 +77,6 @@ type SchemaResource {
 type SchemaAction {
   id: ID!
   name: String!
-  resource: SchemaResource!
   key: SchemaValue
   payload: SchemaValue!
   returns: SchemaValue
@@ -99,7 +98,21 @@ type ResourceOperation {
   operation: ActionOperation!
 }
 
-union ActionOperation = CacheOperation | PubsubOperation | TaskOperation
+enum ActionOperationType {
+  cache
+  pubsub
+  task
+}
+
+type ActionOperation {
+  id: ID!
+  connectedDeviceId: ID!
+  createMsAgo: Int!
+  type: ActionOperationType!
+  data: ActionOperationData!
+}
+
+union ActionOperationData = CacheOperation | PubsubOperation | TaskOperation
 
 enum CacheOperationType {
   get
@@ -108,8 +121,6 @@ enum CacheOperationType {
 
 type CacheOperation {
   type: CacheOperationType!
-  connectedDeviceId: ID!
-  createMsAgo: Int!
   key: Json
   payload: Json!
 }
@@ -121,8 +132,6 @@ enum PubsubOperationType {
 
 type PubsubOperation {
   type: PubsubOperationType!
-  connectedDeviceId: ID!
-  createMsAgo: Int!
   key: Json
   payload: Json
   publishTo: [PubsubOperationPublishTo!]
@@ -141,8 +150,6 @@ enum TaskOperationType {
 
 type TaskOperation {
   type: TaskOperationType!
-  connectedDeviceId: ID!
-  createMsAgo: Int!
   key: Json
   payload: Json
   queueTo: TaskOperationQueueTo

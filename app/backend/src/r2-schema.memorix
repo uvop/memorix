@@ -97,7 +97,7 @@ PubSub {
                 freq_start_high: number
                 freq_end_high: number
                 is_record: boolean
-            }?
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
-import { getOperations, getSchema } from "./mocks";
+import { getOperations, getOperationsGenerator, getSchema } from "./mocks";
 import { Resolvers, Subscription } from "./schema-resolvers-generated";
 
 export const resolvers: Resolvers = {
-  ActionOperation: {
+  ActionOperationData: {
     // eslint-disable-next-line no-underscore-dangle
     __resolveType(res) {
       // eslint-disable-next-line no-underscore-dangle
@@ -122,6 +122,15 @@ export const resolvers: Resolvers = {
             operation: x.base,
           }));
 
+          for await (const ops of getOperationsGenerator()) {
+            if (ops.length > 0) {
+              yield ops.map((x) => ({
+                platformId: x.platformId,
+                operation: x.base,
+              }));
+            }
+          }
+
           return undefined;
         })();
       },
@@ -136,11 +145,14 @@ export const resolvers: Resolvers = {
           undefined,
           void
         > {
-          const operations = await getOperations();
-          yield operations.map((x) => ({
-            platformId: x.platformId,
-            operation: x.base,
-          }));
+          for await (const ops of getOperationsGenerator()) {
+            if (ops.length > 0) {
+              yield ops.map((x) => ({
+                platformId: x.platformId,
+                operation: x.base,
+              }));
+            }
+          }
 
           return undefined;
         })();
@@ -165,6 +177,16 @@ export const resolvers: Resolvers = {
               operation: x.base,
             }));
 
+          for await (const op of getOperationsGenerator()) {
+            const ops = op.filter((x) => x.platformId === platformId);
+            if (ops.length > 0) {
+              yield ops.map((x) => ({
+                resourceId: x.resourceId,
+                operation: x.base,
+              }));
+            }
+          }
+
           return undefined;
         })();
       },
@@ -180,13 +202,16 @@ export const resolvers: Resolvers = {
           void
         > {
           const { id: platformId } = args;
-          const operations = await getOperations();
-          yield operations
-            .filter((x) => x.platformId === platformId)
-            .map((x) => ({
-              resourceId: x.resourceId,
-              operation: x.base,
-            }));
+
+          for await (const op of getOperationsGenerator()) {
+            const ops = op.filter((x) => x.platformId === platformId);
+            if (ops.length > 0) {
+              yield ops.map((x) => ({
+                resourceId: x.resourceId,
+                operation: x.base,
+              }));
+            }
+          }
 
           return undefined;
         })();
@@ -211,6 +236,16 @@ export const resolvers: Resolvers = {
               operation: x.base,
             }));
 
+          for await (const op of getOperationsGenerator()) {
+            const ops = op.filter((x) => x.resourceId === resourceId);
+            if (ops.length > 0) {
+              yield ops.map((x) => ({
+                actionId: x.actionsId,
+                operation: x.base,
+              }));
+            }
+          }
+
           return undefined;
         })();
       },
@@ -226,13 +261,16 @@ export const resolvers: Resolvers = {
           void
         > {
           const { id: resourceId } = args;
-          const operations = await getOperations();
-          yield operations
-            .filter((x) => x.resourceId === resourceId)
-            .map((x) => ({
-              actionId: x.actionsId,
-              operation: x.base,
-            }));
+
+          for await (const op of getOperationsGenerator()) {
+            const ops = op.filter((x) => x.resourceId === resourceId);
+            if (ops.length > 0) {
+              yield ops.map((x) => ({
+                actionId: x.actionsId,
+                operation: x.base,
+              }));
+            }
+          }
 
           return undefined;
         })();
@@ -254,6 +292,13 @@ export const resolvers: Resolvers = {
             .filter((x) => x.actionsId === actionId)
             .map((x) => x.base);
 
+          for await (const op of getOperationsGenerator()) {
+            const ops = op.filter((x) => x.actionsId === actionId);
+            if (ops.length > 0) {
+              yield ops.map((x) => x.base);
+            }
+          }
+
           return undefined;
         })();
       },
@@ -261,24 +306,21 @@ export const resolvers: Resolvers = {
         return res;
       },
     },
-    actionLastOperation: {
+    actionLastOperations: {
       subscribe(info, args) {
         return (async function* (): AsyncGenerator<
-          Subscription["actionLastOperation"],
+          Subscription["actionLastOperations"],
           undefined,
           void
         > {
           const { id: actionId } = args;
-          const operations = await getOperations();
-          const actionOperations = operations
-            .filter((x) => x.actionsId === actionId)
-            .map((x) => x.base);
 
-          if (actionOperations.length === 0) {
-            throw new Error(`Couldn't find op for actionId "${actionId}"`);
+          for await (const op of getOperationsGenerator()) {
+            const ops = op.filter((x) => x.actionsId === actionId);
+            if (ops.length > 0) {
+              yield ops.map((x) => x.base);
+            }
           }
-
-          yield actionOperations[0];
 
           return undefined;
         })();
