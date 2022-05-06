@@ -1,8 +1,7 @@
 import { Box, Tab, Tabs, TabsProps } from "@mui/material";
 import type { NextPage } from "next";
 import React, { useCallback, useState } from "react";
-import { DashboardGraph } from "src/dashboard/DashboardGraph";
-import { DashboardSchema } from "src/dashboard/DashboardSchema";
+import { DashboardSchemaGraph } from "src/dashboard/DashboardSchemaGraph";
 import { TabPanel } from "src/ui/TabPanel";
 
 enum TabType {
@@ -31,10 +30,10 @@ const Dashboard: NextPage = () => {
         <Tab value={TabType.Timeline} label="Timeline" />
       </Tabs>
       <TabPanel currentValue={tab} value={TabType.Graph} sx={{ flex: 1 }}>
-        <DashboardGraph />
+        <DashboardSchemaGraph />
       </TabPanel>
       <TabPanel currentValue={tab} value={TabType.Timeline}>
-        <DashboardSchema />
+        <DashboardSchemaGraph />
       </TabPanel>
     </Box>
   );

@@ -15,7 +15,23 @@
       }
       const result: IntrospectionResultData = {
   "__schema": {
-    "types": []
+    "types": [
+      {
+        "kind": "UNION",
+        "name": "ActionOperationData",
+        "possibleTypes": [
+          {
+            "name": "CacheOperation"
+          },
+          {
+            "name": "PubsubOperation"
+          },
+          {
+            "name": "TaskOperation"
+          }
+        ]
+      }
+    ]
   }
 };
       export default result;

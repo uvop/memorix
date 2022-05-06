@@ -1,0 +1,45 @@
+query SchemaGraph {
+  schema {
+    platforms {
+      id
+      type
+    }
+    connectedDevices {
+      id
+      name
+      language
+      secondsConnected
+    }
+  }
+}
+
+subscription SchemaGraphOperations {
+  schemaLastOperations {
+    platformId
+    operation {
+      id
+      connectedDeviceId
+      createMsAgo
+      type
+      data {
+        ... on CacheOperation {
+          cacheType: type
+        }
+        ... on PubsubOperation {
+          pubsubType: type
+          publishTo {
+            connectedDeviceId
+          }
+        }
+        ... on TaskOperation {
+          taskType: type
+          queueTo {
+            connectedDeviceId
+            returns
+            returnCallbackStartedMsAgo
+          }
+        }
+      }
+    }
+  }
+}

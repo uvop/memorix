@@ -1,7 +1,0 @@
-subscription graphDetails {
-  connectedDevices {
-    id
-    language
-    secondsConnected
-  }
-}

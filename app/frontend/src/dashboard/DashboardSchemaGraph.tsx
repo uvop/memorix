@@ -11,12 +11,19 @@ import {
 import RedisIcon from "src/assets/redis.svg";
 import { useState } from "react";
 import { useIntervalRender } from "src/core/hooks/useIntervalRender";
-const Xarrow = dynamic(() => import("react-xarrows"), { ssr: false });
+import {
+  useSchemaGraphQuery,
+  useSchemaGraphOperationsSubscription,
+} from "./DashboardSchemaGraph.generated";
+import { SchemaPlatformType } from "src/graphql/types.generated";
+import { DashboardGraphArrows } from "./DashboardGraphArrows";
 
-export const DashboardGraph = () => {
+export const DashboardSchemaGraph = () => {
   useIntervalRender(1000);
-
   const [baseDate] = useState(() => Date.now());
+  const { data } = useSchemaGraphQuery();
+  const { data: schemaOperationsSubscription } =
+    useSchemaGraphOperationsSubscription();
 
   return (
     <Box
@@ -28,13 +35,24 @@ export const DashboardGraph = () => {
       rowGap="15px"
     >
       <Box display="flex" flexDirection="column" gap="24px" alignItems="center">
-        <ComputerSharpIcon
-          id="platform1"
-          sx={{
-            fontSize: "48px",
-          }}
-        />
-        <Xarrow
+        {data?.schema.connectedDevices.map((device) => (
+          <Box key={device.id} textAlign="center">
+            <ComputerSharpIcon
+              id={device.id}
+              sx={{
+                fontSize: "48px",
+              }}
+            />
+            <Typography>{device.name}</Typography>
+          </Box>
+        ))}
+        {schemaOperationsSubscription?.schemaLastOperations.map((operation) => (
+          <DashboardGraphArrows
+            key={operation.operation.id}
+            schemaOperation={operation}
+          />
+        ))}
+        {/* <Xarrow
           start="platform1"
           end="redis"
           path="grid"
@@ -105,15 +123,32 @@ export const DashboardGraph = () => {
               </Typography>
             ),
           }}
-        />
+        /> */}
       </Box>
       <Box display="flex" flexDirection="column" gap="24px" alignItems="center">
-        <RedisIcon width="48px" height="48px" id="redis" />
-        <AccountTreeIcon
-          sx={{
-            fontSize: "48px",
-          }}
-        />
+        {data?.schema.platforms.map((platform) => {
+          switch (platform.type) {
+            case SchemaPlatformType.Redis:
+              return (
+                <RedisIcon
+                  key={platform.id}
+                  width="48px"
+                  height="48px"
+                  id={platform.id}
+                />
+              );
+            default:
+              return (
+                <AccountTreeIcon
+                  key={platform.id}
+                  id={platform.id}
+                  sx={{
+                    fontSize: "48px",
+                  }}
+                />
+              );
+          }
+        })}
       </Box>
     </Box>
   );
