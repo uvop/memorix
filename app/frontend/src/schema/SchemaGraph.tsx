@@ -5,13 +5,16 @@ import RedisIcon from "src/assets/redis.svg";
 import {
   useSchemaGraphQuery,
   useSchemaGraphOperationsSubscription,
-} from "./DashboardSchemaGraph.generated";
-import { SchemaPlatformType } from "src/graphql/types.generated";
-import { DashboardGraphArrows } from "./DashboardGraphArrows";
-import { MotionArrowTarget } from "./MotionArrowTarget";
+} from "./SchemaGraph.generated";
+import { SchemaPlatformType } from "src/core/graphql/types.generated";
+import { GraphOperationArrows } from "src/core/graphs/GraphOperationArrows";
+import { GraphInstance } from "src/core/graphs/GraphInstance";
 import { Xwrapper } from "react-xarrows";
+import { useRouter } from "next/router";
+import { routes } from "pages";
 
-export const DashboardSchemaGraph = () => {
+export const SchemaGraph = () => {
+  const router = useRouter();
   const { data } = useSchemaGraphQuery();
   const { data: schemaOperationsSubscription } =
     useSchemaGraphOperationsSubscription();
@@ -33,7 +36,7 @@ export const DashboardSchemaGraph = () => {
           alignItems="center"
         >
           {data?.schema.connectedDevices.map((device) => (
-            <MotionArrowTarget key={device.id} id={device.id}>
+            <GraphInstance key={device.id} graphKey="schema" id={device.id}>
               <Box key={device.id} textAlign="center">
                 <ComputerSharpIcon
                   id={device.id}
@@ -43,11 +46,11 @@ export const DashboardSchemaGraph = () => {
                 />
                 <Typography>{device.name}</Typography>
               </Box>
-            </MotionArrowTarget>
+            </GraphInstance>
           ))}
           {schemaOperationsSubscription?.schemaLastOperations.map(
             (schemaOperation) => (
-              <DashboardGraphArrows
+              <GraphOperationArrows
                 key={schemaOperation.operation.id}
                 refId={schemaOperation.platformId}
                 operation={schemaOperation.operation}
@@ -65,18 +68,33 @@ export const DashboardSchemaGraph = () => {
             switch (platform.type) {
               case SchemaPlatformType.Redis:
                 return (
-                  <MotionArrowTarget key={platform.id} id={platform.id}>
+                  <GraphInstance
+                    key={platform.id}
+                    graphKey="schema"
+                    id={platform.id}
+                    onClick={(e, isAfterDrag) => {
+                      if (!isAfterDrag) {
+                        router.push(
+                          routes.platforms.platformId(platform.id).PlatformGraph
+                        );
+                      }
+                    }}
+                  >
                     <RedisIcon
                       key={platform.id}
                       width="48px"
                       height="48px"
                       id={platform.id}
                     />
-                  </MotionArrowTarget>
+                  </GraphInstance>
                 );
               default:
                 return (
-                  <MotionArrowTarget key={platform.id} id={platform.id}>
+                  <GraphInstance
+                    key={platform.id}
+                    graphKey="schema"
+                    id={platform.id}
+                  >
                     <AccountTreeIcon
                       key={platform.id}
                       id={platform.id}
@@ -84,7 +102,7 @@ export const DashboardSchemaGraph = () => {
                         fontSize: "48px",
                       }}
                     />
-                  </MotionArrowTarget>
+                  </GraphInstance>
                 );
             }
           })}

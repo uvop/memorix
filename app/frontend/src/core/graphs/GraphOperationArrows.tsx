@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import * as Types from "src/core/graphql/types.generated";
 const Xarrow = dynamic(() => import("react-xarrows"), { ssr: false });
 
-export interface DashboardGraphArrowsProps {
+export interface GraphOperationArrowsProps {
   refId: string;
   operation: {
     connectedDeviceId: string;
@@ -35,7 +35,7 @@ export interface DashboardGraphArrowsProps {
   };
 }
 
-export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
+export const GraphOperationArrows: React.FC<GraphOperationArrowsProps> = ({
   refId,
   operation,
 }) => {

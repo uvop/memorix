@@ -9,7 +9,7 @@ import { setContext } from "apollo-link-context";
 import { WebSocketLink } from "apollo-link-ws";
 import { getMainDefinition } from "apollo-utilities";
 import { throttle } from "lodash";
-import introspectionResult from "src/graphql/introspection-result.generated";
+import introspectionResult from "src/core/graphql/introspection-result.generated";
 
 const fragmentMatcher = new IntrospectionFragmentMatcher({
   introspectionQueryResultData: introspectionResult,

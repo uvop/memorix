@@ -4,25 +4,30 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import {
   usePlatformGraphQuery,
   usePlatformGraphOperationsSubscription,
-} from "./DashboardPlatformGraph.generated";
-import { DashboardGraphArrows } from "./DashboardGraphArrows";
-import { MotionArrowTarget } from "./MotionArrowTarget";
+} from "./PlatformGraph.generated";
 import { Xwrapper } from "react-xarrows";
 import { startCase } from "lodash";
+import { GraphInstance } from "src/core/graphs/GraphInstance";
+import { GraphOperationArrows } from "src/core/graphs/GraphOperationArrows";
+import { useRouter } from "next/router";
+import { routes } from "pages";
 
-export interface DashboardPlatformGraph {
-  platformId: string;
+export interface PlatformGraph {
+  platformId: string | undefined;
 }
 
-export const DashboardPlatformGraph: React.FC<DashboardPlatformGraph> = ({
-  platformId,
-}) => {
+export const PlatformGraph: React.FC<PlatformGraph> = ({ platformId }) => {
+  const router = useRouter();
+
   const { data } = usePlatformGraphQuery({
     variables: { id: platformId },
+    skip: !platformId,
   });
+
   const { data: platformOperationsSubscription } =
     usePlatformGraphOperationsSubscription({
       variables: { id: platformId },
+      skip: !platformId,
     });
 
   return (
@@ -42,7 +47,11 @@ export const DashboardPlatformGraph: React.FC<DashboardPlatformGraph> = ({
           alignItems="center"
         >
           {data?.platform.connectedDevices.map((device) => (
-            <MotionArrowTarget key={device.id} id={device.id}>
+            <GraphInstance
+              key={device.id}
+              graphKey={`platform_${platformId}`}
+              id={device.id}
+            >
               <Box key={device.id} textAlign="center">
                 <ComputerSharpIcon
                   id={device.id}
@@ -52,11 +61,11 @@ export const DashboardPlatformGraph: React.FC<DashboardPlatformGraph> = ({
                 />
                 <Typography>{device.name}</Typography>
               </Box>
-            </MotionArrowTarget>
+            </GraphInstance>
           ))}
           {platformOperationsSubscription?.platformLastOperations.map(
             (platformOperation) => (
-              <DashboardGraphArrows
+              <GraphOperationArrows
                 key={platformOperation.operation.id}
                 refId={platformOperation.resourceId}
                 operation={platformOperation.operation}
@@ -74,7 +83,18 @@ export const DashboardPlatformGraph: React.FC<DashboardPlatformGraph> = ({
             switch (resource.type) {
               default:
                 return (
-                  <MotionArrowTarget key={resource.id} id={resource.id}>
+                  <GraphInstance
+                    key={resource.id}
+                    graphKey={`platform_${platformId}`}
+                    id={resource.id}
+                    onClick={(_, isAfterDrag) => {
+                      if (!isAfterDrag) {
+                        router.push(
+                          routes.resources.resourceId(resource.id).ResourceGraph
+                        );
+                      }
+                    }}
+                  >
                     <AccountTreeIcon
                       key={resource.id}
                       id={resource.id}
@@ -83,7 +103,7 @@ export const DashboardPlatformGraph: React.FC<DashboardPlatformGraph> = ({
                       }}
                     />
                     <Typography>{startCase(resource.type)}</Typography>
-                  </MotionArrowTarget>
+                  </GraphInstance>
                 );
             }
           })}

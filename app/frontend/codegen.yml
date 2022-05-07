@@ -1,19 +1,19 @@
 schema: http://localhost:8080/graphql
 documents: "src/**/*.graphql"
 generates:
-  ./src/graphql/introspection-result.generated.ts:
+  ./src/core/graphql/introspection-result.generated.ts:
     plugins:
       - fragment-matcher
       - add: "/* tslint-disable */"
       - add: "/* eslint-disable */"
       - add: "// @ts-nocheck"
-  ./src/graphql/schema.graphql:
+  ./src/core/graphql/schema.graphql:
     plugins:
       - schema-ast
     config:
       skipDocumentValidation: true
       includeDirectives: true
-  ./src/graphql/types.generated.ts:
+  ./src/core/graphql/types.generated.ts:
     plugins:
       - add: "/* tslint-disable */"
       - add: "/* eslint-disable */"
