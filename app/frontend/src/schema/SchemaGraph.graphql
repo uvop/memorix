@@ -18,6 +18,7 @@ subscription SchemaGraphOperations {
     platformId
     operation {
       id
+      actionId
       connectedDeviceId
       createMsAgo
       type
@@ -33,8 +34,11 @@ subscription SchemaGraphOperations {
         }
         ... on TaskOperation {
           taskType: type
+          key
+          payload
           queueTo {
             connectedDeviceId
+            callbackEndedMsAgo
             returns
             returnCallbackStartedMsAgo
           }

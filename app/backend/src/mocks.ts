@@ -140,6 +140,7 @@ export const getOperations: () => Promise<
       actionsId: "redis_task_registerPr",
       base: {
         id: "before_1",
+        actionId: "redis_task_registerPr",
         connectedDeviceId: "be1",
         createMsAgo: 30000 + randBetweenInt(-200, 200),
         type: ActionOperationType.Task,
@@ -156,6 +157,7 @@ export const getOperations: () => Promise<
       actionsId: "redis_task_sendLocalizationResult",
       base: {
         id: "before_2",
+        actionId: "redis_task_sendLocalizationResult",
         connectedDeviceId: "be1",
         createMsAgo: 30000 + randBetweenInt(-200, 200),
         type: ActionOperationType.Task,
@@ -172,6 +174,7 @@ export const getOperations: () => Promise<
       actionsId: "redis_task_algo",
       base: {
         id: "before_3",
+        actionId: "redis_task_algo",
         connectedDeviceId: "be2",
         createMsAgo: 30000 + randBetweenInt(-200, 200),
         type: ActionOperationType.Task,
@@ -188,6 +191,7 @@ export const getOperations: () => Promise<
       actionsId: "redis_pubsub_getOperation",
       base: {
         id: "before_4",
+        actionId: "redis_pubsub_getOperation",
         connectedDeviceId: `be1`,
         createMsAgo: 10000 + randBetweenInt(-200, 200),
         type: ActionOperationType.Pubsub,
@@ -231,6 +235,7 @@ export const getOperations: () => Promise<
       actionsId: "redis_task_algo",
       base: {
         id: "before_5",
+        actionId: "redis_task_algo",
         connectedDeviceId: "be1",
         createMsAgo: 3720,
         type: ActionOperationType.Task,
@@ -263,6 +268,7 @@ export const getOperations: () => Promise<
       actionsId: "redis_task_algo",
       base: {
         id: "before_6",
+        actionId: "redis_task_algo",
         connectedDeviceId: "be1",
         createMsAgo: 3650,
         type: ActionOperationType.Task,
@@ -300,6 +306,7 @@ export const getOperations: () => Promise<
             actionsId: "redis_task_registerPr",
             base: {
               id: `before_iot_${num}_1`,
+              actionId: "redis_task_registerPr",
               connectedDeviceId,
               createMsAgo: 20000 + randBetweenInt(-200, 200),
               type: ActionOperationType.Task,
@@ -331,6 +338,7 @@ export const getOperations: () => Promise<
             actionsId: "redis_pubsub_getOperation",
             base: {
               id: `before_iot_${num}_2`,
+              actionId: "redis_pubsub_getOperation",
               connectedDeviceId,
               createMsAgo: 15000 + randBetweenInt(-200, 200),
               type: ActionOperationType.Pubsub,
@@ -373,6 +381,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           actionsId: "redis_task_sendLocalizationResult",
           base: {
             id: `after_iot_${num}_${i}_1`,
+            actionId: "redis_task_sendLocalizationResult",
             connectedDeviceId,
             createMsAgo: 10,
             type: ActionOperationType.Task,
@@ -424,6 +433,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           actionsId: "redis_task_sendLocalizationResult",
           base: {
             id: `after_iot_${num}_${i}_1`,
+            actionId: "redis_task_sendLocalizationResult",
             connectedDeviceId,
             createMsAgo: 10 + sleep1,
             type: ActionOperationType.Task,
@@ -478,6 +488,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           actionsId: "redis_cache_localizationResult",
           base: {
             id: `after_iot_${num}_${i}_2`,
+            actionId: "redis_cache_localizationResult",
             connectedDeviceId: "be1",
             createMsAgo: 7,
             type: ActionOperationType.Cache,
@@ -527,6 +538,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           actionsId: "redis_task_sendLocalizationResult",
           base: {
             id: `after_iot_${num}_${i}_1`,
+            actionId: "redis_task_sendLocalizationResult",
             connectedDeviceId,
             createMsAgo: 10 + sleep1 + sleep2,
             type: ActionOperationType.Task,
@@ -582,6 +594,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
         resourceId: "redis_task",
         actionsId: "redis_task_algo",
         base: {
+          actionId: "redis_task_algo",
           id: `after_iot_${i}_1`,
           connectedDeviceId: "be1",
           createMsAgo: 5,
@@ -611,6 +624,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
         resourceId: "redis_task",
         actionsId: "redis_task_algo",
         base: {
+          actionId: "redis_task_algo",
           id: `after_iot_${i}_1`,
           connectedDeviceId: "be1",
           createMsAgo: 5 + sleep1,
@@ -644,6 +658,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           actionsId: "redis_cache_localizationResult",
           base: {
             id: `after_be_${num}_${i}_3`,
+            actionId: "redis_cache_localizationResult",
             connectedDeviceId: "be2",
             createMsAgo: 7,
             type: ActionOperationType.Cache,
@@ -694,6 +709,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
         actionsId: "redis_task_algo",
         base: {
           id: `after_iot_${i}_1`,
+          actionId: "redis_task_algo",
           connectedDeviceId: "be1",
           createMsAgo: 5 + sleep1 + sleep2,
           type: ActionOperationType.Task,
@@ -733,6 +749,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
         actionsId: "redis_task_algo",
         base: {
           id: `after_iot_${i}_1`,
+          actionId: "redis_task_algo",
           connectedDeviceId: "be1",
           createMsAgo: 5 + sleep1 + sleep2 + sleep3,
           type: ActionOperationType.Task,
@@ -772,6 +789,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
         resourceId: "redis_task",
         actionsId: "redis_task_algo",
         base: {
+          actionId: "redis_task_algo",
           id: `after_iot_${i}_1`,
           connectedDeviceId: "be1",
           createMsAgo: 5 + sleep1 + sleep2 + sleep3 + sleep4,

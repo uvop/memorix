@@ -12,12 +12,32 @@ import { GraphInstance } from "src/core/graphs/GraphInstance";
 import { Xwrapper } from "react-xarrows";
 import { useRouter } from "next/router";
 import { routes } from "pages";
+import { useEffect, useState } from "react";
+import { useOpenOperationDrawer } from "src/dashboard/OperationDrawer";
 
 export const SchemaGraph = () => {
   const router = useRouter();
   const { data } = useSchemaGraphQuery();
   const { data: schemaOperationsSubscription } =
     useSchemaGraphOperationsSubscription();
+
+  const [didOpen, setDidOpen] = useState(false);
+  const openOperationDrawer = useOpenOperationDrawer();
+
+  useEffect(() => {
+    if (!didOpen && schemaOperationsSubscription) {
+      const operation =
+        schemaOperationsSubscription.schemaLastOperations[0].operation;
+      if (
+        operation.data.__typename === "TaskOperation" &&
+        operation.data.queueTo?.returnCallbackStartedMsAgo != undefined &&
+        operation.actionId === "redis_task_algo"
+      ) {
+        openOperationDrawer(operation as any);
+        setDidOpen(true);
+      }
+    }
+  }, [didOpen, openOperationDrawer, schemaOperationsSubscription]);
 
   return (
     <Xwrapper>

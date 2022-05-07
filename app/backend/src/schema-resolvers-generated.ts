@@ -188,6 +188,7 @@ export enum ActionOperationType {
 export type ActionOperation = {
   __typename?: "ActionOperation";
   id: Scalars["ID"];
+  actionId: Scalars["ID"];
   connectedDeviceId: Scalars["ID"];
   createMsAgo: Scalars["Int"];
   type: ActionOperationType;
@@ -718,6 +719,7 @@ export type ActionOperationResolvers<
   ParentType extends ResolversParentTypes["ActionOperation"] = ResolversParentTypes["ActionOperation"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  actionId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   connectedDeviceId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   createMsAgo?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   type?: Resolver<

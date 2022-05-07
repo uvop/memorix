@@ -6,6 +6,7 @@ schema {
 
 type ActionOperation {
   id: ID!
+  actionId: ID!
   connectedDeviceId: ID!
   createMsAgo: Int!
   type: ActionOperationType!

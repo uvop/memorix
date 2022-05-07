@@ -38,7 +38,7 @@ export type SchemaGraphOperationsSubscription = (
     & Pick<Types.SchemaOperation, 'platformId'>
     & { operation: (
       { __typename?: 'ActionOperation' }
-      & Pick<Types.ActionOperation, 'id' | 'connectedDeviceId' | 'createMsAgo' | 'type'>
+      & Pick<Types.ActionOperation, 'id' | 'actionId' | 'connectedDeviceId' | 'createMsAgo' | 'type'>
       & { data: (
         { __typename?: 'CacheOperation' }
         & { cacheType: Types.CacheOperation['type'] }
@@ -51,10 +51,11 @@ export type SchemaGraphOperationsSubscription = (
         )>> }
       ) | (
         { __typename?: 'TaskOperation' }
+        & Pick<Types.TaskOperation, 'key' | 'payload'>
         & { taskType: Types.TaskOperation['type'] }
         & { queueTo?: Types.Maybe<(
           { __typename?: 'TaskOperationQueueTo' }
-          & Pick<Types.TaskOperationQueueTo, 'connectedDeviceId' | 'returns' | 'returnCallbackStartedMsAgo'>
+          & Pick<Types.TaskOperationQueueTo, 'connectedDeviceId' | 'callbackEndedMsAgo' | 'returns' | 'returnCallbackStartedMsAgo'>
         )> }
       ) }
     ) }
@@ -129,6 +130,7 @@ export const SchemaGraphOperationsDocument = gql`
     platformId
     operation {
       id
+      actionId
       connectedDeviceId
       createMsAgo
       type
@@ -144,8 +146,11 @@ export const SchemaGraphOperationsDocument = gql`
         }
         ... on TaskOperation {
           taskType: type
+          key
+          payload
           queueTo {
             connectedDeviceId
+            callbackEndedMsAgo
             returns
             returnCallbackStartedMsAgo
           }
