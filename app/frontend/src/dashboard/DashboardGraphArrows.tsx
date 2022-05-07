@@ -25,7 +25,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
           <Xarrow
             start={platformId}
             end={operation.connectedDeviceId}
-            path="grid"
+            path="smooth"
             labels={{
               start: `Cache Get`,
             }}
@@ -36,7 +36,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
           <Xarrow
             start={operation.connectedDeviceId}
             end={platformId}
-            path="grid"
+            path="smooth"
             labels={{
               start: `Cache Set`,
             }}
@@ -52,7 +52,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
           <Xarrow
             start={operation.connectedDeviceId}
             end={platformId}
-            path="grid"
+            path="smooth"
             labels={{
               start: `Pubsub Subscribe`,
             }}
@@ -64,7 +64,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
             <Xarrow
               start={operation.connectedDeviceId}
               end={platformId}
-              path="grid"
+              path="smooth"
               labels={{
                 start: `Pubsub Publish`,
               }}
@@ -73,7 +73,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
               <Xarrow
                 key={x.connectedDeviceId}
                 start={platformId}
-                path="grid"
+                path="smooth"
                 end={x.connectedDeviceId}
                 labels={{
                   start: `Subscribe Callback`,
@@ -91,7 +91,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
           <Xarrow
             start={operation.connectedDeviceId}
             end={platformId}
-            path="grid"
+            path="smooth"
             labels={{
               start: `Task Subscribe`,
             }}
@@ -103,7 +103,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
             <Xarrow
               start={operation.connectedDeviceId}
               end={platformId}
-              path="grid"
+              path="smooth"
               labels={{
                 start: `Task Publish`,
               }}
@@ -113,7 +113,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
                 <Xarrow
                   start={platformId}
                   end={queueTo.connectedDeviceId}
-                  path="grid"
+                  path="smooth"
                   labels={{
                     start: `Task Subscribtion Callback`,
                   }}
@@ -122,7 +122,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
                   <Xarrow
                     start={queueTo.connectedDeviceId}
                     end={platformId}
-                    path="grid"
+                    path="smooth"
                     labels={{
                       start: `Task Subscribtion Callback Result`,
                     }}
@@ -132,7 +132,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
                   <Xarrow
                     start={platformId}
                     end={operation.connectedDeviceId}
-                    path="grid"
+                    path="smooth"
                     labels={{
                       start: `Task Result Callback`,
                     }}
