@@ -38,6 +38,9 @@
     "react-dom": "18.0.0",
     "react-xarrows": "^2.0.2"
   },
+  "resolutions": {
+    "@apollo/client": "~3.4.16"
+  },
   "devDependencies": {
     "@graphql-codegen/add": "^1.17.4",
     "@graphql-codegen/cli": "^1.17.8",
