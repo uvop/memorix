@@ -1,20 +1,29 @@
 import { Box, Typography } from "@mui/material";
 import ComputerSharpIcon from "@mui/icons-material/ComputerSharp";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import RedisIcon from "src/assets/redis.svg";
 import {
-  useSchemaGraphQuery,
-  useSchemaGraphOperationsSubscription,
-} from "./DashboardSchemaGraph.generated";
-import { SchemaPlatformType } from "src/graphql/types.generated";
+  usePlatformGraphQuery,
+  usePlatformGraphOperationsSubscription,
+} from "./DashboardPlatformGraph.generated";
 import { DashboardGraphArrows } from "./DashboardGraphArrows";
 import { MotionArrowTarget } from "./MotionArrowTarget";
 import { Xwrapper } from "react-xarrows";
+import { startCase } from "lodash";
 
-export const DashboardSchemaGraph = () => {
-  const { data } = useSchemaGraphQuery();
-  const { data: schemaOperationsSubscription } =
-    useSchemaGraphOperationsSubscription();
+export interface DashboardPlatformGraph {
+  platformId: string;
+}
+
+export const DashboardPlatformGraph: React.FC<DashboardPlatformGraph> = ({
+  platformId,
+}) => {
+  const { data } = usePlatformGraphQuery({
+    variables: { id: platformId },
+  });
+  const { data: platformOperationsSubscription } =
+    usePlatformGraphOperationsSubscription({
+      variables: { id: platformId },
+    });
 
   return (
     <Xwrapper>
@@ -32,7 +41,7 @@ export const DashboardSchemaGraph = () => {
           gap="24px"
           alignItems="center"
         >
-          {data?.schema.connectedDevices.map((device) => (
+          {data?.platform.connectedDevices.map((device) => (
             <MotionArrowTarget key={device.id} id={device.id}>
               <Box key={device.id} textAlign="center">
                 <ComputerSharpIcon
@@ -45,12 +54,12 @@ export const DashboardSchemaGraph = () => {
               </Box>
             </MotionArrowTarget>
           ))}
-          {schemaOperationsSubscription?.schemaLastOperations.map(
-            (schemaOperation) => (
+          {platformOperationsSubscription?.platformLastOperations.map(
+            (platformOperation) => (
               <DashboardGraphArrows
-                key={schemaOperation.operation.id}
-                refId={schemaOperation.platformId}
-                operation={schemaOperation.operation}
+                key={platformOperation.operation.id}
+                refId={platformOperation.resourceId}
+                operation={platformOperation.operation}
               />
             )
           )}
@@ -61,29 +70,19 @@ export const DashboardSchemaGraph = () => {
           gap="24px"
           alignItems="center"
         >
-          {data?.schema.platforms.map((platform) => {
-            switch (platform.type) {
-              case SchemaPlatformType.Redis:
-                return (
-                  <MotionArrowTarget key={platform.id} id={platform.id}>
-                    <RedisIcon
-                      key={platform.id}
-                      width="48px"
-                      height="48px"
-                      id={platform.id}
-                    />
-                  </MotionArrowTarget>
-                );
+          {data?.platform.resources.map((resource) => {
+            switch (resource.type) {
               default:
                 return (
-                  <MotionArrowTarget key={platform.id} id={platform.id}>
+                  <MotionArrowTarget key={resource.id} id={resource.id}>
                     <AccountTreeIcon
-                      key={platform.id}
-                      id={platform.id}
+                      key={resource.id}
+                      id={resource.id}
                       sx={{
                         fontSize: "48px",
                       }}
                     />
+                    <Typography>{startCase(resource.type)}</Typography>
                   </MotionArrowTarget>
                 );
             }

@@ -1,29 +1,51 @@
 import dynamic from "next/dynamic";
-import {
-  ActionOperationType,
-  CacheOperation,
-  CacheOperationType,
-  PubsubOperationType,
-  TaskOperationType,
-} from "src/graphql/types.generated";
+import * as Types from "src/graphql/types.generated";
 const Xarrow = dynamic(() => import("react-xarrows"), { ssr: false });
-import { SchemaGraphOperationsSubscription } from "./DashboardSchemaGraph.generated";
 
 export interface DashboardGraphArrowsProps {
-  schemaOperation: SchemaGraphOperationsSubscription["schemaLastOperations"][number];
+  refId: string;
+  operation: {
+    connectedDeviceId: string;
+    data:
+      | ({
+          __typename?: "CacheOperation";
+        } & { cacheType: Types.CacheOperation["type"] })
+      | ({ __typename?: "PubsubOperation" } & {
+          pubsubType: Types.PubsubOperation["type"];
+        } & {
+          publishTo?: Types.Maybe<
+            Array<
+              { __typename?: "PubsubOperationPublishTo" } & Pick<
+                Types.PubsubOperationPublishTo,
+                "connectedDeviceId"
+              >
+            >
+          >;
+        })
+      | ({ __typename?: "TaskOperation" } & {
+          taskType: Types.TaskOperation["type"];
+        } & {
+          queueTo?: Types.Maybe<
+            { __typename?: "TaskOperationQueueTo" } & Pick<
+              Types.TaskOperationQueueTo,
+              "connectedDeviceId" | "returns" | "returnCallbackStartedMsAgo"
+            >
+          >;
+        });
+  };
 }
 
 export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
-  schemaOperation,
+  refId,
+  operation,
 }) => {
-  const { operation, platformId } = schemaOperation;
   switch (operation.data.__typename) {
     case "CacheOperation": {
       const { cacheType } = operation.data;
-      if (cacheType === CacheOperationType.Get) {
+      if (cacheType === Types.CacheOperationType.Get) {
         return (
           <Xarrow
-            start={platformId}
+            start={refId}
             end={operation.connectedDeviceId}
             path="smooth"
             labels={{
@@ -35,7 +57,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
         return (
           <Xarrow
             start={operation.connectedDeviceId}
-            end={platformId}
+            end={refId}
             path="smooth"
             labels={{
               start: `Cache Set`,
@@ -47,11 +69,11 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
     case "PubsubOperation": {
       const { pubsubType, publishTo } = operation.data;
 
-      if (pubsubType === PubsubOperationType.Subscribe) {
+      if (pubsubType === Types.PubsubOperationType.Subscribe) {
         return (
           <Xarrow
             start={operation.connectedDeviceId}
-            end={platformId}
+            end={refId}
             path="smooth"
             labels={{
               start: `Pubsub Subscribe`,
@@ -63,7 +85,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
           <>
             <Xarrow
               start={operation.connectedDeviceId}
-              end={platformId}
+              end={refId}
               path="smooth"
               labels={{
                 start: `Pubsub Publish`,
@@ -72,7 +94,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
             {publishTo?.map((x) => (
               <Xarrow
                 key={x.connectedDeviceId}
-                start={platformId}
+                start={refId}
                 path="smooth"
                 end={x.connectedDeviceId}
                 labels={{
@@ -86,11 +108,11 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
     }
     case "TaskOperation": {
       const { taskType, queueTo } = operation.data;
-      if (taskType === TaskOperationType.Dequeue) {
+      if (taskType === Types.TaskOperationType.Dequeue) {
         return (
           <Xarrow
             start={operation.connectedDeviceId}
-            end={platformId}
+            end={refId}
             path="smooth"
             labels={{
               start: `Task Subscribe`,
@@ -102,7 +124,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
           <>
             <Xarrow
               start={operation.connectedDeviceId}
-              end={platformId}
+              end={refId}
               path="smooth"
               labels={{
                 start: `Task Publish`,
@@ -111,7 +133,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
             {queueTo && (
               <>
                 <Xarrow
-                  start={platformId}
+                  start={refId}
                   end={queueTo.connectedDeviceId}
                   path="smooth"
                   labels={{
@@ -121,7 +143,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
                 {queueTo.returns && (
                   <Xarrow
                     start={queueTo.connectedDeviceId}
-                    end={platformId}
+                    end={refId}
                     path="smooth"
                     labels={{
                       start: `Task Subscribtion Callback Result`,
@@ -130,7 +152,7 @@ export const DashboardGraphArrows: React.FC<DashboardGraphArrowsProps> = ({
                 )}
                 {queueTo.returnCallbackStartedMsAgo && (
                   <Xarrow
-                    start={platformId}
+                    start={refId}
                     end={operation.connectedDeviceId}
                     path="smooth"
                     labels={{
