@@ -17,4 +17,9 @@ export const routes = {
       ResourceGraph: `/resources/${id}/ResourceGraph`,
     }),
   },
+  actions: {
+    actionId: (id: string) => ({
+      ActionGraph: `/actions/${id}/ActionGraph`,
+    }),
+  },
 };

@@ -1,13 +1,6 @@
 import { createContext, useCallback, useContext, useState } from "react";
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  CircularProgress,
-  Drawer,
-  Typography,
-} from "@mui/material";
-import { ActionOperation } from "src/graphql/types.generated";
+import { CircularProgress, Drawer, Typography } from "@mui/material";
+import { ActionOperation } from "src/core/graphql/types.generated";
 import { useActionDataQuery } from "./OperationDrawerAction.generated";
 import { Box } from "@mui/system";
 import { JSONTree } from "react-json-tree";

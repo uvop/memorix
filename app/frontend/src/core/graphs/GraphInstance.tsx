@@ -44,6 +44,16 @@ export const GraphInstance: React.FC<GraphInstanceProps> = ({
         x: dragX,
         y: dragY,
       }}
+      whileHover="hover"
+      whileDrag="drag"
+      variants={{
+        hover: {
+          cursor: "grab",
+        },
+        drag: {
+          cursor: "grabbing",
+        },
+      }}
       onDragStart={() => {
         isDragRef.current = true;
         updateXArrow();

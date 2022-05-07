@@ -4,25 +4,25 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import {
   useActionGraphQuery,
   useActionGraphOperationsSubscription,
-} from "./DashboardActionGraph.generated";
-import { DashboardGraphArrows } from "./DashboardGraphArrows";
-import { MotionArrowTarget } from "./MotionArrowTarget";
+} from "./ActionGraph.generated";
 import { Xwrapper } from "react-xarrows";
 import { startCase } from "lodash";
+import { GraphInstance } from "src/core/graphs/GraphInstance";
+import { GraphOperationArrows } from "src/core/graphs/GraphOperationArrows";
 
-export interface DashboardActionGraph {
-  actionId: string;
+export interface ActionGraph {
+  actionId: string | undefined;
 }
 
-export const DashboardActionGraph: React.FC<DashboardActionGraph> = ({
-  actionId,
-}) => {
+export const ActionGraph: React.FC<ActionGraph> = ({ actionId }) => {
   const { data } = useActionGraphQuery({
     variables: { id: actionId },
+    skip: !actionId,
   });
   const { data: platformOperationsSubscription } =
     useActionGraphOperationsSubscription({
       variables: { id: actionId },
+      skip: !actionId,
     });
 
   return (
@@ -42,7 +42,11 @@ export const DashboardActionGraph: React.FC<DashboardActionGraph> = ({
           alignItems="center"
         >
           {data?.action.connectedDevices.map((device) => (
-            <MotionArrowTarget key={device.id} id={device.id}>
+            <GraphInstance
+              key={device.id}
+              graphKey={`action_${actionId}`}
+              id={device.id}
+            >
               <Box key={device.id} textAlign="center">
                 <ComputerSharpIcon
                   id={device.id}
@@ -52,13 +56,13 @@ export const DashboardActionGraph: React.FC<DashboardActionGraph> = ({
                 />
                 <Typography>{device.name}</Typography>
               </Box>
-            </MotionArrowTarget>
+            </GraphInstance>
           ))}
           {platformOperationsSubscription?.actionLastOperations.map(
             (actionOperation) => (
-              <DashboardGraphArrows
+              <GraphOperationArrows
                 key={actionOperation.id}
-                refId={actionId}
+                refId={actionId!}
                 operation={actionOperation}
               />
             )
@@ -71,7 +75,11 @@ export const DashboardActionGraph: React.FC<DashboardActionGraph> = ({
           alignItems="center"
         >
           {data?.action && (
-            <MotionArrowTarget id={data.action.id} textAlign="center">
+            <GraphInstance
+              id={data.action.id}
+              graphKey={`action_${actionId}`}
+              textAlign="center"
+            >
               <AccountTreeIcon
                 key={data.action.id}
                 id={data.action.id}
@@ -80,7 +88,7 @@ export const DashboardActionGraph: React.FC<DashboardActionGraph> = ({
                 }}
               />
               <Typography>{startCase(data.action.name)}</Typography>
-            </MotionArrowTarget>
+            </GraphInstance>
           )}
         </Box>
       </Box>

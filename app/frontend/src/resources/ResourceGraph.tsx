@@ -9,12 +9,15 @@ import { Xwrapper } from "react-xarrows";
 import { startCase } from "lodash";
 import { GraphInstance } from "src/core/graphs/GraphInstance";
 import { GraphOperationArrows } from "src/core/graphs/GraphOperationArrows";
+import { useRouter } from "next/router";
+import { routes } from "pages";
 
 export interface ResourceGraph {
   resourceId: string | undefined;
 }
 
 export const ResourceGraph: React.FC<ResourceGraph> = ({ resourceId }) => {
+  const router = useRouter();
   const { data } = useResourceGraphQuery({
     variables: { id: resourceId },
     skip: !resourceId,
@@ -81,6 +84,11 @@ export const ResourceGraph: React.FC<ResourceGraph> = ({ resourceId }) => {
                 graphKey={`resource_${resourceId}`}
                 id={action.id}
                 textAlign="center"
+                onClick={(_, isAfterDrag) => {
+                  if (!isAfterDrag) {
+                    router.push(routes.actions.actionId(action.id).ActionGraph);
+                  }
+                }}
               >
                 <AccountTreeIcon
                   key={action.id}
