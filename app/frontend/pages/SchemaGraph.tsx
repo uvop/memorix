@@ -35,7 +35,7 @@ const SchemaGraph: NextPage = () => {
         <TabPanel currentValue={tab} value={TabType.Graph} sx={{ flex: 1 }}>
           <SchemaGraphPage />
         </TabPanel>
-        <TabPanel currentValue={tab} value={TabType.Timeline}>
+        <TabPanel currentValue={tab} value={TabType.Timeline} sx={{ flex: 1 }}>
           <SchemaTimeline />
         </TabPanel>
       </Box>
