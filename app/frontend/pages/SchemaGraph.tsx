@@ -4,6 +4,7 @@ import React, { useCallback, useState } from "react";
 import { SchemaGraph as SchemaGraphPage } from "src/schema/SchemaGraph";
 import { OperationDrawer } from "src/dashboard/OperationDrawer";
 import { TabPanel } from "src/ui/TabPanel";
+import { SchemaTimeline } from "src/schema/SchemaTimeline";
 
 enum TabType {
   Graph,
@@ -35,7 +36,7 @@ const SchemaGraph: NextPage = () => {
           <SchemaGraphPage />
         </TabPanel>
         <TabPanel currentValue={tab} value={TabType.Timeline}>
-          <SchemaGraphPage />
+          <SchemaTimeline />
         </TabPanel>
       </Box>
     </OperationDrawer>
