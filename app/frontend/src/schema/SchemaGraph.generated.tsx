@@ -41,21 +41,20 @@ export type SchemaGraphOperationsSubscription = (
       & Pick<Types.ActionOperation, 'id' | 'actionId' | 'connectedDeviceId' | 'createMsAgo' | 'type'>
       & { data: (
         { __typename?: 'CacheOperation' }
-        & { cacheType: Types.CacheOperation['type'] }
+        & { cacheType: Types.CacheOperation['type'], cacheKey: Types.CacheOperation['key'], cachePayload: Types.CacheOperation['payload'] }
       ) | (
         { __typename?: 'PubsubOperation' }
-        & { pubsubType: Types.PubsubOperation['type'] }
+        & { pubsubType: Types.PubsubOperation['type'], pubsubKey: Types.PubsubOperation['key'], pubsubPayload: Types.PubsubOperation['payload'] }
         & { publishTo?: Types.Maybe<Array<(
           { __typename?: 'PubsubOperationPublishTo' }
-          & Pick<Types.PubsubOperationPublishTo, 'connectedDeviceId'>
+          & Pick<Types.PubsubOperationPublishTo, 'connectedDeviceId' | 'callbackStartedMsAgo' | 'callbackEndedMsAgo'>
         )>> }
       ) | (
         { __typename?: 'TaskOperation' }
-        & Pick<Types.TaskOperation, 'key' | 'payload'>
-        & { taskType: Types.TaskOperation['type'] }
+        & { taskType: Types.TaskOperation['type'], taskKey: Types.TaskOperation['key'], taskPayload: Types.TaskOperation['payload'] }
         & { queueTo?: Types.Maybe<(
           { __typename?: 'TaskOperationQueueTo' }
-          & Pick<Types.TaskOperationQueueTo, 'connectedDeviceId' | 'callbackEndedMsAgo' | 'returns' | 'returnCallbackStartedMsAgo'>
+          & Pick<Types.TaskOperationQueueTo, 'connectedDeviceId' | 'callbackStartedMsAgo' | 'callbackEndedMsAgo' | 'returns' | 'returnCallbackStartedMsAgo' | 'returnCallbackEndedMsAgo'>
         )> }
       ) }
     ) }
@@ -137,22 +136,30 @@ export const SchemaGraphOperationsDocument = gql`
       data {
         ... on CacheOperation {
           cacheType: type
+          cacheKey: key
+          cachePayload: payload
         }
         ... on PubsubOperation {
           pubsubType: type
+          pubsubKey: key
+          pubsubPayload: payload
           publishTo {
             connectedDeviceId
+            callbackStartedMsAgo
+            callbackEndedMsAgo
           }
         }
         ... on TaskOperation {
           taskType: type
-          key
-          payload
+          taskKey: key
+          taskPayload: payload
           queueTo {
             connectedDeviceId
+            callbackStartedMsAgo
             callbackEndedMsAgo
             returns
             returnCallbackStartedMsAgo
+            returnCallbackEndedMsAgo
           }
         }
       }

@@ -25,22 +25,30 @@ subscription SchemaGraphOperations {
       data {
         ... on CacheOperation {
           cacheType: type
+          cacheKey: key
+          cachePayload: payload
         }
         ... on PubsubOperation {
           pubsubType: type
+          pubsubKey: key
+          pubsubPayload: payload
           publishTo {
             connectedDeviceId
+            callbackStartedMsAgo
+            callbackEndedMsAgo
           }
         }
         ... on TaskOperation {
           taskType: type
-          key
-          payload
+          taskKey: key
+          taskPayload: payload
           queueTo {
             connectedDeviceId
+            callbackStartedMsAgo
             callbackEndedMsAgo
             returns
             returnCallbackStartedMsAgo
+            returnCallbackEndedMsAgo
           }
         }
       }
