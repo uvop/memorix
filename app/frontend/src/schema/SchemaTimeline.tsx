@@ -11,8 +11,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Box } from "@mui/system";
+import {
+  useSchemaTimelineOperationsSubscription,
+  useSchemaTimelineQuery,
+} from "./SchemaTimeline.generated";
+import { useEffect, useState, useRef } from "react";
+import { ActionOperationType } from "src/core/graphql/types.generated";
 
-const data = [
+const barData = [
   {
     name: "",
     time: 2400,
@@ -32,6 +38,72 @@ const data = [
 ];
 
 export const SchemaTimeline: React.FC = () => {
+  const { data, loading } = useSchemaTimelineOperationsSubscription();
+  const [actions, setActions] = useState<
+    {
+      id: string;
+      actionId: string;
+      connectedDeviceId: string;
+      startDate: Date;
+      endDate?: Date;
+      type: ActionOperationType;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    if (data?.schemaOperations) {
+      const actionsCopy = [...actions];
+      data.schemaOperations.forEach((operation) => {
+        const { actionId, id, connectedDeviceId, createMsAgo, type } =
+          operation.operation;
+        const startDate = new Date(Date.now() - createMsAgo);
+        const formatedOperation = {
+          id,
+          actionId,
+          connectedDeviceId,
+          type,
+          startDate,
+          endDate: undefined as Date | undefined,
+        };
+        if (type === ActionOperationType.Cache) {
+          formatedOperation.endDate = new Date();
+          actionsCopy.push(formatedOperation);
+          return;
+        }
+        if (
+          operation.operation.data.__typename === "TaskOperation" &&
+          operation.operation.data.queueTo?.returnCallbackEndedMsAgo
+        ) {
+          const endDate = new Date(
+            Date.now() -
+              operation.operation.data.queueTo?.returnCallbackEndedMsAgo
+          );
+          formatedOperation.endDate = endDate;
+        }
+        if (
+          operation.operation.data.__typename === "PubsubOperation" &&
+          operation.operation.data.publishTo.callbackEndedMsAgo
+        ) {
+          const endDate = new Date(
+            Date.now() - operation.operation.data.publishTo.callbackEndedMsAgo
+          );
+          formatedOperation.endDate = endDate;
+        }
+        let oldOperationsIndex = actionsCopy.findIndex(
+          (x) => x.actionId === actionId
+        );
+        if (oldOperationsIndex > -1) {
+          actionsCopy.splice(oldOperationsIndex, 1);
+        }
+        actionsCopy.push(formatedOperation);
+      });
+
+      setActions(actionsCopy);
+    }
+  }, [data]);
+
+  console.log(actions);
+
   const onBarClick = (bar: Bar) => {
     console.log(bar);
   };
@@ -71,7 +143,7 @@ export const SchemaTimeline: React.FC = () => {
 
           width={600}
           height={300}
-          data={data}
+          data={barData}
           style={{
             flex: 1,
           }}
