@@ -424,7 +424,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           },
         },
       ];
-      const sleep1 = randBetweenInt(100, 200);
+      const sleep1 = randBetweenInt(300, 1000);
       await sleep(sleep1);
       yield [
         {
@@ -480,7 +480,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           },
         },
       ];
-      await sleep(randBetweenInt(100, 200));
+      await sleep(randBetweenInt(300, 1000));
       yield [
         {
           platformId: "redis",
@@ -529,7 +529,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           },
         },
       ];
-      const sleep2 = randBetweenInt(100, 200);
+      const sleep2 = randBetweenInt(300, 1000);
       await sleep(sleep2);
       yield [
         {
@@ -586,7 +586,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
           },
         },
       ];
-      await sleep(randBetweenInt(100, 200));
+      await sleep(randBetweenInt(300, 1000));
     }
     yield [
       {
@@ -616,7 +616,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
       },
     ];
 
-    const sleep1 = randBetweenInt(100, 200);
+    const sleep1 = randBetweenInt(300, 1000);
     await sleep(sleep1);
     yield [
       {
@@ -650,7 +650,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
       },
     ];
     for (let num = 1; num <= 4; num += 1) {
-      await sleep(randBetweenInt(100, 200));
+      await sleep(randBetweenInt(300, 1000));
       yield [
         {
           platformId: "redis",
@@ -740,7 +740,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
         },
       },
     ];
-    const sleep3 = randBetweenInt(100, 200);
+    const sleep3 = randBetweenInt(300, 1000);
     await sleep(sleep3);
     yield [
       {
@@ -781,7 +781,7 @@ export async function* getOperationsGenerator(): AsyncGenerator<
         },
       },
     ];
-    const sleep4 = randBetweenInt(100, 200);
+    const sleep4 = randBetweenInt(300, 1000);
     await sleep(sleep4);
     yield [
       {

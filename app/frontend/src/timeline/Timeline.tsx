@@ -22,7 +22,7 @@ export interface TimelineProps {
 }
 
 export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
-  useIntervalRender(16);
+  useIntervalRender(40);
   const endDate = new Date();
   const consistentColor = useConsistentColors();
 
@@ -40,17 +40,20 @@ export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
               display="flex"
               alignItems="center"
               position="relative"
+              overflow="hidden"
             >
-              {node.bars.map((bar) => (
-                <TimelineBar
-                  key={bar.id}
-                  bgcolor={consistentColor(bar.id)}
-                  timelineStartDate={startDate}
-                  timelineEndDate={endDate}
-                  startDate={bar.startDate}
-                  endDate={bar.endDate ?? endDate}
-                />
-              ))}
+              {node.bars
+                .filter((bar) => !bar.endDate || bar.endDate > startDate)
+                .map((bar) => (
+                  <TimelineBar
+                    key={bar.id}
+                    bgcolor={consistentColor(bar.id)}
+                    timelineStartDate={startDate}
+                    timelineEndDate={endDate}
+                    startDate={bar.startDate}
+                    endDate={bar.endDate ?? endDate}
+                  />
+                ))}
             </Box>
           </Box>
         }

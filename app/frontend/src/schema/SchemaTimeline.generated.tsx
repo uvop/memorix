@@ -26,7 +26,7 @@ export type SchemaTimelineQuery = (
         & Pick<Types.SchemaResource, 'id' | 'type'>
         & { actions: Array<(
           { __typename?: 'SchemaAction' }
-          & Pick<Types.SchemaAction, 'id' | 'name'>
+          & Pick<Types.SchemaAction, 'id' | 'name' | 'returns'>
           & { connectedDevices: Array<(
             { __typename?: 'ConnectedDevice' }
             & Pick<Types.ConnectedDevice, 'id' | 'name' | 'language' | 'secondsConnected'>
@@ -83,6 +83,7 @@ export const SchemaTimelineDocument = gql`
         actions {
           id
           name
+          returns
           connectedDevices {
             id
             name

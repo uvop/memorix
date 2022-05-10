@@ -15,30 +15,27 @@ import {
   useSchemaTimelineOperationsSubscription,
   useSchemaTimelineQuery,
 } from "./SchemaTimeline.generated";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { ActionOperationType } from "src/core/graphql/types.generated";
-
-const barData = [
-  {
-    name: "",
-    time: 2400,
-  },
-  {
-    name: "",
-    time: 3000,
-  },
-  {
-    name: "",
-    time: [150, 2000],
-  },
-  {
-    name: "",
-    time: [2000, 2780],
-  },
-];
+import produce from "immer";
+import { Node, Timeline } from "src/timeline/Timeline";
+import { find, flatten, isEmpty, orderBy, startCase } from "lodash";
+import { max, subMinutes } from "date-fns";
 
 export const SchemaTimeline: React.FC = () => {
-  const { data, loading } = useSchemaTimelineOperationsSubscription();
+  const { data: timelineQuery } = useSchemaTimelineQuery();
+  const { data: operationsSubscription } =
+    useSchemaTimelineOperationsSubscription();
+
+  const schemaActions = useMemo(
+    () =>
+      timelineQuery?.schema.platforms
+        .map((p) => p.resources.map((x) => x.actions).flat())
+        .flat(),
+    [timelineQuery]
+  );
+
+  const [minDate, setMinDate] = useState(new Date());
   const [actions, setActions] = useState<
     {
       id: string;
@@ -50,127 +47,131 @@ export const SchemaTimeline: React.FC = () => {
     }[]
   >([]);
 
+  const nodes = useMemo<Node[]>(() => {
+    return [
+      {
+        id: "schema",
+        name: "Schema",
+        bars: [],
+        items: timelineQuery?.schema.platforms.map((platform) => ({
+          id: platform.id,
+          name: startCase(platform.type),
+          bars: [],
+          items: platform.resources.map<Node>((resource) => ({
+            id: resource.id,
+            name: startCase(resource.type),
+            bars: [],
+            items: resource.actions.map((action) => ({
+              id: action.id,
+              name: action.name,
+              bars: [],
+              items: action.connectedDevices.map<Node>((device) => ({
+                id: device.id,
+                name: device.name,
+                bars: actions
+                  .filter(
+                    ({ actionId, connectedDeviceId }) =>
+                      actionId === action.id && connectedDeviceId === device.id
+                  )
+                  .map((action) => ({
+                    id: action.id,
+                    startDate: action.startDate,
+                    endDate: action.endDate,
+                  })),
+              })),
+            })),
+          })),
+        })),
+      },
+    ];
+  }, [timelineQuery, actions]);
+
   useEffect(() => {
-    if (data?.schemaOperations) {
-      const actionsCopy = [...actions];
-      data.schemaOperations.forEach((operation) => {
-        const { actionId, id, connectedDeviceId, createMsAgo, type } =
-          operation.operation;
-        const startDate = new Date(Date.now() - createMsAgo);
-        const formatedOperation = {
-          id,
-          actionId,
-          connectedDeviceId,
-          type,
-          startDate,
-          endDate: undefined as Date | undefined,
-        };
-        if (type === ActionOperationType.Cache) {
-          formatedOperation.endDate = new Date();
-          actionsCopy.push(formatedOperation);
-          return;
-        }
-        if (
-          operation.operation.data.__typename === "TaskOperation" &&
-          operation.operation.data.queueTo?.returnCallbackEndedMsAgo
-        ) {
-          const endDate = new Date(
+    if (
+      schemaActions &&
+      operationsSubscription &&
+      !isEmpty(operationsSubscription?.schemaOperations)
+    ) {
+      const { schemaOperations } = operationsSubscription;
+
+      setMinDate((minDate) => {
+        return (
+          minDate ??
+          new Date(
             Date.now() -
-              operation.operation.data.queueTo?.returnCallbackEndedMsAgo
-          );
-          formatedOperation.endDate = endDate;
-        }
-        if (
-          operation.operation.data.__typename === "PubsubOperation" &&
-          operation.operation.data.publishTo.callbackEndedMsAgo
-        ) {
-          const endDate = new Date(
-            Date.now() - operation.operation.data.publishTo.callbackEndedMsAgo
-          );
-          formatedOperation.endDate = endDate;
-        }
-        let oldOperationsIndex = actionsCopy.findIndex(
-          (x) => x.actionId === actionId
+              orderBy(
+                schemaOperations,
+                (x) => x.operation.createMsAgo,
+                "desc"
+              )[0].operation.createMsAgo
+          )
         );
-        if (oldOperationsIndex > -1) {
-          actionsCopy.splice(oldOperationsIndex, 1);
-        }
-        actionsCopy.push(formatedOperation);
       });
 
-      setActions(actionsCopy);
+      setActions(
+        produce((d) => {
+          schemaOperations.forEach((operation) => {
+            const { actionId, id, connectedDeviceId, createMsAgo, type } =
+              operation.operation;
+            const startDate = new Date(Date.now() - createMsAgo);
+
+            const formatedOperation = {
+              id,
+              actionId,
+              connectedDeviceId,
+              type,
+              startDate,
+              endDate: undefined as Date | undefined,
+            };
+            if (type === ActionOperationType.Cache) {
+              formatedOperation.endDate = new Date(Date.now() + 1000);
+              d.push(formatedOperation);
+              return;
+            }
+            if (
+              operation.operation.data.__typename === "TaskOperation" &&
+              operation.operation.data.queueTo?.returnCallbackEndedMsAgo
+            ) {
+              formatedOperation.endDate = new Date(
+                Date.now() -
+                  operation.operation.data.queueTo.returnCallbackEndedMsAgo
+              );
+            }
+            if (
+              operation.operation.data.__typename === "TaskOperation" &&
+              operation.operation.data.queueTo?.callbackEndedMsAgo != null &&
+              find(schemaActions, { id: actionId })!.returns == undefined
+            ) {
+              formatedOperation.endDate = new Date(
+                Date.now() - operation.operation.data.queueTo.callbackEndedMsAgo
+              );
+            }
+            if (
+              operation.operation.data.__typename === "PubsubOperation" &&
+              operation.operation.data.publishTo.callbackEndedMsAgo
+            ) {
+              const endDate = new Date(
+                Date.now() -
+                  operation.operation.data.publishTo.callbackEndedMsAgo
+              );
+              formatedOperation.endDate = endDate;
+            }
+            let oldOperationsIndex = d.findIndex((x) => x.id === id);
+            if (oldOperationsIndex > -1) {
+              d.splice(oldOperationsIndex, 1);
+            }
+            d.push(formatedOperation);
+          });
+        })
+      );
     }
-  }, [data]);
+  }, [operationsSubscription, schemaActions]);
 
-  console.log(actions);
-
-  const onBarClick = (bar: Bar) => {
-    console.log(bar);
-  };
-
+  //   console.log(nodes);
   return (
-    <Box display={"flex"} height="100%">
-      <TreeView
-        aria-label="file system navigator"
-        defaultCollapseIcon={<ExpandMoreIcon />}
-        defaultExpandIcon={<ChevronRightIcon />}
-        sx={{
-          flexGrow: 1,
-          maxWidth: 400,
-          overflowY: "auto",
-        }}
-      >
-        <TreeItem nodeId="plat1" label="Redis">
-          <TreeItem nodeId="plat1_rs1" label="Cache">
-            <TreeItem nodeId="plat1_rs1_ac1" label="Cache Action 1"></TreeItem>
-          </TreeItem>
-          <TreeItem nodeId="plat1_rs2" label="Pubsub">
-            <TreeItem nodeId="plat1_rs2_ac1" label="Pubsub Action 1"></TreeItem>
-            <TreeItem nodeId="plat1_rs2_ac2" label="Pubsub Action 2"></TreeItem>
-          </TreeItem>
-          <TreeItem nodeId="plat1_rs3" label="Task">
-            <TreeItem nodeId="plat1_rs3_ac1" label="Task Action 1"></TreeItem>
-            <TreeItem nodeId="plat1_rs3_ac2" label="Task Action 2"></TreeItem>
-            <TreeItem nodeId="plat1_rs3_ac3" label="Task Action 3"></TreeItem>
-          </TreeItem>
-        </TreeItem>
-        <TreeItem nodeId="plat2" label="P2P"></TreeItem>
-      </TreeView>
-      <ResponsiveContainer height="100%" width="100%">
-        <BarChart
-          // barCategoryGap={"130px"}
-          // barGap={"10px"}
-
-          width={600}
-          height={300}
-          data={barData}
-          style={{
-            flex: 1,
-          }}
-          layout="vertical"
-          // margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-        >
-          <XAxis
-            padding={{ left: 1, right: 1 }}
-            type="number"
-            domain={[0, 7000]}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            hide={true}
-            padding={{ top: 1, bottom: 1 }}
-          />
-          {/* <CartesianGrid strokeDasharray="3 3" /> */}
-          <Tooltip />
-          <Bar
-            dataKey="time"
-            fill="#8884d8"
-            onClick={onBarClick}
-            barSize={24}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </Box>
+    <Timeline
+      startDate={max([minDate, subMinutes(Date.now(), 1)])}
+      nodes={nodes}
+    />
   );
 };

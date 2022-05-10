@@ -9,6 +9,7 @@ query SchemaTimeline {
         actions {
           id
           name
+          returns
           connectedDevices {
             id
             name
