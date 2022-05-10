@@ -1,6 +1,8 @@
-import SchemaGraph from "./SchemaGraph";
+const Home = () => {
+  return null;
+};
 
-export default SchemaGraph;
+export default Home;
 
 export const routes = {
   Home: "/",

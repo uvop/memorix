@@ -95,17 +95,18 @@ export const SchemaTimeline: React.FC = () => {
       const { schemaOperations } = operationsSubscription;
 
       setMinDate((minDate) => {
-        return (
+        return max([
           minDate ??
-          new Date(
-            Date.now() -
-              orderBy(
-                schemaOperations,
-                (x) => x.operation.createMsAgo,
-                "desc"
-              )[0].operation.createMsAgo
-          )
-        );
+            new Date(
+              Date.now() -
+                orderBy(
+                  schemaOperations,
+                  (x) => x.operation.createMsAgo,
+                  "desc"
+                )[0].operation.createMsAgo
+            ),
+          subMinutes(Date.now(), 1),
+        ]);
       });
 
       setActions(
@@ -115,63 +116,70 @@ export const SchemaTimeline: React.FC = () => {
               operation.operation;
             const startDate = new Date(Date.now() - createMsAgo);
 
-            const formatedOperation = {
-              id,
-              actionId,
-              connectedDeviceId,
-              type,
-              startDate,
-              endDate: undefined as Date | undefined,
-            };
-            if (type === ActionOperationType.Cache) {
-              formatedOperation.endDate = new Date(Date.now() + 1000);
+            const existingIndex = d.findIndex((x) => x.id === id);
+            if (existingIndex === -1) {
+              const formatedOperation = {
+                id,
+                actionId,
+                connectedDeviceId,
+                type,
+                startDate,
+                endDate: undefined as Date | undefined,
+              };
+
+              if (type === ActionOperationType.Cache) {
+                formatedOperation.endDate = new Date(Date.now() + 100);
+                d.push(formatedOperation);
+                return;
+              }
+
               d.push(formatedOperation);
-              return;
+            } else {
+              const existingEntry = d[existingIndex];
+
+              if (
+                operation.operation.data.__typename === "TaskOperation" &&
+                operation.operation.data.queueTo?.returnCallbackEndedMsAgo
+              ) {
+                existingEntry.endDate = new Date(
+                  Date.now() -
+                    operation.operation.data.queueTo.returnCallbackEndedMsAgo
+                );
+              }
+              if (
+                operation.operation.data.__typename === "TaskOperation" &&
+                operation.operation.data.queueTo?.callbackEndedMsAgo != null &&
+                find(schemaActions, { id: actionId })!.returns == undefined
+              ) {
+                existingEntry.endDate = new Date(
+                  Date.now() -
+                    operation.operation.data.queueTo.callbackEndedMsAgo
+                );
+              }
+              if (
+                operation.operation.data.__typename === "PubsubOperation" &&
+                operation.operation.data.publishTo.callbackEndedMsAgo
+              ) {
+                const endDate = new Date(
+                  Date.now() -
+                    operation.operation.data.publishTo.callbackEndedMsAgo
+                );
+                existingEntry.endDate = endDate;
+              }
             }
-            if (
-              operation.operation.data.__typename === "TaskOperation" &&
-              operation.operation.data.queueTo?.returnCallbackEndedMsAgo
-            ) {
-              formatedOperation.endDate = new Date(
-                Date.now() -
-                  operation.operation.data.queueTo.returnCallbackEndedMsAgo
-              );
-            }
-            if (
-              operation.operation.data.__typename === "TaskOperation" &&
-              operation.operation.data.queueTo?.callbackEndedMsAgo != null &&
-              find(schemaActions, { id: actionId })!.returns == undefined
-            ) {
-              formatedOperation.endDate = new Date(
-                Date.now() - operation.operation.data.queueTo.callbackEndedMsAgo
-              );
-            }
-            if (
-              operation.operation.data.__typename === "PubsubOperation" &&
-              operation.operation.data.publishTo.callbackEndedMsAgo
-            ) {
-              const endDate = new Date(
-                Date.now() -
-                  operation.operation.data.publishTo.callbackEndedMsAgo
-              );
-              formatedOperation.endDate = endDate;
-            }
-            let oldOperationsIndex = d.findIndex((x) => x.id === id);
-            if (oldOperationsIndex > -1) {
-              d.splice(oldOperationsIndex, 1);
-            }
-            d.push(formatedOperation);
           });
         })
       );
     }
   }, [operationsSubscription, schemaActions]);
 
-  //   console.log(nodes);
-  return (
-    <Timeline
-      startDate={max([minDate, subMinutes(Date.now(), 1)])}
-      nodes={nodes}
-    />
-  );
+  useEffect(() => {
+    setActions(
+      produce((d) => {
+        return d.filter((item) => !item.endDate || item.endDate > minDate);
+      })
+    );
+  }, [minDate]);
+
+  return <Timeline startDate={minDate} nodes={nodes} />;
 };

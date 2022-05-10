@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
 export const useIntervalRender = (interval: number) => {
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(false);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setTick((t) => (t > 0 ? 0 : 1));
+    const timeoutId = setTimeout(() => {
+      setTick((tick) => !tick);
     }, interval);
-    return () => clearInterval(intervalId);
-  }, [interval]);
+    return () => clearTimeout(timeoutId);
+  }, [tick, interval]);
 };
