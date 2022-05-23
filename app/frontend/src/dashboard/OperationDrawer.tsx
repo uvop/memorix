@@ -42,6 +42,8 @@ import {
 } from "@mui/lab";
 import { useIntervalRender } from "src/core/hooks/useIntervalRender";
 import { ResourceTypeIcon } from "src/assets/ResourceTypeIcon";
+import { buildDrawerOperation } from "./buildDrawerOperation";
+import { isNil, omitBy } from "lodash";
 
 export type OperationForDrawer = {
   actionId: string;
@@ -127,11 +129,9 @@ export const OperationDrawer = ({ children }: Props) => {
     setActionOperation(undefined);
   }, []);
 
-  const handleOpenCallback = useCallback<
-    (newActionOperation: OperationForDrawer) => () => void
-  >(
-    (newActionOperation) => {
-      setActionOperation(newActionOperation);
+  const handleOpenCallback = useCallback<(operation: any) => () => void>(
+    (operation) => {
+      setActionOperation(buildDrawerOperation(operation));
       return closeDrawer;
     },
     [closeDrawer]
@@ -187,10 +187,13 @@ export const OperationDrawer = ({ children }: Props) => {
                             <TimelineOppositeContent color="text.secondary">
                               <Box textAlign="left">
                                 <JSONTree
-                                  data={{
-                                    key: actionOperation.key,
-                                    payload: actionOperation.payload,
-                                  }}
+                                  data={omitBy(
+                                    {
+                                      key: actionOperation.key,
+                                      payload: actionOperation.payload,
+                                    },
+                                    isNil
+                                  )}
                                 />
                               </Box>
                             </TimelineOppositeContent>
@@ -233,9 +236,11 @@ export const OperationDrawer = ({ children }: Props) => {
                               </TimelineSeparator>
                               <TimelineOppositeContent color="text.secondary">
                                 <Box textAlign="left">
-                                  <JSONTree
-                                    data={actionOperation.data.phase2.returns}
-                                  />
+                                  {data.action.returns && (
+                                    <JSONTree
+                                      data={actionOperation.data.phase2.returns}
+                                    />
+                                  )}
                                 </Box>
                               </TimelineOppositeContent>
                             </TimelineItem>

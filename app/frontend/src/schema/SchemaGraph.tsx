@@ -12,116 +12,12 @@ import { GraphInstance } from "src/core/graphs/GraphInstance";
 import { Xwrapper } from "react-xarrows";
 import { useRouter } from "next/router";
 import { routes } from "pages";
-import { useEffect, useState } from "react";
-import { useOpenOperationDrawer } from "src/dashboard/OperationDrawer";
 
 export const SchemaGraph = () => {
   const router = useRouter();
   const { data } = useSchemaGraphQuery();
   const { data: schemaOperationsSubscription } =
     useSchemaGraphOperationsSubscription();
-
-  const [didOpen, setDidOpen] = useState(false);
-  const openOperationDrawer = useOpenOperationDrawer();
-
-  useEffect(() => {
-    if (!didOpen && schemaOperationsSubscription) {
-      const operation =
-        schemaOperationsSubscription.schemaLastOperations[0].operation;
-      if (
-        operation.data.__typename !== undefined &&
-        (operation.data as any).queueTo?.returnCallbackEndedMsAgo !=
-          undefined &&
-        operation.actionId === "redis_task_algo"
-      ) {
-        openOperationDrawer({
-          actionId: operation.actionId,
-          connectedDeviceId: operation.connectedDeviceId,
-          startDate: new Date(Date.now() - operation.createMsAgo),
-          type: operation.type,
-          data: {},
-          ...(operation.data.__typename === "CacheOperation"
-            ? {
-                subType: operation.data.cacheType,
-                key: operation.data.cacheKey,
-                payload: operation.data.cachePayload,
-              }
-            : {}),
-          ...(operation.data.__typename === "PubsubOperation"
-            ? {
-                subType: operation.data.pubsubType,
-                key: operation.data.pubsubKey,
-                payload: operation.data.pubsubPayload,
-                data: {
-                  phase1: operation.data.publishTo
-                    ? {
-                        toConnectedDeviceId:
-                          operation.data.publishTo.connectedDeviceId,
-                        callbackStartedDate: new Date(
-                          Date.now() -
-                            operation.data.publishTo.callbackStartedMsAgo
-                        ),
-                      }
-                    : undefined,
-                  phase2: operation.data.publishTo?.callbackEndedMsAgo
-                    ? {
-                        callbackEndedDate: new Date(
-                          Date.now() -
-                            operation.data.publishTo.callbackEndedMsAgo
-                        ),
-                      }
-                    : undefined,
-                },
-              }
-            : {}),
-          ...(operation.data.__typename === "TaskOperation"
-            ? ({
-                subType: operation.data.taskType,
-                key: operation.data.taskKey,
-                payload: operation.data.taskPayload,
-                data: {
-                  phase1: operation.data.queueTo
-                    ? {
-                        toConnectedDeviceId:
-                          operation.data.queueTo.connectedDeviceId,
-                        callbackStartedDate: new Date(
-                          Date.now() -
-                            operation.data.queueTo.callbackStartedMsAgo
-                        ),
-                      }
-                    : undefined,
-                  phase2: operation.data.queueTo?.callbackEndedMsAgo
-                    ? {
-                        callbackEndedDate: new Date(
-                          Date.now() - operation.data.queueTo.callbackEndedMsAgo
-                        ),
-                        returns: operation.data.queueTo.returns,
-                      }
-                    : undefined,
-                  phase3: operation.data.queueTo?.returnCallbackStartedMsAgo
-                    ? {
-                        returnCallbackStartedDate: new Date(
-                          Date.now() -
-                            operation.data.queueTo.returnCallbackStartedMsAgo
-                        ),
-                      }
-                    : undefined,
-                  phase4: operation.data.queueTo?.returnCallbackEndedMsAgo
-                    ? {
-                        returnCallbackEndedDate: new Date(
-                          Date.now() -
-                            operation.data.queueTo.returnCallbackEndedMsAgo
-                        ),
-                      }
-                    : undefined,
-                },
-              } as any)
-            : {}),
-        });
-        setDidOpen(true);
-      }
-    }
-  }, [didOpen, openOperationDrawer, schemaOperationsSubscription]);
 
   return (
     <Xwrapper>

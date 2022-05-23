@@ -111,7 +111,7 @@ export const SchemaTimeline: React.FC = () => {
               const formatedOperation = {
                 id,
                 actionId,
-                operation,
+                operation: operation.operation,
                 connectedDeviceId,
                 type,
                 startDate,
@@ -127,6 +127,7 @@ export const SchemaTimeline: React.FC = () => {
               d.push(formatedOperation);
             } else {
               const existingEntry = d[existingIndex];
+              existingEntry.operation = operation.operation;
 
               if (
                 operation.operation.data.__typename === "TaskOperation" &&
