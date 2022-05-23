@@ -1,15 +1,3 @@
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { TreeView, TreeItem } from "@mui/lab";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { Box } from "@mui/system";
 import {
   useSchemaTimelineOperationsSubscription,
@@ -20,7 +8,7 @@ import { ActionOperationType } from "src/core/graphql/types.generated";
 import produce from "immer";
 import { Node, Timeline } from "src/timeline/Timeline";
 import { find, flatten, isEmpty, orderBy, startCase } from "lodash";
-import { max, subMinutes } from "date-fns";
+import { max, subMinutes, subSeconds } from "date-fns";
 
 export const SchemaTimeline: React.FC = () => {
   const { data: timelineQuery } = useSchemaTimelineQuery();
@@ -105,7 +93,7 @@ export const SchemaTimeline: React.FC = () => {
                   "desc"
                 )[0].operation.createMsAgo
             ),
-          subMinutes(Date.now(), 1),
+          subSeconds(Date.now(), 45),
         ]);
       });
 

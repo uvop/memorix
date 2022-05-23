@@ -32,7 +32,7 @@ export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
         key={node.id}
         nodeId={`${parent}.${node.id}`}
         label={
-          <Box display="flex" alignItems="center" height="30px">
+          <Box display="flex" height="30px">
             <Typography fontSize="22px">{node.name}</Typography>
             <Box
               flex={1}
@@ -40,6 +40,8 @@ export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
               display="flex"
               alignItems="center"
               position="relative"
+              maxWidth="1060px"
+              marginLeft="auto"
               overflow="hidden"
             >
               {node.bars
