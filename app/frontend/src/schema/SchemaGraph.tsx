@@ -141,7 +141,7 @@ export const SchemaGraph = () => {
         >
           {data?.schema.connectedDevices.map((device) => (
             <GraphInstance key={device.id} graphKey="schema" id={device.id}>
-              <Box key={device.id} textAlign="center">
+              <Box textAlign="center">
                 <ComputerSharpIcon
                   id={device.id}
                   sx={{
@@ -184,12 +184,15 @@ export const SchemaGraph = () => {
                       }
                     }}
                   >
-                    <RedisIcon
-                      key={platform.id}
-                      width="48px"
-                      height="48px"
-                      id={platform.id}
-                    />
+                    <Box textAlign="center">
+                      <RedisIcon
+                        key={platform.id}
+                        width="48px"
+                        height="48px"
+                        id={platform.id}
+                      />
+                      <Typography>Redis</Typography>
+                    </Box>
                   </GraphInstance>
                 );
               default:
@@ -199,13 +202,16 @@ export const SchemaGraph = () => {
                     graphKey="schema"
                     id={platform.id}
                   >
-                    <AccountTreeIcon
-                      key={platform.id}
-                      id={platform.id}
-                      sx={{
-                        fontSize: "48px",
-                      }}
-                    />
+                    <Box textAlign="center">
+                      <AccountTreeIcon
+                        key={platform.id}
+                        id={platform.id}
+                        sx={{
+                          fontSize: "48px",
+                        }}
+                      />
+                      <Typography>P2P</Typography>
+                    </Box>
                   </GraphInstance>
                 );
             }

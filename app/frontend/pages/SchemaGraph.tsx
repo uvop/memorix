@@ -1,4 +1,4 @@
-import { Box, Tab, Tabs, TabsProps } from "@mui/material";
+import { Box, Paper, Tab, Tabs, TabsProps } from "@mui/material";
 import type { NextPage } from "next";
 import React, { useCallback, useState } from "react";
 import { SchemaGraph as SchemaGraphPage } from "src/schema/SchemaGraph";
@@ -22,7 +22,14 @@ const SchemaGraph: NextPage = () => {
 
   return (
     <OperationDrawer>
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Paper
+        sx={{
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "auto",
+        }}
+      >
         <Tabs
           value={tab}
           onChange={handleTabsChange}
@@ -32,13 +39,21 @@ const SchemaGraph: NextPage = () => {
           <Tab value={TabType.Graph} label="Graph" />
           <Tab value={TabType.Timeline} label="Timeline" />
         </Tabs>
-        <TabPanel currentValue={tab} value={TabType.Graph} sx={{ flex: 1 }}>
+        <TabPanel
+          currentValue={tab}
+          value={TabType.Graph}
+          sx={{ flex: 1, minHeight: 0 }}
+        >
           <SchemaGraphPage />
         </TabPanel>
-        <TabPanel currentValue={tab} value={TabType.Timeline} sx={{ flex: 1 }}>
+        <TabPanel
+          currentValue={tab}
+          value={TabType.Timeline}
+          sx={{ flex: 1, minHeight: 0 }}
+        >
           <SchemaTimeline />
         </TabPanel>
-      </Box>
+      </Paper>
     </OperationDrawer>
   );
 };

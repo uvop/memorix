@@ -74,6 +74,13 @@ export const GraphInstance: React.FC<GraphInstanceProps> = ({
         isDragRef.current = false;
         boxProps.onMouseDown?.(e);
       }}
+      border="1px solid"
+      borderRadius="12px"
+      p={2}
+      width="140px"
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
       {...boxProps}
     />
   );
