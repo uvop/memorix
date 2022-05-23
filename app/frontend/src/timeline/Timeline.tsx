@@ -26,11 +26,11 @@ export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
   const endDate = new Date();
   const consistentColor = useConsistentColors();
 
-  const renderNode = (node: Node) => {
+  const renderNode = (node: Node, parent: string) => {
     return (
       <TreeItem
         key={node.id}
-        nodeId={node.id}
+        nodeId={`${parent}.${node.id}`}
         label={
           <Box display="flex" alignItems="center" height="30px">
             <Typography fontSize="22px">{node.name}</Typography>
@@ -58,7 +58,7 @@ export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
           </Box>
         }
       >
-        {node.items?.map(renderNode)}
+        {node.items?.map((item) => renderNode(item, node.id))}
       </TreeItem>
     );
   };
@@ -74,7 +74,7 @@ export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
           overflowY: "auto",
         }}
       >
-        {nodes.map(renderNode)}
+        {nodes.map((node) => renderNode(node, "root"))}
       </TreeView>
     </Box>
   );
