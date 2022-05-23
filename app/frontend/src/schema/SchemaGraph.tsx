@@ -1,12 +1,11 @@
 import { Box, Typography } from "@mui/material";
-import ComputerSharpIcon from "@mui/icons-material/ComputerSharp";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import RedisIcon from "src/assets/redis.svg";
 import {
   useSchemaGraphQuery,
   useSchemaGraphOperationsSubscription,
 } from "./SchemaGraph.generated";
-import { SchemaPlatformType } from "src/core/graphql/types.generated";
+import { Language, SchemaPlatformType } from "src/core/graphql/types.generated";
 import { GraphOperationArrows } from "src/core/graphs/GraphOperationArrows";
 import { GraphInstance } from "src/core/graphs/GraphInstance";
 import { Xwrapper } from "react-xarrows";
@@ -15,6 +14,7 @@ import { routes } from "pages";
 import { useIntervalRender } from "src/core/hooks/useIntervalRender";
 import { useState } from "react";
 import { addSeconds, differenceInSeconds } from "date-fns";
+import { DeviceIcon } from "src/device/DeviceIcon";
 
 export const SchemaGraph = () => {
   useIntervalRender(1000);
@@ -44,12 +44,9 @@ export const SchemaGraph = () => {
           {data?.schema.connectedDevices.map((device) => (
             <GraphInstance key={device.id} graphKey="schema" id={device.id}>
               <Box textAlign="center">
-                <ComputerSharpIcon
-                  id={device.id}
-                  sx={{
-                    fontSize: "48px",
-                  }}
-                />
+                <div id={device.id}>
+                  <DeviceIcon name={device.name} />
+                </div>
                 <Typography>{device.name}</Typography>
                 <Typography>
                   {device.secondsConnected + secondsPassed}s alive
@@ -113,6 +110,7 @@ export const SchemaGraph = () => {
                         id={platform.id}
                         sx={{
                           fontSize: "48px",
+                          color: "lightblue",
                         }}
                       />
                       <Typography>P2P</Typography>

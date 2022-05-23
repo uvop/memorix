@@ -29,7 +29,7 @@ generates:
   ./src/:
     preset: near-operation-file
     presetConfig:
-      baseTypesPath: ./graphql/types.generated.generated
+      baseTypesPath: ./core/graphql/types.generated.generated
       extension: .generated.tsx
     plugins:
       - add:

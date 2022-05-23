@@ -1,5 +1,4 @@
 import { Box, Typography } from "@mui/material";
-import ComputerSharpIcon from "@mui/icons-material/ComputerSharp";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import {
   usePlatformGraphQuery,
@@ -14,6 +13,7 @@ import { routes } from "pages";
 import { useIntervalRender } from "src/core/hooks/useIntervalRender";
 import { useState } from "react";
 import { differenceInSeconds } from "date-fns";
+import { DeviceIcon } from "src/device/DeviceIcon";
 
 export interface PlatformGraph {
   platformId: string | undefined;
@@ -59,12 +59,9 @@ export const PlatformGraph: React.FC<PlatformGraph> = ({ platformId }) => {
               id={device.id}
             >
               <Box textAlign="center">
-                <ComputerSharpIcon
-                  id={device.id}
-                  sx={{
-                    fontSize: "48px",
-                  }}
-                />
+                <div id={device.id}>
+                  <DeviceIcon name={device.name} />
+                </div>
                 <Typography>{device.name}</Typography>
                 <Typography>
                   {device.secondsConnected + secondsPassed}s alive

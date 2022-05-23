@@ -1,7 +1,7 @@
 /* tslint-disable */
 /* eslint-disable */
 // @ts-nocheck
-import * as Types from '../graphql/types.generated';
+import * as Types from '../core/graphql/types.generated';
 
 import gql from 'graphql-tag';
 import * as React from 'react';
