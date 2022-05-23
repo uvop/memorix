@@ -7,7 +7,12 @@ import { Typography } from "@mui/material";
 import { useIntervalRender } from "src/core/hooks/useIntervalRender";
 import { useConsistentColors } from "src/core/hooks/useConsistentColors";
 import { useEffect, useState } from "react";
-import { differenceInMinutes } from "date-fns";
+import {
+  addMilliseconds,
+  differenceInMilliseconds,
+  differenceInMinutes,
+  min,
+} from "date-fns";
 
 export interface Node {
   id: string;
@@ -54,7 +59,12 @@ export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
                     timelineStartDate={startDate}
                     timelineEndDate={endDate}
                     startDate={bar.startDate}
-                    endDate={bar.endDate ?? endDate}
+                    endDate={
+                      bar.endDate ??
+                      differenceInMilliseconds(bar.startDate, endDate) > 5000
+                        ? addMilliseconds(bar.startDate, 5000)
+                        : endDate
+                    }
                   />
                 ))}
             </Box>
