@@ -20,7 +20,7 @@ export type ResourceGraphQuery = (
   { __typename?: 'Query' }
   & { resource: (
     { __typename?: 'SchemaResource' }
-    & Pick<Types.SchemaResource, 'id'>
+    & Pick<Types.SchemaResource, 'id' | 'type'>
     & { actions: Array<(
       { __typename?: 'SchemaAction' }
       & Pick<Types.SchemaAction, 'id' | 'name'>
@@ -71,6 +71,7 @@ export const ResourceGraphDocument = gql`
     query ResourceGraph($id: ID!) {
   resource(id: $id) {
     id
+    type
     actions {
       id
       name

@@ -20,12 +20,12 @@ export interface ActionGraph {
 export const ActionGraph: React.FC<ActionGraph> = ({ actionId }) => {
   useIntervalRender(1000);
   const { data } = useActionGraphQuery({
-    variables: { id: actionId },
+    variables: { id: actionId! },
     skip: !actionId,
   });
   const { data: platformOperationsSubscription } =
     useActionGraphOperationsSubscription({
-      variables: { id: actionId },
+      variables: { id: actionId! },
       skip: !actionId,
     });
   const [baseDate] = useState(() => new Date());
@@ -91,6 +91,7 @@ export const ActionGraph: React.FC<ActionGraph> = ({ actionId }) => {
                 id={data.action.id}
                 sx={{
                   fontSize: "48px",
+                  color: "lightblue",
                 }}
               />
               <Typography>{startCase(data.action.name)}</Typography>

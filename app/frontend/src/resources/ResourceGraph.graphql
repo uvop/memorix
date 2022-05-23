@@ -1,6 +1,7 @@
 query ResourceGraph($id: ID!) {
   resource(id: $id) {
     id
+    type
     actions {
       id
       name

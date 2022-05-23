@@ -1,5 +1,4 @@
 import { Box, Typography } from "@mui/material";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import {
   usePlatformGraphQuery,
   usePlatformGraphOperationsSubscription,
@@ -14,6 +13,7 @@ import { useIntervalRender } from "src/core/hooks/useIntervalRender";
 import { useState } from "react";
 import { differenceInSeconds } from "date-fns";
 import { DeviceIcon } from "src/device/DeviceIcon";
+import { ResourceIcon } from "src/resources/ResourceIcon";
 
 export interface PlatformGraph {
   platformId: string | undefined;
@@ -24,13 +24,13 @@ export const PlatformGraph: React.FC<PlatformGraph> = ({ platformId }) => {
   const router = useRouter();
 
   const { data } = usePlatformGraphQuery({
-    variables: { id: platformId },
+    variables: { id: platformId! },
     skip: !platformId,
   });
 
   const { data: platformOperationsSubscription } =
     usePlatformGraphOperationsSubscription({
-      variables: { id: platformId },
+      variables: { id: platformId! },
       skip: !platformId,
     });
   const [baseDate] = useState(() => new Date());
@@ -101,13 +101,9 @@ export const PlatformGraph: React.FC<PlatformGraph> = ({ platformId }) => {
                       }
                     }}
                   >
-                    <AccountTreeIcon
-                      key={resource.id}
-                      id={resource.id}
-                      sx={{
-                        fontSize: "48px",
-                      }}
-                    />
+                    <div id={resource.id}>
+                      <ResourceIcon type={resource.type} />
+                    </div>
                     <Typography>{startCase(resource.type)}</Typography>
                   </GraphInstance>
                 );

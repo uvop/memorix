@@ -1,5 +1,4 @@
 import { Box, Typography } from "@mui/material";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import {
   useResourceGraphQuery,
   useResourceGraphOperationsSubscription,
@@ -14,6 +13,7 @@ import { useIntervalRender } from "src/core/hooks/useIntervalRender";
 import { useState } from "react";
 import { differenceInSeconds } from "date-fns";
 import { DeviceIcon } from "src/device/DeviceIcon";
+import { ResourceIcon } from "./ResourceIcon";
 
 export interface ResourceGraph {
   resourceId: string | undefined;
@@ -23,12 +23,12 @@ export const ResourceGraph: React.FC<ResourceGraph> = ({ resourceId }) => {
   useIntervalRender(1000);
   const router = useRouter();
   const { data } = useResourceGraphQuery({
-    variables: { id: resourceId },
+    variables: { id: resourceId! },
     skip: !resourceId,
   });
   const { data: platformOperationsSubscription } =
     useResourceGraphOperationsSubscription({
-      variables: { id: resourceId },
+      variables: { id: resourceId! },
       skip: !resourceId,
     });
   const [baseDate] = useState(() => new Date());
@@ -96,13 +96,9 @@ export const ResourceGraph: React.FC<ResourceGraph> = ({ resourceId }) => {
                   }
                 }}
               >
-                <AccountTreeIcon
-                  key={action.id}
-                  id={action.id}
-                  sx={{
-                    fontSize: "48px",
-                  }}
-                />
+                <div id={action.id}>
+                  <ResourceIcon type={data.resource.type} />
+                </div>
                 <Typography>{startCase(action.name)}</Typography>
               </GraphInstance>
             );

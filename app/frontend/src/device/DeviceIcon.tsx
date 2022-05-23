@@ -3,6 +3,7 @@ import Image from "next/image";
 import IotIcon from "src/assets/iot_icon.png";
 import GraphqlIcon from "src/assets/graphql_icon.svg";
 import PythonIcon from "src/assets/python_icon.svg";
+import TaskIcon from "src/assets/task_icon.svg";
 
 export interface DeviceIconProps {
   name: string;
