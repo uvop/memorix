@@ -3,6 +3,7 @@ import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { useCallback, useState } from "react";
 import { ActionGraph as ActionGraphPage } from "src/actions/ActionGraph";
+import { Layout } from "src/layout/Layout";
 import { TabPanel } from "src/ui/TabPanel";
 
 enum TabType {
@@ -25,7 +26,7 @@ const ActionGraph: NextPage = () => {
   );
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Layout>
       <Tabs
         value={tab}
         onChange={handleTabsChange}
@@ -41,7 +42,7 @@ const ActionGraph: NextPage = () => {
       <TabPanel currentValue={tab} value={TabType.Timeline}>
         <ActionGraphPage actionId={actionId} />
       </TabPanel>
-    </Box>
+    </Layout>
   );
 };
 

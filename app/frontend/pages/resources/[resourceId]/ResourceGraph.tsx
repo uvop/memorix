@@ -2,6 +2,7 @@ import { Box, Tab, Tabs, TabsProps } from "@mui/material";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { useCallback, useState } from "react";
+import { Layout } from "src/layout/Layout";
 import { ResourceGraph as ResourceGraphPage } from "src/resources/ResourceGraph";
 import { TabPanel } from "src/ui/TabPanel";
 
@@ -25,7 +26,7 @@ const ResourceGraph: NextPage = () => {
   );
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Layout>
       <Tabs
         value={tab}
         onChange={handleTabsChange}
@@ -41,7 +42,7 @@ const ResourceGraph: NextPage = () => {
       <TabPanel currentValue={tab} value={TabType.Timeline}>
         <ResourceGraphPage resourceId={resourceId} />
       </TabPanel>
-    </Box>
+    </Layout>
   );
 };
 

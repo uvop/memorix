@@ -2,6 +2,7 @@ import { Box, Tab, Tabs, TabsProps } from "@mui/material";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { useCallback, useState } from "react";
+import { Layout } from "src/layout/Layout";
 import { PlatformGraph as PlatformGraphPage } from "src/platforms/PlatformGraph";
 import { TabPanel } from "src/ui/TabPanel";
 
@@ -25,7 +26,7 @@ const PlatformGraph: NextPage = () => {
   );
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Layout>
       <Tabs
         value={tab}
         onChange={handleTabsChange}
@@ -41,7 +42,7 @@ const PlatformGraph: NextPage = () => {
       <TabPanel currentValue={tab} value={TabType.Timeline}>
         <PlatformGraphPage platformId={platformId} />
       </TabPanel>
-    </Box>
+    </Layout>
   );
 };
 

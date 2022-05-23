@@ -77,8 +77,9 @@ export const GraphInstance: React.FC<GraphInstanceProps> = ({
       border="1px solid"
       borderRadius="12px"
       p={2}
-      width="140px"
+      width="170px"
       display="flex"
+      flexDirection="column"
       justifyContent="center"
       alignItems="center"
       {...boxProps}
