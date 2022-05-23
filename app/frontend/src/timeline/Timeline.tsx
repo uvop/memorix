@@ -12,7 +12,7 @@ import { differenceInMinutes } from "date-fns";
 export interface Node {
   id: string;
   name: string;
-  bars: Array<{ id: string; startDate: Date; endDate?: Date }>;
+  bars: Array<{ id: string; startDate: Date; endDate?: Date; operation: any }>;
   items?: Node[];
 }
 
@@ -49,6 +49,7 @@ export const Timeline: React.FC<TimelineProps> = ({ nodes, startDate }) => {
                 .map((bar) => (
                   <TimelineBar
                     key={bar.id}
+                    operation={bar.operation}
                     bgcolor={consistentColor(bar.id)}
                     timelineStartDate={startDate}
                     timelineEndDate={endDate}
