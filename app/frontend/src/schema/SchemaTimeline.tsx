@@ -29,6 +29,7 @@ export const SchemaTimeline: React.FC = () => {
       id: string;
       actionId: string;
       connectedDeviceId: string;
+      operation: any;
       startDate: Date;
       endDate?: Date;
       type: ActionOperationType;
@@ -64,6 +65,7 @@ export const SchemaTimeline: React.FC = () => {
                   .map((action) => ({
                     id: action.id,
                     startDate: action.startDate,
+                    operation: action.operation,
                     endDate: action.endDate,
                   })),
               })),
@@ -109,6 +111,7 @@ export const SchemaTimeline: React.FC = () => {
               const formatedOperation = {
                 id,
                 actionId,
+                operation,
                 connectedDeviceId,
                 type,
                 startDate,
