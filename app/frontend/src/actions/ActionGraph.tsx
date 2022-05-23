@@ -9,12 +9,16 @@ import { Xwrapper } from "react-xarrows";
 import { startCase } from "lodash";
 import { GraphInstance } from "src/core/graphs/GraphInstance";
 import { GraphOperationArrows } from "src/core/graphs/GraphOperationArrows";
+import { useIntervalRender } from "src/core/hooks/useIntervalRender";
+import { useState } from "react";
+import { differenceInSeconds } from "date-fns";
 
 export interface ActionGraph {
   actionId: string | undefined;
 }
 
 export const ActionGraph: React.FC<ActionGraph> = ({ actionId }) => {
+  useIntervalRender(1000);
   const { data } = useActionGraphQuery({
     variables: { id: actionId },
     skip: !actionId,
@@ -24,6 +28,8 @@ export const ActionGraph: React.FC<ActionGraph> = ({ actionId }) => {
       variables: { id: actionId },
       skip: !actionId,
     });
+  const [baseDate] = useState(() => new Date());
+  const secondsPassed = differenceInSeconds(new Date(), baseDate);
 
   return (
     <Xwrapper>
@@ -47,7 +53,7 @@ export const ActionGraph: React.FC<ActionGraph> = ({ actionId }) => {
               graphKey={`action_${actionId}`}
               id={device.id}
             >
-              <Box key={device.id} textAlign="center">
+              <Box textAlign="center">
                 <ComputerSharpIcon
                   id={device.id}
                   sx={{
@@ -55,6 +61,9 @@ export const ActionGraph: React.FC<ActionGraph> = ({ actionId }) => {
                   }}
                 />
                 <Typography>{device.name}</Typography>
+                <Typography>
+                  {device.secondsConnected + secondsPassed}s alive
+                </Typography>
               </Box>
             </GraphInstance>
           ))}

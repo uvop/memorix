@@ -12,12 +12,18 @@ import { GraphInstance } from "src/core/graphs/GraphInstance";
 import { Xwrapper } from "react-xarrows";
 import { useRouter } from "next/router";
 import { routes } from "pages";
+import { useIntervalRender } from "src/core/hooks/useIntervalRender";
+import { useState } from "react";
+import { addSeconds, differenceInSeconds } from "date-fns";
 
 export const SchemaGraph = () => {
+  useIntervalRender(1000);
   const router = useRouter();
   const { data } = useSchemaGraphQuery();
   const { data: schemaOperationsSubscription } =
     useSchemaGraphOperationsSubscription();
+  const [baseDate] = useState(() => new Date());
+  const secondsPassed = differenceInSeconds(new Date(), baseDate);
 
   return (
     <Xwrapper>
@@ -45,6 +51,9 @@ export const SchemaGraph = () => {
                   }}
                 />
                 <Typography>{device.name}</Typography>
+                <Typography>
+                  {device.secondsConnected + secondsPassed}s alive
+                </Typography>
               </Box>
             </GraphInstance>
           ))}

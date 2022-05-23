@@ -11,12 +11,16 @@ import { GraphInstance } from "src/core/graphs/GraphInstance";
 import { GraphOperationArrows } from "src/core/graphs/GraphOperationArrows";
 import { useRouter } from "next/router";
 import { routes } from "pages";
+import { useIntervalRender } from "src/core/hooks/useIntervalRender";
+import { useState } from "react";
+import { differenceInSeconds } from "date-fns";
 
 export interface PlatformGraph {
   platformId: string | undefined;
 }
 
 export const PlatformGraph: React.FC<PlatformGraph> = ({ platformId }) => {
+  useIntervalRender(1000);
   const router = useRouter();
 
   const { data } = usePlatformGraphQuery({
@@ -29,6 +33,8 @@ export const PlatformGraph: React.FC<PlatformGraph> = ({ platformId }) => {
       variables: { id: platformId },
       skip: !platformId,
     });
+  const [baseDate] = useState(() => new Date());
+  const secondsPassed = differenceInSeconds(new Date(), baseDate);
 
   return (
     <Xwrapper>
@@ -52,7 +58,7 @@ export const PlatformGraph: React.FC<PlatformGraph> = ({ platformId }) => {
               graphKey={`platform_${platformId}`}
               id={device.id}
             >
-              <Box key={device.id} textAlign="center">
+              <Box textAlign="center">
                 <ComputerSharpIcon
                   id={device.id}
                   sx={{
@@ -60,6 +66,9 @@ export const PlatformGraph: React.FC<PlatformGraph> = ({ platformId }) => {
                   }}
                 />
                 <Typography>{device.name}</Typography>
+                <Typography>
+                  {device.secondsConnected + secondsPassed}s alive
+                </Typography>
               </Box>
             </GraphInstance>
           ))}
