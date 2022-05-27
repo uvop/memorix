@@ -158,7 +158,7 @@ export const OperationDrawer = ({ children }: Props) => {
         ) : (
           <List>
             <ListItem>
-              <ListItemIcon>
+              <ListItemIcon color="primary" sx={{ svg: { color: "inherit" } }}>
                 <ResourceTypeIcon type={actionOperation.type} />
               </ListItemIcon>
               <ListItemText primary={data.action.name} color="primary" />
