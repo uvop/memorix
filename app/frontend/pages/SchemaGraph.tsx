@@ -1,10 +1,20 @@
-import { Box, Paper, Tab, Tabs, TabsProps } from "@mui/material";
+import {
+  Badge,
+  Box,
+  IconButton,
+  Paper,
+  Tab,
+  Tabs,
+  TabsProps,
+} from "@mui/material";
 import type { NextPage } from "next";
 import React, { useCallback, useState } from "react";
 import { SchemaGraph as SchemaGraphPage } from "src/schema/SchemaGraph";
 import { OperationDrawer } from "src/dashboard/OperationDrawer";
 import { TabPanel } from "src/ui/TabPanel";
 import { SchemaTimeline } from "src/schema/SchemaTimeline";
+import { Notifications } from "@mui/icons-material";
+import { Layout } from "src/layout/Layout";
 
 enum TabType {
   Graph,
@@ -22,14 +32,7 @@ const SchemaGraph: NextPage = () => {
 
   return (
     <OperationDrawer>
-      <Paper
-        sx={{
-          height: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "auto",
-        }}
-      >
+      <Layout>
         <Tabs
           value={tab}
           onChange={handleTabsChange}
@@ -38,6 +41,13 @@ const SchemaGraph: NextPage = () => {
         >
           <Tab value={TabType.Graph} label="Graph" />
           <Tab value={TabType.Timeline} label="Timeline" />
+          <Box marginLeft="auto" padding="12px">
+            <IconButton>
+              <Badge badgeContent={3} color="error">
+                <Notifications />
+              </Badge>
+            </IconButton>
+          </Box>
         </Tabs>
         <TabPanel
           currentValue={tab}
@@ -53,7 +63,7 @@ const SchemaGraph: NextPage = () => {
         >
           <SchemaTimeline />
         </TabPanel>
-      </Paper>
+      </Layout>
     </OperationDrawer>
   );
 };

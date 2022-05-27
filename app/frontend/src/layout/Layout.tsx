@@ -11,6 +11,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
         display: "flex",
         flexDirection: "column",
         overflow: "auto",
+        borderRadius: 0,
       }}
     >
       {children}
