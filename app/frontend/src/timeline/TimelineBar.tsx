@@ -29,7 +29,7 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
       {...boxProps}
       position="absolute"
       onClick={() => {
-        openOperationDrawer(operation);
+        openOperationDrawer({ ...operation, endDate });
       }}
       left={`${100 * (offset / x)}%`}
       width={`${100 * (width / x)}%`}

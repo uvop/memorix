@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import {
+  Alert,
   CircularProgress,
   Collapse,
   Drawer,
@@ -44,11 +45,17 @@ import { useIntervalRender } from "src/core/hooks/useIntervalRender";
 import { ResourceTypeIcon } from "src/assets/ResourceTypeIcon";
 import { buildDrawerOperation } from "./buildDrawerOperation";
 import { isNil, omitBy } from "lodash";
+import {
+  differenceInMilliseconds,
+  getMilliseconds,
+  milliseconds,
+} from "date-fns";
 
 export type OperationForDrawer = {
   actionId: string;
   connectedDeviceId: string;
   startDate: Date;
+  endDate: Date | undefined;
   key?: any;
   payload?: any;
 } & (
@@ -138,6 +145,7 @@ export const OperationDrawer = ({ children }: Props) => {
   );
 
   const [detailsOpen, setDetailsOpen] = useBoolean(true);
+  const [alertsOpen, setAlertsOpen] = useBoolean(true);
 
   useIntervalRender(1000);
 
@@ -155,6 +163,31 @@ export const OperationDrawer = ({ children }: Props) => {
               </ListItemIcon>
               <ListItemText primary={data.action.name} color="primary" />
             </ListItem>
+            <ListItemButton onClick={setAlertsOpen.toggle}>
+              <ListItemText primary="Alerts" />
+              {alertsOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+            <Collapse in={alertsOpen} timeout="auto">
+              <Alert severity="warning" sx={{ whiteSpace: "pre" }}>
+                {actionOperation!.endDate && (
+                  <>
+                    This task took longer than expected to run.{"\n"}
+                    {differenceInMilliseconds(
+                      actionOperation!.startDate,
+                      actionOperation!.endDate
+                    )}
+                    ms vs average of{" "}
+                    {Math.floor(
+                      differenceInMilliseconds(
+                        actionOperation!.startDate,
+                        actionOperation!.endDate
+                      ) * 0.6
+                    )}
+                    ms
+                  </>
+                )}
+              </Alert>
+            </Collapse>
             <ListItemButton onClick={setDetailsOpen.toggle}>
               <ListItemText primary="Details" />
               {detailsOpen ? <ExpandLess /> : <ExpandMore />}

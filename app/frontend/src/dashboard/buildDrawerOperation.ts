@@ -6,6 +6,7 @@ export const buildDrawerOperation = (operation: any): OperationForDrawer => {
     connectedDeviceId: operation.connectedDeviceId,
     startDate: new Date(Date.now() - operation.createMsAgo),
     type: operation.type,
+    endDate: operation.endDate,
     data: {},
     ...(operation.data.__typename === "CacheOperation"
       ? {
