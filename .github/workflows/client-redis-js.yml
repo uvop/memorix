@@ -1,0 +1,45 @@
+name: Client Redis JS
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/redis/js
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+      - name: Install dependencies
+        run: yarn install
+      - name: Format
+        run: yarn format:check
+      - name: Lint
+        run: yarn lint:err
+      - name: Typecheck
+        run: yarn typecheck
+
+  build:
+    needs: [test]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/redis/js
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+      - name: Install dependencies
+        run: yarn install
+      - name: Build
+        run: yarn build
+
+  # deploy:
+  #   needs: [build]
+  #   if: github.ref == 'refs/heads/master'
+  #   runs-on: ubuntu-latest
+  #   steps:
