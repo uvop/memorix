@@ -1,2 +1,2 @@
-schema: "./app/frontend/src/graphql/schema.graphql"
+schema: "./app/frontend/src/core/graphql/schema.graphql"
 documents: "./app/frontend/src/**/*.graphql"

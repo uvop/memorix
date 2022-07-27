@@ -102,7 +102,7 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
     }
     const match = /(?<type>(Model|Enum)) (?<name>.*)/g.exec(n.name);
 
-    if (!match) {
+    if (!match || !match.groups) {
       throw new Error(`Invalid namespace "${n.name}"`);
     }
 

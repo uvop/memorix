@@ -1,7 +1,0 @@
-mutation sendMessage($message: String!) {
-  echo(message: $message)
-}
-
-subscription listenToMessages {
-  listenToEchoes
-}

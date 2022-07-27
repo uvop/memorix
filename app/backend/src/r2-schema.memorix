@@ -1,0 +1,103 @@
+Model LocalizationResult {
+    serial_num: number
+    recv_time: string
+    red_peaks: [number]
+    red_widths: [number]
+    red_heights: [number]
+    blue_peaks: [number]
+    blue_widths: [number]
+    blue_heights: [number]
+    cp_peaks: [number]
+    cp_widths: [number]
+    cp_heights: [number]
+    is_detect_controller: boolean
+    red_max: number
+    blue_max: number
+    cp_max: number
+    i_max: number
+    q_max: number
+    is_detect_red: boolean
+    is_detect_blue: boolean
+    is_detect_cp: boolean
+    is_clock_alignment: boolean
+    iteration_num: number
+    iteration_total_time: number
+    processing_time: number
+    recv_signal_time: number
+    sync_delay: number
+}
+
+Cache {
+    localizationResult {
+        key: string
+        payload: LocalizationResult
+    }
+}
+
+Task {
+    registerPr {
+        payload: {
+            name: string
+            geo_location: {
+                lat: number
+                lng: number
+            }
+        }
+        returns: string
+    }
+    sendLocalizationResult {
+        payload: {
+            token: string
+            result: LocalizationResult
+        }
+    }
+    algo {
+        payload: {
+            resultKeys: [string]
+        }
+        returns: {
+            geo_location: {
+                lat: number
+                lng: number
+            }
+        }
+    }
+}
+
+Enum PrOperationType {
+    START_DETCTION
+    START_LOCALIZATION
+    START_TRANSMITION
+    REQUEST_SIGNAL
+    SYNC_CALIBRATION
+    PAUSE
+    STOP
+}
+
+Enum DetectionType {
+    MAVIC
+    LTE4G
+}
+
+PubSub {
+    getOperation {
+        key: string
+        payload: {
+            type: PrOperationType
+            localizationData: {
+                token: string
+                name: string
+                detection_type: DetectionType
+                freq: number
+                rate: number
+                bw: number
+                duration: number
+                freq_start_low: number
+                freq_end_low: number
+                freq_start_high: number
+                freq_end_high: number
+                is_record: boolean
+            }
+        }
+    }
+}

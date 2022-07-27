@@ -1,0 +1,173 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type ActionOperation {
+  id: ID!
+  actionId: ID!
+  connectedDeviceId: ID!
+  createMsAgo: Int!
+  type: ActionOperationType!
+  data: ActionOperationData!
+}
+
+union ActionOperationData = CacheOperation | PubsubOperation | TaskOperation
+
+enum ActionOperationType {
+  cache
+  pubsub
+  task
+}
+
+type CacheOperation {
+  type: CacheOperationType!
+  key: Json
+  payload: Json!
+}
+
+enum CacheOperationType {
+  get
+  set
+}
+
+type ConnectedDevice {
+  id: ID!
+  name: String!
+  language: Language!
+  secondsConnected: Int!
+}
+
+scalar Json
+
+enum Language {
+  TYPESCRIPT
+  PYTHON
+}
+
+type Mutation {
+  echo(message: String!): Boolean!
+}
+
+type PlatformOperation {
+  resourceId: ID!
+  operation: ActionOperation!
+}
+
+type PubsubOperation {
+  type: PubsubOperationType!
+  key: Json
+  payload: Json
+  publishTo: [PubsubOperationPublishTo!]
+}
+
+type PubsubOperationPublishTo {
+  connectedDeviceId: ID!
+  callbackStartedMsAgo: Int!
+  callbackEndedMsAgo: Int
+}
+
+enum PubsubOperationType {
+  publish
+  subscribe
+}
+
+type Query {
+  test: Boolean!
+  schema: Schema!
+  platform(id: ID!): SchemaPlatform!
+  resource(id: ID!): SchemaResource!
+  action(id: ID!): SchemaAction!
+}
+
+type ResourceOperation {
+  actionId: ID!
+  operation: ActionOperation!
+}
+
+type Schema {
+  platforms: [SchemaPlatform!]!
+  connectedDevices: [ConnectedDevice!]!
+}
+
+type SchemaAction {
+  id: ID!
+  name: String!
+  key: SchemaValue
+  payload: SchemaValue!
+  returns: SchemaValue
+  connectedDevices: [ConnectedDevice!]!
+}
+
+type SchemaModel {
+  id: ID!
+  name: String!
+  value: SchemaValue!
+}
+
+type SchemaOperation {
+  platformId: ID!
+  operation: ActionOperation!
+}
+
+type SchemaPlatform {
+  id: ID!
+  type: SchemaPlatformType!
+  models: [SchemaModel!]!
+  resources: [SchemaResource!]!
+  connectedDevices: [ConnectedDevice!]!
+}
+
+enum SchemaPlatformType {
+  redis
+  p2p
+}
+
+type SchemaResource {
+  id: ID!
+  type: SchemaResourceType!
+  actions: [SchemaAction!]!
+  connectedDevices: [ConnectedDevice!]!
+}
+
+enum SchemaResourceType {
+  cache
+  pubsub
+  task
+}
+
+scalar SchemaValue
+
+type Subscription {
+  listenToEchoes: String!
+  schemaOperations: [SchemaOperation!]!
+  schemaLastOperations: [SchemaOperation!]!
+  platformOperations(id: ID!): [PlatformOperation!]!
+  platformLastOperations(id: ID!): [PlatformOperation!]!
+  resourceOperations(id: ID!): [ResourceOperation!]!
+  resourceLastOperations(id: ID!): [ResourceOperation!]!
+  actionOperations(id: ID!): [ActionOperation!]!
+  actionLastOperations(id: ID!): [ActionOperation!]!
+}
+
+type TaskOperation {
+  type: TaskOperationType!
+  key: Json
+  payload: Json
+  queueTo: TaskOperationQueueTo
+}
+
+type TaskOperationQueueTo {
+  connectedDeviceId: ID!
+  callbackStartedMsAgo: Int!
+  callbackEndedMsAgo: Int
+  returns: Json
+  returnCallbackStartedMsAgo: Int
+  returnCallbackEndedMsAgo: Int
+}
+
+enum TaskOperationType {
+  queue
+  dequeue
+}

@@ -1,0 +1,46 @@
+query PlatformGraph($id: ID!) {
+  platform(id: $id) {
+    id
+    resources {
+      id
+      type
+    }
+    connectedDevices {
+      id
+      name
+      language
+      secondsConnected
+    }
+  }
+}
+
+subscription PlatformGraphOperations($id: ID!) {
+  platformLastOperations(id: $id) {
+    resourceId
+    operation {
+      id
+      connectedDeviceId
+      createMsAgo
+      type
+      data {
+        ... on CacheOperation {
+          cacheType: type
+        }
+        ... on PubsubOperation {
+          pubsubType: type
+          publishTo {
+            connectedDeviceId
+          }
+        }
+        ... on TaskOperation {
+          taskType: type
+          queueTo {
+            connectedDeviceId
+            returns
+            returnCallbackStartedMsAgo
+          }
+        }
+      }
+    }
+  }
+}

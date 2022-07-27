@@ -1,0 +1,65 @@
+query SchemaTimeline {
+  schema {
+    platforms {
+      id
+      type
+      resources {
+        id
+        type
+        actions {
+          id
+          name
+          returns
+          connectedDevices {
+            id
+            name
+            language
+            secondsConnected
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription SchemaTimelineOperations {
+  schemaOperations {
+    operation {
+      id
+      actionId
+      connectedDeviceId
+      createMsAgo
+      type
+      data {
+        ... on CacheOperation {
+          cacheType: type
+          cacheKey: key
+          cachePayload: payload
+        }
+        ... on PubsubOperation {
+          pubsubType: type
+          pubsubKey: key
+          pubsubPayload: payload
+          publishTo {
+            connectedDeviceId
+            callbackStartedMsAgo
+            callbackEndedMsAgo
+          }
+        }
+        ... on TaskOperation {
+          taskType: type
+          taskKey: key
+          taskPayload: payload
+          queueTo {
+            connectedDeviceId
+            callbackStartedMsAgo
+            callbackEndedMsAgo
+            returns
+            returnCallbackStartedMsAgo
+            returnCallbackEndedMsAgo
+          }
+        }
+      }
+    }
+  }
+}
