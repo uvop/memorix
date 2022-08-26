@@ -25,6 +25,8 @@ jobs:
           cache-dependency-path: "./clients/redis/js/yarn.lock"
       - name: Install dependencies
         run: yarn install
+      - name: Build
+        run: yarn build
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
