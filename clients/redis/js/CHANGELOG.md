@@ -1,3 +1,10 @@
+# [1.0.0-next.4](https://github.com/uvop/memorix/compare/v1.0.0-next.3...v1.0.0-next.4) (2022-08-26)
+
+
+### Bug Fixes
+
+* Add build to publish package ([bce7464](https://github.com/uvop/memorix/commit/bce74648b9bb9c1a9180035b850edd37a4f74ec4))
+
 # [1.0.0-next.3](https://github.com/uvop/memorix/compare/v1.0.0-next.2...v1.0.0-next.3) (2022-08-26)
 
 
