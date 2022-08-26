@@ -5,16 +5,19 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "main": "src/index.ts",
+  "bin": {
+    "memorix-codegen": "./lib/src/codegen.js"
+  },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json",
     "dev": "jest --watch",
+    "fix-ts-path": "ts-node -r tsconfig-paths/register bin/fix-ts-path.ts lib src",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint:err": "npm run lint -- --quiet",
-    "lint:fix": "npm run lint -- --fix",
     "generate-schema": "ts-node -r tsconfig-paths/register src/generate-schema.ts",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:err": "yarn lint --quiet",
+    "lint:fix": "yarn lint --fix",
     "test": "jest",
     "typecheck": "tsc --noEmit"
   },
@@ -26,11 +29,11 @@
         }
       }
     },
-    "preset": "ts-jest",
-    "testEnvironment": "node",
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/src/$1"
-    }
+    },
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",
@@ -43,11 +46,22 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-prettier": "^3.1.4",
+    "glob": "^8.0.3",
+    "glob-promise": "^5.0.0",
     "jest": "^27.4.1",
+    "pkg": "^5.8.0",
     "prettier": "^2.1.2",
     "ts-jest": "^27.1.4",
     "ts-node": "^10.7.0",
     "tsconfig-paths": "^3.14.1",
     "typescript": "^4.6.3"
+  },
+  "pkg": {
+    "targets": [
+      "node14-linux-x64",
+      "node14-macos-x64",
+      "node14-win-x64"
+    ],
+    "outputPath": "lib"
   }
 }

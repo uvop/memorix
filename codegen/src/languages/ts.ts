@@ -59,7 +59,7 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
           return `${getTabs(2)}${v.name}: this.${itemFn}<${
             v.key ? `${valueToTs(v.key, 2)}` : "undefined"
           }, ${valueToTs(v.payload, 2)}${
-            hasReturns
+            hasReturns && "returns" in v
               ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
               : ""
           }>("${v.name}"),`;
@@ -84,9 +84,9 @@ export const codegenTs: (schema: string) => string = (schema) => {
   const code = []
     .concat(
       hasApi
-        ? `import { ${[]
+        ? `import { ${([] as string[])
             .concat(hasApi ? ["MemorixClientApi"] : [])
-            .join(", ")} } from "@memorix/client-js";`
+            .join(", ")} } from "@memorix/client-redis";`
         : []
     )
     .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToTs))

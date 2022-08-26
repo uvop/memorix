@@ -150,7 +150,7 @@ export type User = {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
@@ -177,7 +177,7 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
@@ -206,7 +206,7 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
@@ -241,7 +241,7 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
 export type User = {
   name: string;
@@ -273,7 +273,7 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
 export class MemorixApi extends MemorixClientApi {
   pubsub = {
@@ -300,7 +300,7 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
 export class MemorixApi extends MemorixClientApi {
   task = {
