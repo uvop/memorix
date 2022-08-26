@@ -61,7 +61,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "16"
+          cache: "yarn"
+          cache-dependency-path: "./yarn.lock"
       - uses: actions/download-artifact@v3
+      - run: (ls artifact-client-redis-js || exit 0) && echo 1;
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
