@@ -1,3 +1,10 @@
+# [1.0.0-next.7](https://github.com/uvop/memorix/compare/v1.0.0-next.6...v1.0.0-next.7) (2022-08-26)
+
+
+### Bug Fixes
+
+* codegen not working ([60a4129](https://github.com/uvop/memorix/commit/60a4129c4d20ebbd73e6a32c35ce31e12b2eda57))
+
 # [1.0.0-next.6](https://github.com/uvop/memorix/compare/v1.0.0-next.5...v1.0.0-next.6) (2022-08-26)
 
 
