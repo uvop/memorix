@@ -20,9 +20,13 @@
       "@semantic-release/github",
       {
         "assets": [
-          { "path": "./codegen/lib/codegen-macos", "label": "macos" },
-          { "path": "./codegen/lib/codegen-linux", "label": "linux" },
-          { "path": "./codegen/lib/codegen-win.exe", "label": "win" }
+          {
+            "path": "./codegen/lib/codegen-macos-arm64",
+            "label": "macos-arm64"
+          },
+          { "path": "./codegen/lib/codegen-macos-x64", "label": "macos-x64" },
+          { "path": "./codegen/lib/codegen-linux-x64", "label": "linux-x64" },
+          { "path": "./codegen/lib/codegen-win-x64.exe", "label": "win-x64" }
         ]
       }
     ],
