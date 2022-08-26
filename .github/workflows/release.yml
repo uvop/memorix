@@ -1,4 +1,4 @@
-name: Publish
+name: Release
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - 8-add-code-to-client-js-so-the-generated-code-will-work-with-it
 
 jobs:
-  test:
+  release:
     runs-on: ubuntu-latest
     defaults:
       run:

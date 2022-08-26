@@ -1,8 +1,10 @@
 {
   "branches": [
-    "master",
-    "next",
-    "8-add-code-to-client-js-so-the-generated-code-will-work-with-it"
+    { "name": "master", "prerelease": "next" },
+    {
+      "name": "8-add-code-to-client-js-so-the-generated-code-will-work-with-it",
+      "prerelease": "next"
+    }
   ],
   "plugins": [
     "@semantic-release/commit-analyzer",
