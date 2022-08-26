@@ -63,10 +63,15 @@ jobs:
           node-version: "16"
           cache: "yarn"
           cache-dependency-path: "./yarn.lock"
+      - name: Install dependencies
+        run: yarn install
       - uses: actions/download-artifact@v3
-      - run: (ls artifact-client-redis-js || exit 0) && echo 1;
+      - name: Move artifacts to projects
+        run: |
+          mv -v artifact-codegen/* ./codegen/
+          mv -v artifact-client-redis-js/* ./clients/redis/js/
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release
+        run: yarn semantic-release
