@@ -8,16 +8,34 @@ on:
       - 8-add-code-to-client-js-so-the-generated-code-will-work-with-it
 
 jobs:
-  release:
+  build-codegen:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./codegen
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          cache: "yarn"
+          cache-dependency-path: "./codegen/yarn.lock"
+      - name: Install dependencies
+        run: yarn install
+      - name: Build
+        run: yarn build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: artifact-codegen
+          path: ./codegen/lib
+          retention-days: 1
+  build-client-redis-js:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./clients/redis/js
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - uses: actions/setup-node@v3
         with:
           node-version: "16"
@@ -27,6 +45,22 @@ jobs:
         run: yarn install
       - name: Build
         run: yarn build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: artifact-client-redis-js
+          path: ./clients/redis/js/lib
+          retention-days: 1
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      - uses: actions/download-artifact@v3
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,31 @@
+{
+  "branches": [
+    "master",
+    {
+      "name": "8-add-code-to-client-js-so-the-generated-code-will-work-with-it",
+      "prerelease": "next"
+    }
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    [
+      "@semantic-release/npm",
+      {
+        "pkgRoot": "./clients/redis/js"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          { "path": "./codegen/lib/codegen-macos", "label": "macos" },
+          { "path": "./codegen/lib/codegen-linux", "label": "linux" },
+          { "path": "./codegen/lib/codegen-win.exe", "label": "win" }
+        ]
+      }
+    ],
+    "@semantic-release/git"
+  ]
+}
