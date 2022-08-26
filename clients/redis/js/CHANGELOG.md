@@ -1,3 +1,10 @@
+# [1.0.0-next.5](https://github.com/uvop/memorix/compare/v1.0.0-next.4...v1.0.0-next.5) (2022-08-26)
+
+
+### Bug Fixes
+
+* Try publish with lib ([12cb1d6](https://github.com/uvop/memorix/commit/12cb1d6d6fd941eafee660b54cdc79879d0ea127))
+
 # [1.0.0-next.4](https://github.com/uvop/memorix/compare/v1.0.0-next.3...v1.0.0-next.4) (2022-08-26)
 
 
