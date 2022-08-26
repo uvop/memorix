@@ -68,8 +68,8 @@ jobs:
       - uses: actions/download-artifact@v3
       - name: Move artifacts to projects
         run: |
-          mv -v artifact-codegen/* ./codegen/lib
-          mv -v artifact-client-redis-js/* ./clients/redis/js/lib
+          mkdir ./codegen/lib && mv -v artifact-codegen/* ./codegen/lib
+          mkdir ./clients/redis/js/lib && mv -v artifact-client-redis-js/* ./clients/redis/js/lib
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
