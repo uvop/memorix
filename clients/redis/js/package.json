@@ -1,5 +1,5 @@
 {
-  "name": "@memorix/client-redis-js",
+  "name": "@memorix/client-redis",
   "version": "0.0.0",
   "description": "",
   "license": "ISC",
@@ -19,7 +19,7 @@
     "lint:err": "npm run lint -- --quiet",
     "lint:fix": "npm run lint -- --fix",
     "start": "ts-node -r tsconfig-paths/register src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Error: no test specified\" && exit 0",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -27,6 +27,12 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/commit-analyzer": "^9.0.2",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^8.0.5",
+    "@semantic-release/npm": "^9.0.1",
+    "@semantic-release/release-notes-generator": "^10.0.3",
     "@types/ioredis": "^4.28.10",
     "@types/lodash": "^4.14.182",
     "@types/node": "^17.0.28",

@@ -1,6 +1,11 @@
-name: Client Redis JS
+name: Publish
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
+      - next
+      # - 8-add-code-to-client-js-so-the-generated-code-will-work-with-it
 
 jobs:
   test:
@@ -20,14 +25,6 @@ jobs:
           cache-dependency-path: "./clients/redis/js/yarn.lock"
       - name: Install dependencies
         run: yarn install
-      - name: Format
-        run: yarn format:check
-      - name: Lint
-        run: yarn lint:err
-      - name: Typecheck
-        run: yarn typecheck
-      - name: Test
-        run: yarn test
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
