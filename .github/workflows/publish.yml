@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - next
-      # - 8-add-code-to-client-js-so-the-generated-code-will-work-with-it
+      - 8-add-code-to-client-js-so-the-generated-code-will-work-with-it
 
 jobs:
   test:
@@ -25,7 +25,7 @@ jobs:
           cache-dependency-path: "./clients/redis/js/yarn.lock"
       - name: Install dependencies
         run: yarn install
-      - name: Release
+      - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
