@@ -51,6 +51,7 @@ jobs:
           path: ./clients/redis/js/lib
           retention-days: 1
   release:
+    needs: [build-codegen, build-client-redis-js]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
