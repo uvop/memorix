@@ -1,3 +1,10 @@
+# [1.0.0-next.2](https://github.com/uvop/memorix/compare/v1.0.0-next.1...v1.0.0-next.2) (2022-08-26)
+
+
+### Bug Fixes
+
+* try publish again ([7839d84](https://github.com/uvop/memorix/commit/7839d843640e7fdee99ba006786e25bb1e45a259))
+
 # 1.0.0-next.1 (2022-08-26)
 
 
