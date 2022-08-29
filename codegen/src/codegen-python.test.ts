@@ -11,19 +11,22 @@ describe("python codegen", () => {
         codegenPython(
           `
             Model User {
-                id: number
+                id: int
                 name: string
-                age: number?
+                age: float?
             }
           `
         )
       ).toBe(
         `
-export type User = {
-  id: number;
-  name: string;
-  age?: number;
-};
+import typing
+from memorix_client_redis import dataclass
+
+@dataclass
+class User:
+  id: int
+  name: str
+  age: typing.Optional[float]
   `.trim()
       );
     });

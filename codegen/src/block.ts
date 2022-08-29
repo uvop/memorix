@@ -5,7 +5,7 @@ import {
   PropertyType,
   ValueTypes,
 } from "./value";
-import { removeBracketsOfScope } from "./utilities";
+import { assertUnreachable, removeBracketsOfScope } from "./utilities";
 
 export enum BlockTypes {
   model = "Model",
@@ -133,4 +133,94 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
   });
 
   return blocks;
+};
+
+const getBlockModelsFromValue = (
+  value: ValueType,
+  name: string
+): BlockModel[] => {
+  if (value.type !== ValueTypes.object) {
+    return [];
+  }
+  return [
+    ...value.properties
+      .map((p) => getBlockModelsFromValue(p.value, `${name}${p.name}`))
+      .flat(),
+    {
+      type: BlockTypes.model,
+      name,
+      properties: value.properties.reduce(
+        (agg, p) => [
+          ...agg,
+          p.value.type === ValueTypes.object
+            ? ({
+                name: p.name,
+                value: {
+                  type: ValueTypes.simple,
+                  isOptional: p.value.isOptional,
+                  name: `${name}${p.name}`,
+                },
+              } as PropertyType)
+            : p,
+        ],
+        [] as typeof value.properties
+      ),
+    },
+  ];
+};
+
+export const flatBlocks = (blocks: Block[]): Block[] => {
+  let modelBlocks: BlockModel[] = [];
+
+  blocks
+    .filter((b) => [BlockTypes.model, BlockTypes.enum].indexOf(b.type) === -1)
+    .forEach((b) => {
+      let newBlocks: BlockModel[] = [];
+      switch (b.type) {
+        case BlockTypes.model:
+        case BlockTypes.enum:
+          break;
+        case BlockTypes.task: {
+          newBlocks = newBlocks.concat(
+            b.values
+              .filter((v) => v.returns !== undefined)
+              .map((v) =>
+                getBlockModelsFromValue(v.returns, `${b.type}${v.name}Returns`)
+              )
+              .flat()
+          );
+        }
+        // Fallthrough on purpose
+        // eslint-disable-next-line no-fallthrough
+        case BlockTypes.cache:
+        case BlockTypes.pubsub: {
+          newBlocks = newBlocks.concat(
+            b.values
+              .filter((v) => v.key !== undefined)
+              .map((v) =>
+                getBlockModelsFromValue(v.key!, `${b.type}${v.name}Key`)
+              )
+              .flat()
+          );
+          newBlocks = newBlocks.concat(
+            b.values
+              .map((v) =>
+                getBlockModelsFromValue(v.payload, `${b.type}${v.name}Payload`)
+              )
+              .flat()
+          );
+          break;
+        }
+        default:
+          assertUnreachable(b.type);
+      }
+      modelBlocks = modelBlocks.concat(newBlocks);
+    });
+
+  return [
+    ...blocks.filter(
+      (b) => [BlockTypes.model, BlockTypes.enum].indexOf(b.type) !== -1
+    ),
+    ...modelBlocks,
+  ];
 };

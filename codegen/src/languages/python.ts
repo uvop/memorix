@@ -1,49 +1,39 @@
-import { Block, BlockTypes, getBlocks } from "src/block";
+import { Block, BlockTypes, flatBlocks, getBlocks } from "src/block";
 import { ValueType, ValueTypes } from "src/value";
 import { assertUnreachable, getTabs } from "src/utilities";
 
-const valueToTs: (
-  value: ValueType,
-  level?: number,
-  isParentObject?: boolean
-) => string = (value, level = 0, isParentObject = false) => {
-  let valueTs;
+const valueToPython: (value: ValueType) => string = (value) => {
+  let valuePython;
   if (value.type === ValueTypes.simple) {
-    valueTs = `${value.name}`;
+    if (value.name === "string") {
+      valuePython = "str";
+    } else {
+      valuePython = `${value.name}`;
+    }
   } else if (value.type === ValueTypes.array) {
-    valueTs = `Array<${valueToTs(value.value, level)}>`;
+    valuePython = `list[${valueToPython(value.value)}]`;
   } else {
-    valueTs = `{
-${getTabs(level + 1)}${value.properties
-      .map(
-        (prop) =>
-          `${prop.name}${prop.value.isOptional ? "?" : ""}: ${valueToTs(
-            prop.value,
-            level + 1,
-            true
-          )};`
-      )
-      .join(`\n${getTabs(level + 1)}`)}
-${getTabs(level)}}`;
+    throw new Error(
+      "Shouldn't get here, all inline objects became models, maybe forgot 'flatBlocks()?'"
+    );
   }
 
-  return `${valueTs}${
-    value.isOptional && !isParentObject ? " | undefined" : ""
+  return `${value.isOptional ? "typing.Optional[" : ""}${valuePython}${
+    value.isOptional ? "]" : ""
   }`;
 };
 
-const blockToTs: (block: Block) => string = (b) => {
+const blockToPython: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `export type ${b.name} = ${valueToTs({
-        type: ValueTypes.object,
-        isOptional: false,
-        properties: b.properties,
-      })};`;
+      return `@dataclass
+class ${b.name}:
+${b.properties
+  .map((p) => `${getTabs(1)}${p.name}: ${valueToPython(p.value)}`)
+  .join(`\n`)}`;
     case BlockTypes.enum:
-      return `export enum ${b.name} {
-${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
-}`;
+      return `class ${b.name}(Enum):
+${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
     case BlockTypes.cache:
     case BlockTypes.pubsub:
     case BlockTypes.task: {
@@ -57,10 +47,10 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
       return `${b.values
         .map((v) => {
           return `${getTabs(2)}${v.name}: this.${itemFn}<${
-            v.key ? `${valueToTs(v.key, 2)}` : "undefined"
-          }, ${valueToTs(v.payload, 2)}${
+            v.key ? `${valueToPython(v.key)}` : "undefined"
+          }, ${valueToPython(v.payload)}${
             hasReturns && "returns" in v
-              ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
+              ? `, ${v.returns ? `${valueToPython(v.returns)}` : "undefined"}`
               : ""
           }>("${v.name}"),`;
         })
@@ -73,7 +63,7 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
 };
 
 export const codegenPython: (schema: string) => string = (schema) => {
-  const blocks = getBlocks(schema);
+  const blocks = flatBlocks(getBlocks(schema));
 
   const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
@@ -81,25 +71,25 @@ export const codegenPython: (schema: string) => string = (schema) => {
   const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
   const hasApi = hasCache || hasPubsub || hasTask;
 
-  const code = []
+  const code = [
+    `import typing
+from memorix_client_redis import dataclass${[""]
+      .concat(hasApi ? ["MemorixClientApi"] : [])
+      .join(", ")}`,
+  ]
+    .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToPython))
     .concat(
-      hasApi
-        ? `import { ${([] as string[])
-            .concat(hasApi ? ["MemorixClientApi"] : [])
-            .join(", ")} } from "@memorix/client-redis";`
-        : []
+      blocks.filter((b) => b.type === BlockTypes.model).map(blockToPython)
     )
-    .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToTs))
-    .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToTs))
     .concat(
       hasApi
-        ? `export class MemorixApi extends MemorixClientApi {
+        ? `class MemorixApi(MemorixClientApi):
 ${
   hasCache
     ? `${getTabs(1)}cache = {
 ${blocks
   .filter((b) => b.type === BlockTypes.cache)
-  .map(blockToTs)
+  .map(blockToPython)
   .join("\n")}
 ${getTabs(1)}};`
     : ""
@@ -108,7 +98,7 @@ ${getTabs(1)}};`
               ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
 ${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
-  .map(blockToTs)
+  .map(blockToPython)
   .join("\n")}
 ${getTabs(1)}};`
               : ""
@@ -117,12 +107,12 @@ ${getTabs(1)}};`
               ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
 ${blocks
   .filter((b) => b.type === BlockTypes.task)
-  .map(blockToTs)
+  .map(blockToPython)
   .join("\n")}
 ${getTabs(1)}};`
               : ""
           }
-}`
+`
         : []
     )
     .join("\n\n");
