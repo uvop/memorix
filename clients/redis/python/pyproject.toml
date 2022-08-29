@@ -10,6 +10,7 @@ start = "memorix_client_redis.start:start"
 [tool.poetry.dependencies]
 python = "^3.10"
 redis = "^4.3.4"
+dacite = "^1.6.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
