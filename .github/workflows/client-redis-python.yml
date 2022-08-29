@@ -1,0 +1,29 @@
+name: Client Redis Python
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/redis/python
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.6"
+          cache: "poetry"
+          cache-dependency-path: ./clients/redis/python/poetry.lock
+      - name: Install
+        run: poetry install
+      - name: Format
+        run: poetry run black --check .
+      - name: Lint
+        run: poetry run flake8 .
+      - name: Typecheck
+        run: poetry run mypy --strict .
+      - name: Test
+        run: poetry run pytest ./tests

@@ -1,6 +1,6 @@
 import { isPlainObject } from "lodash";
 
-export function hashKey(object) {
+export const hashKey = (object: any) => {
   return JSON.stringify(object, (_, val) =>
     isPlainObject(val)
       ? Object.keys(val)
@@ -14,4 +14,4 @@ export function hashKey(object) {
           )
       : val
   );
-}
+};

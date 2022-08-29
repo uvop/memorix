@@ -17,6 +17,12 @@
       }
     ],
     [
+      "semantic-release-python",
+      {
+        "setupPy": "./clients/redis/python/pyproject.toml"
+      }
+    ],
+    [
       "@semantic-release/github",
       {
         "assets": [

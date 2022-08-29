@@ -1,4 +1,4 @@
-import { MemorixBaseApi } from "@memorix/client-js/MemorixBaseApi";
+import { MemorixBaseApi } from "../../../clients/redis/js/src/MemorixBaseApi";
 
 export enum EventTypes {
   get = "get",

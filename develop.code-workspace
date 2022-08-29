@@ -9,8 +9,12 @@
       "path": "codegen"
     },
     {
-      "name": "client-js",
-      "path": "clients/js"
+      "name": "client-redis-js",
+      "path": "clients/redis/js"
+    },
+    {
+      "name": "client-redis-python",
+      "path": "clients/redis/python"
     },
     {
       "name": "app-frontend",

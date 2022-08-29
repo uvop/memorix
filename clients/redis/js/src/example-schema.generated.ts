@@ -1,4 +1,4 @@
-import { MemorixClientApi } from "src";
+import { MemorixClientApi } from "@memorix/client-redis";
 
 export enum Animals {
   dog = "dog",
@@ -18,14 +18,13 @@ export type User2 = {
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
-    adminId: this.getCacheItem<undefined, string>("adminId"),
+    adminId: this.getCacheItem<undefined, string | undefined>("adminId"),
     user: this.getCacheItem<string, User>("user"),
     adminId2: this.getCacheItem<undefined, string | undefined>("adminId2"),
     user2: this.getCacheItem<string, User2>("user2"),
   };
-
   task = {
-    runAlgo: this.getTaskItem<never, string, Animals>("runAlgo"),
-    runAlgo2: this.getTaskItem<never, string, string>("runAlgo2"),
+    runAlgo: this.getTaskItem<undefined, string, Animals>("runAlgo"),
+    runAlgo2: this.getTaskItem<undefined, string, string>("runAlgo2"),
   };
 }
