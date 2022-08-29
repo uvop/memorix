@@ -9,7 +9,11 @@ const valueToTs: (
 ) => string = (value, level = 0, isParentObject = false) => {
   let valueTs;
   if (value.type === ValueTypes.simple) {
-    valueTs = `${value.name}`;
+    if (value.name === "int" || value.name === "float") {
+      valueTs = "number";
+    } else {
+      valueTs = `${value.name}`;
+    }
   } else if (value.type === ValueTypes.array) {
     valueTs = `Array<${valueToTs(value.value, level)}>`;
   } else {

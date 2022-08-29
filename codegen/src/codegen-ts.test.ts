@@ -11,9 +11,9 @@ describe("ts codegen", () => {
         codegenTs(
           `
             Model User {
-                id: number
+                id: int
                 name: string
-                age: number?
+                age: float?
             }
           `
         )
@@ -32,11 +32,11 @@ export type User = {
         codegenTs(
           `
             Model User1 {
-                id: number
+                id: int
             }
             Model User2 {
                 name: string
-                age: number?
+                age: int?
             }
           `.trim()
         )
@@ -58,7 +58,7 @@ export type User2 = {
         codegenTs(
           `
             Model User {
-                id: number
+                id: int
                 papa: {
                     name: string?
                 }
@@ -81,13 +81,13 @@ export type User = {
         codegenTs(
           `
             Model User {
-                id: number
+                id: int
                 papa: {
                     name: string?
                     mama: {
                         sick: boolean
                     }?
-                    age: number
+                    age: int
                 }
             }
           `.trim()
@@ -112,10 +112,10 @@ export type User = {
         codegenTs(
           `
             Model User {
-                id: number
+                id: int
                 names: [string]
                 children: [{
-                  id: number
+                  id: int
                   name: string?
                 }?]?
             }
@@ -142,7 +142,7 @@ export type User = {
           `
             Cache {
               user {
-                key: number
+                key: int
                 payload: string
               }
             }
@@ -166,10 +166,10 @@ export class MemorixApi extends MemorixClientApi {
           `
             Cache {
               user {
-                key: number
+                key: int
                 payload: {
                   name: string
-                  age: number?
+                  age: int?
                 }?
               }
             }
@@ -198,7 +198,7 @@ export class MemorixApi extends MemorixClientApi {
               user {
                 payload: {
                   name: string
-                  age: number?
+                  age: int?
                 }?
               }
             }
@@ -235,7 +235,7 @@ export class MemorixApi extends MemorixClientApi {
         
           Model User {
             name: string
-            age: number?
+            age: int?
           }
           `
         )
@@ -265,7 +265,7 @@ export class MemorixApi extends MemorixClientApi {
           `
             PubSub {
               message {
-                key: number
+                key: int
                 payload: string
               }
             }
@@ -291,7 +291,7 @@ export class MemorixApi extends MemorixClientApi {
           `
             Task {
               doIt {
-                key: number
+                key: int
                 payload: string
                 returns: boolean
               }

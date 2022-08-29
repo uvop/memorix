@@ -183,15 +183,29 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
         case BlockTypes.task: {
           newBlocks = newBlocks.concat(
             b.values
+              .filter((v) => v.key !== undefined)
+              .map((v) =>
+                getBlockModelsFromValue(v.key!, `${b.type}${v.name}Key`)
+              )
+              .flat()
+          );
+          newBlocks = newBlocks.concat(
+            b.values
+              .map((v) =>
+                getBlockModelsFromValue(v.payload, `${b.type}${v.name}Payload`)
+              )
+              .flat()
+          );
+          newBlocks = newBlocks.concat(
+            b.values
               .filter((v) => v.returns !== undefined)
               .map((v) =>
                 getBlockModelsFromValue(v.returns, `${b.type}${v.name}Returns`)
               )
               .flat()
           );
+          break;
         }
-        // Fallthrough on purpose
-        // eslint-disable-next-line no-fallthrough
         case BlockTypes.cache:
         case BlockTypes.pubsub: {
           newBlocks = newBlocks.concat(
@@ -211,8 +225,9 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
           );
           break;
         }
-        default:
-          assertUnreachable(b.type);
+        default: {
+          assertUnreachable(b);
+        }
       }
       modelBlocks = modelBlocks.concat(newBlocks);
     });
