@@ -6,22 +6,24 @@ export enum ValueTypes {
   array,
 }
 
-export type ValueType = {
+type BaseValueType = {
   isOptional: boolean;
-} & (
-  | {
-      type: ValueTypes.simple;
-      name: string;
-    }
-  | {
-      type: ValueTypes.object;
-      properties: PropertyType[];
-    }
-  | {
-      type: ValueTypes.array;
-      value: ValueType;
-    }
-);
+};
+
+export type SimpleValueType = BaseValueType & {
+  type: ValueTypes.simple;
+  name: string;
+};
+export type ArrayValueType = BaseValueType & {
+  type: ValueTypes.array;
+  value: ValueType;
+};
+export type ObjectValueType = BaseValueType & {
+  type: ValueTypes.object;
+  properties: PropertyType[];
+};
+
+export type ValueType = SimpleValueType | ArrayValueType | ObjectValueType;
 
 export type PropertyType = {
   name: string;

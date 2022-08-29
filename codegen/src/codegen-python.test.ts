@@ -6,7 +6,7 @@ const codegenPython = (schema: string) =>
 
 describe("python codegen", () => {
   describe("model", () => {
-    it.only("can generate from model", () => {
+    it("can generate from model", () => {
       expect(
         codegenPython(
           `
@@ -35,24 +35,27 @@ class User:
         codegenPython(
           `
             Model User1 {
-                id: number
+                id: int
             }
             Model User2 {
                 name: string
-                age: number?
+                age: int?
             }
           `.trim()
         )
       ).toBe(
         `
-export type User1 = {
-  id: number;
-};
+import typing
+from memorix_client_redis import dataclass
 
-export type User2 = {
-  name: string;
-  age?: number;
-};
+@dataclass
+class User1:
+  id: int
+
+@dataclass
+class User2:
+  name: str
+  age: typing.Optional[int]
   `.trim()
       );
     });
@@ -61,7 +64,7 @@ export type User2 = {
         codegenPython(
           `
             Model User {
-                id: number
+                id: int
                 papa: {
                     name: string?
                 }
@@ -70,12 +73,17 @@ export type User2 = {
         )
       ).toBe(
         `
-export type User = {
-  id: number;
-  papa: {
-    name?: string;
-  };
-};
+import typing
+from memorix_client_redis import dataclass
+
+@dataclass
+class UserPapa:
+  name: typing.Optional[str]
+
+@dataclass
+class User:
+  id: int
+  papa: UserPapa
   `.trim()
       );
     });
@@ -84,29 +92,36 @@ export type User = {
         codegenPython(
           `
             Model User {
-                id: number
+                id: int
                 papa: {
                     name: string?
                     mama: {
                         sick: boolean
                     }?
-                    age: number
+                    age: int
                 }
             }
           `.trim()
         )
       ).toBe(
         `
-export type User = {
-  id: number;
-  papa: {
-    name?: string;
-    mama?: {
-      sick: boolean;
-    };
-    age: number;
-  };
-};
+import typing
+from memorix_client_redis import dataclass
+
+@dataclass
+class UserPapaMama:
+  sick: bool
+
+@dataclass
+class UserPapa:
+  name: typing.Optional[str]
+  mama: typing.Optional[UserPapaMama]
+  age: int
+
+@dataclass
+class User:
+  id: int
+  papa: UserPapa
   `.trim()
       );
     });
@@ -115,10 +130,10 @@ export type User = {
         codegenPython(
           `
             Model User {
-                id: number
+                id: int
                 names: [string]
                 children: [{
-                  id: number
+                  id: int
                   name: string?
                 }?]?
             }
@@ -126,14 +141,19 @@ export type User = {
         )
       ).toBe(
         `
-export type User = {
-  id: number;
-  names: Array<string>;
-  children?: Array<{
-    id: number;
-    name?: string;
-  } | undefined>;
-};
+import typing
+from memorix_client_redis import dataclass
+
+@dataclass
+class UserChildren:
+  id: int
+  name: typing.Optional[str]
+
+@dataclass
+class User:
+  id: int
+  names: typing.List[str]
+  children: typing.Optional[typing.List[typing.Optional[UserChildren]]]
   `.trim()
       );
     });
@@ -145,7 +165,7 @@ export type User = {
           `
             Cache {
               user {
-                key: number
+                key: int
                 payload: string
               }
             }
@@ -153,13 +173,20 @@ export type User = {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-redis";
+import typing
+from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientCacheApi, MemorixClientCacheApiItem
 
-export class MemorixApi extends MemorixClientApi {
-  cache = {
-    user: this.getCacheItem<number, string>("user"),
-  };
-}
+class MemorixCacheApi(MemorixClientCacheApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixCacheApi, self).__init__(*args, **kwargs)
+
+    user = MemorixClientCacheApiItem(int, str, *args, **kwargs)
+
+class MemorixApi(MemorixClientApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixApi, self).__init__(*args, **kwargs)
+
+    cache = MemorixCacheApi(*args, **kwargs)
   `.trim()
       );
     });
@@ -169,10 +196,10 @@ export class MemorixApi extends MemorixClientApi {
           `
             Cache {
               user {
-                key: number
+                key: int
                 payload: {
                   name: string
-                  age: number?
+                  age: int?
                 }?
               }
             }
@@ -180,16 +207,25 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-redis";
+import typing
+from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientCacheApi, MemorixClientCacheApiItem
 
-export class MemorixApi extends MemorixClientApi {
-  cache = {
-    user: this.getCacheItem<number, {
-      name: string;
-      age?: number;
-    } | undefined>("user"),
-  };
-}
+@dataclass
+class CacheUserPayload:
+  name: str
+  age: typing.Optional[int]
+
+class MemorixCacheApi(MemorixClientCacheApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixCacheApi, self).__init__(*args, **kwargs)
+
+    user = MemorixClientCacheApiItem(int, typing.Optional[CacheUserPayload], *args, **kwargs)
+
+class MemorixApi(MemorixClientApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixApi, self).__init__(*args, **kwargs)
+
+    cache = MemorixCacheApi(*args, **kwargs)
   `.trim()
       );
     });
@@ -201,7 +237,7 @@ export class MemorixApi extends MemorixClientApi {
               user {
                 payload: {
                   name: string
-                  age: number?
+                  age: int?
                 }?
               }
             }
@@ -209,16 +245,25 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-redis";
+import typing
+from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientCacheApi, MemorixClientCacheApiItem
 
-export class MemorixApi extends MemorixClientApi {
-  cache = {
-    user: this.getCacheItem<undefined, {
-      name: string;
-      age?: number;
-    } | undefined>("user"),
-  };
-}
+@dataclass
+class CacheUserPayload:
+  name: str
+  age: typing.Optional[int]
+
+class MemorixCacheApi(MemorixClientCacheApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixCacheApi, self).__init__(*args, **kwargs)
+
+    user = MemorixClientCacheApiItem(None, typing.Optional[CacheUserPayload], *args, **kwargs)
+
+class MemorixApi(MemorixClientApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixApi, self).__init__(*args, **kwargs)
+
+    cache = MemorixCacheApi(*args, **kwargs)
   `.trim()
       );
     });
@@ -238,25 +283,32 @@ export class MemorixApi extends MemorixClientApi {
         
           Model User {
             name: string
-            age: number?
+            age: int?
           }
           `
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-redis";
+import typing
+from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientCacheApi, MemorixClientCacheApiItem
 
-export type User = {
-  name: string;
-  age?: number;
-};
+@dataclass
+class User:
+  name: str
+  age: typing.Optional[int]
 
-export class MemorixApi extends MemorixClientApi {
-  cache = {
-    adminId: this.getCacheItem<undefined, string | undefined>("adminId"),
-    user: this.getCacheItem<string, User>("user"),
-  };
-}
+class MemorixCacheApi(MemorixClientCacheApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixCacheApi, self).__init__(*args, **kwargs)
+
+    adminId = MemorixClientCacheApiItem(None, typing.Optional[str], *args, **kwargs)
+    user = MemorixClientCacheApiItem(str, User, *args, **kwargs)
+
+class MemorixApi(MemorixClientApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixApi, self).__init__(*args, **kwargs)
+
+    cache = MemorixCacheApi(*args, **kwargs)
   `.trim()
       );
     });
@@ -268,7 +320,7 @@ export class MemorixApi extends MemorixClientApi {
           `
             PubSub {
               message {
-                key: number
+                key: int
                 payload: string
               }
             }
@@ -276,13 +328,20 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-redis";
+import typing
+from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientPubsubApi, MemorixClientPubsubApiItem
 
-export class MemorixApi extends MemorixClientApi {
-  pubsub = {
-    message: this.getPubsubItem<number, string>("message"),
-  };
-}
+class MemorixPubsubApi(MemorixClientPubsubApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixPubsubApi, self).__init__(*args, **kwargs)
+
+    message = MemorixClientPubsubApiItem(int, str, *args, **kwargs)
+
+class MemorixApi(MemorixClientApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixApi, self).__init__(*args, **kwargs)
+
+    pubsub = MemorixPubsubApi(*args, **kwargs)
   `.trim()
       );
     });
@@ -294,7 +353,7 @@ export class MemorixApi extends MemorixClientApi {
           `
             Task {
               doIt {
-                key: number
+                key: int
                 payload: string
                 returns: boolean
               }
@@ -303,13 +362,20 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-import { MemorixClientApi } from "@memorix/client-redis";
+import typing
+from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientTaskApi, MemorixClientTaskApiItem
 
-export class MemorixApi extends MemorixClientApi {
-  task = {
-    doIt: this.getTaskItem<number, string, boolean>("doIt"),
-  };
-}
+class MemorixTaskApi(MemorixClientTaskApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixTaskApi, self).__init__(*args, **kwargs)
+
+    doIt = MemorixClientTaskApiItem(int, str, bool, *args, **kwargs)
+
+class MemorixApi(MemorixClientApi):
+  def __init__(self, *args, **kwargs):
+    super(MemorixApi, self).__init__(*args, **kwargs)
+
+    task = MemorixTaskApi(*args, **kwargs)
   `.trim()
       );
     });
@@ -328,11 +394,14 @@ export class MemorixApi extends MemorixClientApi {
         )
       ).toBe(
         `
-export enum Animals {
-  dog = "dog",
-  cat = "cat",
-  person = "person",
-}
+import typing
+from enum import Enum
+from memorix_client_redis import dataclass
+
+class Animals(Enum):
+  dog = "dog"
+  cat = "cat"
+  person = "person"
   `.trim()
       );
     });
