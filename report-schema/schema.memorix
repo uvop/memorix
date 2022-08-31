@@ -1,36 +1,49 @@
-Enum EventTypes {
-    get
-    set
-    publish
-    subscribe
-    queue
-    dequeue
-}
-
 Enum Languages {
     typescript
 }
 
 Task {
-    registerDevice {
+    startSession {
         payload: {
             schema: string
             language: Languages
         }
-        returns: string
     }
-    deregisterDevice {
-        payload: string
-    }
-    sendEvent {
+    collectPublish {
         payload: {
-            deviceId: string
-            type: EventTypes
-            traceId: string
-            data: {
-                identifier: string
-                args: any
-            }
+            identifier: string
+            sessionId: string
+            key: any?
+            publishTraceId: string
+            payload: any?
+        }
+    }
+    collectSubscribeCallback {
+        payload: {
+            subscriptionId: string
+            publishTraceId: string
+        }
+    }
+    collectDequeue {
+        payload: {
+            identifier: string
+            sessionId: string
+            key: any?
+        }
+        returns: {
+            dequeueId: string
+        }
+    }
+    collectQueue {
+        payload: {
+            identifier: string
+            sessionId: string
+            key: any?
+            queueTraceId: string
+            payload: any?
+        }
+        returns: {
+            queueId: string
         }
     }
     sendEventEnd {
@@ -40,4 +53,7 @@ Task {
             traceId: string
         }
     }
+    collectQueueCallback {
+        payload: {
+            queueId: string
 }
