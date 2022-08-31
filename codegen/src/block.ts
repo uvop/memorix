@@ -205,7 +205,6 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
   blocks
     .filter((b) => [BlockTypes.enum].indexOf(b.type) === -1)
     .forEach((b) => {
-      let newSubBlocks: Block[] = [];
       switch (b.type) {
         case BlockTypes.enum:
           break;
@@ -328,7 +327,6 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
           assertUnreachable(b);
         }
       }
-      newBlocks = newBlocks.concat(newSubBlocks);
     });
 
   return [...blocks.filter((b) => b.type === BlockTypes.enum), ...newBlocks];
