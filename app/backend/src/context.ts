@@ -1,5 +1,6 @@
 import { RedisPubSub } from "graphql-redis-subscriptions";
 import { PrismaClient } from "@prisma/client";
+import { MemorixReportApi } from "./report-api.generated";
 
 const { REDIS_URL } = process.env;
 
@@ -42,8 +43,9 @@ const redis = Object.assign(redisPubSub, {
 export interface Context {
   db: DB;
   redis: Redis;
+  memorixReportApi: MemorixReportApi;
 }
 
 export const createContext: () => Context = () => {
-  return { db, redis };
+  return { db, redis, memorixReportApi: new MemorixReportApi() };
 };

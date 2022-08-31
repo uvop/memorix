@@ -1,0 +1,61 @@
+[flake8]
+max-line-length = 88
+ignore = 
+    WPS300, # Local import
+    WPS355, # blank line, let black do that
+    WPS201, # too many imports
+    WPS202, # too many imports
+    WPS226, # string over-use
+    WPS110, # Wrong variable name
+    WPS213, # too many expressions
+    WPS231, # too high function cognitive complxeity
+    WPS232, # too high module cognitive complxeity
+    WPS102, # Found incorrect module name pattern
+    I001, # import sort
+    I003, # import line break
+    D100, # Docstring public module
+    D101, # Docstring public class
+    D102, # Docstring public method
+    D103, # Docstring public function
+    D104, # Docstring public package
+    D106, # Docstring public nested class
+    D107, # Docstring __init__
+    S101, # use of assert detected (useless with pytest)
+    E203,  # whitespace before ':' # formating fix
+    WPS210, # Found too many local variables
+    W503, # line break before binary operator # formating fix
+    WPS331, # remove var which used only for return
+    WPS125, # enable shadowing of known variable names like id
+    WPS214, # too many methods, good thing
+    WPS506, # useless lambda? why
+    WPS431, # nested classes are cool
+    WPS602, # static methods are cool
+    WPS421, # print is cool
+    WPS230, # too many public instance - it OK
+    WPS504, # not bool is ok
+    WPS407, # Mutable module constant
+    WPS211, # Too many arguments, good for models
+    WPS402, # Too many noqa, good for mocks
+    WPS229, # Too long try, over complicates
+    WPS501, # Try without except, it's wanted sometimes..
+    WPS122, # unused variable, Underscore not ignoring it..
+    WPS352, # multiline loop, black has our back
+    S310, # Why needed
+    WPS204, # overused expression, is OK
+per-file-ignores =
+    __init__.py: 
+        # import unused, for exporting
+        F401,
+        # same alias as import, for exporting
+        WPS113,
+        # module with logic, only for exporting
+        WPS412
+exclude =
+    .git,
+    __pycache__,
+    *.egg-info,
+    .nox,
+    .pytest_cache,
+    .mypy_cache
+    .history
+inline-quotes = "

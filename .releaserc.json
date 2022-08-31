@@ -1,0 +1,55 @@
+{
+  "tagformat": "v${version.replace('-', '')}",
+  "branches": [
+    {
+      "name": "master",
+      "prerelease": "rc"
+    },
+    {
+      "name": "*",
+      "prerelease": "b"
+    }
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/npm",
+      {
+        "pkgRoot": "../js"
+      }
+    ],
+    [
+      "semantic-release-python",
+      {
+        "setupPy": "./pyproject.toml"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "../../../codegen/lib/codegen-macos-arm64",
+            "label": "macos-arm64"
+          },
+          { "path": "../../../codegen/lib/codegen-macos-x64", "label": "macos-x64" },
+          { "path": "../../../codegen/lib/codegen-linux-x64", "label": "linux-x64" },
+          { "path": "../../../codegen/lib/codegen-win-x64.exe", "label": "win-x64" }
+        ]
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "../../../CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["../../../CHANGELOG.md"]
+      }
+    ]
+  ]
+}

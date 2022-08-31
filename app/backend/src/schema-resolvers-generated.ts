@@ -32,6 +32,7 @@ export type Scalars = {
 
 export type Query = {
   __typename?: "Query";
+  devices: Array<Device>;
   test: Scalars["Boolean"];
   schema: Schema;
   platform: SchemaPlatform;
@@ -49,6 +50,12 @@ export type QueryResourceArgs = {
 
 export type QueryActionArgs = {
   id: Scalars["ID"];
+};
+
+export type Device = {
+  __typename?: "Device";
+  schema: Scalars["String"];
+  language: Scalars["String"];
 };
 
 export type Mutation = {
@@ -381,8 +388,9 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
   Boolean: ResolverTypeWrapper<Scalars["Boolean"]>;
   ID: ResolverTypeWrapper<Scalars["ID"]>;
-  Mutation: ResolverTypeWrapper<{}>;
+  Device: ResolverTypeWrapper<Device>;
   String: ResolverTypeWrapper<Scalars["String"]>;
+  Mutation: ResolverTypeWrapper<{}>;
   Subscription: ResolverTypeWrapper<{}>;
   Language: Language;
   ConnectedDevice: ResolverTypeWrapper<ConnectedDevice>;
@@ -424,8 +432,9 @@ export type ResolversParentTypes = {
   Query: {};
   Boolean: Scalars["Boolean"];
   ID: Scalars["ID"];
-  Mutation: {};
+  Device: Device;
   String: Scalars["String"];
+  Mutation: {};
   Subscription: {};
   ConnectedDevice: ConnectedDevice;
   Int: Scalars["Int"];
@@ -465,6 +474,7 @@ export type QueryResolvers<
   ContextType = Context,
   ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"]
 > = {
+  devices?: Resolver<Array<ResolversTypes["Device"]>, ParentType, ContextType>;
   test?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   schema?: Resolver<ResolversTypes["Schema"], ParentType, ContextType>;
   platform?: Resolver<
@@ -485,6 +495,15 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QueryActionArgs, "id">
   >;
+};
+
+export type DeviceResolvers<
+  ContextType = Context,
+  ParentType extends ResolversParentTypes["Device"] = ResolversParentTypes["Device"]
+> = {
+  schema?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  language?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type MutationResolvers<
@@ -845,6 +864,7 @@ export type Resolvers<ContextType = Context> = {
   SchemaValue?: GraphQLScalarType;
   Json?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
+  Device?: DeviceResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   ConnectedDevice?: ConnectedDeviceResolvers<ContextType>;

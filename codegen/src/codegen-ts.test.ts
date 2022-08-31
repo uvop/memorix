@@ -11,9 +11,9 @@ describe("ts codegen", () => {
         codegenTs(
           `
             Model User {
-                id: number
+                id: int
                 name: string
-                age: number?
+                age: float?
             }
           `
         )
@@ -32,11 +32,11 @@ export type User = {
         codegenTs(
           `
             Model User1 {
-                id: number
+                id: int
             }
             Model User2 {
                 name: string
-                age: number?
+                age: int?
             }
           `.trim()
         )
@@ -58,7 +58,7 @@ export type User2 = {
         codegenTs(
           `
             Model User {
-                id: number
+                id: int
                 papa: {
                     name: string?
                 }
@@ -81,13 +81,13 @@ export type User = {
         codegenTs(
           `
             Model User {
-                id: number
+                id: int
                 papa: {
                     name: string?
                     mama: {
                         sick: boolean
                     }?
-                    age: number
+                    age: int
                 }
             }
           `.trim()
@@ -112,10 +112,10 @@ export type User = {
         codegenTs(
           `
             Model User {
-                id: number
+                id: int
                 names: [string]
                 children: [{
-                  id: number
+                  id: int
                   name: string?
                 }?]?
             }
@@ -142,7 +142,7 @@ export type User = {
           `
             Cache {
               user {
-                key: number
+                key: int
                 payload: string
               }
             }
@@ -150,9 +150,9 @@ export type User = {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
     user: this.getCacheItem<number, string>("user"),
   };
@@ -166,10 +166,10 @@ export class MemorixApi extends BaseMemorixApi {
           `
             Cache {
               user {
-                key: number
+                key: int
                 payload: {
                   name: string
-                  age: number?
+                  age: int?
                 }?
               }
             }
@@ -177,9 +177,9 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
     user: this.getCacheItem<number, {
       name: string;
@@ -198,7 +198,7 @@ export class MemorixApi extends BaseMemorixApi {
               user {
                 payload: {
                   name: string
-                  age: number?
+                  age: int?
                 }?
               }
             }
@@ -206,11 +206,11 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
-    user: this.getCacheItem<never, {
+    user: this.getCacheItem<undefined, {
       name: string;
       age?: number;
     } | undefined>("user"),
@@ -235,22 +235,22 @@ export class MemorixApi extends BaseMemorixApi {
         
           Model User {
             name: string
-            age: number?
+            age: int?
           }
           `
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
 export type User = {
   name: string;
   age?: number;
 };
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   cache = {
-    adminId: this.getCacheItem<never, string | undefined>("adminId"),
+    adminId: this.getCacheItem<undefined, string | undefined>("adminId"),
     user: this.getCacheItem<string, User>("user"),
   };
 }
@@ -265,7 +265,7 @@ export class MemorixApi extends BaseMemorixApi {
           `
             PubSub {
               message {
-                key: number
+                key: int
                 payload: string
               }
             }
@@ -273,9 +273,9 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   pubsub = {
     message: this.getPubsubItem<number, string>("message"),
   };
@@ -291,7 +291,7 @@ export class MemorixApi extends BaseMemorixApi {
           `
             Task {
               doIt {
-                key: number
+                key: int
                 payload: string
                 returns: boolean
               }
@@ -300,9 +300,9 @@ export class MemorixApi extends BaseMemorixApi {
         )
       ).toBe(
         `
-import { BaseMemorixApi } from "@memorix/client-js";
+import { MemorixClientApi } from "@memorix/client-redis";
 
-export class MemorixApi extends BaseMemorixApi {
+export class MemorixApi extends MemorixClientApi {
   task = {
     doIt: this.getTaskItem<number, string, boolean>("doIt"),
   };

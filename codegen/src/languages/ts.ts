@@ -9,7 +9,11 @@ const valueToTs: (
 ) => string = (value, level = 0, isParentObject = false) => {
   let valueTs;
   if (value.type === ValueTypes.simple) {
-    valueTs = `${value.name}`;
+    if (value.name === "int" || value.name === "float") {
+      valueTs = "number";
+    } else {
+      valueTs = `${value.name}`;
+    }
   } else if (value.type === ValueTypes.array) {
     valueTs = `Array<${valueToTs(value.value, level)}>`;
   } else {
@@ -57,10 +61,10 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
       return `${b.values
         .map((v) => {
           return `${getTabs(2)}${v.name}: this.${itemFn}<${
-            v.key ? `${valueToTs(v.key, 2)}` : "never"
+            v.key ? `${valueToTs(v.key, 2)}` : "undefined"
           }, ${valueToTs(v.payload, 2)}${
-            hasReturns
-              ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "never"}`
+            hasReturns && "returns" in v
+              ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
               : ""
           }>("${v.name}"),`;
         })
@@ -84,16 +88,16 @@ export const codegenTs: (schema: string) => string = (schema) => {
   const code = []
     .concat(
       hasApi
-        ? `import { ${[]
-            .concat(hasApi ? ["BaseMemorixApi"] : [])
-            .join(", ")} } from "@memorix/client-js";`
+        ? `import { ${([] as string[])
+            .concat(hasApi ? ["MemorixClientApi"] : [])
+            .join(", ")} } from "@memorix/client-redis";`
         : []
     )
     .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToTs))
     .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToTs))
     .concat(
       hasApi
-        ? `export class MemorixApi extends BaseMemorixApi {
+        ? `export class MemorixApi extends MemorixClientApi {
 ${
   hasCache
     ? `${getTabs(1)}cache = {

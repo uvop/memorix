@@ -1,5 +1,11 @@
 import { getOperations, getOperationsGenerator, getSchema } from "./mocks";
 import { Resolvers, Subscription } from "./schema-resolvers-generated";
+import { Languages } from "./report-api.generated";
+
+const devices = [] as {
+  schema: string;
+  language: Languages;
+}[];
 
 export const resolvers: Resolvers = {
   ActionOperationData: {
@@ -10,7 +16,15 @@ export const resolvers: Resolvers = {
     },
   },
   Query: {
-    test() {
+    devices() {
+      return devices;
+    },
+    test(info, args, ctx) {
+      ctx.memorixReportApi.task.registerDevice.dequeue((payload) => {
+        devices.push(payload);
+
+        return `id_${devices.length}`;
+      });
       return true;
     },
     async schema() {

@@ -4,8 +4,14 @@ import {
   ValueType,
   PropertyType,
   ValueTypes,
+  SimpleValueType,
+  ArrayValueType,
 } from "./value";
-import { removeBracketsOfScope } from "./utilities";
+import {
+  assertUnreachable,
+  camelCase,
+  removeBracketsOfScope,
+} from "./utilities";
 
 export enum BlockTypes {
   model = "Model",
@@ -133,4 +139,195 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
   });
 
   return blocks;
+};
+
+const getNonObjectValueFromValue = (
+  value: ValueType,
+  name: string
+): SimpleValueType | ArrayValueType => {
+  switch (value.type) {
+    case ValueTypes.simple:
+      return value;
+    case ValueTypes.array:
+      return {
+        ...value,
+        value: getNonObjectValueFromValue(value.value, name),
+      };
+    case ValueTypes.object:
+      return {
+        type: ValueTypes.simple,
+        isOptional: value.isOptional,
+        name,
+      };
+    default:
+      assertUnreachable(value);
+      return undefined;
+  }
+};
+
+const getBlockModelsFromValue = (
+  value: ValueType,
+  name: string
+): BlockModel[] => {
+  switch (value.type) {
+    case ValueTypes.simple:
+      return [];
+    case ValueTypes.object:
+      return [
+        ...value.properties
+          .map((p) =>
+            getBlockModelsFromValue(p.value, `${name}${camelCase(p.name)}`)
+          )
+          .flat(),
+        {
+          type: BlockTypes.model,
+          name,
+          properties: value.properties.map((p) => ({
+            name: p.name,
+            value: getNonObjectValueFromValue(
+              p.value,
+              `${name}${camelCase(p.name)}`
+            ),
+          })),
+        },
+      ];
+    case ValueTypes.array:
+      return getBlockModelsFromValue(value.value, name);
+    default:
+      assertUnreachable(value);
+      return undefined;
+  }
+};
+
+export const flatBlocks = (blocks: Block[]): Block[] => {
+  let newBlocks: Block[] = [];
+
+  blocks
+    .filter((b) => [BlockTypes.enum].indexOf(b.type) === -1)
+    .forEach((b) => {
+      switch (b.type) {
+        case BlockTypes.enum:
+          break;
+        case BlockTypes.model: {
+          newBlocks = newBlocks.concat(
+            getBlockModelsFromValue(
+              {
+                type: ValueTypes.object,
+                isOptional: false,
+                properties: b.properties,
+              },
+              b.name
+            )
+          );
+          break;
+        }
+        case BlockTypes.task: {
+          newBlocks = newBlocks.concat(
+            b.values
+              .filter((v) => v.key !== undefined)
+              .map((v) =>
+                getBlockModelsFromValue(
+                  v.key!,
+                  `${b.type}${camelCase(v.name)}Key`
+                )
+              )
+              .flat()
+          );
+          newBlocks = newBlocks.concat(
+            b.values
+              .map((v) =>
+                getBlockModelsFromValue(
+                  v.payload,
+                  `${b.type}${camelCase(v.name)}Payload`
+                )
+              )
+              .flat()
+          );
+          newBlocks = newBlocks.concat(
+            b.values
+              .filter((v) => v.returns !== undefined)
+              .map((v) =>
+                getBlockModelsFromValue(
+                  v.returns,
+                  `${b.type}${camelCase(v.name)}Returns`
+                )
+              )
+              .flat()
+          );
+          newBlocks = newBlocks.concat([
+            {
+              type: BlockTypes.task,
+              values: b.values.map((v) => ({
+                ...v,
+                key: v.key
+                  ? getNonObjectValueFromValue(
+                      v.key,
+                      `${b.type}${camelCase(v.name)}Key`
+                    )
+                  : undefined,
+                payload: getNonObjectValueFromValue(
+                  v.payload,
+                  `${b.type}${camelCase(v.name)}Payload`
+                ),
+                returns: v.returns
+                  ? getNonObjectValueFromValue(
+                      v.returns,
+                      `${b.type}${camelCase(v.name)}Returns`
+                    )
+                  : undefined,
+              })),
+            },
+          ]);
+          break;
+        }
+        case BlockTypes.cache:
+        case BlockTypes.pubsub: {
+          newBlocks = newBlocks.concat(
+            b.values
+              .filter((v) => v.key !== undefined)
+              .map((v) =>
+                getBlockModelsFromValue(
+                  v.key!,
+                  `${b.type}${camelCase(v.name)}Key`
+                )
+              )
+              .flat()
+          );
+          newBlocks = newBlocks.concat(
+            b.values
+              .map((v) =>
+                getBlockModelsFromValue(
+                  v.payload,
+                  `${b.type}${camelCase(v.name)}Payload`
+                )
+              )
+              .flat()
+          );
+          newBlocks = newBlocks.concat([
+            {
+              type: b.type,
+              values: b.values.map((v) => ({
+                ...v,
+                key: v.key
+                  ? getNonObjectValueFromValue(
+                      v.key,
+                      `${b.type}${camelCase(v.name)}Key`
+                    )
+                  : undefined,
+                payload: getNonObjectValueFromValue(
+                  v.payload,
+                  `${b.type}${camelCase(v.name)}Payload`
+                ),
+              })),
+            },
+          ]);
+          break;
+        }
+        default: {
+          assertUnreachable(b);
+        }
+      }
+    });
+
+  return [...blocks.filter((b) => b.type === BlockTypes.enum), ...newBlocks];
 };

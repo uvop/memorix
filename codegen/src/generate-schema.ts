@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { codegen } from "./codegen";
+import { Languages } from "./languages";
 
 const [, , schemaArgPath, outputPath] = process.argv;
 
@@ -25,7 +26,7 @@ const generateSchema = async () => {
 
   const schema = await (await fs.promises.readFile(schemaPath)).toString();
 
-  const code = codegen({ schema });
+  const code = codegen({ schema, language: Languages.typescript });
 
   await fs.promises.writeFile(codePath, code);
 

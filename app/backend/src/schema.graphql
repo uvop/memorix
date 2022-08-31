@@ -2,11 +2,17 @@ scalar SchemaValue
 scalar Json
 
 type Query {
+  devices: [Device!]!
   test: Boolean!
   schema: Schema!
   platform(id: ID!): SchemaPlatform!
   resource(id: ID!): SchemaResource!
   action(id: ID!): SchemaAction!
+}
+
+type Device {
+  schema: String!
+  language: String!
 }
 
 type Mutation {

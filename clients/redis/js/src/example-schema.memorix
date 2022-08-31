@@ -23,7 +23,7 @@ Task {
 
 Model User {
     name: string
-    age: number?
+    age: int?
 }
 
 Cache {
@@ -45,5 +45,5 @@ Task {
 
 Model User2 {
     name: string
-    age: number?
+    age: int?
 }

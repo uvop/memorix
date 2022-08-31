@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "memorix_client_redis"
+version = "1.0.0"
+description = ""
+authors = ["Yuval Saraf <unimonkiez@gmail.com>"]
+
+[tool.poetry.scripts]
+start = "memorix_client_redis.start:start"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+redis = "^4.3.4"
+dacite = "^1.6.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+flake8 = "^4.0.0"
+black = "^22.6.0"
+mypy = "^0.971"
+wemake-python-styleguide = "^0.16.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
