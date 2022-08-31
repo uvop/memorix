@@ -1,6 +1,7 @@
 {
   "tagformat": "v${version.replace('-', '')}",
   "branches": [
+    "release",
     {
       "name": "master",
       "prerelease": "rc"
