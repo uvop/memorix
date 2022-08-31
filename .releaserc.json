@@ -1,6 +1,6 @@
 {
+  "tagformat": "v${version.replace('-', '')}",
   "branches": [
-    "+([0-9])?(.{+([0-9]),x})x",
     "master",
     {
       "name": "8-add-code-to-client-js-so-the-generated-code-will-work-with-it",
