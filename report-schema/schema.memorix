@@ -1,104 +1,43 @@
+Enum EventTypes {
+    get
+    set
+    publish
+    subscribe
+    queue
+    dequeue
+}
+
 Enum Languages {
     typescript
 }
 
 Task {
-    startSession {
+    registerDevice {
         payload: {
             schema: string
             language: Languages
-            temp: {
-                token: string
+        }
+        returns: string
+    }
+    deregisterDevice {
+        payload: string
+    }
+    sendEvent {
+        payload: {
+            deviceId: string
+            type: EventTypes
+            traceId: string
+            data: {
+                identifier: string
+                args: any
             }
         }
-        returns: {
-            sessionId: string
-        }
     }
-    keepSessionAlive {
+    sendEventEnd {
         payload: {
-            sessionId: string
-        }
-    }
-    stopSession {
-        payload: {
-            sessionId: string
-        }
-    }
-    collectGet {
-        payload: {
-            identifier: string
-            sessionId: string
-            key: any?
-            setTraceId: string?
-        }
-    }
-    collectSet {
-        payload: {
-            identifier: string
-            sessionId: string
-            key: any?
-            setTraceId: string
-            payload: any
-        }
-    }
-    collectSubscribe {
-        payload: {
-            identifier: string
-            sessionId: string
-            key: any?
-        }
-        returns: {
-            subscriptionId: string
-        }
-    }
-    collectPublish {
-        payload: {
-            identifier: string
-            sessionId: string
-            key: any?
-            publishTraceId: string
-            payload: any?
-        }
-    }
-    collectSubscribeCallback {
-        payload: {
-            subscriptionId: string
-            publishTraceId: string
-        }
-    }
-    collectDequeue {
-        payload: {
-            identifier: string
-            sessionId: string
-            key: any?
-        }
-        returns: {
-            dequeueId: string
-        }
-    }
-    collectQueue {
-        payload: {
-            identifier: string
-            sessionId: string
-            key: any?
-            queueTraceId: string
-            payload: any?
-        }
-        returns: {
-            queueId: string
-        }
-    }
-    collectDequeueCallback {
-       payload: {
-           dequeueId: string
-           queueTraceId: string
-           returnPayload: any?
-       }
-    }
-    collectQueueCallback {
-        payload: {
-            queueId: string
+            deviceId: string
+            type: EventTypes
+            traceId: string
         }
     }
 }

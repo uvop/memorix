@@ -1,10 +1,7 @@
 import { codegenByLanguage, Languages } from "./languages";
 
-type CodegenFn = (params: { schema: string; language?: Languages }) => string;
+type CodegenFn = (params: { schema: string; language: Languages }) => string;
 
-export const codegen: CodegenFn = ({
-  schema,
-  language = Languages.typescript,
-}) => {
+export const codegen: CodegenFn = ({ schema, language }) => {
   return codegenByLanguage(schema, language);
 };
