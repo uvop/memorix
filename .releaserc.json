@@ -1,16 +1,18 @@
 {
   "tagformat": "v${version.replace('-', '')}",
   "branches": [
-    "master",
     {
-      "name": "8-add-code-to-client-js-so-the-generated-code-will-work-with-it",
+      "name": "master",
       "prerelease": "rc"
+    },
+    {
+      "name": "*",
+      "prerelease": "b"
     }
   ],
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    "@semantic-release/changelog",
     [
       "@semantic-release/npm",
       {
@@ -37,6 +39,17 @@
         ]
       }
     ],
-    "@semantic-release/git"
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "../../../CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["../../../CHANGELOG.md"]
+      }
+    ]
   ]
 }
