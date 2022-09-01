@@ -33,10 +33,12 @@ class MemorixCacheApi(MemorixClientCacheApi):
         self.favoriteAnimal = MemorixClientCacheApiItem[str, Animal](
             cache_api=self,
             id="favoriteAnimal",
+            payload_class=Animal,
         )
         self.user = MemorixClientCacheApiItem[str, User](
             cache_api=self,
             id="user",
+            payload_class=User,
         )
 
 
