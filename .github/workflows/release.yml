@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - master
-  workflow_dispatch:
+      - release
+      - next
 
 jobs:
   build-codegen:

@@ -6,8 +6,8 @@
       "prerelease": "rc"
     },
     {
-      "name": "*",
-      "prerelease": "b"
+      "name": "next",
+      "prerelease": "a"
     }
   ],
   "plugins": [
@@ -33,9 +33,18 @@
             "path": "../../../codegen/lib/codegen-macos-arm64",
             "label": "macos-arm64"
           },
-          { "path": "../../../codegen/lib/codegen-macos-x64", "label": "macos-x64" },
-          { "path": "../../../codegen/lib/codegen-linux-x64", "label": "linux-x64" },
-          { "path": "../../../codegen/lib/codegen-win-x64.exe", "label": "win-x64" }
+          {
+            "path": "../../../codegen/lib/codegen-macos-x64",
+            "label": "macos-x64"
+          },
+          {
+            "path": "../../../codegen/lib/codegen-linux-x64",
+            "label": "linux-x64"
+          },
+          {
+            "path": "../../../codegen/lib/codegen-win-x64.exe",
+            "label": "win-x64"
+          }
         ]
       }
     ],
