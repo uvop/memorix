@@ -1,14 +1,32 @@
 import os
 from .example_schema_generated import Animal, MemorixApi, User
+import multiprocessing
+from time import sleep
 
 redis_url = os.environ["REDIS_URL"]
+
+
+def listen_to_message() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+    for m in memorix_api.pubsub.message.subscribe():
+        print("message:", m)
 
 
 def start() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
-    memorix_api.cache.user.set(key="uv", payload=User(name="bla", age=18))
+    memorix_api.cache.user.set("uv", User(name="uv", age=29))
 
-    user = memorix_api.cache.user.get(key="uv")
-
+    user = memorix_api.cache.user.get("uv")
     print(user.age)
+
+    process = multiprocessing.Process(target=listen_to_message)
+    process.start()
+
+    for i in [1, 2, 3, 4]:
+        sleep(1)
+        listeners = memorix_api.pubsub.message.publish(payload="Heyy buddy")
+        print("listeners:", listeners)
+
+    sleep(0.5)
+    process.kill()

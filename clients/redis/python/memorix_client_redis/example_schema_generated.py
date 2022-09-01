@@ -49,6 +49,7 @@ class MemorixPubsubApi(MemorixClientPubSubApi):
         self.message = MemorixClientPubSubApiItemNoKey[str](
             pubsub_api=self,
             id="message",
+            payload_class=str,
         )
 
 
