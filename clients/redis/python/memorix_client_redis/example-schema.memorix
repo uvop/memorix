@@ -1,0 +1,34 @@
+Enum Animal {
+    dog
+    cat
+    person
+}
+
+Model User {
+    name: string
+    age: int?
+}
+
+Cache {
+    favoriteAnimal {
+        key: string
+        payload: Animal
+    }
+    user {
+        key: string
+        payload: User
+    }
+}
+
+PubSub {
+    message {
+        payload: string
+    }
+}
+
+Task {
+    runAlgo {
+        payload: string
+        returns: Animals
+    }
+}

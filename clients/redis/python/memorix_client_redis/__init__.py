@@ -1,1 +1,2 @@
-from .memorix_client_api import MemorixClientApi
+from .api.api import Api as memorix_client_api
+from dataclasses import dataclass

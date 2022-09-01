@@ -1,3 +1,3 @@
-class MemorixClientApi(object):
+class Api(object):
     def say_hello(self) -> None:
         print("Hello World")
