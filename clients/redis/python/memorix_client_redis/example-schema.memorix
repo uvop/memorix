@@ -29,6 +29,6 @@ PubSub {
 Task {
     runAlgo {
         payload: string
-        returns: Animals
+        returns: Animal
     }
 }

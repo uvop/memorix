@@ -1,3 +1,6 @@
+from redis import Redis
+
+
 class Api(object):
-    def say_hello(self) -> None:
-        print("Hello World")
+    def __init__(self, redis_url: str) -> None:
+        self._redis = Redis.from_url(redis_url)
