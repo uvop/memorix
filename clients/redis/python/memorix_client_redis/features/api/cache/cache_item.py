@@ -30,36 +30,31 @@ class CacheItem(Generic[KT, PT]):
         print("get async")
         return cast(PT, None)
 
-    def set(self, key: KT, payload: PT) -> bool | None:
+    def set(self, key: KT, payload: PT) -> Optional[bool]:
         payload_json = to_json(payload)
         return self._cache_api._api._redis.set(
             hash_key(self._id, key=key),
             payload_json,
         )
 
-    async def async_set(self, key: KT, payload: PT) -> None:
+    async def async_set(self, key: KT, payload: PT) -> Optional[bool]:
         print("set async")
+        return True
 
 
-class CacheItemNoKey(Generic[PT]):
-    def __init__(
-        self,
-        cache_api: CacheApi,
-        id: str,
-    ) -> None:
-        self._cache_api = cache_api
-        self._id = id
+class CacheItemNoKey(CacheItem[None, PT]):
+    # Different signature on purpose
+    def get(self) -> Optional[PT]:  # type: ignore
+        return CacheItem.get(self, key=None)
 
-    def get(self) -> PT:
-        print("get sync")
-        return cast(PT, None)
+    # Different signature on purpose
+    async def async_get(self) -> PT:  # type: ignore
+        return await CacheItem.async_get(self, key=None)
 
-    async def async_get(self) -> PT:
-        print("get async")
-        return cast(PT, None)
+    # Different signature on purpose
+    def set(self, payload: PT) -> Optional[bool]:  # type: ignore
+        return CacheItem.set(self, key=None, payload=payload)
 
-    def set(self, payload: PT) -> None:
-        print("set sync")
-
-    async def async_set(self, payload: PT) -> None:
-        print("set async")
+    # Different signature on purpose
+    async def async_set(self, payload: PT) -> Optional[bool]:  # type: ignore
+        return await CacheItem.async_set(self, key=None, payload=payload)

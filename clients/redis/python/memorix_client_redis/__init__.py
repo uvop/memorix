@@ -1,6 +1,9 @@
 from .features.api.api import Api as MemorixClientApi
 from .features.api.cache.cache_api import CacheApi as MemorixClientCacheApi
-from .features.api.cache.cache_item import CacheItem as MemorixClientCacheApiItem
+from .features.api.cache.cache_item import (
+    CacheItem as MemorixClientCacheApiItem,
+    CacheItemNoKey as MemorixClientCacheApiItemNoKey,
+)
 from .features.api.pubsub.pubsub_api import PubSubApi as MemorixClientPubSubApi
 from .features.api.pubsub.pubsub_item import (
     PubSubItem as MemorixClientPubSubApiItem,
