@@ -9,8 +9,8 @@ jobs:
       run:
         working-directory: ./clients/redis/python
     steps:
-      - run: cd ./clients/redis/python
       - uses: actions/checkout@v2
+      - run: cd ./clients/redis/python
       - name: Install poetry
         run: pipx install poetry
       - uses: actions/setup-python@v4
