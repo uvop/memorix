@@ -16,6 +16,7 @@ from typing import (
     Type,
     TypeVar,
     cast,
+    Optional,
 )
 
 KT = TypeVar("KT")
@@ -98,12 +99,12 @@ class TaskItem(Generic[KT, PT, RT]):
         api: Api,
         id: str,
         payload_class: Type[PT],
-        returns_class: Type[RT] | None,
+        returns_class: Optional[Type[RT]] = None,
     ) -> None:
         self._api = api
         self._id = id
         self._payload_class = payload_class
-        if returns_class:
+        if returns_class is not None:
             self._returns_task = TaskItemNoReturns[str, RT](
                 api=api,
                 id="{0}_returns".format(id),
