@@ -8,26 +8,26 @@ on:
       - next
 
 jobs:
-  build-codegen:
+  build-cli:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./codegen
+        working-directory: ./cli
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
           node-version: "16"
           cache: "yarn"
-          cache-dependency-path: "./codegen/yarn.lock"
+          cache-dependency-path: "./cli/yarn.lock"
       - name: Install dependencies
         run: yarn install
       - name: Build
         run: yarn build
       - uses: actions/upload-artifact@v3
         with:
-          name: artifact-codegen
-          path: ./codegen/lib
+          name: artifact-cli
+          path: ./cli/lib
           retention-days: 1
   build-client-redis-js:
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
           path: ./clients/redis/js/lib
           retention-days: 1
   release:
-    needs: [build-codegen, build-client-redis-js]
+    needs: [build-cli, build-client-redis-js]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/download-artifact@v3
       - name: Move artifacts to projects
         run: |
-          mkdir ./codegen/lib && mv -v artifact-codegen/* ./codegen/lib
+          mkdir ./cli/lib && mv -v artifact-cli/* ./cli/lib
           mkdir ./clients/redis/js/lib && mv -v artifact-client-redis-js/* ./clients/redis/js/lib
       - name: Semantic release
         env:

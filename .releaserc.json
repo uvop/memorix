@@ -30,19 +30,19 @@
       {
         "assets": [
           {
-            "path": "../../../codegen/lib/codegen-macos-arm64",
+            "path": "../../../cli/lib/macos-arm64/memorix",
             "label": "macos-arm64"
           },
           {
-            "path": "../../../codegen/lib/codegen-macos-x64",
+            "path": "../../../cli/lib/macos-x64/memorix",
             "label": "macos-x64"
           },
           {
-            "path": "../../../codegen/lib/codegen-linux-x64",
+            "path": "../../../cli/lib/linux-x64/memorix",
             "label": "linux-x64"
           },
           {
-            "path": "../../../codegen/lib/codegen-win-x64.exe",
+            "path": "../../../cli/lib/win-x64/memorix.exe",
             "label": "win-x64"
           }
         ]

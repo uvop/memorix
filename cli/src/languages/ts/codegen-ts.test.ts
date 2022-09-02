@@ -1,8 +1,7 @@
-import { codegen } from "./codegen";
-import { Languages } from "./languages";
+import { Languages, codegenByLanguage } from "src/languages";
 
 const codegenTs = (schema: string) =>
-  codegen({ schema, language: Languages.typescript }).trim();
+  codegenByLanguage(schema, Languages.typescript).trim();
 
 describe("ts codegen", () => {
   describe("model", () => {
@@ -17,15 +16,7 @@ describe("ts codegen", () => {
             }
           `
         )
-      ).toBe(
-        `
-export type User = {
-  id: number;
-  name: string;
-  age?: number;
-};
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate from 2 models", () => {
       expect(
@@ -40,18 +31,7 @@ export type User = {
             }
           `.trim()
         )
-      ).toBe(
-        `
-export type User1 = {
-  id: number;
-};
-
-export type User2 = {
-  name: string;
-  age?: number;
-};
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate from model within model", () => {
       expect(
@@ -65,16 +45,7 @@ export type User2 = {
             }
           `.trim()
         )
-      ).toBe(
-        `
-export type User = {
-  id: number;
-  papa: {
-    name?: string;
-  };
-};
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate from model within model within a model", () => {
       expect(
@@ -92,20 +63,7 @@ export type User = {
             }
           `.trim()
         )
-      ).toBe(
-        `
-export type User = {
-  id: number;
-  papa: {
-    name?: string;
-    mama?: {
-      sick: boolean;
-    };
-    age: number;
-  };
-};
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate from model with array", () => {
       expect(
@@ -121,18 +79,7 @@ export type User = {
             }
           `
         )
-      ).toBe(
-        `
-export type User = {
-  id: number;
-  names: Array<string>;
-  children?: Array<{
-    id: number;
-    name?: string;
-  } | undefined>;
-};
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
   describe("cache", () => {
@@ -148,17 +95,7 @@ export type User = {
             }
           `
         )
-      ).toBe(
-        `
-import { MemorixClientApi } from "@memorix/client-redis";
-
-export class MemorixApi extends MemorixClientApi {
-  cache = {
-    user: this.getCacheItem<number, string>("user"),
-  };
-}
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate with inline object type", () => {
       expect(
@@ -175,20 +112,7 @@ export class MemorixApi extends MemorixClientApi {
             }
           `
         )
-      ).toBe(
-        `
-import { MemorixClientApi } from "@memorix/client-redis";
-
-export class MemorixApi extends MemorixClientApi {
-  cache = {
-    user: this.getCacheItem<number, {
-      name: string;
-      age?: number;
-    } | undefined>("user"),
-  };
-}
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate with no key", () => {
       expect(
@@ -204,20 +128,7 @@ export class MemorixApi extends MemorixClientApi {
             }
           `
         )
-      ).toBe(
-        `
-import { MemorixClientApi } from "@memorix/client-redis";
-
-export class MemorixApi extends MemorixClientApi {
-  cache = {
-    user: this.getCacheItem<undefined, {
-      name: string;
-      age?: number;
-    } | undefined>("user"),
-  };
-}
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate also with model", () => {
       expect(
@@ -239,23 +150,7 @@ export class MemorixApi extends MemorixClientApi {
           }
           `
         )
-      ).toBe(
-        `
-import { MemorixClientApi } from "@memorix/client-redis";
-
-export type User = {
-  name: string;
-  age?: number;
-};
-
-export class MemorixApi extends MemorixClientApi {
-  cache = {
-    adminId: this.getCacheItem<undefined, string | undefined>("adminId"),
-    user: this.getCacheItem<string, User>("user"),
-  };
-}
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
   describe("pubsub", () => {
@@ -271,17 +166,7 @@ export class MemorixApi extends MemorixClientApi {
             }
           `
         )
-      ).toBe(
-        `
-import { MemorixClientApi } from "@memorix/client-redis";
-
-export class MemorixApi extends MemorixClientApi {
-  pubsub = {
-    message: this.getPubsubItem<number, string>("message"),
-  };
-}
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
   describe("task", () => {
@@ -298,17 +183,7 @@ export class MemorixApi extends MemorixClientApi {
             }
           `
         )
-      ).toBe(
-        `
-import { MemorixClientApi } from "@memorix/client-redis";
-
-export class MemorixApi extends MemorixClientApi {
-  task = {
-    doIt: this.getTaskItem<number, string, boolean>("doIt"),
-  };
-}
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
   describe("enum", () => {
@@ -323,15 +198,7 @@ export class MemorixApi extends MemorixClientApi {
             }
           `
         )
-      ).toBe(
-        `
-export enum Animals {
-  dog = "dog",
-  cat = "cat",
-  person = "person",
-}
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
 });

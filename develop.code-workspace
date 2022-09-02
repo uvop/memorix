@@ -5,8 +5,8 @@
       "path": "report-schema"
     },
     {
-      "name": "codegen",
-      "path": "codegen"
+      "name": "cli",
+      "path": "cli"
     },
     {
       "name": "client-redis-js",
