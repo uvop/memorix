@@ -31,4 +31,6 @@ jobs:
       - name: Typecheck
         run: poetry run mypy --strict .
       - name: Test
-        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 poetry run pytest ./tests
+        run: |
+          poetry env use 3.10.6
+          REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 poetry run pytest ./tests
