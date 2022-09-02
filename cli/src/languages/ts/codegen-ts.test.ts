@@ -1,8 +1,7 @@
-import { codegen } from "./codegen";
-import { Languages } from "./languages";
+import { Languages, codegenByLanguage } from "src/languages";
 
 const codegenTs = (schema: string) =>
-  codegen({ schema, language: Languages.typescript }).trim();
+  codegenByLanguage(schema, Languages.typescript).trim();
 
 describe("ts codegen", () => {
   describe("model", () => {

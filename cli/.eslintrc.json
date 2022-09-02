@@ -37,6 +37,7 @@
     "default-case": "off",
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/no-non-null-assertion": "off",
-    "no-restricted-syntax": "off"
+    "no-restricted-syntax": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off"
   }
 }

@@ -1,8 +1,7 @@
-import { codegen } from "./codegen";
-import { Languages } from "./languages";
+import { codegenByLanguage, Languages } from "src/languages";
 
 const codegenPython = (schema: string) =>
-  codegen({ schema, language: Languages.python }).trim();
+  codegenByLanguage(schema, Languages.python).trim();
 
 describe("python codegen", () => {
   describe("model", () => {

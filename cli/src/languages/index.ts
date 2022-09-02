@@ -1,10 +1,10 @@
-import { assertUnreachable } from "src/utilities";
-import { codegenTs } from "./ts";
-import { codegenPython } from "./python";
+import { assertUnreachable } from "src/core/utilities";
+import { codegenTs } from "./ts/ts";
+import { codegenPython } from "./python/python";
 
 export enum Languages {
-  typescript,
-  python,
+  typescript = "typescript",
+  python = "python",
 }
 
 type CodegenByLanguageFn = (schema: string, language: Languages) => string;

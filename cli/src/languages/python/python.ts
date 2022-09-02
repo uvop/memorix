@@ -1,6 +1,6 @@
-import { Block, BlockTypes, flatBlocks, getBlocks } from "src/block";
-import { ValueType, ValueTypes } from "src/value";
-import { assertUnreachable, getTabs } from "src/utilities";
+import { Block, BlockTypes, flatBlocks, getBlocks } from "src/core/block";
+import { ValueType, ValueTypes } from "src/core/value";
+import { assertUnreachable, getTabs } from "src/core/utilities";
 
 const valueToPython: (value: ValueType) => string = (value) => {
   let valuePython;
