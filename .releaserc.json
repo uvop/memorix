@@ -1,13 +1,9 @@
 {
   "branches": [
-    "release",
-    {
-      "name": "master",
-      "prerelease": "rc"
-    },
+    "master",
     {
       "name": "next",
-      "prerelease": "a"
+      "prerelease": "rc"
     }
   ],
   "plugins": [
@@ -30,19 +26,19 @@
       {
         "assets": [
           {
-            "path": "../../../cli/lib/macos-arm64/memorix",
+            "path": "../../../cli/lib/bin/macos-arm64/memorix",
             "label": "macos-arm64"
           },
           {
-            "path": "../../../cli/lib/macos-x64/memorix",
+            "path": "../../../cli/lib/bin/macos-x64/memorix",
             "label": "macos-x64"
           },
           {
-            "path": "../../../cli/lib/linux-x64/memorix",
+            "path": "../../../cli/lib/bin/linux-x64/memorix",
             "label": "linux-x64"
           },
           {
-            "path": "../../../cli/lib/win-x64/memorix.exe",
+            "path": "../../../cli/lib/bin/win-x64/memorix.exe",
             "label": "win-x64"
           }
         ]
