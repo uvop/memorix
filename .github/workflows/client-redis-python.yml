@@ -9,6 +9,7 @@ jobs:
       run:
         working-directory: ./clients/redis/python
     steps:
+      - run: cd ./clients/redis/python
       - uses: actions/checkout@v2
       - name: Install poetry
         run: pipx install poetry
@@ -16,7 +17,7 @@ jobs:
         with:
           python-version: "3.10.6"
           cache: "poetry"
-          cache-dependency-path: ./clients/redis/python/poetry.lock
+          cache-dependency-path: ./poetry.lock
       - id: redis-step
         uses: shogo82148/actions-setup-redis@v1
         with:
