@@ -1,6 +1,6 @@
 from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json
-from .cache_api import CacheApi
+from ..api import Api
 from typing import Generic, Optional, Type, TypeVar, cast
 
 KT = TypeVar("KT")
@@ -10,16 +10,16 @@ PT = TypeVar("PT")
 class CacheItem(Generic[KT, PT]):
     def __init__(
         self,
-        cache_api: CacheApi,
+        api: Api,
         id: str,
         payload_class: Type[PT],
     ) -> None:
-        self._cache_api = cache_api
+        self._api = api
         self._id = id
         self._payload_class = payload_class
 
     def get(self, key: KT) -> Optional[PT]:
-        res = self._cache_api._api._redis.get(hash_key(self._id, key=key))
+        res = self._api._redis.get(hash_key(self._id, key=key))
         if res is None:
             return None
 
@@ -32,7 +32,7 @@ class CacheItem(Generic[KT, PT]):
 
     def set(self, key: KT, payload: PT) -> Optional[bool]:
         payload_json = to_json(payload)
-        return self._cache_api._api._redis.set(
+        return self._api._redis.set(
             hash_key(self._id, key=key),
             payload_json,
         )

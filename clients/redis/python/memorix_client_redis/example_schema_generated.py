@@ -31,12 +31,12 @@ class MemorixCacheApi(MemorixClientCacheApi):
         super().__init__(api=api)
 
         self.favoriteAnimal = MemorixClientCacheApiItem[str, Animal](
-            cache_api=self,
+            api=self._api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
         self.user = MemorixClientCacheApiItem[str, User](
-            cache_api=self,
+            api=self._api,
             id="user",
             payload_class=User,
         )
@@ -47,7 +47,7 @@ class MemorixPubsubApi(MemorixClientPubSubApi):
         super().__init__(api=api)
 
         self.message = MemorixClientPubSubApiItemNoKey[str](
-            pubsub_api=self,
+            api=self._api,
             id="message",
             payload_class=str,
         )
@@ -58,8 +58,10 @@ class MemorixTaskApi(MemorixClientTaskApi):
         super().__init__(api=api)
 
         self.runAlgo = MemorixClientTaskApiItemNoKey[str, Animal](
-            task_api=self,
+            api=self._api,
             id="runAlgo",
+            payload_class=str,
+            returns_class=Animal,
         )
 
 
