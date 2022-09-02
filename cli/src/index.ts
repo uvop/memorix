@@ -1,12 +1,17 @@
 #!/usr/bin/env node
+import clear from "clear";
+import figlet from "figlet";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import { Languages } from "./languages";
 import { codegen } from "./codgen";
 
+clear();
+console.log(figlet.textSync("Memorix", { horizontalLayout: "full" }));
+
 yargs(hideBin(process.argv))
   .command(
-    "codegen <schemaFilePath> <...files>",
+    "codegen <schemaFilePath> <files...>",
     "Codegen memorix schema to code",
     (b) => {
       return b
@@ -23,6 +28,7 @@ yargs(hideBin(process.argv))
         files: string[];
       };
       const parsedFiles: Parameters<typeof codegen>[0]["files"] = [];
+
       for (let index = 0; index < files.length; index += 2) {
         const languageStr = files[index];
         const dist = files[index + 1];

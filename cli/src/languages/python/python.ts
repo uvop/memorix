@@ -1,6 +1,8 @@
 import { Block, BlockTypes, flatBlocks, getBlocks } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
-import { assertUnreachable, getTabs } from "src/core/utilities";
+import { assertUnreachable, getTabs as get2Tabs } from "src/core/utilities";
+
+const getTabs = (x: number) => get2Tabs(x * 2);
 
 const valueToPython: (value: ValueType) => string = (value) => {
   let valuePython;
@@ -29,7 +31,7 @@ const blockToPython: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
       return `@dataclass
-class ${b.name}:
+class ${b.name}(object):
 ${b.properties
   .map((p) => `${getTabs(1)}${p.name}: ${valueToPython(p.value)}`)
   .join(`\n`)}`;
@@ -41,20 +43,28 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
     case BlockTypes.task: {
       const itemClass = {
         [BlockTypes.cache]: "MemorixClientCacheApiItem",
-        [BlockTypes.pubsub]: "MemorixClientPubsubApiItem",
+        [BlockTypes.pubsub]: "MemorixClientPubSubApiItem",
         [BlockTypes.task]: "MemorixClientTaskApiItem",
       }[b.type];
       const hasReturns = b.type === BlockTypes.task;
 
       return `${b.values
         .map((v) => {
-          return `${getTabs(2)}${v.name} = ${itemClass}(${
-            v.key ? `${valueToPython(v.key)}` : "None"
-          }, ${valueToPython(v.payload)}${
-            hasReturns && "returns" in v
-              ? `, ${v.returns ? `${valueToPython(v.returns)}` : "None"}`
+          return `${getTabs(2)}self.${v.name} = ${itemClass}${
+            v.key ? "" : "NoKey"
+          }${hasReturns && !v.returns ? "NoReturns" : ""}[${
+            v.key ? `${valueToPython(v.key)}, ` : ""
+          }${valueToPython(v.payload)}${
+            v.returns ? `, ${valueToPython(v.returns)}` : ""
+          }](
+${getTabs(3)}api=self._api,
+${getTabs(3)}id="${v.name}",
+${getTabs(3)}payload_class=${valueToPython(v.payload)},${
+            v.returns
+              ? `\n${getTabs(3)}returns_class=${valueToPython(v.returns)},`
               : ""
-          }, *args, **kwargs)`;
+          }
+${getTabs(2)})`;
         })
         .join("\n")}`;
     }
@@ -81,20 +91,40 @@ export const codegenPython: (schema: string) => string = (schema) => {
 from enum import Enum`
         : ""
     }
-from memorix_client_redis import dataclass${[""]
-      .concat(hasApi ? ["MemorixClientApi"] : [])
+from memorix_client_redis import (
+${getTabs(1)}dataclass${[""]
+      .concat(hasApi ? [`${getTabs(1)}MemorixClientApi`] : [])
       .concat(
-        hasCache ? ["MemorixClientCacheApi", "MemorixClientCacheApiItem"] : []
-      )
-      .concat(
-        hasPubsub
-          ? ["MemorixClientPubsubApi", "MemorixClientPubsubApiItem"]
+        hasCache
+          ? [
+              `${getTabs(1)}MemorixClientCacheApi`,
+              `${getTabs(1)}MemorixClientCacheApiItem`,
+              `${getTabs(1)}MemorixClientCacheApiItemItemNoKey`,
+            ]
           : []
       )
       .concat(
-        hasTask ? ["MemorixClientTaskApi", "MemorixClientTaskApiItem"] : []
+        hasPubsub
+          ? [
+              `${getTabs(1)}MemorixClientPubSubApi`,
+              `${getTabs(1)}MemorixClientPubSubApiItem`,
+              `${getTabs(1)}MemorixClientPubSubApiItemNoKey`,
+            ]
+          : []
       )
-      .join(", ")}`,
+      .concat(
+        hasTask
+          ? [
+              `${getTabs(1)}MemorixClientTaskApi`,
+              `${getTabs(1)}MemorixClientTaskApiItem`,
+              `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
+              `${getTabs(1)}MemorixClientTaskApiItemNoReturn`,
+              `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
+            ]
+          : []
+      )
+      .join(", \n")}
+)`,
   ]
     .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToPython))
     .concat(
@@ -103,8 +133,8 @@ from memorix_client_redis import dataclass${[""]
     .concat(
       hasCache
         ? `class MemorixCacheApi(MemorixClientCacheApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixCacheApi, self).__init__(*args, **kwargs)
+${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
+${getTabs(2)}super().__init__(api=api)
 
 ${blocks
   .filter((b) => b.type === BlockTypes.cache)
@@ -114,9 +144,9 @@ ${blocks
     )
     .concat(
       hasPubsub
-        ? `class MemorixPubsubApi(MemorixClientPubsubApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixPubsubApi, self).__init__(*args, **kwargs)
+        ? `class MemorixPubSubApi(MemorixClientPubSubApi):
+${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
+${getTabs(2)}super().__init__(api=api)
 
 ${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
@@ -127,8 +157,8 @@ ${blocks
     .concat(
       hasTask
         ? `class MemorixTaskApi(MemorixClientTaskApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixTaskApi, self).__init__(*args, **kwargs)
+${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
+${getTabs(2)}super().__init__(api=api)
 
 ${blocks
   .filter((b) => b.type === BlockTypes.task)
@@ -139,20 +169,16 @@ ${blocks
     .concat(
       hasApi
         ? `class MemorixApi(MemorixClientApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixApi, self).__init__(*args, **kwargs)
+${getTabs(1)}def __init__(self, redis_url: str) -> None:
+${getTabs(2)}super().__init__(redis_url=redis_url)
 
 ${[]
-  .concat(
-    hasCache ? `${getTabs(2)}cache = MemorixCacheApi(*args, **kwargs)` : []
-  )
-  .concat(
-    hasPubsub ? `${getTabs(2)}pubsub = MemorixPubsubApi(*args, **kwargs)` : []
-  )
-  .concat(hasTask ? `${getTabs(2)}task = MemorixTaskApi(*args, **kwargs)` : [])
+  .concat(hasCache ? `${getTabs(2)}self.cache = MemorixCacheApi(self)` : [])
+  .concat(hasPubsub ? `${getTabs(2)}self.pubsub = MemorixPubSubApi(self)` : [])
+  .concat(hasTask ? `${getTabs(2)}self.task = MemorixTaskApi(self)` : [])
   .join("\n")}`
         : []
     )
-    .join("\n\n");
+    .join("\n\n\n");
   return `${code}\n`;
 };

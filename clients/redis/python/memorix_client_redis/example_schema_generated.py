@@ -5,12 +5,15 @@ from memorix_client_redis import (
     MemorixClientApi,
     MemorixClientCacheApi,
     MemorixClientCacheApiItem,
+    # MemorixClientCacheApiItemItemNoKey,
     MemorixClientPubSubApi,
     # MemorixClientPubSubApiItem,
     MemorixClientPubSubApiItemNoKey,
     MemorixClientTaskApi,
     # MemorixClientTaskApiItem,
     MemorixClientTaskApiItemNoKey,
+    # MemorixClientTaskApiItemNoReturn,
+    # MemorixClientTaskApiItemNoKeyNoReturns
 )
 
 
@@ -42,7 +45,7 @@ class MemorixCacheApi(MemorixClientCacheApi):
         )
 
 
-class MemorixPubsubApi(MemorixClientPubSubApi):
+class MemorixPubSubApi(MemorixClientPubSubApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
 
@@ -70,5 +73,5 @@ class MemorixApi(MemorixClientApi):
         super().__init__(redis_url=redis_url)
 
         self.cache = MemorixCacheApi(self)
-        self.pubsub = MemorixPubsubApi(self)
+        self.pubsub = MemorixPubSubApi(self)
         self.task = MemorixTaskApi(self)

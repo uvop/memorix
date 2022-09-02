@@ -1,6 +1,23 @@
 import path from "path";
 import fs from "fs";
 import { codegenByLanguage, Languages } from "./languages";
+import { assertUnreachable } from "./core/utilities";
+
+const createFileName = (schemaBasename: string, language: Languages) => {
+  switch (language) {
+    case Languages.python:
+      return `${schemaBasename
+        .split(/(?=[A-Z])/)
+        .join("_")
+        .toLowerCase()
+        .replace(/-/g, "_")}_generated.py`;
+    case Languages.typescript:
+      return `${schemaBasename}.generated.ts`;
+    default:
+      assertUnreachable(language);
+      return "";
+  }
+};
 
 export const codegen = async ({
   schemaFilePath,
@@ -25,10 +42,10 @@ export const codegen = async ({
         : path.dirname(schemaPath);
       const codeFilename =
         isOutputPathADir || !isOutputPathDefined
-          ? `${path.basename(
-              schemaPath,
-              path.extname(schemaPath)
-            )}.generated.ts`
+          ? createFileName(
+              path.basename(schemaPath, path.extname(schemaPath)),
+              language
+            )
           : path.basename(outputPath);
       const codePath = path.join(codeDir, codeFilename);
 
