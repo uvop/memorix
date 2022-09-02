@@ -1,7 +1,7 @@
 from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json
 from ..api import Api
-from typing import AsyncGenerator, Dict, Generator, Generic, Type, TypeVar, cast
+from typing import AsyncGenerator, Dict, Generator, Generic, Type, TypeVar, Union, cast
 
 KT = TypeVar("KT")
 PT = TypeVar("PT")
@@ -49,7 +49,7 @@ class PubSubItem(Generic[KT, PT]):
     def subscribe(self, key: KT) -> Generator[PubSubItemSubscribe[PT], None, None]:
         sub = self._api._redis.pubsub()
         sub.subscribe(hash_key(self._id, key=key))
-        for message in cast(Generator[Dict[str, int | bytes], None, None], sub.listen()):  # type: ignore
+        for message in cast(Generator[Dict[str, Union[int, bytes]], None, None], sub.listen()):  # type: ignore
             data_bytes = message["data"]
             if isinstance(data_bytes, bytes):
                 data = from_json(value=data_bytes, data_class=self._payload_class)
