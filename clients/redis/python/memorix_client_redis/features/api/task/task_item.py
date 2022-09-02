@@ -106,7 +106,7 @@ class TaskItem(Generic[KT, PT, RT]):
         if returns_class:
             self._returns_task = TaskItemNoReturns[str, RT](
                 api=api,
-                id="{0}_returns",
+                id="{0}_returns".format(id),
                 payload_class=returns_class,
             )
 
