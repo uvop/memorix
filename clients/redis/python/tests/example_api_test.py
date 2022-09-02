@@ -1,0 +1,60 @@
+import os
+from .example_schema_generated import Animal, MemorixApi, User
+import multiprocessing
+from time import sleep
+
+redis_url = os.environ["REDIS_URL"]
+
+
+def listen_to_message() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+    for res in memorix_api.pubsub.message.subscribe():
+        print("message:", res.payload)
+
+
+def listen_to_algo() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+    for res in memorix_api.task.runAlgo.dequeue():
+        print("task:", res.payload)
+        res.send_returns(returns=Animal.dog)
+
+
+def test_cache() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    memorix_api.cache.user.set("uv", User(name="uv", age=29))
+
+    user = memorix_api.cache.user.get("uv")
+    assert user.age is 29
+
+
+def test_pubsub() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    process = multiprocessing.Process(target=listen_to_message)
+    process.start()
+
+    for i in [1, 2, 3, 4]:
+        sleep(0.1)
+        res = memorix_api.pubsub.message.publish(payload="Heyy buddy")
+        print("listeners:", res.subscribers_size)
+
+    sleep(0.2)
+    process.kill()
+
+
+def test_task() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    task = multiprocessing.Process(target=listen_to_algo)
+    task.start()
+
+    for i in [1, 2, 3, 4]:
+        sleep(0.1)
+        queue = memorix_api.task.runAlgo.queue(payload="Im a task!")
+        print("queue_size:", queue.queue_size)
+        res = queue.get_returns()
+        print("animal:", res.value)
+
+    sleep(0.2)
+    task.kill()

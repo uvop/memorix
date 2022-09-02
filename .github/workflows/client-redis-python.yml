@@ -25,5 +25,10 @@ jobs:
         run: poetry run flake8 .
       - name: Typecheck
         run: poetry run mypy --strict .
+      - id: redis-step
+        uses: shogo82148/actions-setup-redis@v1
+        with:
+          redis-version: '7.x'
+          auto-start: "true"
       - name: Test
-        run: poetry run pytest ./tests
+        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 poetry run pytest ./tests

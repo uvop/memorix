@@ -26,5 +26,10 @@ jobs:
         run: yarn lint:err
       - name: Typecheck
         run: yarn typecheck
+      - id: redis-step
+        uses: shogo82148/actions-setup-redis@v1
+        with:
+          redis-version: '7.x'
+          auto-start: "true"
       - name: Test
-        run: yarn test
+        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 yarn test
