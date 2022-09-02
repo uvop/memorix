@@ -14,7 +14,7 @@ def to_json(value: TT) -> str:
         dict = asdict(value)
         return json.dumps(dict)
     if isinstance(value, Enum):
-        return value.value
+        return cast(str, value.value)
     return str(value)
 
 
@@ -28,15 +28,15 @@ def from_json(value: bytes, data_class: Type[TT]) -> TT:
             data_class=data_class,
         )
     if issubclass(data_class, Enum):
-        return data_class(value_str)
+        return cast(TT, data_class(value_str))
 
-    return value_str
+    return cast(TT, value_str)
 
 
 def from_json_to_dict(value: bytes) -> Dict[str, Any]:
     value_str = value.decode(encoding)
     dict = json.loads(value_str)
-    return dict
+    return cast(Dict[str, Any], dict)
 
 
 def from_dict(dict: Dict[str, Any], data_class: Type[TT]) -> TT:
@@ -44,8 +44,9 @@ def from_dict(dict: Dict[str, Any], data_class: Type[TT]) -> TT:
         return dacite_from_dict(
             data=dict,
             data_class=data_class,
+            config=Config(cast=[Enum]),
         )
     if issubclass(data_class, Enum):
-        return data_class(dict)
+        return cast(TT, data_class(dict))
 
-    return dict
+    return cast(TT, dict)

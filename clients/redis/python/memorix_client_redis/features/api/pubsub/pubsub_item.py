@@ -56,7 +56,8 @@ class PubSubItem(Generic[KT, PT]):
                 yield PubSubItemSubscribe(payload=data)
 
     async def async_subscribe(
-        self, key: KT
+        self,
+        key: KT,
     ) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:
         print("subscribe async")
         yield cast(PubSubItemSubscribe[PT], None)

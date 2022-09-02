@@ -42,6 +42,14 @@ ignore =
     WPS352, # multiline loop, black has our back
     S310, # Why needed
     WPS204, # overused expression, is OK
+    E501, # line too long
+    WPS347, # vague import?
+    WPS437, # protected
+    WPS457, # Infinite loop is ok
+    WPS359, # Destructioning is cool
+    WPS432, # magic is cool
+    WPS454, # I'll raise what I want
+    WPS221, # So many jones
 per-file-ignores =
     __init__.py: 
         # import unused, for exporting
@@ -49,7 +57,7 @@ per-file-ignores =
         # same alias as import, for exporting
         WPS113,
         # module with logic, only for exporting
-        WPS412
+        WPS412,
 exclude =
     .git,
     __pycache__,

@@ -7,10 +7,6 @@ from memorix_client_redis.features.api.json import (
     from_json_to_dict,
     to_json,
 )
-from memorix_client_redis.features.api.pubsub.pubsub_item import (
-    PubSubItem,
-    PubSubItemPublish,
-)
 from ..api import Api
 from typing import (
     Any,
@@ -44,12 +40,18 @@ class TaskItemQueueWithReturns(TaskItemQueue, Generic[RT]):
         self._returns_task = returns_task
 
     def get_returns(self) -> RT:
+        payload = None
         for message in self._returns_task.dequeue(key=self._returns_id):
-            return message.payload
+            payload = message.payload
+            break
+        return cast(RT, payload)
 
     async def async_get_returns(self) -> RT:
+        payload = None
         async for message in self._returns_task.async_dequeue(key=self._returns_id):
-            return message.payload
+            payload = message.payload
+            break
+        return cast(RT, payload)
 
 
 class TaskItemDequeue(Generic[PT]):
@@ -72,10 +74,16 @@ class TaskItemDequeueWithReturns(TaskItemDequeue[PT]):
         self._returns_task = returns_task
 
     def send_returns(self, returns: RT) -> TaskItemQueue:
-        return self._returns_task.queue(key=self._returns_id, payload=returns)
+        return cast(
+            TaskItemQueue,
+            self._returns_task.queue(key=self._returns_id, payload=returns),
+        )
 
     async def async_send_returns(self, returns: RT) -> TaskItemQueue:
-        return self._returns_task.async_queue(key=self._returns_id, payload=returns)
+        return cast(
+            TaskItemQueue,
+            self._returns_task.async_queue(key=self._returns_id, payload=returns),
+        )
 
 
 @dataclass
@@ -115,21 +123,24 @@ class TaskItem(Generic[KT, PT, RT]):
             payload_json,
         )
         if returns_id is None:
-            return cast(TaskItemQueueWithReturns, TaskItemQueue(queue_size=queue_size))
+            return cast(
+                TaskItemQueueWithReturns[RT],
+                TaskItemQueue(queue_size=queue_size),
+            )
         return TaskItemQueueWithReturns(
             queue_size=queue_size,
             returns_id=returns_id,
             returns_task=self._returns_task,
         )
 
-    async def async_queue(self, key: KT, payload: PT) -> int:
+    async def async_queue(self, key: KT, payload: PT) -> TaskItemQueueWithReturns[RT]:
         print("queue async")
-        return 0
+        return cast(TaskItemQueueWithReturns[RT], None)
 
     def dequeue(self, key: KT) -> Generator[TaskItemDequeueWithReturns[PT], None, None]:
         while True:
             [channel_bytes, data_bytes] = self._api._redis.blpop(
-                hash_key(self._id, key=key)
+                hash_key(self._id, key=key),
             )
             if hasattr(self, "_returns_task"):
                 dict = from_json_to_dict(data_bytes)
@@ -145,10 +156,14 @@ class TaskItem(Generic[KT, PT, RT]):
             else:
                 payload = from_json(value=data_bytes, data_class=self._payload_class)
 
-                yield TaskItemDequeue(payload=payload)
+                yield cast(
+                    TaskItemDequeueWithReturns[PT],
+                    TaskItemDequeue(payload=payload),
+                )
 
     async def async_dequeue(
-        self, key: KT
+        self,
+        key: KT,
     ) -> AsyncGenerator[TaskItemDequeueWithReturns[PT], None]:
         print("dequeue async")
         yield cast(TaskItemDequeueWithReturns[PT], None)
@@ -160,7 +175,7 @@ class TaskItemNoKey(TaskItem[None, PT, RT]):
         return TaskItem.queue(self, key=None, payload=payload)
 
     # Different signature on purpose
-    async def async_queue(self, payload: PT) -> int:  # type: ignore
+    async def async_queue(self, payload: PT) -> TaskItemQueueWithReturns[RT]:  # type: ignore
         return await TaskItem.async_queue(self, key=None, payload=payload)
 
     # Different signature on purpose
@@ -191,7 +206,7 @@ class TaskItemNoReturns(TaskItem[KT, PT, None]):
         return cast(TaskItemQueue, TaskItem.queue(self, key=key, payload=payload))
 
     # Different signature on purpose
-    async def async_queue(self, key: KT, payload: PT) -> int:  # type: ignore
+    async def async_queue(self, key: KT, payload: PT) -> TaskItemQueue:  # type: ignore
         return await TaskItem.async_queue(self, key=key, payload=payload)
 
     # Different signature on purpose
@@ -209,7 +224,7 @@ class TaskItemNoKeyNoReturns(TaskItemNoReturns[None, PT]):
         return cast(TaskItemQueue, TaskItem.queue(self, key=None, payload=payload))
 
     # Different signature on purpose
-    async def async_queue(self, payload: PT) -> int:  # type: ignore
+    async def async_queue(self, payload: PT) -> TaskItemQueue:  # type: ignore
         return await TaskItem.async_queue(self, key=None, payload=payload)
 
     # Different signature on purpose

@@ -25,12 +25,14 @@ def start() -> None:
     memorix_api.cache.user.set("uv", User(name="uv", age=29))
 
     user = memorix_api.cache.user.get("uv")
+    if user is None:
+        raise Exception("Didn't get user from redis")
     print(user.age)
 
     process = multiprocessing.Process(target=listen_to_message)
     process.start()
 
-    for i in [1, 2, 3, 4]:
+    for _num in (1, 2, 3, 4):
         sleep(0.1)
         res = memorix_api.pubsub.message.publish(payload="Heyy buddy")
         print("listeners:", res.subscribers_size)
@@ -41,12 +43,12 @@ def start() -> None:
     task = multiprocessing.Process(target=listen_to_algo)
     task.start()
 
-    for i in [1, 2, 3, 4]:
+    for _num2 in (1, 2, 3, 4):
         sleep(0.1)
         queue = memorix_api.task.runAlgo.queue(payload="Im a task!")
         print("queue_size:", queue.queue_size)
-        res = queue.get_returns()
-        print("animal:", res.value)
+        res2 = queue.get_returns()
+        print("animal:", res2.value)
 
     sleep(0.2)
     task.kill()
