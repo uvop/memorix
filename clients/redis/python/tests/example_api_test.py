@@ -33,30 +33,38 @@ def test_cache() -> None:
 def test_pubsub() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
-    process = multiprocessing.Process(target=listen_to_message)
-    process.start()
+    process1 = multiprocessing.Process(target=listen_to_message)
+    process2 = multiprocessing.Process(target=listen_to_message)
+    process1.start()
+    process2.start()
 
-    for _num in (1, 2, 3, 4):
-        sleep(0.1)
-        res = memorix_api.pubsub.message.publish(payload="Heyy buddy")
-        print("listeners:", res.subscribers_size)
+    sleep(0.5)
+    res = memorix_api.pubsub.message.publish(payload="Heyy buddy")
+    assert res.subscribers_size == 2
 
-    sleep(0.2)
-    process.kill()
+    sleep(0.1)
+    process1.kill()
+    process2.kill()
 
 
 def test_task() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
-    task = multiprocessing.Process(target=listen_to_algo)
-    task.start()
+    task1 = multiprocessing.Process(target=listen_to_algo)
+    task2 = multiprocessing.Process(target=listen_to_algo)
+    task1.start()
+    task2.start()
 
-    for _num in (1, 2, 3, 4):
-        sleep(0.1)
-        queue = memorix_api.task.runAlgo.queue(payload="Im a task!")
-        print("queue_size:", queue.queue_size)
-        res = queue.get_returns()
-        print("animal:", res.value)
+    sleep(0.1)
+    queue = memorix_api.task.runAlgo.queue(payload="Im a task!")
 
-    sleep(0.2)
-    task.kill()
+    assert queue.queue_size == 1
+
+    res = queue.get_returns()
+
+    assert res == Animal.dog
+
+    sleep(0.1)
+
+    task1.kill()
+    task2.kill()
