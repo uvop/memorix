@@ -16,18 +16,7 @@ describe("python codegen", () => {
             }
           `
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass
-
-@dataclass
-class User:
-  id: int
-  name: str
-  age: typing.Optional[float]
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate from 2 models", () => {
       expect(
@@ -42,21 +31,7 @@ class User:
             }
           `.trim()
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass
-
-@dataclass
-class User1:
-  id: int
-
-@dataclass
-class User2:
-  name: str
-  age: typing.Optional[int]
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate from model within model", () => {
       expect(
@@ -70,21 +45,7 @@ class User2:
             }
           `.trim()
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass
-
-@dataclass
-class UserPapa:
-  name: typing.Optional[str]
-
-@dataclass
-class User:
-  id: int
-  papa: UserPapa
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate from model within model within a model", () => {
       expect(
@@ -102,27 +63,7 @@ class User:
             }
           `.trim()
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass
-
-@dataclass
-class UserPapaMama:
-  sick: bool
-
-@dataclass
-class UserPapa:
-  name: typing.Optional[str]
-  mama: typing.Optional[UserPapaMama]
-  age: int
-
-@dataclass
-class User:
-  id: int
-  papa: UserPapa
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate from model with array", () => {
       expect(
@@ -138,23 +79,7 @@ class User:
             }
           `
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass
-
-@dataclass
-class UserChildren:
-  id: int
-  name: typing.Optional[str]
-
-@dataclass
-class User:
-  id: int
-  names: typing.List[str]
-  children: typing.Optional[typing.List[typing.Optional[UserChildren]]]
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
   describe("cache", () => {
@@ -170,24 +95,7 @@ class User:
             }
           `
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientCacheApi, MemorixClientCacheApiItem
-
-class MemorixCacheApi(MemorixClientCacheApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixCacheApi, self).__init__(*args, **kwargs)
-
-    user = MemorixClientCacheApiItem(int, str, *args, **kwargs)
-
-class MemorixApi(MemorixClientApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixApi, self).__init__(*args, **kwargs)
-
-    cache = MemorixCacheApi(*args, **kwargs)
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate with inline object type", () => {
       expect(
@@ -204,29 +112,7 @@ class MemorixApi(MemorixClientApi):
             }
           `
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientCacheApi, MemorixClientCacheApiItem
-
-@dataclass
-class CacheUserPayload:
-  name: str
-  age: typing.Optional[int]
-
-class MemorixCacheApi(MemorixClientCacheApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixCacheApi, self).__init__(*args, **kwargs)
-
-    user = MemorixClientCacheApiItem(int, typing.Optional[CacheUserPayload], *args, **kwargs)
-
-class MemorixApi(MemorixClientApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixApi, self).__init__(*args, **kwargs)
-
-    cache = MemorixCacheApi(*args, **kwargs)
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate with no key", () => {
       expect(
@@ -242,29 +128,7 @@ class MemorixApi(MemorixClientApi):
             }
           `
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientCacheApi, MemorixClientCacheApiItem
-
-@dataclass
-class CacheUserPayload:
-  name: str
-  age: typing.Optional[int]
-
-class MemorixCacheApi(MemorixClientCacheApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixCacheApi, self).__init__(*args, **kwargs)
-
-    user = MemorixClientCacheApiItem(None, typing.Optional[CacheUserPayload], *args, **kwargs)
-
-class MemorixApi(MemorixClientApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixApi, self).__init__(*args, **kwargs)
-
-    cache = MemorixCacheApi(*args, **kwargs)
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
     it("can generate also with model", () => {
       expect(
@@ -286,30 +150,7 @@ class MemorixApi(MemorixClientApi):
           }
           `
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientCacheApi, MemorixClientCacheApiItem
-
-@dataclass
-class User:
-  name: str
-  age: typing.Optional[int]
-
-class MemorixCacheApi(MemorixClientCacheApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixCacheApi, self).__init__(*args, **kwargs)
-
-    adminId = MemorixClientCacheApiItem(None, typing.Optional[str], *args, **kwargs)
-    user = MemorixClientCacheApiItem(str, User, *args, **kwargs)
-
-class MemorixApi(MemorixClientApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixApi, self).__init__(*args, **kwargs)
-
-    cache = MemorixCacheApi(*args, **kwargs)
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
   describe("pubsub", () => {
@@ -325,24 +166,7 @@ class MemorixApi(MemorixClientApi):
             }
           `
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientPubsubApi, MemorixClientPubsubApiItem
-
-class MemorixPubsubApi(MemorixClientPubsubApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixPubsubApi, self).__init__(*args, **kwargs)
-
-    message = MemorixClientPubsubApiItem(int, str, *args, **kwargs)
-
-class MemorixApi(MemorixClientApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixApi, self).__init__(*args, **kwargs)
-
-    pubsub = MemorixPubsubApi(*args, **kwargs)
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
   describe("task", () => {
@@ -359,24 +183,7 @@ class MemorixApi(MemorixClientApi):
             }
           `
         )
-      ).toBe(
-        `
-import typing
-from memorix_client_redis import dataclass, MemorixClientApi, MemorixClientTaskApi, MemorixClientTaskApiItem
-
-class MemorixTaskApi(MemorixClientTaskApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixTaskApi, self).__init__(*args, **kwargs)
-
-    doIt = MemorixClientTaskApiItem(int, str, bool, *args, **kwargs)
-
-class MemorixApi(MemorixClientApi):
-  def __init__(self, *args, **kwargs):
-    super(MemorixApi, self).__init__(*args, **kwargs)
-
-    task = MemorixTaskApi(*args, **kwargs)
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
   describe("enum", () => {
@@ -391,18 +198,7 @@ class MemorixApi(MemorixClientApi):
             }
           `
         )
-      ).toBe(
-        `
-import typing
-from enum import Enum
-from memorix_client_redis import dataclass
-
-class Animals(Enum):
-  dog = "dog"
-  cat = "cat"
-  person = "person"
-  `.trim()
-      );
+      ).toMatchSnapshot();
     });
   });
 });
