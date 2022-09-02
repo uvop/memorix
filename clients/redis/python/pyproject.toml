@@ -8,7 +8,7 @@ authors = ["Yuval Saraf <unimonkiez@gmail.com>"]
 start = "memorix_client_redis.start:start"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 redis = "^4.3.4"
 dacite = "^1.6.0"
 
