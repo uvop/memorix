@@ -17,6 +17,11 @@ jobs:
           python-version: "3.10.6"
           cache: "poetry"
           cache-dependency-path: ./clients/redis/python/poetry.lock
+      - id: redis-step
+        uses: shogo82148/actions-setup-redis@v1
+        with:
+          redis-version: '7.x'
+          auto-start: "true"
       - name: Install
         run: poetry install
       - name: Format
@@ -25,10 +30,5 @@ jobs:
         run: poetry run flake8 .
       - name: Typecheck
         run: poetry run mypy --strict .
-      - id: redis-step
-        uses: shogo82148/actions-setup-redis@v1
-        with:
-          redis-version: '7.x'
-          auto-start: "true"
       - name: Test
         run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 poetry run pytest ./tests
