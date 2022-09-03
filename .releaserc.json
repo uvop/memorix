@@ -10,35 +10,23 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/npm",
-      {
-        "pkgRoot": "../js"
-      }
-    ],
-    [
-      "semantic-release-python",
-      {
-        "setupPy": "./pyproject.toml"
-      }
-    ],
-    [
       "@semantic-release/github",
       {
         "assets": [
           {
-            "path": "../../../cli/lib/bin/macos-arm64/memorix",
+            "path": "../../../cli/lib/memorix-macos-arm64",
             "label": "macos-arm64"
           },
           {
-            "path": "../../../cli/lib/bin/macos-x64/memorix",
+            "path": "../../../cli/lib/memorix-macos-x64",
             "label": "macos-x64"
           },
           {
-            "path": "../../../cli/lib/bin/linux-x64/memorix",
+            "path": "../../../cli/lib/memorix-linux-x64",
             "label": "linux-x64"
           },
           {
-            "path": "../../../cli/lib/bin/win-x64/memorix.exe",
+            "path": "../../../cli/lib/memorix-win-x64.exe",
             "label": "win-x64"
           }
         ]
@@ -54,6 +42,18 @@
       "@semantic-release/git",
       {
         "assets": ["../../../CHANGELOG.md"]
+      }
+    ],
+    [
+      "@semantic-release/npm",
+      {
+        "pkgRoot": "../js"
+      }
+    ],
+    [
+      "semantic-release-python",
+      {
+        "setupPy": "./pyproject.toml"
       }
     ]
   ]

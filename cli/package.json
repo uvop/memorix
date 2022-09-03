@@ -1,5 +1,5 @@
 {
-  "name": "@memorix/cli",
+  "name": "memorix",
   "version": "1.0.0",
   "private": true,
   "description": "",
@@ -7,7 +7,7 @@
   "author": "",
   "bin": "./lib/src/index.js",
   "scripts": {
-    "build": "rm -rf lib && tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json && (cd lib && mkdir bin bin/linux-x64 bin/macos-x64 bin/macos-arm64 bin/win-x64 && mv cli-linux-x64 bin/linux-x64/memorix && mv cli-macos-x64 bin/macos-x64/memorix && mv cli-macos-arm64 bin/macos-arm64/memorix && mv cli-win-x64.exe bin/win-x64/memorix.exe)",
+    "build": "rm -rf lib && tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json",
     "dev": "jest --watch",
     "fix-ts-path": "ts-node -r tsconfig-paths/register bin/fix-ts-path.ts lib src",
     "format": "prettier --write \"src/**/*.ts\"",
