@@ -3,9 +3,19 @@ import { CacheItem, PubsubItem, TaskItem } from "./types";
 import { hashKey } from "./utils/hashKey";
 
 export class MemorixBaseApi {
-  private readonly redis = new Redis(process.env.REDIS_ENV!);
+  private readonly redis: Redis;
 
-  private readonly redisSub = new Redis(process.env.REDIS_ENV!);
+  private readonly redisSub: Redis;
+
+  constructor({ redisUrl }: { redisUrl: string }) {
+    this.redis = new Redis(redisUrl);
+    this.redisSub = new Redis(redisUrl);
+  }
+
+  disconnect(): void {
+    this.redis.quit();
+    this.redisSub.quit();
+  }
 
   getCacheItem<Key, Payload>(identifier: string): CacheItem<Key, Payload> {
     const hashCacheKey = (key: Key | undefined) => {

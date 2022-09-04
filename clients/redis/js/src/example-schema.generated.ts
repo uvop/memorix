@@ -1,6 +1,6 @@
-import { MemorixClientApi } from "./MemorixClientApi";
+import { MemorixClientApi } from "./index";
 
-export enum Animals {
+export enum Animal {
   dog = "dog",
   cat = "cat",
   person = "person",
@@ -11,21 +11,15 @@ export type User = {
   age?: number;
 };
 
-export type User2 = {
-  name: string;
-  age?: number;
-};
-
 export class MemorixApi extends MemorixClientApi {
   cache = {
-    adminId: this.getCacheItem<undefined, string | undefined>("adminId"),
+    favoriteAnimal: this.getCacheItem<string, Animal>("favoriteAnimal"),
     user: this.getCacheItem<string, User>("user"),
-    adminId2: this.getCacheItem<undefined, string | undefined>("adminId2"),
-    user2: this.getCacheItem<string, User2>("user2"),
   };
-
+  pubsub = {
+    message: this.getPubsubItem<undefined, string>("message"),
+  };
   task = {
-    runAlgo: this.getTaskItem<undefined, string, Animals>("runAlgo"),
-    runAlgo2: this.getTaskItem<undefined, string, string>("runAlgo2"),
+    runAlgo: this.getTaskItem<undefined, string, Animal>("runAlgo"),
   };
 }

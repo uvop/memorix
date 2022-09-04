@@ -7,9 +7,11 @@
   "main": "lib/src/index.js",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "codegen-example": "(cd ../../../codegen && yarn generate-schema ../clients/redis/js/src/example-schema.memorix)",
+    "codegen-example": "yarn codegen-example-1 && yarn codegen-example-replace-1",
+    "codegen-example-1": "(cd ../../../cli && yarn cli codegen ../clients/redis/js/src/example-schema.memorix typescript ../clients/redis/js/src)",
+    "codegen-example-replace-1": "sed -i '' 's|@memorix/client-redis|./index|g' ./src/example-schema.generated.ts",
     "codegen-report": "yarn codegen-report-1 && yarn codegen-report-replace-1 && yarn codegen-report-replace-2 && yarn codegen-report-replace-3",
-    "codegen-report-1": "(cd ../../../codegen && yarn generate-schema ../report-schema/schema.memorix ../clients/redis/js/src/report-api.generated.ts)",
+    "codegen-report-1": "(cd ../../../cli && yarn cli codegen ../report-schema/schema.memorix typescript ../clients/redis/js/src/report-api.generated.ts)",
     "codegen-report-replace-1": "sed -i '' 's|MemorixApi|MemorixReportApi|g' ./src/report-api.generated.ts",
     "codegen-report-replace-2": "sed -i '' 's|@memorix/client-redis|./MemorixBaseApi|g' ./src/report-api.generated.ts",
     "codegen-report-replace-3": "sed -i '' 's|MemorixClientApi|MemorixBaseApi|g' ./src/report-api.generated.ts",
@@ -18,9 +20,24 @@
     "lint": "eslint \"src/**/*.ts\"",
     "lint:err": "npm run lint -- --quiet",
     "lint:fix": "npm run lint -- --fix",
-    "start": "ts-node -r tsconfig-paths/register src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 0",
+    "start": "ts-node -r tsconfig-paths/register src/start.ts",
+    "test": "jest",
+    "test:dev": "yarn test --watch",
     "typecheck": "tsc --noEmit"
+  },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "diagnostics": {
+          "warnOnly": true
+        }
+      }
+    },
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/src/$1"
+    },
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   },
   "dependencies": {
     "ioredis": "^5.0.4",
@@ -28,6 +45,7 @@
   },
   "devDependencies": {
     "@types/ioredis": "^4.28.10",
+    "@types/jest": "^29.0.0",
     "@types/lodash": "^4.14.182",
     "@types/node": "^17.0.28",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
@@ -38,7 +56,9 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-prettier": "^3.1.4",
+    "jest": "28.0.0",
     "prettier": "^2.1.2",
+    "ts-jest": "^28.0.8",
     "ts-node": "^10.7.0",
     "tsconfig-paths": "^3.14.1",
     "typescript": "^4.6.3"
