@@ -11,10 +11,13 @@ export class MemorixClientApi extends MemorixBaseApi {
 
   private deviceIdPromise: Promise<string>;
 
-  constructor(schema: string) {
-    super();
+  constructor({
+    schema,
+    ...baseObj
+  }: { schema: string } & ConstructorParameters<typeof MemorixBaseApi>[0]) {
+    super(baseObj);
 
-    this.reporter = new MemorixReportApi();
+    this.reporter = new MemorixReportApi(baseObj);
     this.deviceIdPromise = this.reporter.task.registerDevice.queue({
       schema,
       language: Languages.typescript,
