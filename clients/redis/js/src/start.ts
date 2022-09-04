@@ -1,7 +1,10 @@
 import { MemorixClientApi } from "./MemorixClientApi";
 
 const init = async () => {
-  const api = new MemorixClientApi("Yuval");
+  const api = new MemorixClientApi({
+    schema: "Yuval",
+    redisUrl: process.env.REDIS_URL!,
+  });
   const { get, set } = api.getCacheItem<string, string>("memo");
   set("key", "success");
   const cachedData = await get("key");
