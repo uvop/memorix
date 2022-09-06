@@ -47,5 +47,11 @@ export interface Context {
 }
 
 export const createContext: () => Context = () => {
-  return { db, redis, memorixReportApi: new MemorixReportApi() };
+  return {
+    db,
+    redis,
+    memorixReportApi: new MemorixReportApi({
+      redisUrl: process.env.REDIS_URL!,
+    }),
+  };
 };

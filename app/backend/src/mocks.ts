@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
-import { BlockTypes, getBlocks } from "@memorix/codegen/block";
-import { ValueTypes } from "@memorix/codegen/value";
+import { BlockTypes, getBlocks } from "@memorix/cli/core/block";
+import { ValueTypes } from "@memorix/cli/core/value";
 import fs from "fs";
 import path from "path";
 import {
