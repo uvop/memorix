@@ -25,8 +25,6 @@ def to_json(value: TT, sort_dict: bool = False) -> str:
         if sort_dict:
             dict = order_dict(dict)
         return json.dumps(dict)
-    if isinstance(value, Enum):
-        return cast(str, value.value)
     return json.dumps(value)
 
 
@@ -42,13 +40,13 @@ def from_json(value: bytes, data_class: Type[TT]) -> TT:
     if issubclass(data_class, Enum):
         return cast(TT, data_class(value_str))
 
-    return cast(TT, value_str)
+    return json.loads(value_str)
 
 
-def from_json_to_dict(value: bytes) -> Dict[str, Any]:
+def from_json_to_any(value: bytes) -> Any:
     value_str = value.decode(encoding)
-    dict = json.loads(value_str)
-    return cast(Dict[str, Any], dict)
+    res = json.loads(value_str)
+    return res
 
 
 def from_dict(dict: Dict[str, Any], data_class: Type[TT]) -> TT:
