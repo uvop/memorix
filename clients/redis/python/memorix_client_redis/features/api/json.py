@@ -40,7 +40,7 @@ def from_json(value: bytes, data_class: Type[TT]) -> TT:
     if issubclass(data_class, Enum):
         return cast(TT, data_class(value_str))
 
-    return json.loads(value_str)
+    return cast(TT, json.loads(value_str))
 
 
 def from_json_to_any(value: bytes) -> Any:
