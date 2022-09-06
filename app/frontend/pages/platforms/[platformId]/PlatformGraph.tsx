@@ -1,4 +1,4 @@
-import { Box, Stack, Tab, Tabs, TabsProps } from "@mui/material";
+import { Box, Divider, Stack, Tab, Tabs, TabsProps } from "@mui/material";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { useCallback, useState } from "react";
@@ -33,6 +33,7 @@ const PlatformGraph: NextPage = () => {
           sx={{
             mx: 1,
             marginInlineEnd: 2,
+            py: 0.5,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -44,12 +45,18 @@ const PlatformGraph: NextPage = () => {
           value={tab}
           onChange={handleTabsChange}
           aria-label="basic tabs example"
-          sx={{ flex: 1 }}
+          sx={{
+            flex: 1,
+            "& .MuiTabs-flexContainer": {
+              height: "100%",
+            },
+          }}
         >
           <Tab value={TabType.Graph} label="Graph" />
           <Tab value={TabType.Timeline} label="Timeline" />
         </Tabs>
       </Stack>
+      <Divider />
       <TabPanel currentValue={tab} value={TabType.Graph} sx={{ flex: 1 }}>
         <PlatformGraphPage platformId={platformId} />
       </TabPanel>
