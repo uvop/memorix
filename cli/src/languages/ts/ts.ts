@@ -102,36 +102,38 @@ export const codegenTs: (schema: string) => string = (schema) => {
     .concat(
       hasApi
         ? `export class MemorixApi extends MemorixClientApi {
-${
-  hasCache
-    ? `${getTabs(1)}cache = {
+${[]
+  .concat(
+    hasCache
+      ? `${getTabs(1)}cache = {
 ${blocks
   .filter((b) => b.type === BlockTypes.cache)
   .map(blockToTs)
   .join("\n")}
 ${getTabs(1)}};`
-    : ""
-}
-${
-  hasPubsub
-    ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
+      : []
+  )
+  .concat(
+    hasPubsub
+      ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
 ${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
   .map(blockToTs)
   .join("\n")}
 ${getTabs(1)}};`
-    : ""
-}
-${
-  hasTask
-    ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
+      : []
+  )
+  .concat(
+    hasTask
+      ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
 ${blocks
   .filter((b) => b.type === BlockTypes.task)
   .map(blockToTs)
   .join("\n")}
 ${getTabs(1)}};`
-    : ""
-}
+      : []
+  )
+  .join("\n")}
 }`
         : []
     )
