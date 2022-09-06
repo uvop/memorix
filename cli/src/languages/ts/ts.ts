@@ -66,7 +66,11 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
             hasReturns && "returns" in v
               ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
               : ""
-          }>("${v.name}"),`;
+          }>("${v.name}"${
+            b.type === BlockTypes.task
+              ? `, ${v.returns ? "true" : "false"}`
+              : ""
+          }),`;
         })
         .join("\n")}`;
     }
@@ -107,25 +111,27 @@ ${blocks
   .join("\n")}
 ${getTabs(1)}};`
     : ""
-}${
-            hasPubsub
-              ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
+}
+${
+  hasPubsub
+    ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
 ${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
   .map(blockToTs)
   .join("\n")}
 ${getTabs(1)}};`
-              : ""
-          }${
-            hasTask
-              ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
+    : ""
+}
+${
+  hasTask
+    ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
 ${blocks
   .filter((b) => b.type === BlockTypes.task)
   .map(blockToTs)
   .join("\n")}
 ${getTabs(1)}};`
-              : ""
-          }
+    : ""
+}
 }`
         : []
     )
