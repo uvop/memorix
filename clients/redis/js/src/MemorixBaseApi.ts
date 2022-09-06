@@ -151,7 +151,7 @@ export class MemorixBaseApi {
         const redisClient = this.redis.duplicate();
         this.redisTasks.push(redisClient);
 
-        let stoppedPromise = new Promise((res) => {
+        const stoppedPromise = new Promise((res) => {
           const cb = async (err: any, blpop: any) => {
             if (err) {
               res(err);

@@ -2,7 +2,6 @@ from memorix_client_redis.features.api.hash_key import hash_key
 from uuid import uuid4
 from memorix_client_redis.features.api.json import (
     from_dict,
-    from_json,
     from_json_to_any,
     to_json,
 )
