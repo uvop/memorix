@@ -22,6 +22,6 @@ export class MemorixApi extends MemorixClientApi {
   };
 
   task = {
-    runAlgo: this.getTaskItem<undefined, string, Animal>("runAlgo"),
+    runAlgo: this.getTaskItem<undefined, string, Animal>("runAlgo", true),
   };
 }
