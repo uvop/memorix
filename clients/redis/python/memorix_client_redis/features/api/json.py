@@ -24,8 +24,8 @@ def to_json(value: TT, sort_dict: bool = False) -> str:
         dict = asdict(value)
         if sort_dict:
             dict = order_dict(dict)
-        return json.dumps(dict)
-    return json.dumps(value)
+        return json.dumps(dict, separators=(",", ":"))
+    return json.dumps(value, separators=(",", ":"))
 
 
 def from_json(value: bytes, data_class: Type[TT]) -> TT:
