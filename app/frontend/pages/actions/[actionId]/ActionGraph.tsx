@@ -1,8 +1,9 @@
-import { Box, Tab, Tabs, TabsProps } from "@mui/material";
+import { Box, Divider, Stack, Tab, Tabs, TabsProps } from "@mui/material";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { useCallback, useState } from "react";
 import { ActionGraph as ActionGraphPage } from "src/actions/ActionGraph";
+import { LogoIcon } from "src/assets/LogoICon";
 import { Layout } from "src/layout/Layout";
 import { TabPanel } from "src/ui/TabPanel";
 
@@ -27,15 +28,35 @@ const ActionGraph: NextPage = () => {
 
   return (
     <Layout>
-      <Tabs
-        value={tab}
-        onChange={handleTabsChange}
-        aria-label="basic tabs example"
-        sx={{ borderBottom: 1, borderColor: "divider" }}
-      >
-        <Tab value={TabType.Graph} label="Graph" />
-        <Tab value={TabType.Timeline} label="Timeline" />
-      </Tabs>
+      <Stack flexDirection="row">
+        <Box
+          sx={{
+            mx: 1,
+            marginInlineEnd: 2,
+            py: 0.5,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <LogoIcon size={16} />
+        </Box>
+        <Tabs
+          value={tab}
+          onChange={handleTabsChange}
+          aria-label="basic tabs example"
+          sx={{
+            flex: 1,
+            "& .MuiTabs-flexContainer": {
+              height: "100%",
+            },
+          }}
+        >
+          <Tab value={TabType.Graph} label="Graph" />
+          <Tab value={TabType.Timeline} label="Timeline" />
+        </Tabs>
+      </Stack>
+      <Divider />
       <TabPanel currentValue={tab} value={TabType.Graph} sx={{ flex: 1 }}>
         <ActionGraphPage actionId={actionId} />
       </TabPanel>

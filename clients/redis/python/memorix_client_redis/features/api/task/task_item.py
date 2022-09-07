@@ -1,10 +1,8 @@
-from dataclasses import dataclass
 from memorix_client_redis.features.api.hash_key import hash_key
 from uuid import uuid4
 from memorix_client_redis.features.api.json import (
     from_dict,
-    from_json,
-    from_json_to_dict,
+    from_json_to_any,
     to_json,
 )
 from ..api import Api
@@ -87,12 +85,6 @@ class TaskItemDequeueWithReturns(TaskItemDequeue[PT]):
         )
 
 
-@dataclass
-class TaskPayload(Generic[PT]):
-    returns_id: str
-    payload: PT
-
-
 class TaskItem(Generic[KT, PT, RT]):
     def __init__(
         self,
@@ -115,13 +107,13 @@ class TaskItem(Generic[KT, PT, RT]):
         returns_id: str | None = None
         if hasattr(self, "_returns_task"):
             returns_id = str(uuid4())
-            payload_json = to_json(TaskPayload(returns_id=returns_id, payload=payload))
+            wrapped_payload_json = to_json([returns_id, payload])
         else:
-            payload_json = to_json(payload)
+            wrapped_payload_json = to_json([payload])
 
         queue_size = self._api._redis.rpush(
             hash_key(self._id, key=key),
-            payload_json,
+            wrapped_payload_json,
         )
         if returns_id is None:
             return cast(
@@ -143,19 +135,19 @@ class TaskItem(Generic[KT, PT, RT]):
             [channel_bytes, data_bytes] = self._api._redis.blpop(
                 hash_key(self._id, key=key),
             )
+            wrapped_payload = from_json_to_any(data_bytes)
             if hasattr(self, "_returns_task"):
-                dict = from_json_to_dict(data_bytes)
-                payload_dict = dict["payload"]
+                returns_id = wrapped_payload[0]
+                payload_dict = wrapped_payload[1]
                 payload = from_dict(dict=payload_dict, data_class=self._payload_class)
-                returns_id = dict["returns_id"]
-
                 yield TaskItemDequeueWithReturns(
                     payload=payload,
                     returns_id=returns_id,
                     returns_task=self._returns_task,
                 )
             else:
-                payload = from_json(value=data_bytes, data_class=self._payload_class)
+                payload_dict = wrapped_payload[0]
+                payload = from_dict(dict=payload_dict, data_class=self._payload_class)
 
                 yield cast(
                     TaskItemDequeueWithReturns[PT],

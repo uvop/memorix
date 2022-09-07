@@ -22,9 +22,10 @@ export class MemorixReportApi extends MemorixBaseApi {
         language: Languages;
       },
       string
-    >("registerDevice"),
+    >("registerDevice", true),
     deregisterDevice: this.getTaskItem<undefined, string, undefined>(
-      "deregisterDevice"
+      "deregisterDevice",
+      false
     ),
     sendEvent: this.getTaskItem<
       undefined,
@@ -38,7 +39,7 @@ export class MemorixReportApi extends MemorixBaseApi {
         };
       },
       undefined
-    >("sendEvent"),
+    >("sendEvent", false),
     sendEventEnd: this.getTaskItem<
       undefined,
       {
@@ -47,6 +48,6 @@ export class MemorixReportApi extends MemorixBaseApi {
         traceId: string;
       },
       undefined
-    >("sendEventEnd"),
+    >("sendEventEnd", false),
   };
 }

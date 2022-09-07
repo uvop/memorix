@@ -147,7 +147,7 @@ from memorix_client_redis import (
 )
 
 
-class Animals(Enum):
+class Animals(str, Enum):
     dog = \\"dog\\"
     cat = \\"cat\\"
     person = \\"person\\""

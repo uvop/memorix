@@ -16,7 +16,9 @@ def listen_to_algo() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
     for res in memorix_api.task.runAlgo.dequeue():
         print("task:", res.payload)
-        res.send_returns(returns=Animal.dog)
+        res.send_returns(
+            returns=Animal.cat if res.payload == "send me cat" else Animal.dog,
+        )
 
 
 def test_cache() -> None:
@@ -47,6 +49,15 @@ def test_pubsub() -> None:
     process2.kill()
 
 
+def test_task_dequeue() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+    memorix_api.task.runAlgo.queue(payload="send me dog")
+    sleep(0.1)
+    for res in memorix_api.task.runAlgo.dequeue():
+        assert res.payload == "send me dog"
+        break
+
+
 def test_task() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
@@ -56,13 +67,13 @@ def test_task() -> None:
     task2.start()
 
     sleep(0.1)
-    queue = memorix_api.task.runAlgo.queue(payload="Im a task!")
+    queue = memorix_api.task.runAlgo.queue(payload="send me cat")
 
     assert queue.queue_size == 1
 
     res = queue.get_returns()
 
-    assert res == Animal.dog
+    assert res.value == Animal.cat.value
 
     sleep(0.1)
 

@@ -1,18 +1,18 @@
 #!/usr/bin/env node
-import clear from "clear";
-import figlet from "figlet";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import { Languages } from "./languages";
 import { codegen } from "./codgen";
+import { printLogo } from "./print-logo";
 
-clear();
-console.log(figlet.textSync("Memorix", { horizontalLayout: "full" }));
+printLogo();
 
 yargs(hideBin(process.argv))
   .command(
     "codegen <schemaFilePath> <files...>",
-    "Codegen memorix schema to code",
+    `Codegen memorix schema to code
+
+Example: memorix codegen ./schema.memorix python ./schema_generated.py`,
     (b) => {
       return b
         .positional("schemaFilePath", {
@@ -51,6 +51,7 @@ yargs(hideBin(process.argv))
       if (parsedFiles.length === 0) {
         throw new Error(`Didn't get any languages to codegen`);
       }
+      printLogo();
       codegen({
         schemaFilePath,
         files: parsedFiles,

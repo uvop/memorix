@@ -50,6 +50,7 @@ ignore =
     WPS432, # magic is cool
     WPS454, # I'll raise what I want
     WPS221, # So many jones
+    WPS600, # So many jones
 per-file-ignores =
     __init__.py: 
         # import unused, for exporting

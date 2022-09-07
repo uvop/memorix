@@ -36,7 +36,7 @@ ${b.properties
   .map((p) => `${getTabs(1)}${p.name}: ${valueToPython(p.value)}`)
   .join(`\n`)}`;
     case BlockTypes.enum:
-      return `class ${b.name}(Enum):
+      return `class ${b.name}(str, Enum):
 ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
     case BlockTypes.cache:
     case BlockTypes.pubsub:

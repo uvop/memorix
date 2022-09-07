@@ -1,8 +1,10 @@
 import {
   Badge,
   Box,
+  Divider,
   IconButton,
   Paper,
+  Stack,
   Tab,
   Tabs,
   TabsProps,
@@ -15,6 +17,7 @@ import { TabPanel } from "src/ui/TabPanel";
 import { SchemaTimeline } from "src/schema/SchemaTimeline";
 import { Notifications } from "@mui/icons-material";
 import { Layout } from "src/layout/Layout";
+import { LogoIcon } from "src/assets/LogoICon";
 
 enum TabType {
   Graph,
@@ -33,22 +36,37 @@ const SchemaGraph: NextPage = () => {
   return (
     <OperationDrawer>
       <Layout>
-        <Tabs
-          value={tab}
-          onChange={handleTabsChange}
-          aria-label="basic tabs example"
-          sx={{ borderBottom: 1, borderColor: "divider" }}
-        >
-          <Tab value={TabType.Graph} label="Graph" />
-          <Tab value={TabType.Timeline} label="Timeline" />
-          <Box marginLeft="auto" padding="12px">
-            <IconButton>
-              <Badge badgeContent={3} color="error">
-                <Notifications />
-              </Badge>
-            </IconButton>
+        <Stack flexDirection="row">
+          <Box
+            sx={{
+              mx: 1,
+              marginInlineEnd: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <LogoIcon size={16} />
           </Box>
-        </Tabs>
+          <Tabs
+            value={tab}
+            onChange={handleTabsChange}
+            aria-label="basic tabs example"
+            sx={{ flex: 1 }}
+          >
+            <Tab value={TabType.Graph} label="Graph" />
+            <Tab value={TabType.Timeline} label="Timeline" />
+            <Box marginLeft="auto" />
+            <Box marginLeft="auto" padding="12px">
+              <IconButton>
+                <Badge badgeContent={3} color="error">
+                  <Notifications />
+                </Badge>
+              </IconButton>
+            </Box>
+          </Tabs>
+        </Stack>
+        <Divider />
         <TabPanel
           currentValue={tab}
           value={TabType.Graph}

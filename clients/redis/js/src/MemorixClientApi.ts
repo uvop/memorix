@@ -11,14 +11,19 @@ export class MemorixClientApi extends MemorixBaseApi {
 
   private deviceIdPromise: Promise<string>;
 
-  constructor(schema: string) {
-    super();
+  constructor({
+    schema,
+    ...baseObj
+  }: { schema: string } & ConstructorParameters<typeof MemorixBaseApi>[0]) {
+    super(baseObj);
 
-    this.reporter = new MemorixReportApi();
-    this.deviceIdPromise = this.reporter.task.registerDevice.queue({
-      schema,
-      language: Languages.typescript,
-    });
+    this.reporter = new MemorixReportApi(baseObj);
+    this.deviceIdPromise = this.reporter.task.registerDevice
+      .queue({
+        schema,
+        language: Languages.typescript,
+      })
+      .then(({ getReturns }) => getReturns());
   }
 
   getCacheItem<Key, Payload>(identifier: string): CacheItem<Key, Payload> {
@@ -95,7 +100,7 @@ export class MemorixClientApi extends MemorixBaseApi {
           });
         });
 
-        return pubsubItem.subscribe(key, (memorixPayload) => {
+        return pubsubItem.subscribe(key, ({ payload: memorixPayload }) => {
           this.deviceIdPromise.then((deviceId) => {
             this.reporter.task.sendEventEnd.queue({
               deviceId,
@@ -104,7 +109,7 @@ export class MemorixClientApi extends MemorixBaseApi {
             });
           });
 
-          callback(memorixPayload.payload);
+          callback({ payload: memorixPayload.payload });
         });
       },
       publish: (...args) => {

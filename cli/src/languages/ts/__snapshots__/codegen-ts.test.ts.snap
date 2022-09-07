@@ -127,7 +127,7 @@ exports[`ts codegen task can generate with inline types 1`] = `
 
 export class MemorixApi extends MemorixClientApi {
   task = {
-    doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\"),
+    doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true),
   };
 }"
 `;

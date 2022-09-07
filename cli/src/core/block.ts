@@ -161,7 +161,7 @@ const getNonObjectValueFromValue = (
       };
     default:
       assertUnreachable(value);
-      return undefined;
+      return undefined as any;
   }
 };
 
@@ -195,7 +195,7 @@ const getBlockModelsFromValue = (
       return getBlockModelsFromValue(value.value, name);
     default:
       assertUnreachable(value);
-      return undefined;
+      return undefined as any;
   }
 };
 
@@ -248,7 +248,7 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
               .filter((v) => v.returns !== undefined)
               .map((v) =>
                 getBlockModelsFromValue(
-                  v.returns,
+                  v.returns!,
                   `${b.type}${camelCase(v.name)}Returns`
                 )
               )
