@@ -9,8 +9,9 @@ class Memorix < Formula
             url "https://github.com/uvop/memorix/releases/download/v#{version}/memorix-macos-x64.tar.gz"
             sha256 "{{{MAC_INTEL_SHA}}}"
         else
+            # For now m1 will use x64
             url "https://github.com/uvop/memorix/releases/download/v#{version}/memorix-macos-x64.tar.gz"
-            sha256 "{{{MAC_M1_SHA}}}"
+            sha256 "{{{MAC_INTEL_SHA}}}"
         end
     end
   
