@@ -39,12 +39,6 @@
       }
     ],
     [
-      "@semantic-release/git",
-      {
-        "assets": ["../../../CHANGELOG.md"]
-      }
-    ],
-    [
       "@semantic-release/npm",
       {
         "pkgRoot": "../js"
@@ -59,7 +53,13 @@
     [
       "@semantic-release/exec",
       {
-        "publishCmd": "(cd ../../.. && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
+        "publishCmd": "(cd ../../../cli && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["../../../CHANGELOG.md"]
       }
     ]
   ]
