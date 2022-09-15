@@ -33,6 +33,7 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}/cli:/cli"
           install: |
+            apt-get -y install curl git
             export NVM_DIR=$HOME/.nvm
             export NODE_VERSION=16.14.2
             export NODE_PATH=$NVM_DIR/versions/node/v$NODE_VERSION/lib/node_modules
