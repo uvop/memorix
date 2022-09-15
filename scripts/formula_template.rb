@@ -1,4 +1,4 @@
-cask "memorix" do
+class Memorix < Formula
     version "{{{VERSION}}}"
   
     if Hardware::CPU.intel?
@@ -9,11 +9,10 @@ cask "memorix" do
         sha256 "{{{M1_SHA}}}"
     end
   
-    name "Memorix"
     desc "Memorix - CLI"
     homepage "https://github.com/uvop/memorix"
   
     def install
         bin.install "memorix"
     end
-  end
+end

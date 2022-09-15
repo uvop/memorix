@@ -14,8 +14,8 @@ VERSION=${VERSION#"v"}
 echo "Targeting version $VERSION"
 
 echo "Reading artifacts hashes"
-INTEL_SHA=$(shasum -a 256 ./cli/lib/release/memorix-macos-x64.tar.gz)
-# M1_SHA=$(shasum -a 256 ./cli/lib/release/memorix-macos-arm64.tar.gz)
+INTEL_SHA=$(shasum -a 256 ./cli/lib/release/memorix-macos-x64.tar.gz | awk '{print $1}')
+# M1_SHA=$(shasum -a 256 ./cli/lib/release/memorix-macos-arm64.tar.gz | awk '{print $1}')
 M1_SHA=$INTEL_SHA
 
 echo "Cloning tap repository"

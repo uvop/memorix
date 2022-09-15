@@ -77,6 +77,10 @@ jobs:
         run: |
           mkdir ./cli/lib && mv -v artifact-cli/* ./cli/lib
           mkdir ./clients/redis/js/lib && mv -v artifact-client-redis-js/* ./clients/redis/js/lib
+      - name: "Setup SSH deploy key"
+        uses: webfactory/ssh-agent@fc49353b67b2b7c1e0e6a600572d01a69f2672dd
+        with:
+          ssh-private-key: ${{ secrets.ALL_GH_SSH }}
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
