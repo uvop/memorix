@@ -45,6 +45,12 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "(cd ../js && yarn install && yarn build)"
+      }
+    ],
+    [
       "semantic-release-python",
       {
         "setupPy": "./pyproject.toml"
@@ -53,6 +59,7 @@
     [
       "@semantic-release/exec",
       {
+        "prepareCmd": "(cd ../../../cli && yarn install && yarn build)",
         "publishCmd": "(cd ../../../cli && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
       }
     ],
