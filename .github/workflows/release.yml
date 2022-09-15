@@ -6,6 +6,7 @@ on:
       - master
       - release
       - next
+      - qemu
 
 jobs:
   build-cli:
