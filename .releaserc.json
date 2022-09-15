@@ -59,7 +59,7 @@
     [
       "@semantic-release/exec",
       {
-        "publishCmd": "VERSION=${nextRelease.version} ../../../scripts/publish_homebrew_version.sh"
+        "publishCmd": "(cd ../../.. && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
       }
     ]
   ]
