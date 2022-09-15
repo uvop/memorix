@@ -14,9 +14,10 @@ VERSION=${VERSION#"v"}
 echo "Targeting version $VERSION"
 
 echo "Reading artifacts hashes"
-INTEL_SHA=$(shasum -a 256 ./cli/lib/release/memorix-macos-x64.tar.gz | awk '{print $1}')
+LINUX_INTEL_SHA=$(shasum -a 256 ./cli/lib/release/memorix-linux-x64.tar.gz | awk '{print $1}')
+MAC_INTEL_SHA=$(shasum -a 256 ./cli/lib/release/memorix-macos-x64.tar.gz | awk '{print $1}')
 # M1_SHA=$(shasum -a 256 ./cli/lib/release/memorix-macos-arm64.tar.gz | awk '{print $1}')
-M1_SHA=$INTEL_SHA
+MAC_M1_SHA=$INTEL_SHA
 
 echo "Cloning tap repository"
 
@@ -25,7 +26,9 @@ cd ./homebrew-memorix
 echo "Rendering formula template"
 
 cat ../scripts/formula_template.rb | sed "s/{{{VERSION}}}/$VERSION/g" | \
-  sed "s/{{{INTEL_SHA}}}/$INTEL_SHA/g" | sed "s/{{{M1_SHA}}}/$M1_SHA/g" > ./Formula/memorix.rb
+  sed "s/{{{LINUX_INTEL_SHA}}}/$LINUX_INTEL_SHA/g" | \
+  sed "s/{{{MAC_INTEL_SHA}}}/$MAC_INTEL_SHA/g" | \
+  sed "s/{{{MAC_M1_SHA}}}/$MAC_M1_SHA/g" > ./Formula/memorix.rb
 
 echo "Committing version update"
 git add Formula/memorix.rb
