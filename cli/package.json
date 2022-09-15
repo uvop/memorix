@@ -7,9 +7,9 @@
   "author": "",
   "bin": "./lib/src/index.js",
   "scripts": {
-    "build": "rm -rf lib && tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json && ./bin/create-dist.sh",
+    "build": "rm -rf lib && tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json && ./scripts/create-dist.sh",
     "dev": "jest --watch",
-    "fix-ts-path": "ts-node -r tsconfig-paths/register bin/fix-ts-path.ts lib src",
+    "fix-ts-path": "ts-node -r tsconfig-paths/register scripts/fix-ts-path.ts lib src",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "cli": "ts-node -r tsconfig-paths/register src/index.ts",
