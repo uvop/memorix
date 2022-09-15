@@ -7,7 +7,8 @@
   "author": "",
   "bin": "./lib/src/index.js",
   "scripts": {
-    "build": "rm -rf lib && tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json",
+    "build": "rm -rf lib && tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json && yarn create-dist",
+    "create-dist": "for FILE in ./lib/release/*; do if [[ $FILE == *exe ]] ; then mv $FILE memorix.exe && zip ${FILE/exe/zip} memorix.exe && mv memorix.exe $FILE; else mv $FILE memorix && tar -czf $FILE.tar.gz memorix && mv memorix $FILE ; fi; done;",
     "dev": "jest --watch",
     "fix-ts-path": "ts-node -r tsconfig-paths/register bin/fix-ts-path.ts lib src",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -62,7 +63,7 @@
       "node16-macos-arm64",
       "node16-win-x64"
     ],
-    "outputPath": "lib"
+    "outputPath": "lib/release"
   },
   "dependencies": {
     "clear": "^0.1.0",

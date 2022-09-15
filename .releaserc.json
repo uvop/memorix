@@ -14,20 +14,20 @@
       {
         "assets": [
           {
-            "path": "../../../cli/lib/memorix-macos-arm64",
-            "label": "macos-arm64"
+            "path": "../../../cli/lib/release/memorix-macos-arm64.tar.gz",
+            "label": "memorix-macos-arm64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/memorix-macos-x64",
-            "label": "macos-x64"
+            "path": "../../../cli/lib/release/memorix-macos-x64.tar.gz",
+            "label": "memorix-macos-x64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/memorix-linux-x64",
-            "label": "linux-x64"
+            "path": "../../../cli/lib/release/memorix-linux-x64.tar.gz",
+            "label": "memorix-linux-x64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/memorix-win-x64.exe",
-            "label": "win-x64"
+            "path": "../../../cli/lib/release/memorix-win-x64.zip",
+            "label": "memorix-win-x64.zip"
           }
         ]
       }
@@ -54,6 +54,12 @@
       "semantic-release-python",
       {
         "setupPy": "./pyproject.toml"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "publishCmd": "VERSION=${nextRelease.version} ../../../scripts/publish_homebrew_version.sh"
       }
     ]
   ]
