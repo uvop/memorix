@@ -79,7 +79,7 @@ jobs:
           mkdir ./clients/redis/js/lib && mv -v artifact-client-redis-js/* ./clients/redis/js/lib
       - uses: webfactory/ssh-agent@v0.5.4
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.GH_SSH_PRIVATE_KEY }}
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
