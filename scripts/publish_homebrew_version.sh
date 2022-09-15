@@ -21,6 +21,7 @@ M1_SHA=$INTEL_SHA
 echo "Cloning tap repository"
 
 git clone git@github.com:uvop/homebrew-memorix.git
+cd ./homebrew-memorix
 echo "Rendering formula template"
 
 cat ../scripts/formula_template.rb | sed "s/{{{VERSION}}}/$VERSION/g" | \
