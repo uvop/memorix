@@ -27,7 +27,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: artifact-cli
-          path: ./cli/lib
+          path: ./cli/lib/release
           retention-days: 1
   build-client-redis-js:
     runs-on: ubuntu-latest
@@ -75,12 +75,11 @@ jobs:
       - uses: actions/download-artifact@v3
       - name: Move artifacts to projects
         run: |
-          mkdir ./cli/lib && mv -v artifact-cli/* ./cli/lib
+          mkdir ./cli/lib && mkdir ./cli/lib/release && mv -v artifact-cli/* ./cli/lib/release
           mkdir ./clients/redis/js/lib && mv -v artifact-client-redis-js/* ./clients/redis/js/lib
-      - name: "Setup SSH deploy key"
-        uses: webfactory/ssh-agent@fc49353b67b2b7c1e0e6a600572d01a69f2672dd
+      - uses: webfactory/ssh-agent@v0.5.4
         with:
-          ssh-private-key: ${{ secrets.ALL_GH_SSH }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
