@@ -1,5 +1,5 @@
 ---
-title: "Installation"
+title: "Quick start"
 date: 2020-11-16T13:59:39+01:00
 lastmod: 2020-11-16T13:59:39+01:00
 draft: false
@@ -16,31 +16,7 @@ toc: true
 - [Git](https://git-scm.com/) — latest source release
 - [Node.js](https://nodejs.org/) — latest LTS version or newer
 
-{{< tabs >}}
-{{% tab name="python" %}}
-
-```python
-print("Hello World!")
-```
-
-{{% /tab %}}
-{{% tab name="R" %}}
-
-```R
-> print("Hello World!")
-```
-
-{{% /tab %}}
-{{% tab name="Bash" %}}
-
-```Bash
-echo "Hello World!"
-```
-
-{{% /tab %}}
-{{< /tabs >}}
-
-{{< details "Why Node.js2?" >}}
+{{< details "Why Node.js?" >}}
 Doks uses npm (included with Node.js) to centralize dependency management, making it [easy to update]({{< relref "how-to-update" >}}) resources, build tooling, plugins, and build scripts.
 {{< /details >}}
 

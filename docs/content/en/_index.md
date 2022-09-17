@@ -14,6 +14,10 @@ bullets:
       title: "Multi language support 🫶",
       description: "Specialized for microservices and IOT devices, Memorix is language and service agnostic",
     },
+    {
+      title: "Multi broker support 📡",
+      description: "Written in mind to support many cache services, such as Redis",
+    },
   ]
 date: 2020-10-06T08:47:36+00:00
 lastmod: 2020-10-06T08:47:36+00:00
