@@ -1,4 +1,4 @@
-baseurl = "https://doks-child-theme.netlify.app/"
+baseurl = "http://uvop.github.io/memorix"
 canonifyURLs = false
 disableAliases = true
 disableHugoGeneratorInject = true
@@ -10,7 +10,7 @@ rssLimit = 10
 
 # Multilingual
 defaultContentLanguage = "en"
-disableLanguages = ["de", "nl"]
+disableLanguages = ["nl", "de"]
 # defaultContentLanguageInSubdir = true
 
 # add redirects/headers
@@ -62,7 +62,7 @@ rel  = "sitemap"
   tag = "tags"
 
 [permalinks]
-  blog = "/blog/:title/"
+# blog = "/blog/:title/"
 # docs = "/docs/1.0/:sections[1:]/:title/"
 
 [minify.tdewolff.html]
