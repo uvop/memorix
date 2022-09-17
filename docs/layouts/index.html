@@ -8,16 +8,16 @@
       <div class="p-4">{{ partial "svgs/logo.svg" (dict "size" 256 ) }}</div>
       <a
         class="btn btn-primary btn-lg px-4 mb-2"
-        href="/docs/{{ if .Site.Params.options.docsVersioning }}{{ .Site.Params.docsVersion }}/{{ end }}prologue/introduction/"
+        href="docs/{{ if .Site.Params.options.docsVersioning }}{{ .Site.Params.docsVersion }}/{{ end }}prologue/introduction/"
         role="button"
         >Get Started</a
       >
-      <p class="meta">
+      <!-- <p class="meta">
         Open-source MIT Licensed.
         <a href="https://github.com/uvop/memorix"
           >GitHub v{{ $data := getJSON "/package.json" }}{{ $data.version }}</a
         >
-      </p>
+      </p> -->
     </div>
   </div>
 </section>
