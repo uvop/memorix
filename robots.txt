@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: http://uvop.github.io/memorix/sitemap.xml
+Sitemap: https://uvop.github.io/memorix/sitemap.xml
