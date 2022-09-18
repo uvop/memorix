@@ -22,6 +22,7 @@ Memorix is an open source next-generation in-memory ORM, it has the following pa
 
 ## Why memorix
 
-Memorix was heavily inspired by [GraphQL](https://graphql.org/) and [Prisma](https://www.prisma.io/).
+Memorix was heavily inspired by [GraphQL](https://graphql.org/) and [Prisma](https://www.prisma.io/).  
 Both of them cover persistent memory layer and message layer, and they do it great.
-Once your application needs in-memory service, such as Redis, Kafka, RabbitMQ and etc, we started to feel the pain of not having such great tools for the cache layer, and decides to make our own!
+
+Once your application needs in-memory service, such as Redis, Kafka, RabbitMQ and etc, we started to feel the pain of not having such great tools for the cache layer, and decided to make our own!

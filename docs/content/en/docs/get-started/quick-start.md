@@ -11,67 +11,107 @@ weight: 110
 toc: true
 ---
 
-## Requirements
+Now we have all the tools needed to create our schema and start using it!
 
-- [Git](https://git-scm.com/) — latest source release
-- [Node.js](https://nodejs.org/) — latest LTS version or newer
+## Creating schema
 
-{{< details "Why Node.js?" >}}
-Doks uses npm (included with Node.js) to centralize dependency management, making it [easy to update]({{< relref "how-to-update" >}}) resources, build tooling, plugins, and build scripts.
-{{< /details >}}
+First, lets create a basic schema.
 
-## Start a new Doks project
+- Create a file with name `schema.memorix` in the root of your project
+  ```
+  Cache {
+      hello {
+          payload: string
+      }
+      rating {
+          payload: int
+      }
+  }
+  PubSub {
+      message {
+          payload: string
+      }
+  }
+  ```
+- Now we can generate code for the schema we created using the `memorix CLI` (and on future schema changes)
+  {{< tabs >}}
+  {{% tab name="Node.js" %}}
+  Add this to your `package.json`
 
-Create a new site, change directories, install dependencies, and start development server.
+  ```json
+  "scripts": {
+    ...
+    "memorix": "memorix codegen ./schema.memorix typescript src/memorix-api.ts"
+  }
+  ```
 
-### Create a new site
+  Now run this in your terminal
 
-Doks is available as a child theme and a starter theme.
+  ```bash
+  npm run memorix
+  ```
 
-#### Child theme
+  or
 
-- Intended for novice to intermediate users
-- Intended for minor customizations
-- [Easily update npm packages]({{< relref "how-to-update" >}}) — **including** [Doks](https://www.npmjs.com/package/@hyas/doks)
+  ```bash
+  yarn memorix
+  ```
 
-```bash
-git clone https://github.com/h-enk/doks-child-theme.git my-doks-site
+  {{% /tab %}}
+  {{% tab name="Python" %}}
+  Run this in your terminal
+
+  ```bash
+  memorix codegen ./schema.memorix python <projects_name>/memorix_api.py
+  ```
+
+  {{% /tab %}}
+  {{< /tabs >}}
+
+  - Now api files have been generated in your source code folder, you can start using the api.
+
+## Using the schema api (redis)
+
+Here is a code example of how to use the schema we created
+
+- Note: you need a redis service running, this code example assumes you do
+
+{{< tabs >}}
+{{% tab name="Node.js" %}}
+
+```js
+import MemorixApi from "src/generated-schema";
+
+const start = async () => {
+  const memorixApi = new MemorixApi({ redisUrl: "redis://localhost:6379/0" });
+
+  await memorixApi.cache.hello.set("world");
+  await memorixApi.cache.rating.set(10);
+  const helloValue = await memorixApi.cache.hello.get();
+
+  console.log(helloValue); // Should print "world"
+};
+
+start();
 ```
 
-#### Starter theme
+{{% /tab %}}
+{{% tab name="Python" %}}
 
-- Intended for intermediate to advanced users
-- Intended for major customizations
-- [Easily update npm packages]({{< relref "how-to-update" >}})
+```python
+from src.generated_schema import MemorixApi
 
-```bash
-git clone https://github.com/h-enk/doks.git my-doks-site
+memorix_api = MemorixApi(redis_url="redis://localhost:6379/0")
+
+memorix_api.cache.hello.set("world")
+memorix_api.cache.rating.set(10)
+hello_value = memorix_api.cache.hello.get()
+
+print(hello_value) # Should print "world"
 ```
 
-{{< details "Help me choose" >}}
-Not sure which one is for you? Pick the child theme.
-{{< /details >}}
+{{% /tab %}}
+{{< /tabs >}}
 
-### Change directories
-
-```bash
-cd my-doks-site
-```
-
-### Install dependencies
-
-```bash
-npm install
-```
-
-### Start development server
-
-```bash
-npm run start
-```
-
-Doks will start the Hugo development webserver accessible by default at `http://localhost:1313`. Saved changes will live reload in the browser.
-
-## Other commands
-
-Doks comes with commands for common tasks. [Installation →]({{< relref "installation" >}})
+You can explore the api we created using you IDE since it's fully typed.
+To learn which more features memorix has to offer, start by checking [defining your data →]({{< relref "data" >}})

@@ -11,91 +11,84 @@ weight: 110
 toc: true
 ---
 
-## Requirements
+## CLI installation
 
-- [Git](https://git-scm.com/) — latest source release
-- [Node.js](https://nodejs.org/) — latest LTS version or newer
+Follow the instructions below to install `memorix-cli` on your machine depends on the platform you use
+
+### macOS, linux and WSL installation (recommanded)
+
+#### Requirements
+
+- [brew](https://brew.sh/) — Package manager for macOS and linux.
+  - To install on Linux or WSL, [couple of commands are required after the install script](https://docs.brew.sh/Homebrew-on-Linux).
+
+#### Steps
+
+Run these in the terminal
+
+```bash
+brew tap uvop/memorix
+brew install memorix
+memorix --version
+```
+
+Done!  
+if successful, you should see this in your terminal
+
+```bash
+
+@@@     @@@    @@@@@@&    @@     .@@      @@@@@     #@@@@@      @@    @&    &@
+@@@@   @@@@    @@         @@@   @@@@    @@    %@    #@&   @@    @@     @@@@@@
+@@ @@ @@ @@    @@^^^^^    @@ @@@@ @@    @@    @@    #@@@@@@     @@     @@@@@@
+@@  @@@  @@    @@@@@@&    @@ .@@  @@      @@@@      #@&  @@@    @@    @&    &@
+
+1.0.0
+```
+
+### Manual installation
+
+This way also supports windows without WSL, but is a bit more tedious
+
+- Go to [memorix releases on github](https://github.com/uvop/memorix/releases).
+- Download the asset for your platform.
+- Extract the executable somewhere in on your computer, like `~/.memorix/bin/*`.
+- Add the folder extracted to to your `PATH` environment variable.
+- Done!
+
+## Client installation
+
+To start using memorix, first head into your project/s and install the run-time dependency.  
+The only support at the moment is for Redis.
+
+### Redis client
 
 {{< tabs >}}
-{{% tab name="python" %}}
+{{% tab name="Node.js" %}}
 
-```python
-print("Hello World!")
+```bash
+npm install @memorix/client-redis
+```
+
+or
+
+```bash
+yarn add @memorix/client-redis
 ```
 
 {{% /tab %}}
-{{% tab name="R" %}}
+{{% tab name="Python" %}}
 
-```R
-> print("Hello World!")
+```bash
+pip install memorix-client-redis
 ```
 
-{{% /tab %}}
-{{% tab name="Bash" %}}
+or
 
-```Bash
-echo "Hello World!"
+```bash
+poetry add memorix-client-redis
 ```
 
 {{% /tab %}}
 {{< /tabs >}}
 
-{{< details "Why Node.js2?" >}}
-Doks uses npm (included with Node.js) to centralize dependency management, making it [easy to update]({{< relref "how-to-update" >}}) resources, build tooling, plugins, and build scripts.
-{{< /details >}}
-
-## Start a new Doks project
-
-Create a new site, change directories, install dependencies, and start development server.
-
-### Create a new site
-
-Doks is available as a child theme and a starter theme.
-
-#### Child theme
-
-- Intended for novice to intermediate users
-- Intended for minor customizations
-- [Easily update npm packages]({{< relref "how-to-update" >}}) — **including** [Doks](https://www.npmjs.com/package/@hyas/doks)
-
-```bash
-git clone https://github.com/h-enk/doks-child-theme.git my-doks-site
-```
-
-#### Starter theme
-
-- Intended for intermediate to advanced users
-- Intended for major customizations
-- [Easily update npm packages]({{< relref "how-to-update" >}})
-
-```bash
-git clone https://github.com/h-enk/doks.git my-doks-site
-```
-
-{{< details "Help me choose" >}}
-Not sure which one is for you? Pick the child theme.
-{{< /details >}}
-
-### Change directories
-
-```bash
-cd my-doks-site
-```
-
-### Install dependencies
-
-```bash
-npm install
-```
-
-### Start development server
-
-```bash
-npm run start
-```
-
-Doks will start the Hugo development webserver accessible by default at `http://localhost:1313`. Saved changes will live reload in the browser.
-
-## Other commands
-
-Doks comes with commands for common tasks. [Installation →]({{< relref "installation" >}})
+Now we're ready to start using memorix! Head on to [Quick start →]({{< relref "quick-start" >}})
