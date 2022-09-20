@@ -190,9 +190,17 @@ await stop();
 await memorixApi.pubsub.message.publish("Will be published but no one is listening");
 ```
 
+You can also subscribe to an [`Async iterable`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) if you don't pass a callback
+
+```js
+for await (const { payload } of memorixApi.pubsub.message.subscribe()) {
+  console.log("Got payload: " + payload);
+}
+```
+
 {{% /tab %}}
 {{% tab name="Python" %}}
-To use python pubsub, you need to subscribe on a `Thread` or a `Process` since it's blocking code, for example
+To use python pubsub, you need to subscribe on a `Thread` or a `Process` since it's a blocking code, for example
 
 ```python
 import multiprocessing

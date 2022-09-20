@@ -9,6 +9,7 @@
     "release": "semantic-release"
   },
   "dependencies": {
+    "@qiwi/semantic-release-gh-pages-plugin": "^5.2.3",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/exec": "^6.0.3",

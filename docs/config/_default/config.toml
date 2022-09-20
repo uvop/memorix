@@ -1,4 +1,4 @@
-baseurl = "http://uvop.github.io/memorix"
+baseurl = "https://uvop.github.io/memorix"
 canonifyURLs = false
 disableAliases = true
 disableHugoGeneratorInject = true

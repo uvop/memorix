@@ -1,27 +1,39 @@
+export type CacheSetOptions = {
+  expire?: {
+    value: number;
+    isInMs?: boolean;
+  };
+};
+
 export type CacheItem<Key, Payload> = {
-  get(
-    ...args: Key extends undefined ? [] : [key: Key]
-  ): Promise<Payload | null>;
-  set(
-    ...args: Key extends undefined
-      ? [payload: Payload]
-      : [key: Key, payload: Payload]
-  ): Promise<void>;
+  get(key: Key): Promise<Payload | null>;
+  set(key: Key, payload: Payload, options?: CacheSetOptions): Promise<void>;
+};
+export type CacheItemNoKey<Payload> = {
+  get(): Promise<Payload | null>;
+  set(payload: Payload, options?: CacheSetOptions): Promise<void>;
 };
 
 export type PubsubCallback<Payload> = (payload: Payload) => void;
 
 export type PubsubItem<Key, Payload> = {
   subscribe(
-    ...args: Key extends undefined
-      ? [callback: PubsubCallback<{ payload: Payload }>]
-      : [key: Key, callback: PubsubCallback<{ payload: Payload }>]
+    key: Key,
+    callback: PubsubCallback<{ payload: Payload }>
   ): Promise<{ stop: () => Promise<void> }>;
-  publish(
-    ...args: Key extends undefined
-      ? [payload: Payload]
-      : [key: Key, payload: Payload]
-  ): Promise<{ subscribersSize: number }>;
+  subscribe(key: Key): AsyncIterableIterator<{ payload: Payload }>;
+  publish(key: Key, payload: Payload): Promise<{ subscribersSize: number }>;
+};
+export type PubsubItemNoKey<Payload> = {
+  subscribe(
+    callback: PubsubCallback<{ payload: Payload }>
+  ): Promise<{ stop: () => Promise<void> }>;
+  subscribe(): AsyncIterableIterator<{ payload: Payload }>;
+  publish(payload: Payload): Promise<{ subscribersSize: number }>;
+};
+
+export type TaskDequequeOptions = {
+  takeNewest: boolean;
 };
 
 type TaskQueue<Returns> = Promise<
@@ -38,15 +50,22 @@ type TaskDequeueCallback<Payload, Returns> = (arg: {
   : Returns | Promise<Returns>;
 
 export type TaskItem<Key, Payload, Returns> = {
-  queue(
-    ...args: Key extends undefined
-      ? [payload: Payload]
-      : [key: Key, payload: Payload]
-  ): TaskQueue<Returns>;
+  queue(...args: [key: Key, payload: Payload]): TaskQueue<Returns>;
   dequeue(
-    ...args: Key extends undefined
-      ? [callback: TaskDequeueCallback<Payload, Returns>]
-      : [key: Key, callback: TaskDequeueCallback<Payload, Returns>]
+    ...args: [
+      key: Key,
+      callback: TaskDequeueCallback<Payload, Returns>,
+      options?: TaskDequequeOptions
+    ]
+  ): TaskDequeue;
+};
+export type TaskItemNoKey<Payload, Returns> = {
+  queue(...args: [payload: Payload]): TaskQueue<Returns>;
+  dequeue(
+    ...args: [
+      callback: TaskDequeueCallback<Payload, Returns>,
+      options?: TaskDequequeOptions
+    ]
   ): TaskDequeue;
 };
 
