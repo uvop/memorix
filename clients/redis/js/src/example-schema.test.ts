@@ -70,7 +70,7 @@ describe("example schema has", () => {
   });
   describe("task", () => {
     beforeEach(async () => {
-      const { stop } = await memorixApi.task.runAlgo.dequeue(({ payload }) => {
+      const { stop } = await memorixApi.task.runAlgo.dequeue(() => {
         return Animal.dog;
       });
       await new Promise((res) => setTimeout(res, 1000));
