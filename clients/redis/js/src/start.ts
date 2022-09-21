@@ -1,8 +1,7 @@
-import { MemorixClientApi } from "./MemorixClientApi";
+import { MemorixBaseApi } from "./MemorixBaseApi";
 
 const init = async () => {
-  const api = new MemorixClientApi({
-    schema: "Yuval",
+  const api = new MemorixBaseApi({
     redisUrl: process.env.REDIS_URL!,
   });
   const { get, set } = api.getCacheItem<string, string>("memo");
@@ -10,9 +9,7 @@ const init = async () => {
   const cachedData = await get("key");
   console.log(`chached data ${cachedData}`);
 
-  const { publish, subscribe } = api.getPubsubItem<undefined, number>(
-    "testPubSub"
-  );
+  const { publish, subscribe } = api.getPubsubItemNoKey<number>("testPubSub");
   subscribe((payload) => {
     console.log(`subscriber got payload ${payload}`);
   });
@@ -23,5 +20,3 @@ const init = async () => {
 };
 
 init();
-
-export { MemorixClientApi };

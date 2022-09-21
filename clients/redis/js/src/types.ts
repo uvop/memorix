@@ -68,8 +68,3 @@ export type TaskItemNoKey<Payload, Returns> = {
     ]
   ): TaskDequeue;
 };
-
-export type MemorixPayload<Payload> = {
-  traceId: string;
-  payload: Payload;
-};

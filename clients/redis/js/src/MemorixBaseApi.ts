@@ -263,7 +263,7 @@ export class MemorixBaseApi {
   }
 
   getTaskItemNoKey<Payload, Returns>(
-    ...itemArgs: Parameters<typeof this.getTaskItem>
+    ...itemArgs: any[]
   ): TaskItemNoKey<Payload, Returns> {
     const item = (this.getTaskItem as any)(...itemArgs);
 
