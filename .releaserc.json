@@ -59,7 +59,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "(cd ../docs && npm install && npm run build)"
+        "prepareCmd": "(cd ../../../docs && npm install && npm run build)"
       }
     ],
     [
