@@ -35,6 +35,8 @@ jobs:
       - uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.GH_SSH_PRIVATE_KEY }}
+      - name: Create empty docs build dir
+        run: mkdir ./docs/public
       - name: Semantic release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
