@@ -60,9 +60,12 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
 
       return `${b.values
         .map((v) => {
-          return `${getTabs(2)}${v.name}: this.${itemFn}<${
-            v.key ? `${valueToTs(v.key, 2)}` : "undefined"
-          }, ${valueToTs(v.payload, 2)}${
+          return `${getTabs(2)}${v.name}: this.${itemFn}${
+            v.key ? "" : "NoKey"
+          }<${v.key ? `${valueToTs(v.key, 2)}, ` : ""}${valueToTs(
+            v.payload,
+            2
+          )}${
             hasReturns && "returns" in v
               ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
               : ""

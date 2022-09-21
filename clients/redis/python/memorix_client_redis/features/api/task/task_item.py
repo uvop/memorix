@@ -5,7 +5,6 @@ from memorix_client_redis.features.api.json import (
     from_json_to_any,
     to_json,
 )
-from ..api import Api
 from typing import (
     Any,
     AsyncGenerator,
@@ -16,6 +15,8 @@ from typing import (
     cast,
     Optional,
 )
+from ..api import Api, ApiDefaults
+from .task_options import TaskDequequeOptions
 
 KT = TypeVar("KT")
 PT = TypeVar("PT")
@@ -130,11 +131,33 @@ class TaskItem(Generic[KT, PT, RT]):
         print("queue async")
         return cast(TaskItemQueueWithReturns[RT], None)
 
-    def dequeue(self, key: KT) -> Generator[TaskItemDequeueWithReturns[PT], None, None]:
+    def dequeue(
+        self,
+        key: KT,
+        options: Optional[TaskDequequeOptions] = None,
+    ) -> Generator[TaskItemDequeueWithReturns[PT], None, None]:
+        take_newest: Optional[bool] = None
+        try:
+            take_newest = cast(TaskDequequeOptions, options).take_newest
+        except AttributeError:
+            try:
+                take_newest = cast(
+                    TaskDequequeOptions,
+                    cast(ApiDefaults, self._api._defaults).task_dequeque_options,
+                ).take_newest
+            except AttributeError:
+                pass
+
         while True:
-            [channel_bytes, data_bytes] = self._api._redis.blpop(
-                hash_key(self._id, key=key),
-            )
+            if take_newest:
+                [channel_bytes, data_bytes] = self._api._redis.brpop(
+                    hash_key(self._id, key=key),
+                )
+            else:
+                [channel_bytes, data_bytes] = self._api._redis.blpop(
+                    hash_key(self._id, key=key),
+                )
+
             wrapped_payload = from_json_to_any(data_bytes)
             if hasattr(self, "_returns_task"):
                 returns_id = wrapped_payload[0]

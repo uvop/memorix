@@ -18,10 +18,10 @@ export class MemorixApi extends MemorixClientApi {
   };
 
   pubsub = {
-    message: this.getPubsubItem<undefined, string>("message"),
+    message: this.getPubsubItemNoKey<string>("message"),
   };
 
   task = {
-    runAlgo: this.getTaskItem<undefined, string, Animal>("runAlgo", true),
+    runAlgo: this.getTaskItemNoKey<string, Animal>("runAlgo", true),
   };
 }

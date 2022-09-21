@@ -59,6 +59,18 @@
     [
       "@semantic-release/exec",
       {
+        "prepareCmd": "(cd ../docs && npm install && npm run build)"
+      }
+    ],
+    [
+      "@qiwi/semantic-release-gh-pages-plugin",
+      {
+        "src": "../../../docs/public"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
         "prepareCmd": "(cd ../../../cli && yarn install && yarn build)",
         "publishCmd": "(cd ../../../cli && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
       }

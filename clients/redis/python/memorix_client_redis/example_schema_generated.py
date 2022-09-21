@@ -1,20 +1,28 @@
 import typing
 from enum import Enum
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
     dataclass,
     MemorixClientApi,
     MemorixClientCacheApi,
     MemorixClientCacheApiItem,
-    # MemorixClientCacheApiItemItemNoKey,
+    MemorixClientCacheApiItemNoKey,
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
     MemorixClientPubSubApi,
-    # MemorixClientPubSubApiItem,
+    MemorixClientPubSubApiItem,
     MemorixClientPubSubApiItemNoKey,
     MemorixClientTaskApi,
-    # MemorixClientTaskApiItem,
+    MemorixClientTaskApiItem,
     MemorixClientTaskApiItemNoKey,
-    # MemorixClientTaskApiItemNoReturn,
-    # MemorixClientTaskApiItemNoKeyNoReturns
+    MemorixClientTaskApiItemNoReturns,
+    MemorixClientTaskApiItemNoKeyNoReturns,
+    MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
+MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
 class Animal(str, Enum):

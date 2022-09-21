@@ -15,6 +15,18 @@ describe("example schema has", () => {
     const user = await memorixApi.cache.user.get("uv");
     expect(user!.age).toBe(29);
   });
+  it("cache expire", async () => {
+    await memorixApi.cache.user.set(
+      "uv",
+      { name: "uv", age: 29 },
+      { expire: { value: 1 } }
+    );
+    const user1 = await memorixApi.cache.user.get("uv");
+    expect(user1!.age).toBe(29);
+    await new Promise((res) => setTimeout(res, 1500));
+    const user2 = await memorixApi.cache.user.get("uv");
+    expect(user2).toBe(null);
+  });
   describe("pubsub", () => {
     it("publish says how many subscribers", (done) => {
       memorixApi.pubsub.message
@@ -46,13 +58,22 @@ describe("example schema has", () => {
           memorixApi.pubsub.message.publish("hello uv");
         });
     });
+    it("subscribe gets payload with AsyncIterableIterator", async () => {
+      setTimeout(() => {
+        memorixApi.pubsub.message.publish("hello uv");
+      }, 500);
+      for await (const { payload } of memorixApi.pubsub.message.subscribe()) {
+        expect(payload).toBe("hello uv");
+        break;
+      }
+    });
   });
   describe("task", () => {
     beforeEach(async () => {
       const { stop } = await memorixApi.task.runAlgo.dequeue(() => {
         return Animal.dog;
       });
-      await new Promise((res) => setTimeout(res, 100));
+      await new Promise((res) => setTimeout(res, 1000));
       await stop();
     });
     it("queue returns the queue size", async () => {
@@ -63,28 +84,77 @@ describe("example schema has", () => {
     it("dequeue receives a message", (done) => {
       memorixApi.task.runAlgo
         .queue("uv3")
-        .then(async () => {
-          const { stop } = await memorixApi.task.runAlgo.dequeue(
-            ({ payload }) => {
-              try {
-                expect(payload).toBe("uv3");
-                done();
-              } catch (error) {
-                done(error);
-              }
-              return Animal.cat;
-            }
-          );
-          await new Promise((res) => setTimeout(res, 100));
+        .then(() => memorixApi.task.runAlgo.queue("uv4"))
+        .then(({ queueSize }) => {
+          expect(queueSize).toBe(2);
+
+          return new Promise((res) => {
+            const payloads: string[] = [];
+            let stop: any;
+            memorixApi.task.runAlgo
+              .dequeue(({ payload }) => {
+                payloads.push(payload);
+                if (payloads.length === 2) {
+                  res({
+                    payloads,
+                    stop,
+                  });
+                }
+                return Animal.cat;
+              })
+              .then((args) => {
+                stop = args.stop;
+              });
+          });
+        })
+        .then(async ({ payloads, stop }: any) => {
+          expect(payloads).toStrictEqual(["uv3", "uv4"]);
           await stop();
+          done();
+        })
+        .catch(done);
+    });
+    it("dequeue receives a message in opposite order if asked", (done) => {
+      memorixApi.task.runAlgo
+        .queue("uv6")
+        .then(() => memorixApi.task.runAlgo.queue("uv7"))
+        .then(({ queueSize }) => {
+          expect(queueSize).toBe(2);
+
+          return new Promise((res) => {
+            const payloads: string[] = [];
+            let stop: any;
+            memorixApi.task.runAlgo
+              .dequeue(
+                ({ payload }) => {
+                  payloads.push(payload);
+                  if (payloads.length === 2) {
+                    res({
+                      payloads,
+                      stop,
+                    });
+                  }
+                  return Animal.cat;
+                },
+                { takeNewest: true }
+              )
+              .then((args) => {
+                stop = args.stop;
+              });
+          });
+        })
+        .then(async ({ payloads, stop }: any) => {
+          expect(payloads).toStrictEqual(["uv7", "uv6"]);
+          await stop();
+          done();
         })
         .catch(done);
     });
     it("queue receives a returns", async () => {
       const { stop } = await memorixApi.task.runAlgo.dequeue(({ payload }) =>
-        payload === "uv4" ? Animal.person : Animal.dog
+        payload === "uv5" ? Animal.person : Animal.dog
       );
-      const { getReturns } = await memorixApi.task.runAlgo.queue("uv4");
+      const { getReturns } = await memorixApi.task.runAlgo.queue("uv5");
       const returns = await getReturns();
       expect(returns).toBe(Animal.person);
       await stop();

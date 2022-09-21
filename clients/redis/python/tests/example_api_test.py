@@ -1,5 +1,11 @@
 import os
-from .example_schema_generated import Animal, MemorixApi, User
+from .example_schema_generated import (
+    Animal,
+    MemorixApi,
+    User,
+    MemorixClientCacheSetOptions,
+    MemorixClientCacheSetOptionsExpire,
+)
 import multiprocessing
 from time import sleep
 
@@ -30,6 +36,29 @@ def test_cache() -> None:
     if user is None:
         raise Exception("Didn't get user from redis")
     assert user.age == 29
+
+
+def test_cache_expire() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    memorix_api.cache.user.set(
+        "uv",
+        User(name="uv", age=29),
+        MemorixClientCacheSetOptions(
+            expire=MemorixClientCacheSetOptionsExpire(
+                value=500,
+                is_in_ms=True,
+            ),
+        ),
+    )
+
+    user1 = memorix_api.cache.user.get("uv")
+    if user1 is None:
+        raise Exception("Didn't get user from redis")
+    assert user1.age == 29
+    sleep(0.7)
+    user2 = memorix_api.cache.user.get("uv")
+    assert user2 is None
 
 
 def test_pubsub() -> None:
