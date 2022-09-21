@@ -633,10 +633,10 @@
   dependencies:
     "@types/node" "*"
 
-"@unimonkiez/semantic-release-python@2.5.31":
-  version "2.5.31"
-  resolved "https://registry.yarnpkg.com/@unimonkiez/semantic-release-python/-/semantic-release-python-2.5.31.tgz#318797caa09013781619f9b2ffe8be916c81ea5a"
-  integrity sha512-zuQqJ1vQ9yJ44v1J/k1E3t70cWqS2sYSdd1BqgsGzdeeO2zQe+JYmfej4qcIuUk2B6c8GbGJlJYCNF74oQ2hsg==
+"@unimonkiez/semantic-release-python@2.5.32":
+  version "2.5.32"
+  resolved "https://registry.yarnpkg.com/@unimonkiez/semantic-release-python/-/semantic-release-python-2.5.32.tgz#3627fdc198fc958be45af567120ca5f3c7592881"
+  integrity sha512-p6hbwnldgWU8ZS14i+Bbtc2TbnvBK+iIsPKcteaPgJLRGR/yEo4V6fPiadpwhD15aISROz2xwiE5l5OIbC871g==
   dependencies:
     execa "^4.1.0"
     form-data "^3.0.1"
