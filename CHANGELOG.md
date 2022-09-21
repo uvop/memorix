@@ -1,3 +1,10 @@
+# [1.0.0-rc.18](https://github.com/uvop/memorix/compare/v1.0.0-rc.17...v1.0.0-rc.18) (2022-09-21)
+
+
+### Bug Fixes
+
+* try publish again ([e51593c](https://github.com/uvop/memorix/commit/e51593cd322c03de7e8f2d89578d9b3ddf494d5d))
+
 # [1.0.0-rc.17](https://github.com/uvop/memorix/compare/v1.0.0-rc.16...v1.0.0-rc.17) (2022-09-21)
 
 
