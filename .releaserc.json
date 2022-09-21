@@ -63,9 +63,15 @@
       }
     ],
     [
-      "@qiwi/semantic-release-gh-pages-plugin",
+      "@qiwi/semrel-metabranch",
       {
-        "src": "./docs/public"
+        "publish": {
+          "action": "push",
+          "branch": "gh-pages",
+          "from": "./docs/public",
+          "to": "./",
+          "message": "update docs ${nextRelease.gitTag}"
+        }
       }
     ],
     [
