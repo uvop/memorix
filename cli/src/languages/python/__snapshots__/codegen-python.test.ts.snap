@@ -7,10 +7,14 @@ from memorix_client_redis import (  # noqa: F401
     MemorixClientApi, 
     MemorixClientCacheApi, 
     MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemItemNoKey, 
-    MemorixClientCacheSetOptions, 
-    MemorixClientCacheSetOptionsExpire
+    MemorixClientCacheApiItemNoKey, 
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
 
 @dataclass
@@ -49,10 +53,14 @@ from memorix_client_redis import (  # noqa: F401
     MemorixClientApi, 
     MemorixClientCacheApi, 
     MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemItemNoKey, 
-    MemorixClientCacheSetOptions, 
-    MemorixClientCacheSetOptionsExpire
+    MemorixClientCacheApiItemNoKey, 
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
 
 @dataclass
@@ -86,10 +94,14 @@ from memorix_client_redis import (  # noqa: F401
     MemorixClientApi, 
     MemorixClientCacheApi, 
     MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemItemNoKey, 
-    MemorixClientCacheSetOptions, 
-    MemorixClientCacheSetOptionsExpire
+    MemorixClientCacheApiItemNoKey, 
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
 
 class MemorixCacheApi(MemorixClientCacheApi):
@@ -117,10 +129,14 @@ from memorix_client_redis import (  # noqa: F401
     MemorixClientApi, 
     MemorixClientCacheApi, 
     MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemItemNoKey, 
-    MemorixClientCacheSetOptions, 
-    MemorixClientCacheSetOptionsExpire
+    MemorixClientCacheApiItemNoKey, 
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
 
 @dataclass
@@ -151,8 +167,11 @@ exports[`python codegen enum can generate 1`] = `
 "import typing
 from enum import Enum
 from memorix_client_redis import (  # noqa: F401
-    dataclass
+    dataclass,
 )
+
+
+
 
 
 class Animals(str, Enum):
@@ -164,8 +183,11 @@ class Animals(str, Enum):
 exports[`python codegen model can generate from 2 models 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -182,8 +204,11 @@ class User2(object):
 exports[`python codegen model can generate from model 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -196,8 +221,11 @@ class User(object):
 exports[`python codegen model can generate from model with array 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -216,8 +244,11 @@ class User(object):
 exports[`python codegen model can generate from model within model 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -234,8 +265,11 @@ class User(object):
 exports[`python codegen model can generate from model within model within a model 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -263,8 +297,11 @@ from memorix_client_redis import (  # noqa: F401
     MemorixClientApi, 
     MemorixClientPubSubApi, 
     MemorixClientPubSubApiItem, 
-    MemorixClientPubSubApiItemNoKey
+    MemorixClientPubSubApiItemNoKey,
 )
+
+
+
 
 
 class MemorixPubSubApi(MemorixClientPubSubApi):
@@ -293,10 +330,13 @@ from memorix_client_redis import (  # noqa: F401
     MemorixClientTaskApi, 
     MemorixClientTaskApiItem, 
     MemorixClientTaskApiItemNoKey, 
-    MemorixClientTaskApiItemNoReturn, 
+    MemorixClientTaskApiItemNoReturns, 
     MemorixClientTaskApiItemNoKeyNoReturns, 
-    MemorixClientTaskDequequeOptions
+    MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
 )
+
+
+MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
 class MemorixTaskApi(MemorixClientTaskApi):

@@ -141,7 +141,10 @@ class TaskItem(Generic[KT, PT, RT]):
             take_newest = cast(TaskDequequeOptions, options).take_newest
         except AttributeError:
             try:
-                take_newest = cast(TaskDequequeOptions, cast(ApiDefaults, self._api._defaults).task_dequeque_options).take_newest
+                take_newest = cast(
+                    TaskDequequeOptions,
+                    cast(ApiDefaults, self._api._defaults).task_dequeque_options,
+                ).take_newest
             except AttributeError:
                 pass
 

@@ -100,8 +100,12 @@ ${getTabs(1)}dataclass${[""]
               `${getTabs(1)}MemorixClientCacheApi`,
               `${getTabs(1)}MemorixClientCacheApiItem`,
               `${getTabs(1)}MemorixClientCacheApiItemNoKey`,
-              `${getTabs(1)}MemorixClientCacheSetOptions`,
-              `${getTabs(1)}MemorixClientCacheSetOptionsExpire`,
+              `${getTabs(
+                1
+              )}MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions`,
+              `${getTabs(
+                1
+              )}MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire`,
             ]
           : []
       )
@@ -122,13 +126,34 @@ ${getTabs(1)}dataclass${[""]
               `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
               `${getTabs(1)}MemorixClientTaskApiItemNoReturns`,
               `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
-              `${getTabs(1)}MemorixClientTaskDequequeOptions`,
+              `${getTabs(
+                1
+              )}MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions`,
             ]
           : []
       )
-      .join(", \n")}
+      .join(", \n")},
 )`,
   ]
+    .concat(
+      []
+        .concat(
+          hasCache
+            ? [
+                `MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions`,
+                `MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire`,
+              ]
+            : []
+        )
+        .concat(
+          hasTask
+            ? [
+                `MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions`,
+              ]
+            : []
+        )
+        .join("\n")
+    )
     .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToPython))
     .concat(
       blocks.filter((b) => b.type === BlockTypes.model).map(blockToPython)

@@ -42,7 +42,10 @@ class CacheItem(Generic[KT, PT]):
             expire = cast(CacheSetOptions, options).expire
         except AttributeError:
             try:
-                expire = cast(CacheSetOptions, cast(ApiDefaults, self._api._defaults).cache_set_options).expire
+                expire = cast(
+                    CacheSetOptions,
+                    cast(ApiDefaults, self._api._defaults).cache_set_options,
+                ).expire
             except AttributeError:
                 pass
 
