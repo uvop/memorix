@@ -99,7 +99,7 @@ ${getTabs(1)}dataclass${[""]
           ? [
               `${getTabs(1)}MemorixClientCacheApi`,
               `${getTabs(1)}MemorixClientCacheApiItem`,
-              `${getTabs(1)}MemorixClientCacheApiItemItemNoKey`,
+              `${getTabs(1)}MemorixClientCacheApiItemNoKey`,
               `${getTabs(1)}MemorixClientCacheSetOptions`,
               `${getTabs(1)}MemorixClientCacheSetOptionsExpire`,
             ]
@@ -120,7 +120,7 @@ ${getTabs(1)}dataclass${[""]
               `${getTabs(1)}MemorixClientTaskApi`,
               `${getTabs(1)}MemorixClientTaskApiItem`,
               `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
-              `${getTabs(1)}MemorixClientTaskApiItemNoReturn`,
+              `${getTabs(1)}MemorixClientTaskApiItemNoReturns`,
               `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
               `${getTabs(1)}MemorixClientTaskDequequeOptions`,
             ]

@@ -10,8 +10,8 @@ class ApiDefaults(object):
         cache_set_options: Optional[CacheSetOptions] = None,
         task_dequeque_options: Optional[TaskDequequeOptions] = None,
     ) -> None:
-        self.cache_set_options = self.cache_set_options
-        self.task_dequeque_options = self.task_dequeque_options
+        self.cache_set_options = cache_set_options
+        self.task_dequeque_options = task_dequeque_options
 
 
 class Api(object):

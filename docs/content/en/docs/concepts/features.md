@@ -126,7 +126,9 @@ You can define cache options or override them within you usage
 // Global cache options
 const memorixApi = new MemorixApi({
   redisUrl: "redis://localhost:6379/0",
-  cacheOptions: { ... },
+  defaults: {
+    cacheSetOptions: { ... }
+  },
 });
 
 // Overriden cache options
@@ -140,26 +142,33 @@ await memorixApi.cache.hello.set(
 {{% tab name="Python" %}}
 
 ```python
-from src.generated_schema import MemorixApi, MemorixApiCacheOptions
-
-memorix_api = MemorixApi(
-  redis_url="redis://localhost:6379/0",
-  cache_options=MemorixApiCacheOptions(...),
+from src.generated_schema import (
+  MemorixApi,
+  MemorixClientApiDefaults,
+  MemorixClientCacheSetOptions,
 )
 
+# Global cache options
+memorix_api = MemorixApi(
+  redis_url="redis://localhost:6379/0",
+  defaults=MemorixClientApiDefaults(
+    cache_set_options=MemorixClientCacheSetOptions(...),
+  ),
+)
+
+# Overriden cache options
 memorix_api.cache.hello.set(
   "world",
-  MemorixApiCacheOptions(...),
+  MemorixClientCacheSetOptions(...),
 )
 ```
 
 {{% /tab %}}
 {{< /tabs >}}
 
-| name       | Type     | Description                                                                  |
-| :--------- | :------- | :--------------------------------------------------------------------------- |
-| expireInS  | `int`    | How many seconds until the data is expired and can be deleted from the cache |
-| expireInMS | `number` | Same as `expireInS` just in milliseconds                                     |
+| name   | Type                                | Default       | Description                                                                                    |
+| :----- | :---------------------------------- | :------------ | :--------------------------------------------------------------------------------------------- |
+| expire | { value: `int`, isInMs: `boolean` } | No expiration | How many seconds (or milliseconds) until the data is expired and can be deleted from the cache |
 
 ## PubSub
 
@@ -342,3 +351,55 @@ print(res.value) # Should print "true"
 
 {{% /tab %}}
 {{< /tabs >}}
+
+### Task options
+
+You can define cache options or override them within you usage
+
+{{< tabs >}}
+{{% tab name="Node.js" %}}
+
+```js
+// Global task options
+const memorixApi = new MemorixApi({
+  redisUrl: "redis://localhost:6379/0",
+  defaults: {
+    taskDequequeOptions: { ... }
+  },
+});
+
+// Overriden task options
+await { stop } = memorixApi.task.addMessage.dequeue(async ({ payload }) => {
+  console.log("Got payload: " + payload);
+}, { ... });
+```
+
+{{% /tab %}}
+{{% tab name="Python" %}}
+
+```python
+from src.generated_schema import (
+  MemorixApi,
+  MemorixClientApiDefaults,
+  MemorixClientTaskDequeueOptions,
+)
+
+# Global task options
+memorix_api = MemorixApi(
+  redis_url="redis://localhost:6379/0",
+  defaults=MemorixClientApiDefaults(
+    task_dequeue_options=MemorixClientTaskDequeueOptions(...),
+  ),
+)
+
+# Overriden task options
+for res in memorix_api.task.addMessage.dequeque(MemorixClientTaskDequeueOptions(...)):
+    print("Got payload: ", res.payload)
+```
+
+{{% /tab %}}
+{{< /tabs >}}
+
+| name       | Type      | Default | Description                                                              |
+| :--------- | :-------- | :------ | :----------------------------------------------------------------------- |
+| takeNewest | `boolean` | False   | By default dequeque is FIFO (first in first out), this option changes it |

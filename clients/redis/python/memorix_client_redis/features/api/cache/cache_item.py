@@ -1,7 +1,7 @@
 from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json
 from typing import Generic, Optional, Type, TypeVar, cast
-from ..api import Api
+from ..api import Api, ApiDefaults
 from .cache_options import CacheSetOptions, CacheSetOptionsExpire
 
 KT = TypeVar("KT")
@@ -39,10 +39,10 @@ class CacheItem(Generic[KT, PT]):
     ) -> Optional[bool]:
         expire: Optional[CacheSetOptionsExpire] = None
         try:
-            expire = options.expire
+            expire = cast(CacheSetOptions, options).expire
         except AttributeError:
             try:
-                expire = self._api._defaults.cache_set_options.expire
+                expire = cast(CacheSetOptions, cast(ApiDefaults, self._api._defaults).cache_set_options).expire
             except AttributeError:
                 pass
 

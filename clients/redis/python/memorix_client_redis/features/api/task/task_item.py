@@ -15,7 +15,7 @@ from typing import (
     cast,
     Optional,
 )
-from ..api import Api
+from ..api import Api, ApiDefaults
 from .task_options import TaskDequequeOptions
 
 KT = TypeVar("KT")
@@ -138,10 +138,10 @@ class TaskItem(Generic[KT, PT, RT]):
     ) -> Generator[TaskItemDequeueWithReturns[PT], None, None]:
         take_newest: Optional[bool] = None
         try:
-            take_newest = options.take_newest
+            take_newest = cast(TaskDequequeOptions, options).take_newest
         except AttributeError:
             try:
-                take_newest = self._api._defaults.task_dequeque_options.take_newest
+                take_newest = cast(TaskDequequeOptions, cast(ApiDefaults, self._api._defaults).task_dequeque_options).take_newest
             except AttributeError:
                 pass
 
