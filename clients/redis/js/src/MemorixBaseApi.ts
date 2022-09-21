@@ -81,10 +81,8 @@ export class MemorixBaseApi {
     };
   }
 
-  getCacheItemNoKey<Payload>(
-    ...itemArgs: Parameters<typeof this.getCacheItem>
-  ): CacheItemNoKey<Payload> {
-    const item = this.getCacheItem<undefined, Payload>(...itemArgs);
+  getCacheItemNoKey<Payload>(...itemArgs: any[]): CacheItemNoKey<Payload> {
+    const item = (this.getCacheItem as any)(...itemArgs);
 
     return {
       get: (...args) => item.get(undefined, ...args),
@@ -149,10 +147,8 @@ export class MemorixBaseApi {
     };
   }
 
-  getPubsubItemNoKey<Payload>(
-    ...itemArgs: Parameters<typeof this.getPubsubItem>
-  ): PubsubItemNoKey<Payload> {
-    const item = this.getPubsubItem<undefined, Payload>(...itemArgs);
+  getPubsubItemNoKey<Payload>(...itemArgs: any[]): PubsubItemNoKey<Payload> {
+    const item = (this.getPubsubItem as any)(...itemArgs);
 
     return {
       publish: (...args) => item.publish(undefined, ...args),
