@@ -14,19 +14,19 @@
       {
         "assets": [
           {
-            "path": "../../../cli/lib/release/memorix-macos-arm64.tar.gz",
+            "path": "./cli/lib/release/memorix-macos-arm64.tar.gz",
             "label": "memorix-macos-arm64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/release/memorix-macos-x64.tar.gz",
+            "path": "./cli/lib/release/memorix-macos-x64.tar.gz",
             "label": "memorix-macos-x64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/release/memorix-linux-x64.tar.gz",
+            "path": "./cli/lib/release/memorix-linux-x64.tar.gz",
             "label": "memorix-linux-x64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/release/memorix-win-x64.zip",
+            "path": "./cli/lib/release/memorix-win-x64.zip",
             "label": "memorix-win-x64.zip"
           }
         ]
@@ -35,50 +35,50 @@
     [
       "@semantic-release/changelog",
       {
-        "changelogFile": "../../../CHANGELOG.md"
+        "changelogFile": "./CHANGELOG.md"
       }
     ],
     [
       "@semantic-release/npm",
       {
-        "pkgRoot": "../js"
+        "pkgRoot": "./clients/redis/js"
       }
     ],
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "(cd ../js && yarn install && yarn build)"
+        "prepareCmd": "(cd ./clients/redis/js && yarn install && yarn build)"
       }
     ],
     [
-      "semantic-release-python",
+      "@unimonkiez/semantic-release-python",
       {
-        "setupPy": "./pyproject.toml"
+        "setupPy": "./clients/redis/python/pyproject.toml"
       }
     ],
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "(cd ../../../docs && npm install && npm run build)"
+        "prepareCmd": "(cd ./docs && npm install && npm run build)"
       }
     ],
     [
       "@qiwi/semantic-release-gh-pages-plugin",
       {
-        "src": "../../../docs/public"
+        "src": "./docs/public"
       }
     ],
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "(cd ../../../cli && yarn install && yarn build)",
-        "publishCmd": "(cd ../../../cli && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
+        "prepareCmd": "(cd ./cli && yarn install && yarn build)",
+        "publishCmd": "(cd ./cli && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["../../../CHANGELOG.md"]
+        "assets": ["./CHANGELOG.md"]
       }
     ]
   ]
