@@ -1,7 +1,7 @@
 from typing import Optional
 
 
-class TaskDequequeOptions:
+class TaskDequequeOptions(object):
     def __init__(
         self,
         take_newest: Optional[bool] = False,

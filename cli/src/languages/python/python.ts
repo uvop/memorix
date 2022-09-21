@@ -91,7 +91,7 @@ export const codegenPython: (schema: string) => string = (schema) => {
 from enum import Enum`
         : ""
     }
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
 ${getTabs(1)}dataclass${[""]
       .concat(hasApi ? [`${getTabs(1)}MemorixClientApi`] : [])
       .concat(
@@ -100,6 +100,8 @@ ${getTabs(1)}dataclass${[""]
               `${getTabs(1)}MemorixClientCacheApi`,
               `${getTabs(1)}MemorixClientCacheApiItem`,
               `${getTabs(1)}MemorixClientCacheApiItemItemNoKey`,
+              `${getTabs(1)}MemorixClientCacheSetOptions`,
+              `${getTabs(1)}MemorixClientCacheSetOptionsExpire`,
             ]
           : []
       )
@@ -120,6 +122,7 @@ ${getTabs(1)}dataclass${[""]
               `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
               `${getTabs(1)}MemorixClientTaskApiItemNoReturn`,
               `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
+              `${getTabs(1)}MemorixClientTaskDequequeOptions`,
             ]
           : []
       )

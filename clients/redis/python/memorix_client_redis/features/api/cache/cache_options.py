@@ -1,7 +1,7 @@
 from typing import Optional
 
 
-class CacheSetOptionsExpire:
+class CacheSetOptionsExpire(object):
     def __init__(
         self,
         value: int,
@@ -11,7 +11,7 @@ class CacheSetOptionsExpire:
         self.is_in_ms = is_in_ms
 
 
-class CacheSetOptions:
+class CacheSetOptions(object):
     def __init__(
         self,
         expire: Optional[CacheSetOptionsExpire] = None,

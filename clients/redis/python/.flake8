@@ -51,6 +51,9 @@ ignore =
     WPS454, # I'll raise what I want
     WPS221, # So many jones
     WPS600, # So many jones
+    WPS505, # Nested try because no optional chaining
+    WPS420, # Nothing wrong about pass
+    WPS235, # Complicated library
 per-file-ignores =
     __init__.py: 
         # import unused, for exporting

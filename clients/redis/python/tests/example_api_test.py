@@ -45,7 +45,10 @@ def test_cache_expire() -> None:
         "uv",
         User(name="uv", age=29),
         MemorixClientCacheSetOptions(
-            expire=MemorixClientCacheSetOptionsExpire(value=500, is_in_ms=True)
+            expire=MemorixClientCacheSetOptionsExpire(
+                value=500,
+                is_in_ms=True,
+            ),
         ),
     )
 
@@ -55,7 +58,7 @@ def test_cache_expire() -> None:
     assert user1.age == 29
     sleep(0.7)
     user2 = memorix_api.cache.user.get("uv")
-    assert user2 == None
+    assert user2 is None
 
 
 def test_pubsub() -> None:

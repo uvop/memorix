@@ -50,8 +50,8 @@ class CacheItem(Generic[KT, PT]):
         return self._api._redis.set(
             hash_key(self._id, key=key),
             payload_json,
-            ex=expire.value if expire is not None and expire.is_in_ms != True else None,
-            px=expire.value if expire is not None and expire.is_in_ms == True else None,
+            ex=expire.value if expire is not None and not expire.is_in_ms else None,
+            px=expire.value if expire is not None and expire.is_in_ms else None,
         )
 
     async def async_set(self, key: KT, payload: PT) -> Optional[bool]:

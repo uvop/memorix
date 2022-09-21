@@ -1,19 +1,22 @@
 import typing
 from enum import Enum
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
     dataclass,
     MemorixClientApi,
     MemorixClientCacheApi,
     MemorixClientCacheApiItem,
-    # MemorixClientCacheApiItemItemNoKey,
+    MemorixClientCacheApiItemItemNoKey,
+    MemorixClientCacheSetOptions,
+    MemorixClientCacheSetOptionsExpire,
     MemorixClientPubSubApi,
-    # MemorixClientPubSubApiItem,
+    MemorixClientPubSubApiItem,
     MemorixClientPubSubApiItemNoKey,
     MemorixClientTaskApi,
-    # MemorixClientTaskApiItem,
+    MemorixClientTaskApiItem,
     MemorixClientTaskApiItemNoKey,
-    # MemorixClientTaskApiItemNoReturn,
-    # MemorixClientTaskApiItemNoKeyNoReturns
+    MemorixClientTaskApiItemNoReturn,
+    MemorixClientTaskApiItemNoKeyNoReturns,
+    MemorixClientTaskDequequeOptions,
 )
 
 
