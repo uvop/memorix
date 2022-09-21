@@ -1,3 +1,10 @@
+# [1.0.0-rc.19](https://github.com/uvop/memorix/compare/v1.0.0-rc.18...v1.0.0-rc.19) (2022-09-21)
+
+
+### Bug Fixes
+
+* try deploy docs ([c442ed5](https://github.com/uvop/memorix/commit/c442ed5f2533762e4659d1dab3ce35748bb54243))
+
 # [1.0.0-rc.18](https://github.com/uvop/memorix/compare/v1.0.0-rc.17...v1.0.0-rc.18) (2022-09-21)
 
 
