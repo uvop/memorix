@@ -1,3 +1,10 @@
+# [1.0.0-rc.20](https://github.com/uvop/memorix/compare/v1.0.0-rc.19...v1.0.0-rc.20) (2022-09-23)
+
+
+### Bug Fixes
+
+* Some docs improvements ([18af5ac](https://github.com/uvop/memorix/commit/18af5acea629732155f47262bf0a15cb73773bab))
+
 # [1.0.0-rc.19](https://github.com/uvop/memorix/compare/v1.0.0-rc.18...v1.0.0-rc.19) (2022-09-21)
 
 
