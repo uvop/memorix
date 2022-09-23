@@ -13,7 +13,7 @@ toc: true
 
 In the [Quick start]({{< relref "quick-start" >}}) guide we got to put a simple string value in and out of the in-memory cache, here we'll learn how to define more complicated data structures.
 
-All the data transported through Memorix is parsed to and from JSON format, so to support that we introduced couple of ways to define your data (again, inspired by [GraphQL](https://graphql.org/graphql-js/basic-types/)).
+All the data transported through Memorix is parsed to and from JSON format, so to support that we introduced several of ways to define your data (again, inspired by [GraphQL](https://graphql.org/graphql-js/basic-types/)).
 
 ## Primitive
 
@@ -76,7 +76,7 @@ You can either define your objects inline or outside of your usage, for example
 
 ## Nullable
 
-All fields are required by default, to make them nullable, Simple add `?` after the type
+All fields are required by default, to make them nullable, Simply add `?` after the type
 
 ```
 Model Person {

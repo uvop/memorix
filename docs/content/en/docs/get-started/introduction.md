@@ -13,16 +13,17 @@ weight: 100
 toc: true
 ---
 
-## What is memorix
+## What is Memorix
 
-Memorix is an open source next-generation in-memory ORM, it has the following parts:
+Memorix is an open source next-generation in-memory ORM.  
+It has the following parts:
 
-- `Memorix CLI` - A command line interface tool to generate code from your schema, whatever your code is written in.
-- `Memorix clients` - Runtime dependencies to the projects you use memorix in.
+- `Memorix CLI` - A command line interface tool to generate code from your schema, regardless of language your code is written in.
+- `Memorix clients` - Runtime dependencies to the projects you use Memorix in.
 
-## Why memorix
+## Why Memorix
 
 Memorix was heavily inspired by [GraphQL](https://graphql.org/) and [Prisma](https://www.prisma.io/).  
-Both of them cover persistent memory layer and message layer, and they do it great.
+Both of them cover the persistent memory and messaging layers, and they do it great.
 
-Once your application needs in-memory service, such as Redis, Kafka, RabbitMQ and etc, we started to feel the pain of not having such great tools for the cache layer, and decided to make our own!
+Though, once your application needs in-memory service, such as Redis, Kafka, RabbitMQ and etc, we felt these pains of not having a good enough tool for the cache layer, so we decided to write/make our own!

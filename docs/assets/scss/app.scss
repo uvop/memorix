@@ -37,3 +37,7 @@
 /** Import custom styles */
 @import "tabs";
 @import "common/custom";
+
+*:has(#onThisPage) {
+  padding-bottom: 12px;
+}

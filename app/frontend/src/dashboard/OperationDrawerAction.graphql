@@ -1,9 +1,0 @@
-query ActionData($id: ID!) {
-  action(id: $id) {
-    id
-    name
-    key
-    payload
-    returns
-  }
-}

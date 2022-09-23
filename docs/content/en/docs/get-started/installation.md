@@ -13,9 +13,9 @@ toc: true
 
 ## CLI installation
 
-Follow the instructions below to install `memorix-cli` on your machine depends on the platform you use
+Follow the instructions below to install `memorix-cli` on your machine depending on the platform you use
 
-### macOS, linux and WSL installation (recommanded)
+### macOS, linux and WSL installation (recommended)
 
 #### Requirements
 
@@ -51,14 +51,14 @@ This way also supports windows without WSL, but is a bit more tedious
 
 - Go to [memorix releases on github](https://github.com/uvop/memorix/releases).
 - Download the asset for your platform.
-- Extract the executable somewhere in on your computer, like `~/.memorix/bin/*`.
+- Extract the executable somewhere on your computer, like `~/.memorix/bin/*`.
 - Add the folder extracted to to your `PATH` environment variable.
 - Done!
 
 ## Client installation
 
-To start using memorix, first head into your project/s and install the run-time dependency.  
-The only support at the moment is for Redis.
+To start using Memorix, first head into your project(s) and install the run-time dependency.  
+At the moment, only Redis is supported
 
 ### Redis client
 
@@ -91,4 +91,4 @@ poetry add memorix-client-redis
 {{% /tab %}}
 {{< /tabs >}}
 
-Now we're ready to start using memorix! Head on to [Quick start →]({{< relref "quick-start" >}})
+Now we're ready to start using Memorix! Head on to [Quick start →]({{< relref "quick-start" >}})

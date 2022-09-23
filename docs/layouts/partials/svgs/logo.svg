@@ -1,4 +1,4 @@
-<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="2689.490234375 0 585.469970703125 483.8999996185303" width="{{ .size }}" height="auto" fill="currentColor">
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="2689.490234375 0 585.469970703125 483.8999996185303" style="width: {{ .size }}; height: auto; fill: currentColor;{{ if .maxSize }} max-width: {{ .maxSize }};{{end}}">
     <path d="M1141.11,1144.7h-15.33v-32.24l-15.14,32.24h-17l-15.14-32.24v32.24h-15.23v-63.18h16.9l22,46.36,21.93-46.36h17Z" transform="translate(1626.22 -662.1)" />
     <path d="M1222.12,1081.52v14.12H1189v10.87h27.68v13.2H1189v10.87h33.16v14.12h-48.4v-63.18Z" transform="translate(1626.22 -662.1)" />
     <path d="M1330.91,1144.7h-15.32v-32.24l-15.15,32.24h-17l-15.14-32.24v32.24h-15.24v-63.18H1270l22,46.36,21.92-46.36h17Z" transform="translate(1626.22 -662.1)" />

@@ -11,7 +11,7 @@ weight: 630
 toc: true
 ---
 
-We'll show the different applications you can use memorix for, and how to do so
+We'll show the different applications you can use Memorix for, and how to do so
 
 ## Cache
 
@@ -117,7 +117,7 @@ print(hello_value) # Should print "world"
 
 ### Cache options
 
-You can define cache options or override them within you usage
+You can define cache options or override them within your usage
 
 {{< tabs >}}
 {{% tab name="Node.js" %}}
@@ -172,8 +172,8 @@ memorix_api.cache.hello.set(
 
 ## PubSub
 
-PubSub (in short for publish and subscribe) is a feature used to broadcast messages from one publisher to many subscribers.  
-Unline [`Cache`](#cache), the message isn't saved anywhere and is just passed along.  
+PubSub (short for publish and subscribe) is a feature used to broadcast messages from one publisher to many subscribers.  
+Unlike [`Cache`](#cache), the message isn't saved anywhere and is just passed along.  
 To use it simply add a line to your PubSub scope in `schema.memorix`:
 
 ```
@@ -234,13 +234,13 @@ memorix_api.pubsub.message.publish(payload="Will be published but no one is list
 
 ### PubSub key
 
-PubSub also support key the same as [`Cache`](#cache) supports it, you can use it to publish a message to a specific subscriber or a group.
+PubSub also supports key the same as [`Cache`](#cache) supports it, you can use it to publish a message to a specific subscriber or a group.
 
 ## Task
 
-Task is the last feature memorix supports, it sends a message to a specific queue, and one of the listeners picks it up.
+Task is the last feature Memorix supports, it sends a message to a specific queue, and one of the listeners picks it up.
 
-> Unline [`PubSub`](#pubsub), even if no one is listening to a queue, it's saved and will be passed to a single listener once it starts listening.
+> Unlike [`PubSub`](#pubsub), even if no one is listening to a queue, it's saved and will be passed to a single listener once it starts listening.
 
 To use it simply add a line to your Task scope in `schema.memorix`:
 
@@ -295,12 +295,12 @@ for res in memorix_api.task.addMessage.dequeque():
 
 ### Task key
 
-Task also support key the same as [`Cache`](#cache) and [`PubSub`](#pubsub) support it, you can use put messages in different queues.
+Task also supports key the same as [`Cache`](#cache) and [`PubSub`](#pubsub) support it, you can use put messages in different queues.
 
 ### Task retuns
 
 Since Task sends a message from a single machine to another, we also support sending a response back to the original sender!
-To use it simple add `returns` to your specific `Task`
+To use it simply add `returns` to your specific `Task`
 
 ```
 Task {
@@ -354,7 +354,7 @@ print(res.value) # Should print "true"
 
 ### Task options
 
-You can define cache options or override them within you usage
+You can define cache options or override them within your usage
 
 {{< tabs >}}
 {{% tab name="Node.js" %}}

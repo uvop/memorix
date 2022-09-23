@@ -4,7 +4,7 @@ bullets:
   [
     {
       title: "Type safety 👷‍♀️",
-      description: "Enjoy type safety over all of your in-memory and message-broker services through a simple, yet a powerful API",
+      description: "Enjoy type safety over all of your in-memory and message-broker services through a simple, yet powerful API",
     },
     {
       title: "Schema first 📝",
@@ -16,7 +16,7 @@ bullets:
     },
     {
       title: "Multi service support 📡",
-      description: "Written in mind to support many in-memory and message-broker services, such as Redis",
+      description: "Written with support for many in-memory and message-broker services in mind, such as Redis",
     },
   ]
 date: 2020-10-06T08:47:36+00:00

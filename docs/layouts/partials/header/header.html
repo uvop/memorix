@@ -11,7 +11,7 @@
 <header class="navbar navbar-expand-lg navbar-light doks-navbar">
   <nav class="container-{{ if .Site.Params.options.fullWidth }}fluid{{ else }}xxl{{ end }} flex-wrap flex-lg-nowrap" aria-label="Main navigation">
     <a class="navbar-brand order-0 d-inline-flex" href="{{ .Site.Params.Baseurl }}" aria-label="{{ .Site.Params.Title }}">
-        {{ partial "svgs/logo-just-text.svg" (dict "size" 96 ) }}
+        {{ partial "svgs/logo-just-text.svg" (dict "size" "96px" ) }}
     </a>
     {{ if (in .Site.Params.sections.sectionNav .Section) -}}
     <button class="btn btn-link order-0 ms-auto d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">

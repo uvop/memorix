@@ -33,7 +33,7 @@ First, lets create a basic schema.
       }
   }
   ```
-- Now we can generate code for the schema we created using the `memorix CLI` (and on future schema changes)
+- Now we can generate code for the schema we created using the `Memorix CLI` (and on future schema changes)
   {{< tabs >}}
   {{% tab name="Node.js" %}}
   Add this to your `package.json`
@@ -68,9 +68,9 @@ First, lets create a basic schema.
   {{% /tab %}}
   {{< /tabs >}}
 
-  - Now api files have been generated in your source code folder, you can start using the api.
+  - Now API files have been generated in your source code folder, you can start using the API.
 
-## Using the schema api (redis)
+## Using the schema API (redis)
 
 Here is a code example of how to use the schema we created
 
@@ -113,5 +113,5 @@ print(hello_value) # Should print "world"
 {{% /tab %}}
 {{< /tabs >}}
 
-You can explore the api we created using you IDE since it's fully typed.
-To learn which more features memorix has to offer, start by checking [defining your data →]({{< relref "data" >}})
+You can explore the API we created using your IDE since it's fully typed.
+To learn which other features Memorix has to offer, start by checking [defining your data →]({{< relref "data" >}})
