@@ -1,7 +1,7 @@
 <div style="display: flex; background: white; margin-bottom: 24px">
   <div style="flex: 1 1 auto;"></div>
   <div style="flex: 1 1 auto; text-align: center;">
-    <img style="width: 200px; height: auto" src="https://raw.githubusercontent.com/uvop/memorix/next/docs/static/doks.png" />
+    <img style="width: 200px; height: auto" src="https://raw.githubusercontent.com/uvop/memorix/master/docs/static/doks.png" />
   </div>
   <div style="flex: 1 1 auto;"></div>
 </div>
