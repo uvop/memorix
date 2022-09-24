@@ -15,19 +15,18 @@ export enum Languages {
 
 export class MemorixReportApi extends MemorixBaseApi {
   task = {
-    registerDevice: this.getTaskItem<
-      undefined,
+    registerDevice: this.getTaskItemNoKey<
       {
         schema: string;
         language: Languages;
       },
       string
-    >("registerDevice"),
-    deregisterDevice: this.getTaskItem<undefined, string, undefined>(
-      "deregisterDevice"
+    >("registerDevice", true),
+    deregisterDevice: this.getTaskItemNoKey<string, undefined>(
+      "deregisterDevice",
+      false
     ),
-    sendEvent: this.getTaskItem<
-      undefined,
+    sendEvent: this.getTaskItemNoKey<
       {
         deviceId: string;
         type: EventTypes;
@@ -38,15 +37,14 @@ export class MemorixReportApi extends MemorixBaseApi {
         };
       },
       undefined
-    >("sendEvent"),
-    sendEventEnd: this.getTaskItem<
-      undefined,
+    >("sendEvent", false),
+    sendEventEnd: this.getTaskItemNoKey<
       {
         deviceId: string;
         type: EventTypes;
         traceId: string;
       },
       undefined
-    >("sendEventEnd"),
+    >("sendEventEnd", false),
   };
 }

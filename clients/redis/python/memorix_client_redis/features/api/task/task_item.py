@@ -1,13 +1,10 @@
-from dataclasses import dataclass
 from memorix_client_redis.features.api.hash_key import hash_key
 from uuid import uuid4
 from memorix_client_redis.features.api.json import (
     from_dict,
-    from_json,
-    from_json_to_dict,
+    from_json_to_any,
     to_json,
 )
-from ..api import Api
 from typing import (
     Any,
     AsyncGenerator,
@@ -18,6 +15,8 @@ from typing import (
     cast,
     Optional,
 )
+from ..api import Api, ApiDefaults
+from .task_options import TaskDequequeOptions
 
 KT = TypeVar("KT")
 PT = TypeVar("PT")
@@ -87,12 +86,6 @@ class TaskItemDequeueWithReturns(TaskItemDequeue[PT]):
         )
 
 
-@dataclass
-class TaskPayload(Generic[PT]):
-    returns_id: str
-    payload: PT
-
-
 class TaskItem(Generic[KT, PT, RT]):
     def __init__(
         self,
@@ -115,13 +108,13 @@ class TaskItem(Generic[KT, PT, RT]):
         returns_id: str | None = None
         if hasattr(self, "_returns_task"):
             returns_id = str(uuid4())
-            payload_json = to_json(TaskPayload(returns_id=returns_id, payload=payload))
+            wrapped_payload_json = to_json([returns_id, payload])
         else:
-            payload_json = to_json(payload)
+            wrapped_payload_json = to_json([payload])
 
         queue_size = self._api._redis.rpush(
             hash_key(self._id, key=key),
-            payload_json,
+            wrapped_payload_json,
         )
         if returns_id is None:
             return cast(
@@ -138,24 +131,46 @@ class TaskItem(Generic[KT, PT, RT]):
         print("queue async")
         return cast(TaskItemQueueWithReturns[RT], None)
 
-    def dequeue(self, key: KT) -> Generator[TaskItemDequeueWithReturns[PT], None, None]:
-        while True:
-            [channel_bytes, data_bytes] = self._api._redis.blpop(
-                hash_key(self._id, key=key),
-            )
-            if hasattr(self, "_returns_task"):
-                dict = from_json_to_dict(data_bytes)
-                payload_dict = dict["payload"]
-                payload = from_dict(dict=payload_dict, data_class=self._payload_class)
-                returns_id = dict["returns_id"]
+    def dequeue(
+        self,
+        key: KT,
+        options: Optional[TaskDequequeOptions] = None,
+    ) -> Generator[TaskItemDequeueWithReturns[PT], None, None]:
+        take_newest: Optional[bool] = None
+        try:
+            take_newest = cast(TaskDequequeOptions, options).take_newest
+        except AttributeError:
+            try:
+                take_newest = cast(
+                    TaskDequequeOptions,
+                    cast(ApiDefaults, self._api._defaults).task_dequeque_options,
+                ).take_newest
+            except AttributeError:
+                pass
 
+        while True:
+            if take_newest:
+                [channel_bytes, data_bytes] = self._api._redis.brpop(
+                    hash_key(self._id, key=key),
+                )
+            else:
+                [channel_bytes, data_bytes] = self._api._redis.blpop(
+                    hash_key(self._id, key=key),
+                )
+
+            wrapped_payload = from_json_to_any(data_bytes)
+            if hasattr(self, "_returns_task"):
+                returns_id = wrapped_payload[0]
+                payload_dict = wrapped_payload[1]
+                payload = from_dict(dict=payload_dict, data_class=self._payload_class)
                 yield TaskItemDequeueWithReturns(
                     payload=payload,
                     returns_id=returns_id,
                     returns_task=self._returns_task,
                 )
             else:
-                payload = from_json(value=data_bytes, data_class=self._payload_class)
+                payload_dict = wrapped_payload[0]
+                payload = from_dict(dict=payload_dict, data_class=self._payload_class)
 
                 yield cast(
                     TaskItemDequeueWithReturns[PT],

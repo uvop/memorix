@@ -1,10 +1,6 @@
 {
   "folders": [
     {
-      "name": "report-schema",
-      "path": "report-schema"
-    },
-    {
       "name": "cli",
       "path": "cli"
     },
@@ -15,18 +11,6 @@
     {
       "name": "client-redis-python",
       "path": "clients/redis/python"
-    },
-    {
-      "name": "app-frontend",
-      "path": "app/frontend"
-    },
-    {
-      "name": "app-backend",
-      "path": "app/backend"
-    },
-    {
-      "name": "development-image",
-      "path": "development-image"
     }
   ],
   "settings": {
@@ -36,8 +20,6 @@
     "recommendations": [
       "esbenp.prettier-vscode",
       "dbaeumer.vscode-eslint",
-      "GraphQL.vscode-graphql",
-      "prisma.prisma",
       "ms-python.python",
       "ms-python.vscode-pylance"
     ]

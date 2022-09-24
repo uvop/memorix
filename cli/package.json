@@ -1,5 +1,5 @@
 {
-  "name": "@memorix/cli",
+  "name": "memorix",
   "version": "1.0.0",
   "private": true,
   "description": "",
@@ -7,9 +7,9 @@
   "author": "",
   "bin": "./lib/src/index.js",
   "scripts": {
-    "build": "tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json && (cd lib && mkdir linux-x64 macos-x64 macos-arm64 win-x64 && mv cli-linux-x64 linux-x64/memorix && mv cli-macos-x64 macos-x64/memorix && mv cli-macos-arm64 macos-arm64/memorix && mv cli-win-x64.exe win-x64/memorix.exe)",
+    "build": "rm -rf lib && tsc --project tsconfig.json && yarn fix-ts-path && pkg package.json && ./scripts/create-dist.sh",
     "dev": "jest --watch",
-    "fix-ts-path": "ts-node -r tsconfig-paths/register bin/fix-ts-path.ts lib src",
+    "fix-ts-path": "ts-node -r tsconfig-paths/register scripts/fix-ts-path.ts lib src",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "cli": "ts-node -r tsconfig-paths/register src/index.ts",
@@ -55,16 +55,16 @@
     "typescript": "^4.6.3"
   },
   "pkg": {
+    "assets": "node_modules/figlet/fonts/*",
     "targets": [
       "node16-linux-x64",
       "node16-macos-x64",
       "node16-macos-arm64",
       "node16-win-x64"
     ],
-    "outputPath": "lib"
+    "outputPath": "lib/release"
   },
   "dependencies": {
-    "chalk": "^5.0.1",
     "clear": "^0.1.0",
     "figlet": "^1.5.2",
     "yargs": "^17.5.1"

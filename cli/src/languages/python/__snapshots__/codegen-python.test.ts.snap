@@ -2,13 +2,19 @@
 
 exports[`python codegen cache can generate also with model 1`] = `
 "import typing
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
     dataclass, 
     MemorixClientApi, 
     MemorixClientCacheApi, 
     MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemItemNoKey
+    MemorixClientCacheApiItemNoKey, 
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
 
 @dataclass
@@ -42,13 +48,19 @@ class MemorixApi(MemorixClientApi):
 
 exports[`python codegen cache can generate with inline object type 1`] = `
 "import typing
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
     dataclass, 
     MemorixClientApi, 
     MemorixClientCacheApi, 
     MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemItemNoKey
+    MemorixClientCacheApiItemNoKey, 
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
 
 @dataclass
@@ -77,13 +89,19 @@ class MemorixApi(MemorixClientApi):
 
 exports[`python codegen cache can generate with inline types 1`] = `
 "import typing
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
     dataclass, 
     MemorixClientApi, 
     MemorixClientCacheApi, 
     MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemItemNoKey
+    MemorixClientCacheApiItemNoKey, 
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
 
 class MemorixCacheApi(MemorixClientCacheApi):
@@ -106,13 +124,19 @@ class MemorixApi(MemorixClientApi):
 
 exports[`python codegen cache can generate with no key 1`] = `
 "import typing
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
     dataclass, 
     MemorixClientApi, 
     MemorixClientCacheApi, 
     MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemItemNoKey
+    MemorixClientCacheApiItemNoKey, 
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
+
+
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
 
 @dataclass
@@ -142,12 +166,15 @@ class MemorixApi(MemorixClientApi):
 exports[`python codegen enum can generate 1`] = `
 "import typing
 from enum import Enum
-from memorix_client_redis import (
-    dataclass
+from memorix_client_redis import (  # noqa: F401
+    dataclass,
 )
 
 
-class Animals(Enum):
+
+
+
+class Animals(str, Enum):
     dog = \\"dog\\"
     cat = \\"cat\\"
     person = \\"person\\""
@@ -155,9 +182,12 @@ class Animals(Enum):
 
 exports[`python codegen model can generate from 2 models 1`] = `
 "import typing
-from memorix_client_redis import (
-    dataclass
+from memorix_client_redis import (  # noqa: F401
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -173,9 +203,12 @@ class User2(object):
 
 exports[`python codegen model can generate from model 1`] = `
 "import typing
-from memorix_client_redis import (
-    dataclass
+from memorix_client_redis import (  # noqa: F401
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -187,9 +220,12 @@ class User(object):
 
 exports[`python codegen model can generate from model with array 1`] = `
 "import typing
-from memorix_client_redis import (
-    dataclass
+from memorix_client_redis import (  # noqa: F401
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -207,9 +243,12 @@ class User(object):
 
 exports[`python codegen model can generate from model within model 1`] = `
 "import typing
-from memorix_client_redis import (
-    dataclass
+from memorix_client_redis import (  # noqa: F401
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -225,9 +264,12 @@ class User(object):
 
 exports[`python codegen model can generate from model within model within a model 1`] = `
 "import typing
-from memorix_client_redis import (
-    dataclass
+from memorix_client_redis import (  # noqa: F401
+    dataclass,
 )
+
+
+
 
 
 @dataclass
@@ -250,13 +292,16 @@ class User(object):
 
 exports[`python codegen pubsub can generate with inline types 1`] = `
 "import typing
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
     dataclass, 
     MemorixClientApi, 
     MemorixClientPubSubApi, 
     MemorixClientPubSubApiItem, 
-    MemorixClientPubSubApiItemNoKey
+    MemorixClientPubSubApiItemNoKey,
 )
+
+
+
 
 
 class MemorixPubSubApi(MemorixClientPubSubApi):
@@ -279,15 +324,19 @@ class MemorixApi(MemorixClientApi):
 
 exports[`python codegen task can generate with inline types 1`] = `
 "import typing
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
     dataclass, 
     MemorixClientApi, 
     MemorixClientTaskApi, 
     MemorixClientTaskApiItem, 
     MemorixClientTaskApiItemNoKey, 
-    MemorixClientTaskApiItemNoReturn, 
-    MemorixClientTaskApiItemNoKeyNoReturns
+    MemorixClientTaskApiItemNoReturns, 
+    MemorixClientTaskApiItemNoKeyNoReturns, 
+    MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
 )
+
+
+MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
 class MemorixTaskApi(MemorixClientTaskApi):

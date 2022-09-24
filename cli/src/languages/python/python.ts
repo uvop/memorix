@@ -36,7 +36,7 @@ ${b.properties
   .map((p) => `${getTabs(1)}${p.name}: ${valueToPython(p.value)}`)
   .join(`\n`)}`;
     case BlockTypes.enum:
-      return `class ${b.name}(Enum):
+      return `class ${b.name}(str, Enum):
 ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
     case BlockTypes.cache:
     case BlockTypes.pubsub:
@@ -91,7 +91,7 @@ export const codegenPython: (schema: string) => string = (schema) => {
 from enum import Enum`
         : ""
     }
-from memorix_client_redis import (
+from memorix_client_redis import (  # noqa: F401
 ${getTabs(1)}dataclass${[""]
       .concat(hasApi ? [`${getTabs(1)}MemorixClientApi`] : [])
       .concat(
@@ -99,7 +99,13 @@ ${getTabs(1)}dataclass${[""]
           ? [
               `${getTabs(1)}MemorixClientCacheApi`,
               `${getTabs(1)}MemorixClientCacheApiItem`,
-              `${getTabs(1)}MemorixClientCacheApiItemItemNoKey`,
+              `${getTabs(1)}MemorixClientCacheApiItemNoKey`,
+              `${getTabs(
+                1
+              )}MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions`,
+              `${getTabs(
+                1
+              )}MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire`,
             ]
           : []
       )
@@ -118,14 +124,36 @@ ${getTabs(1)}dataclass${[""]
               `${getTabs(1)}MemorixClientTaskApi`,
               `${getTabs(1)}MemorixClientTaskApiItem`,
               `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
-              `${getTabs(1)}MemorixClientTaskApiItemNoReturn`,
+              `${getTabs(1)}MemorixClientTaskApiItemNoReturns`,
               `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
+              `${getTabs(
+                1
+              )}MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions`,
             ]
           : []
       )
-      .join(", \n")}
+      .join(", \n")},
 )`,
   ]
+    .concat(
+      []
+        .concat(
+          hasCache
+            ? [
+                `MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions`,
+                `MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire`,
+              ]
+            : []
+        )
+        .concat(
+          hasTask
+            ? [
+                `MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions`,
+              ]
+            : []
+        )
+        .join("\n")
+    )
     .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToPython))
     .concat(
       blocks.filter((b) => b.type === BlockTypes.model).map(blockToPython)

@@ -60,13 +60,20 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
 
       return `${b.values
         .map((v) => {
-          return `${getTabs(2)}${v.name}: this.${itemFn}<${
-            v.key ? `${valueToTs(v.key, 2)}` : "undefined"
-          }, ${valueToTs(v.payload, 2)}${
+          return `${getTabs(2)}${v.name}: this.${itemFn}${
+            v.key ? "" : "NoKey"
+          }<${v.key ? `${valueToTs(v.key, 2)}, ` : ""}${valueToTs(
+            v.payload,
+            2
+          )}${
             hasReturns && "returns" in v
               ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
               : ""
-          }>("${v.name}"),`;
+          }>("${v.name}"${
+            b.type === BlockTypes.task
+              ? `, ${v.returns ? "true" : "false"}`
+              : ""
+          }),`;
         })
         .join("\n")}`;
     }
@@ -98,34 +105,38 @@ export const codegenTs: (schema: string) => string = (schema) => {
     .concat(
       hasApi
         ? `export class MemorixApi extends MemorixClientApi {
-${
-  hasCache
-    ? `${getTabs(1)}cache = {
+${[]
+  .concat(
+    hasCache
+      ? `${getTabs(1)}cache = {
 ${blocks
   .filter((b) => b.type === BlockTypes.cache)
   .map(blockToTs)
   .join("\n")}
 ${getTabs(1)}};`
-    : ""
-}${
-            hasPubsub
-              ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
+      : []
+  )
+  .concat(
+    hasPubsub
+      ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
 ${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
   .map(blockToTs)
   .join("\n")}
 ${getTabs(1)}};`
-              : ""
-          }${
-            hasTask
-              ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
+      : []
+  )
+  .concat(
+    hasTask
+      ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
 ${blocks
   .filter((b) => b.type === BlockTypes.task)
   .map(blockToTs)
   .join("\n")}
 ${getTabs(1)}};`
-              : ""
-          }
+      : []
+  )
+  .join("\n")}
 }`
         : []
     )

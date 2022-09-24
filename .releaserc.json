@@ -1,49 +1,33 @@
 {
   "branches": [
-    "release",
-    {
-      "name": "master",
-      "prerelease": "rc"
-    },
+    "master",
     {
       "name": "next",
-      "prerelease": "a"
+      "prerelease": "rc"
     }
   ],
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/npm",
-      {
-        "pkgRoot": "../js"
-      }
-    ],
-    [
-      "semantic-release-python",
-      {
-        "setupPy": "./pyproject.toml"
-      }
-    ],
-    [
       "@semantic-release/github",
       {
         "assets": [
           {
-            "path": "../../../cli/lib/macos-arm64/memorix",
-            "label": "macos-arm64"
+            "path": "./cli/lib/release/memorix-macos-arm64.tar.gz",
+            "label": "memorix-macos-arm64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/macos-x64/memorix",
-            "label": "macos-x64"
+            "path": "./cli/lib/release/memorix-macos-x64.tar.gz",
+            "label": "memorix-macos-x64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/linux-x64/memorix",
-            "label": "linux-x64"
+            "path": "./cli/lib/release/memorix-linux-x64.tar.gz",
+            "label": "memorix-linux-x64.tar.gz"
           },
           {
-            "path": "../../../cli/lib/win-x64/memorix.exe",
-            "label": "win-x64"
+            "path": "./cli/lib/release/memorix-win-x64.zip",
+            "label": "memorix-win-x64.zip"
           }
         ]
       }
@@ -51,13 +35,56 @@
     [
       "@semantic-release/changelog",
       {
-        "changelogFile": "../../../CHANGELOG.md"
+        "changelogFile": "./CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/npm",
+      {
+        "pkgRoot": "./clients/redis/js"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "(cd ./clients/redis/js && yarn install && yarn build)"
+      }
+    ],
+    [
+      "@unimonkiez/semantic-release-python",
+      {
+        "setupPy": "./clients/redis/python/pyproject.toml"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "(cd ./docs && npm install && npm run build)"
+      }
+    ],
+    [
+      "@qiwi/semrel-metabranch",
+      {
+        "publish": {
+          "action": "push",
+          "branch": "gh-pages",
+          "from": "./docs/public",
+          "to": "./",
+          "message": "update docs ${nextRelease.gitTag}"
+        }
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "(cd ./cli && yarn install && yarn build)",
+        "publishCmd": "(cd ./cli && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["../../../CHANGELOG.md"]
+        "assets": ["./CHANGELOG.md"]
       }
     ]
   ]

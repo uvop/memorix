@@ -10,7 +10,7 @@ export type User = {
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
-    adminId: this.getCacheItem<undefined, string | undefined>(\\"adminId\\"),
+    adminId: this.getCacheItemNoKey<string | undefined>(\\"adminId\\"),
     user: this.getCacheItem<string, User>(\\"user\\"),
   };
 }"
@@ -44,7 +44,7 @@ exports[`ts codegen cache can generate with no key 1`] = `
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
-    user: this.getCacheItem<undefined, {
+    user: this.getCacheItemNoKey<{
       name: string;
       age?: number;
     } | undefined>(\\"user\\"),
@@ -127,7 +127,7 @@ exports[`ts codegen task can generate with inline types 1`] = `
 
 export class MemorixApi extends MemorixClientApi {
   task = {
-    doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\"),
+    doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true),
   };
 }"
 `;

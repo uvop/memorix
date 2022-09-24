@@ -3,7 +3,7 @@
   "configurations": [
     {
       "type": "node",
-      "runtimeExecutable": "/Users/yuvalsaraf/.nvm/versions/node/v16.14.2/bin/node",
+      "runtimeExecutable": "/Users/yuvalsaraf/.nvm/versions/node/v16.17.0/bin/node",
       "request": "launch",
       "name": "Jest single run all tests",
       "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
@@ -13,7 +13,7 @@
     },
     {
       "type": "node",
-      "runtimeExecutable": "/Users/yuvalsaraf/.nvm/versions/node/v16.14.2/bin/node",
+      "runtimeExecutable": "/Users/yuvalsaraf/.nvm/versions/node/v16.17.0/bin/node",
       "request": "launch",
       "name": "Jest watch all tests",
       "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
@@ -23,7 +23,7 @@
     },
     {
       "type": "node",
-      "runtimeExecutable": "/Users/yuvalsaraf/.nvm/versions/node/v16.14.2/bin/node",
+      "runtimeExecutable": "/Users/yuvalsaraf/.nvm/versions/node/v16.17.0/bin/node",
       "request": "launch",
       "name": "Jest watch current file",
       "program": "${workspaceFolder}/node_modules/jest/bin/jest",

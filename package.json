@@ -9,13 +9,15 @@
     "release": "semantic-release"
   },
   "dependencies": {
+    "@qiwi/semrel-metabranch": "^3.1.2",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/commit-analyzer": "^9.0.2",
+    "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^8.0.5",
     "@semantic-release/npm": "^9.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
-    "semantic-release": "^19.0.5",
-    "semantic-release-python": "^2.5.30"
+    "@unimonkiez/semantic-release-python": "2.5.34",
+    "semantic-release": "^19.0.5"
   }
 }

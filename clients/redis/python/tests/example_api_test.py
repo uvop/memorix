@@ -1,5 +1,11 @@
 import os
-from .example_schema_generated import Animal, MemorixApi, User
+from .example_schema_generated import (
+    Animal,
+    MemorixApi,
+    User,
+    MemorixClientCacheSetOptions,
+    MemorixClientCacheSetOptionsExpire,
+)
 import multiprocessing
 from time import sleep
 
@@ -16,7 +22,9 @@ def listen_to_algo() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
     for res in memorix_api.task.runAlgo.dequeue():
         print("task:", res.payload)
-        res.send_returns(returns=Animal.dog)
+        res.send_returns(
+            returns=Animal.cat if res.payload == "send me cat" else Animal.dog,
+        )
 
 
 def test_cache() -> None:
@@ -28,6 +36,29 @@ def test_cache() -> None:
     if user is None:
         raise Exception("Didn't get user from redis")
     assert user.age == 29
+
+
+def test_cache_expire() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    memorix_api.cache.user.set(
+        "uv",
+        User(name="uv", age=29),
+        MemorixClientCacheSetOptions(
+            expire=MemorixClientCacheSetOptionsExpire(
+                value=500,
+                is_in_ms=True,
+            ),
+        ),
+    )
+
+    user1 = memorix_api.cache.user.get("uv")
+    if user1 is None:
+        raise Exception("Didn't get user from redis")
+    assert user1.age == 29
+    sleep(0.7)
+    user2 = memorix_api.cache.user.get("uv")
+    assert user2 is None
 
 
 def test_pubsub() -> None:
@@ -47,6 +78,15 @@ def test_pubsub() -> None:
     process2.kill()
 
 
+def test_task_dequeue() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+    memorix_api.task.runAlgo.queue(payload="send me dog")
+    sleep(0.1)
+    for res in memorix_api.task.runAlgo.dequeue():
+        assert res.payload == "send me dog"
+        break
+
+
 def test_task() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
@@ -56,13 +96,13 @@ def test_task() -> None:
     task2.start()
 
     sleep(0.1)
-    queue = memorix_api.task.runAlgo.queue(payload="Im a task!")
+    queue = memorix_api.task.runAlgo.queue(payload="send me cat")
 
     assert queue.queue_size == 1
 
     res = queue.get_returns()
 
-    assert res == Animal.dog
+    assert res.value == Animal.cat.value
 
     sleep(0.1)
 
