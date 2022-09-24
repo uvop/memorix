@@ -1,11 +1,7 @@
-<div style="display: flex; background: white; margin-bottom: 24px">
-  <div style="flex: 1 1 auto;"></div>
-  <div style="flex: 1 1 auto; text-align: center;">
-    <img style="width: 200px; height: auto" src="https://raw.githubusercontent.com/uvop/memorix/master/docs/static/doks.png" />
-  </div>
-  <div style="flex: 1 1 auto;"></div>
+<div align="center" style="background: red;">
+  <img style="width: 200px; height: auto" src="https://raw.githubusercontent.com/uvop/memorix/master/docs/static/doks.png" >
 </div>
-
+<br>
 <div align="center">
   <a href="https://www.npmjs.com/package/@memorix/client-redis"><img src="https://img.shields.io/npm/v/@memorix%2Fclient-redis.svg?style=flat" /></a>
   <a href="https://pypi.org/project/memorix-client-redis"><img src="https://img.shields.io/pypi/v/memorix-client-redis.svg?style=flat" /></a>
