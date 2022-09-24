@@ -1,3 +1,15 @@
+# 1.0.0 (2022-09-24)
+
+
+### Bug Fixes
+
+* Initial release ([#20](https://github.com/uvop/memorix/issues/20)) ([c8d568e](https://github.com/uvop/memorix/commit/c8d568e8f277d4b697c7043cd16926d290201e02)), closes [#16](https://github.com/uvop/memorix/issues/16) [#19](https://github.com/uvop/memorix/issues/19)
+* Make python work (only sync mode) ([#14](https://github.com/uvop/memorix/issues/14)) ([f10738e](https://github.com/uvop/memorix/commit/f10738e5854b45df732e93aadfbd690babc823c8))
+* rerelease ([1df0388](https://github.com/uvop/memorix/commit/1df03887677110fc700860ddc11bb9c212a7697c))
+* retrigger release, and fix some master changes ([fd2a49d](https://github.com/uvop/memorix/commit/fd2a49d38671b2b32140b4b98e0cefdc3db6b7c8))
+* try publish from master ([05a120c](https://github.com/uvop/memorix/commit/05a120ce4fd82e67beb0a98abb448709a179507c))
+* try release ([79a26fb](https://github.com/uvop/memorix/commit/79a26fb6fdf54dcfa548e0c46e8994cc9c6ec1a7))
+
 # [1.0.0-rc.20](https://github.com/uvop/memorix/compare/v1.0.0-rc.19...v1.0.0-rc.20) (2022-09-23)
 
 
