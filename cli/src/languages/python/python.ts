@@ -209,9 +209,11 @@ ${blocks
     .concat(
       hasApi
         ? `class MemorixApi(MemorixClientApi):
-${getTabs(
-  1
-)}def __init__(self, redis_url: str, defaults: typing.Optional[MemorixClientApiDefaults] = None) -> None:
+${getTabs(1)}def __init__(
+${getTabs(2)}self,
+${getTabs(2)}redis_url: str,
+${getTabs(2)}defaults: typing.Optional[MemorixClientApiDefaults] = None,
+${getTabs(1)}) -> None:
 ${getTabs(2)}super().__init__(redis_url=redis_url, defaults=defaults)
 
 ${[]

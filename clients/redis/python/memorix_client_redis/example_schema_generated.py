@@ -79,7 +79,11 @@ class MemorixTaskApi(MemorixClientTaskApi):
 
 
 class MemorixApi(MemorixClientApi):
-    def __init__(self, redis_url: str, defaults: typing.Optional[MemorixClientApiDefaults] = None) -> None:
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
         super().__init__(redis_url=redis_url, defaults=defaults)
 
         self.cache = MemorixCacheApi(self)
