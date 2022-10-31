@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/uvop/memorix/compare/v1.0.0...v1.0.1) (2022-10-31)
+
+
+### Bug Fixes
+
+* Patched some minor bugs ([#24](https://github.com/uvop/memorix/issues/24)) ([c3099fb](https://github.com/uvop/memorix/commit/c3099fb7eea132d2677f8913c59536215b798f8d)), closes [#21](https://github.com/uvop/memorix/issues/21) [#22](https://github.com/uvop/memorix/issues/22) [#23](https://github.com/uvop/memorix/issues/23)
+
 # 1.0.0 (2022-09-24)
 
 
