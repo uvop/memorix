@@ -3,6 +3,7 @@ from enum import Enum
 from memorix_client_redis import (  # noqa: F401
     dataclass,
     MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
     MemorixClientCacheApi,
     MemorixClientCacheApiItem,
     MemorixClientCacheApiItemNoKey,
@@ -20,6 +21,7 @@ from memorix_client_redis import (  # noqa: F401
 )
 
 
+MemorixClientApiDefaults = _MemorixClientApiDefaults
 MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
 MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
@@ -37,6 +39,11 @@ class User(object):
     age: typing.Optional[int]
 
 
+@dataclass
+class CacheUser2Key(object):
+    id: str
+
+
 class MemorixCacheApi(MemorixClientCacheApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
@@ -49,6 +56,11 @@ class MemorixCacheApi(MemorixClientCacheApi):
         self.user = MemorixClientCacheApiItem[str, User](
             api=self._api,
             id="user",
+            payload_class=User,
+        )
+        self.user2 = MemorixClientCacheApiItem[CacheUser2Key, User](
+            api=self._api,
+            id="user2",
             payload_class=User,
         )
 
@@ -77,8 +89,12 @@ class MemorixTaskApi(MemorixClientTaskApi):
 
 
 class MemorixApi(MemorixClientApi):
-    def __init__(self, redis_url: str) -> None:
-        super().__init__(redis_url=redis_url)
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
 
         self.cache = MemorixCacheApi(self)
         self.pubsub = MemorixPubSubApi(self)

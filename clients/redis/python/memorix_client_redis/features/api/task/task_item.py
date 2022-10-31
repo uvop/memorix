@@ -3,7 +3,8 @@ from uuid import uuid4
 from memorix_client_redis.features.api.json import (
     from_dict,
     from_json_to_any,
-    to_json,
+    to_json_serializable,
+    to_json_from_json_serializable,
 )
 from typing import (
     Any,
@@ -106,11 +107,16 @@ class TaskItem(Generic[KT, PT, RT]):
 
     def queue(self, key: KT, payload: PT) -> TaskItemQueueWithReturns[RT]:
         returns_id: str | None = None
+        payload_serializeable = to_json_serializable(value=payload)
         if hasattr(self, "_returns_task"):
             returns_id = str(uuid4())
-            wrapped_payload_json = to_json([returns_id, payload])
+            wrapped_payload_json = to_json_from_json_serializable(
+                [returns_id, payload_serializeable],
+            )
         else:
-            wrapped_payload_json = to_json([payload])
+            wrapped_payload_json = to_json_from_json_serializable(
+                [payload_serializeable],
+            )
 
         queue_size = self._api._redis.rpush(
             hash_key(self._id, key=key),

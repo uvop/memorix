@@ -93,7 +93,16 @@ from enum import Enum`
     }
 from memorix_client_redis import (  # noqa: F401
 ${getTabs(1)}dataclass${[""]
-      .concat(hasApi ? [`${getTabs(1)}MemorixClientApi`] : [])
+      .concat(
+        hasApi
+          ? [
+              `${getTabs(1)}MemorixClientApi`,
+              `${getTabs(
+                1
+              )}MemorixClientApiDefaults as _MemorixClientApiDefaults`,
+            ]
+          : []
+      )
       .concat(
         hasCache
           ? [
@@ -132,11 +141,14 @@ ${getTabs(1)}dataclass${[""]
             ]
           : []
       )
-      .join(", \n")},
+      .join(",\n")},
 )`,
   ]
     .concat(
       []
+        .concat(
+          hasApi ? [`MemorixClientApiDefaults = _MemorixClientApiDefaults`] : []
+        )
         .concat(
           hasCache
             ? [
@@ -197,8 +209,12 @@ ${blocks
     .concat(
       hasApi
         ? `class MemorixApi(MemorixClientApi):
-${getTabs(1)}def __init__(self, redis_url: str) -> None:
-${getTabs(2)}super().__init__(redis_url=redis_url)
+${getTabs(1)}def __init__(
+${getTabs(2)}self,
+${getTabs(2)}redis_url: str,
+${getTabs(2)}defaults: typing.Optional[MemorixClientApiDefaults] = None,
+${getTabs(1)}) -> None:
+${getTabs(2)}super().__init__(redis_url=redis_url, defaults=defaults)
 
 ${[]
   .concat(hasCache ? `${getTabs(2)}self.cache = MemorixCacheApi(self)` : [])

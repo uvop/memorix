@@ -3,16 +3,18 @@
 exports[`python codegen cache can generate also with model 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass, 
-    MemorixClientApi, 
-    MemorixClientCacheApi, 
-    MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemNoKey, 
-    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    dataclass,
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientCacheApi,
+    MemorixClientCacheApiItem,
+    MemorixClientCacheApiItemNoKey,
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
     MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
 
 
+MemorixClientApiDefaults = _MemorixClientApiDefaults
 MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
 MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
@@ -40,8 +42,12 @@ class MemorixCacheApi(MemorixClientCacheApi):
 
 
 class MemorixApi(MemorixClientApi):
-    def __init__(self, redis_url: str) -> None:
-        super().__init__(redis_url=redis_url)
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
 
         self.cache = MemorixCacheApi(self)"
 `;
@@ -49,16 +55,18 @@ class MemorixApi(MemorixClientApi):
 exports[`python codegen cache can generate with inline object type 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass, 
-    MemorixClientApi, 
-    MemorixClientCacheApi, 
-    MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemNoKey, 
-    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    dataclass,
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientCacheApi,
+    MemorixClientCacheApiItem,
+    MemorixClientCacheApiItemNoKey,
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
     MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
 
 
+MemorixClientApiDefaults = _MemorixClientApiDefaults
 MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
 MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
@@ -81,8 +89,12 @@ class MemorixCacheApi(MemorixClientCacheApi):
 
 
 class MemorixApi(MemorixClientApi):
-    def __init__(self, redis_url: str) -> None:
-        super().__init__(redis_url=redis_url)
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
 
         self.cache = MemorixCacheApi(self)"
 `;
@@ -90,16 +102,18 @@ class MemorixApi(MemorixClientApi):
 exports[`python codegen cache can generate with inline types 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass, 
-    MemorixClientApi, 
-    MemorixClientCacheApi, 
-    MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemNoKey, 
-    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    dataclass,
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientCacheApi,
+    MemorixClientCacheApiItem,
+    MemorixClientCacheApiItemNoKey,
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
     MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
 
 
+MemorixClientApiDefaults = _MemorixClientApiDefaults
 MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
 MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
@@ -116,8 +130,12 @@ class MemorixCacheApi(MemorixClientCacheApi):
 
 
 class MemorixApi(MemorixClientApi):
-    def __init__(self, redis_url: str) -> None:
-        super().__init__(redis_url=redis_url)
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
 
         self.cache = MemorixCacheApi(self)"
 `;
@@ -125,16 +143,18 @@ class MemorixApi(MemorixClientApi):
 exports[`python codegen cache can generate with no key 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass, 
-    MemorixClientApi, 
-    MemorixClientCacheApi, 
-    MemorixClientCacheApiItem, 
-    MemorixClientCacheApiItemNoKey, 
-    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions, 
+    dataclass,
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientCacheApi,
+    MemorixClientCacheApiItem,
+    MemorixClientCacheApiItemNoKey,
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
     MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
 )
 
 
+MemorixClientApiDefaults = _MemorixClientApiDefaults
 MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
 MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
 
@@ -157,8 +177,12 @@ class MemorixCacheApi(MemorixClientCacheApi):
 
 
 class MemorixApi(MemorixClientApi):
-    def __init__(self, redis_url: str) -> None:
-        super().__init__(redis_url=redis_url)
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
 
         self.cache = MemorixCacheApi(self)"
 `;
@@ -293,15 +317,16 @@ class User(object):
 exports[`python codegen pubsub can generate with inline types 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass, 
-    MemorixClientApi, 
-    MemorixClientPubSubApi, 
-    MemorixClientPubSubApiItem, 
+    dataclass,
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientPubSubApi,
+    MemorixClientPubSubApiItem,
     MemorixClientPubSubApiItemNoKey,
 )
 
 
-
+MemorixClientApiDefaults = _MemorixClientApiDefaults
 
 
 class MemorixPubSubApi(MemorixClientPubSubApi):
@@ -316,8 +341,12 @@ class MemorixPubSubApi(MemorixClientPubSubApi):
 
 
 class MemorixApi(MemorixClientApi):
-    def __init__(self, redis_url: str) -> None:
-        super().__init__(redis_url=redis_url)
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
 
         self.pubsub = MemorixPubSubApi(self)"
 `;
@@ -325,17 +354,19 @@ class MemorixApi(MemorixClientApi):
 exports[`python codegen task can generate with inline types 1`] = `
 "import typing
 from memorix_client_redis import (  # noqa: F401
-    dataclass, 
-    MemorixClientApi, 
-    MemorixClientTaskApi, 
-    MemorixClientTaskApiItem, 
-    MemorixClientTaskApiItemNoKey, 
-    MemorixClientTaskApiItemNoReturns, 
-    MemorixClientTaskApiItemNoKeyNoReturns, 
+    dataclass,
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientTaskApi,
+    MemorixClientTaskApiItem,
+    MemorixClientTaskApiItemNoKey,
+    MemorixClientTaskApiItemNoReturns,
+    MemorixClientTaskApiItemNoKeyNoReturns,
     MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
 )
 
 
+MemorixClientApiDefaults = _MemorixClientApiDefaults
 MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
@@ -352,8 +383,12 @@ class MemorixTaskApi(MemorixClientTaskApi):
 
 
 class MemorixApi(MemorixClientApi):
-    def __init__(self, redis_url: str) -> None:
-        super().__init__(redis_url=redis_url)
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
 
         self.task = MemorixTaskApi(self)"
 `;

@@ -18,6 +18,12 @@ Cache {
         key: string
         payload: User
     }
+    user2 {
+        key: {
+            id: string
+        }
+        payload: User
+    }
 }
 
 PubSub {

@@ -19,13 +19,22 @@ def order_dict(dict: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def to_json(value: TT, sort_dict: bool = False) -> str:
+def to_json_serializable(value: TT, sort_dict: bool = False) -> Any:
     if is_dataclass(value):
         dict = asdict(value)
         if sort_dict:
             dict = order_dict(dict)
-        return json.dumps(dict, separators=(",", ":"))
+        return dict
+    return value
+
+
+def to_json_from_json_serializable(value: TT) -> str:
     return json.dumps(value, separators=(",", ":"))
+
+
+def to_json(value: TT, sort_dict: bool = False) -> str:
+    dict = to_json_serializable(value=value, sort_dict=sort_dict)
+    return to_json_from_json_serializable(value=dict)
 
 
 def from_json(value: bytes, data_class: Type[TT]) -> TT:

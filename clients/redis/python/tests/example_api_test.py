@@ -1,7 +1,9 @@
 import os
 from .example_schema_generated import (
     Animal,
+    CacheUser2Key,
     MemorixApi,
+    MemorixClientApiDefaults,
     User,
     MemorixClientCacheSetOptions,
     MemorixClientCacheSetOptionsExpire,
@@ -38,6 +40,20 @@ def test_cache() -> None:
     assert user.age == 29
 
 
+def test_cache_complex_key() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    memorix_api.cache.user2.set(
+        key=CacheUser2Key(id="uv"),
+        payload=User(name="uv", age=29),
+    )
+
+    user = memorix_api.cache.user2.get(key=CacheUser2Key(id="uv"))
+    if user is None:
+        raise Exception("Didn't get user from redis")
+    assert user.age == 29
+
+
 def test_cache_expire() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
@@ -50,6 +66,33 @@ def test_cache_expire() -> None:
                 is_in_ms=True,
             ),
         ),
+    )
+
+    user1 = memorix_api.cache.user.get("uv")
+    if user1 is None:
+        raise Exception("Didn't get user from redis")
+    assert user1.age == 29
+    sleep(0.7)
+    user2 = memorix_api.cache.user.get("uv")
+    assert user2 is None
+
+
+def test_cache_expire_defaults() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+        defaults=MemorixClientApiDefaults(
+            cache_set_options=MemorixClientCacheSetOptions(
+                expire=MemorixClientCacheSetOptionsExpire(
+                    value=500,
+                    is_in_ms=True,
+                ),
+            ),
+        ),
+    )
+
+    memorix_api.cache.user.set(
+        "uv",
+        User(name="uv", age=29),
     )
 
     user1 = memorix_api.cache.user.get("uv")
