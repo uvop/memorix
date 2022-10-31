@@ -86,7 +86,7 @@ def test_cache_expire_defaults() -> None:
                     value=500,
                     is_in_ms=True,
                 ),
-            )
+            ),
         ),
     )
 
