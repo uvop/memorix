@@ -93,7 +93,10 @@ from enum import Enum`
     }
 from memorix_client_redis import (  # noqa: F401
 ${getTabs(1)}dataclass${[""]
-      .concat(hasApi ? [`${getTabs(1)}MemorixClientApi`] : [])
+      .concat(hasApi ? [
+        `${getTabs(1)}MemorixClientApi`,
+        `${getTabs(1)}MemorixClientApiDefaults as _MemorixClientApiDefaults`
+      ] : [])
       .concat(
         hasCache
           ? [
@@ -132,11 +135,18 @@ ${getTabs(1)}dataclass${[""]
             ]
           : []
       )
-      .join(", \n")},
+      .join(",\n")},
 )`,
   ]
     .concat(
       []
+        .concat(
+          hasApi
+            ? [
+                `MemorixClientApiDefaults = _MemorixClientApiDefaults`,
+              ]
+            : []
+        )
         .concat(
           hasCache
             ? [
