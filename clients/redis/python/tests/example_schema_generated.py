@@ -39,6 +39,11 @@ class User(object):
     age: typing.Optional[int]
 
 
+@dataclass
+class CacheUser2Key(object):
+    userId: str
+
+
 class MemorixCacheApi(MemorixClientCacheApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
@@ -51,6 +56,11 @@ class MemorixCacheApi(MemorixClientCacheApi):
         self.user = MemorixClientCacheApiItem[str, User](
             api=self._api,
             id="user",
+            payload_class=User,
+        )
+        self.user2 = MemorixClientCacheApiItem[CacheUser2Key, User](
+            api=self._api,
+            id="user2",
             payload_class=User,
         )
 
