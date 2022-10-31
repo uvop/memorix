@@ -41,7 +41,7 @@ class User(object):
 
 @dataclass
 class CacheUser2Key(object):
-    userId: str
+    id: str
 
 
 class MemorixCacheApi(MemorixClientCacheApi):

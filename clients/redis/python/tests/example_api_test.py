@@ -44,11 +44,11 @@ def test_cache_complex_key() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
     memorix_api.cache.user2.set(
-        key=CacheUser2Key(userId="uv"),
+        key=CacheUser2Key(id="uv"),
         payload=User(name="uv", age=29),
     )
 
-    user = memorix_api.cache.user2.get(key=CacheUser2Key(userId="uv"))
+    user = memorix_api.cache.user2.get(key=CacheUser2Key(id="uv"))
     if user is None:
         raise Exception("Didn't get user from redis")
     assert user.age == 29

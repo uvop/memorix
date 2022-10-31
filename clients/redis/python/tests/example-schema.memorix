@@ -20,7 +20,7 @@ Cache {
     }
     user2 {
         key: {
-            userId: string
+            id: string
         }
         payload: User
     }
