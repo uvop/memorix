@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/uvop/memorix/compare/v1.0.1...v1.0.2) (2023-01-11)
+
+
+### Bug Fixes
+
+* Added a py.typed file so that mypy will know to use our type annotations ([ab6ac08](https://github.com/uvop/memorix/commit/ab6ac0834e9683474df59c0b5ab05031d990b7f4))
+
 ## [1.0.1](https://github.com/uvop/memorix/compare/v1.0.0...v1.0.1) (2022-10-31)
 
 
