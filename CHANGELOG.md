@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/uvop/memorix/compare/v1.0.4...v1.0.5) (2023-01-17)
+
+
+### Bug Fixes
+
+* Allow to define models in any order ([#31](https://github.com/uvop/memorix/issues/31)) ([15b54c0](https://github.com/uvop/memorix/commit/15b54c024f4121a4832dc92c30a6a5be836c6ba8))
+
 ## [1.0.4](https://github.com/uvop/memorix/compare/v1.0.3...v1.0.4) (2023-01-17)
 
 
