@@ -40,7 +40,7 @@ class MemorixCacheApi(MemorixClientCacheApi):
             id=\\"adminId\\",
             payload_class=typing.Optional[str],
         )
-        self.user = MemorixClientCacheApiItem[str, User](
+        self.user = MemorixClientCacheApiItem[str, \\"User\\"](
             api=self._api,
             id=\\"user\\",
             payload_class=User,
@@ -93,7 +93,7 @@ class MemorixCacheApi(MemorixClientCacheApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
 
-        self.user = MemorixClientCacheApiItem[int, typing.Optional[CacheUserPayload]](
+        self.user = MemorixClientCacheApiItem[int, typing.Optional[\\"CacheUserPayload\\"]](
             api=self._api,
             id=\\"user\\",
             payload_class=typing.Optional[CacheUserPayload],
@@ -193,7 +193,7 @@ class MemorixCacheApi(MemorixClientCacheApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
 
-        self.user = MemorixClientCacheApiItemNoKey[typing.Optional[CacheUserPayload]](
+        self.user = MemorixClientCacheApiItemNoKey[typing.Optional[\\"CacheUserPayload\\"]](
             api=self._api,
             id=\\"user\\",
             payload_class=typing.Optional[CacheUserPayload],
@@ -314,7 +314,7 @@ class UserChildren(object):
 class User(object):
     id: int
     names: typing.List[str]
-    children: typing.Optional[typing.List[typing.Optional[UserChildren]]]"
+    children: typing.Optional[typing.List[typing.Optional[\\"UserChildren\\"]]]"
 `;
 
 exports[`python codegen model can generate from model within model 1`] = `
@@ -342,7 +342,7 @@ class UserPapa(object):
 @dataclass
 class User(object):
     id: int
-    papa: UserPapa"
+    papa: \\"UserPapa\\""
 `;
 
 exports[`python codegen model can generate from model within model within a model 1`] = `
@@ -370,14 +370,14 @@ class UserPapaMama(object):
 @dataclass
 class UserPapa(object):
     name: typing.Optional[str]
-    mama: typing.Optional[UserPapaMama]
+    mama: typing.Optional[\\"UserPapaMama\\"]
     age: int
 
 
 @dataclass
 class User(object):
     id: int
-    papa: UserPapa"
+    papa: \\"UserPapa\\""
 `;
 
 exports[`python codegen pubsub can generate with inline types 1`] = `

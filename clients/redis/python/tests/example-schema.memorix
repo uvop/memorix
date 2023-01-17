@@ -11,7 +11,7 @@ Model User {
 
 Cache {
     bestStr {
-        payload: str
+        payload: string
     }
     favoriteAnimal {
         key: string

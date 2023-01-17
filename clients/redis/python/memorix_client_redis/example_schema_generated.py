@@ -49,12 +49,12 @@ class MemorixCacheApi(MemorixClientCacheApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
 
-        self.favoriteAnimal = MemorixClientCacheApiItem[str, Animal](
+        self.favoriteAnimal = MemorixClientCacheApiItem[str, "Animal"](
             api=self._api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixClientCacheApiItem[str, User](
+        self.user = MemorixClientCacheApiItem[str, "User"](
             api=self._api,
             id="user",
             payload_class=User,
@@ -76,7 +76,7 @@ class MemorixTaskApi(MemorixClientTaskApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
 
-        self.runAlgo = MemorixClientTaskApiItemNoKey[str, Animal](
+        self.runAlgo = MemorixClientTaskApiItemNoKey[str, "Animal"](
             api=self._api,
             id="runAlgo",
             payload_class=str,
