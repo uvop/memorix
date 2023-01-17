@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/uvop/memorix/compare/v1.0.3...v1.0.4) (2023-01-17)
+
+
+### Bug Fixes
+
+* Typing import error ([#29](https://github.com/uvop/memorix/issues/29)) ([7eb9efc](https://github.com/uvop/memorix/commit/7eb9efc16531db7348452e981ed4e14f008ea557))
+
 ## [1.0.3](https://github.com/uvop/memorix/compare/v1.0.2...v1.0.3) (2023-01-17)
 
 
