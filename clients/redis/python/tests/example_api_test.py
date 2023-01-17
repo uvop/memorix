@@ -1,3 +1,6 @@
+import typing
+import asyncio
+import pytest
 import os
 from .example_schema_generated import (
     Animal,
@@ -10,6 +13,7 @@ from .example_schema_generated import (
 )
 import multiprocessing
 from time import sleep
+from .timeout import with_timeout
 
 redis_url = os.environ["REDIS_URL"]
 
@@ -38,6 +42,30 @@ def test_cache() -> None:
     if user is None:
         raise Exception("Didn't get user from redis")
     assert user.age == 29
+
+
+@pytest.mark.asyncio
+async def test_cache_async() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    await memorix_api.cache.user.async_set("uv", User(name="uv", age=29))
+
+    user = await memorix_api.cache.user.async_get("uv")
+    if user is None:
+        raise Exception("Didn't get user from redis")
+    assert user.age == 29
+
+
+@pytest.mark.asyncio
+async def test_cache_async_no_key() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    await memorix_api.cache.bestStr.async_set("uv")
+
+    best_str = await memorix_api.cache.bestStr.async_get()
+    if best_str is None:
+        raise Exception("Didn't get bestStr from redis")
+    assert best_str == "uv"
 
 
 def test_cache_complex_key() -> None:
@@ -119,6 +147,28 @@ def test_pubsub() -> None:
     sleep(0.1)
     process1.kill()
     process2.kill()
+
+
+@pytest.mark.asyncio
+@with_timeout(3)
+async def test_pubsub_async() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    res = await memorix_api.pubsub.message.async_publish(payload="Heyy")
+    assert res.subscribers_size == 0
+
+    async def publish_in_a_second() -> None:  # noqa: WPS430 # Using here only
+        await asyncio.sleep(1)
+        await memorix_api.pubsub.message.async_publish(payload="buddy")
+
+    asyncio.create_task(publish_in_a_second())
+
+    payload: typing.Optional[str] = None
+    async for message in memorix_api.pubsub.message.async_subscribe():
+        payload = message.payload
+        break
+
+    assert payload == "buddy"
 
 
 def test_task_dequeue() -> None:

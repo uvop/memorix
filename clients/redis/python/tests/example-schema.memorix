@@ -10,6 +10,9 @@ Model User {
 }
 
 Cache {
+    bestStr {
+        payload: str
+    }
     favoriteAnimal {
         key: string
         payload: Animal

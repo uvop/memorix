@@ -85,63 +85,68 @@ export const codegenPython: (schema: string) => string = (schema) => {
   const hasApi = hasCache || hasPubsub || hasTask;
 
   const code = [
-    `import typing${
-      hasEnum
-        ? `
+    `# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+${getTabs(1)}from dataclasses import dataclass
+else:
+${getTabs(1)}from memorix_client_redis import dataclass
+${
+  hasEnum
+    ? `
 from enum import Enum`
-        : ""
-    }
-from memorix_client_redis import (  # noqa: F401
-${getTabs(1)}dataclass${[""]
-      .concat(
-        hasApi
-          ? [
-              `${getTabs(1)}MemorixClientApi`,
-              `${getTabs(
-                1
-              )}MemorixClientApiDefaults as _MemorixClientApiDefaults`,
-            ]
-          : []
-      )
-      .concat(
-        hasCache
-          ? [
-              `${getTabs(1)}MemorixClientCacheApi`,
-              `${getTabs(1)}MemorixClientCacheApiItem`,
-              `${getTabs(1)}MemorixClientCacheApiItemNoKey`,
-              `${getTabs(
-                1
-              )}MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions`,
-              `${getTabs(
-                1
-              )}MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire`,
-            ]
-          : []
-      )
-      .concat(
-        hasPubsub
-          ? [
-              `${getTabs(1)}MemorixClientPubSubApi`,
-              `${getTabs(1)}MemorixClientPubSubApiItem`,
-              `${getTabs(1)}MemorixClientPubSubApiItemNoKey`,
-            ]
-          : []
-      )
-      .concat(
-        hasTask
-          ? [
-              `${getTabs(1)}MemorixClientTaskApi`,
-              `${getTabs(1)}MemorixClientTaskApiItem`,
-              `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
-              `${getTabs(1)}MemorixClientTaskApiItemNoReturns`,
-              `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
-              `${getTabs(
-                1
-              )}MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions`,
-            ]
-          : []
-      )
-      .join(",\n")},
+    : ""
+}
+from memorix_client_redis import (
+${[]
+  .concat(
+    hasApi
+      ? [
+          `${getTabs(1)}MemorixClientApi`,
+          `${getTabs(1)}MemorixClientApiDefaults as _MemorixClientApiDefaults`,
+        ]
+      : []
+  )
+  .concat(
+    hasCache
+      ? [
+          `${getTabs(1)}MemorixClientCacheApi`,
+          `${getTabs(1)}MemorixClientCacheApiItem`,
+          `${getTabs(1)}MemorixClientCacheApiItemNoKey`,
+          `${getTabs(
+            1
+          )}MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions`,
+          `${getTabs(
+            1
+          )}MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire`,
+        ]
+      : []
+  )
+  .concat(
+    hasPubsub
+      ? [
+          `${getTabs(1)}MemorixClientPubSubApi`,
+          `${getTabs(1)}MemorixClientPubSubApiItem`,
+          `${getTabs(1)}MemorixClientPubSubApiItemNoKey`,
+        ]
+      : []
+  )
+  .concat(
+    hasTask
+      ? [
+          `${getTabs(1)}MemorixClientTaskApi`,
+          `${getTabs(1)}MemorixClientTaskApiItem`,
+          `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
+          `${getTabs(1)}MemorixClientTaskApiItemNoReturns`,
+          `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
+          `${getTabs(
+            1
+          )}MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions`,
+        ]
+      : []
+  )
+  .join(",\n")},
 )`,
   ]
     .concat(

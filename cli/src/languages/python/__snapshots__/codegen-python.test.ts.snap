@@ -1,9 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`python codegen cache can generate also with model 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
     MemorixClientApi,
     MemorixClientApiDefaults as _MemorixClientApiDefaults,
     MemorixClientCacheApi,
@@ -53,9 +59,15 @@ class MemorixApi(MemorixClientApi):
 `;
 
 exports[`python codegen cache can generate with inline object type 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
     MemorixClientApi,
     MemorixClientApiDefaults as _MemorixClientApiDefaults,
     MemorixClientCacheApi,
@@ -100,9 +112,15 @@ class MemorixApi(MemorixClientApi):
 `;
 
 exports[`python codegen cache can generate with inline types 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
     MemorixClientApi,
     MemorixClientApiDefaults as _MemorixClientApiDefaults,
     MemorixClientCacheApi,
@@ -141,9 +159,15 @@ class MemorixApi(MemorixClientApi):
 `;
 
 exports[`python codegen cache can generate with no key 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
     MemorixClientApi,
     MemorixClientApiDefaults as _MemorixClientApiDefaults,
     MemorixClientCacheApi,
@@ -188,10 +212,17 @@ class MemorixApi(MemorixClientApi):
 `;
 
 exports[`python codegen enum can generate 1`] = `
-"import typing
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
 from enum import Enum
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+from memorix_client_redis import (
+,
 )
 
 
@@ -205,9 +236,16 @@ class Animals(str, Enum):
 `;
 
 exports[`python codegen model can generate from 2 models 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+,
 )
 
 
@@ -226,9 +264,16 @@ class User2(object):
 `;
 
 exports[`python codegen model can generate from model 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+,
 )
 
 
@@ -243,9 +288,16 @@ class User(object):
 `;
 
 exports[`python codegen model can generate from model with array 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+,
 )
 
 
@@ -266,9 +318,16 @@ class User(object):
 `;
 
 exports[`python codegen model can generate from model within model 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+,
 )
 
 
@@ -287,9 +346,16 @@ class User(object):
 `;
 
 exports[`python codegen model can generate from model within model within a model 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+,
 )
 
 
@@ -315,9 +381,15 @@ class User(object):
 `;
 
 exports[`python codegen pubsub can generate with inline types 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
     MemorixClientApi,
     MemorixClientApiDefaults as _MemorixClientApiDefaults,
     MemorixClientPubSubApi,
@@ -352,9 +424,15 @@ class MemorixApi(MemorixClientApi):
 `;
 
 exports[`python codegen task can generate with inline types 1`] = `
-"import typing
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+"# flake8: noqa
+from typing import TYPE_CHECKING
+    
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
     MemorixClientApi,
     MemorixClientApiDefaults as _MemorixClientApiDefaults,
     MemorixClientTaskApi,

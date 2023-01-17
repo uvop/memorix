@@ -1,3 +1,5 @@
+import asyncio
+import functools
 from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json
 from typing import Generic, Optional, Type, TypeVar, cast
@@ -27,9 +29,17 @@ class CacheItem(Generic[KT, PT]):
         payload = from_json(value=res, data_class=self._payload_class)
         return payload
 
-    async def async_get(self, key: KT) -> PT:
-        print("get async")
-        return cast(PT, None)
+    async def async_get(self, key: KT) -> Optional[PT]:
+        loop = asyncio.get_running_loop()
+        payload = await loop.run_in_executor(
+            None,
+            functools.partial(
+                CacheItem.get,
+                self=self,
+                key=key,
+            ),
+        )
+        return payload
 
     def set(
         self,
@@ -57,9 +67,24 @@ class CacheItem(Generic[KT, PT]):
             px=expire.value if expire is not None and expire.is_in_ms else None,
         )
 
-    async def async_set(self, key: KT, payload: PT) -> Optional[bool]:
-        print("set async")
-        return True
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+        options: Optional[CacheSetOptions] = None,
+    ) -> Optional[bool]:
+        loop = asyncio.get_running_loop()
+        res = await loop.run_in_executor(
+            None,
+            functools.partial(
+                CacheItem.set,
+                self=self,
+                key=key,
+                payload=payload,
+                options=options,
+            ),
+        )
+        return res
 
 
 class CacheItemNoKey(CacheItem[None, PT]):
@@ -68,8 +93,9 @@ class CacheItemNoKey(CacheItem[None, PT]):
         return CacheItem.get(self, key=None)
 
     # Different signature on purpose
-    async def async_get(self) -> PT:  # type: ignore
-        return await CacheItem.async_get(self, key=None)
+    async def async_get(self) -> Optional[PT]:  # type: ignore
+        casted_self = cast(CacheItem[None, Optional[PT]], self)  # Not sure why needed
+        return await CacheItem.async_get(casted_self, key=None)
 
     # Different signature on purpose
     def set(self, payload: PT) -> Optional[bool]:  # type: ignore

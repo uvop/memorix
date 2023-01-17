@@ -48,6 +48,11 @@ class MemorixCacheApi(MemorixClientCacheApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
 
+        self.bestStr = MemorixClientCacheApiItemNoKey[str](
+            api=self._api,
+            id="bestStr",
+            payload_class=str,
+        )
         self.favoriteAnimal = MemorixClientCacheApiItem[str, Animal](
             api=self._api,
             id="favoriteAnimal",
