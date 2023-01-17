@@ -1,7 +1,13 @@
+# flake8: noqa
 import typing
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
 from enum import Enum
-from memorix_client_redis import (  # noqa: F401
-    dataclass,
+from memorix_client_redis import (
     MemorixClientApi,
     MemorixClientApiDefaults as _MemorixClientApiDefaults,
     MemorixClientCacheApi,
