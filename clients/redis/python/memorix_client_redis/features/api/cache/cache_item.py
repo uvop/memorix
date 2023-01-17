@@ -93,7 +93,7 @@ class CacheItemNoKey(CacheItem[None, PT]):
         return CacheItem.get(self, key=None)
 
     # Different signature on purpose
-    async def async_get(self) -> PT:  # type: ignore
+    async def async_get(self) -> Optional[PT]:  # type: ignore
         return await CacheItem.async_get(self, key=None)
 
     # Different signature on purpose
