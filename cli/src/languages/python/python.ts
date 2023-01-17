@@ -4,18 +4,27 @@ import { assertUnreachable, getTabs as get2Tabs } from "src/core/utilities";
 
 const getTabs = (x: number) => get2Tabs(x * 2);
 
-const valueToPython: (value: ValueType) => string = (value) => {
+const valueToPython: (value: ValueType, isType: boolean) => string = (
+  value,
+  isType
+) => {
   let valuePython;
   if (value.type === ValueTypes.simple) {
     if (value.name === "string") {
       valuePython = "str";
     } else if (value.name === "boolean") {
       valuePython = "bool";
+    } else if (value.name === "float") {
+      valuePython = "float";
+    } else if (value.name === "int") {
+      valuePython = "int";
+    } else if (isType) {
+      valuePython = `"${value.name}"`;
     } else {
       valuePython = `${value.name}`;
     }
   } else if (value.type === ValueTypes.array) {
-    valuePython = `typing.List[${valueToPython(value.value)}]`;
+    valuePython = `typing.List[${valueToPython(value.value, isType)}]`;
   } else {
     throw new Error(
       "Shouldn't get here, all inline objects became models, maybe forgot 'flatBlocks()?'"
@@ -33,7 +42,7 @@ const blockToPython: (block: Block) => string = (b) => {
       return `@dataclass
 class ${b.name}(object):
 ${b.properties
-  .map((p) => `${getTabs(1)}${p.name}: ${valueToPython(p.value)}`)
+  .map((p) => `${getTabs(1)}${p.name}: ${valueToPython(p.value, true)}`)
   .join(`\n`)}`;
     case BlockTypes.enum:
       return `class ${b.name}(str, Enum):
@@ -53,15 +62,18 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
           return `${getTabs(2)}self.${v.name} = ${itemClass}${
             v.key ? "" : "NoKey"
           }${hasReturns && !v.returns ? "NoReturns" : ""}[${
-            v.key ? `${valueToPython(v.key)}, ` : ""
-          }${valueToPython(v.payload)}${
-            v.returns ? `, ${valueToPython(v.returns)}` : ""
+            v.key ? `${valueToPython(v.key, true)}, ` : ""
+          }${valueToPython(v.payload, true)}${
+            v.returns ? `, ${valueToPython(v.returns, true)}` : ""
           }](
 ${getTabs(3)}api=self._api,
 ${getTabs(3)}id="${v.name}",
-${getTabs(3)}payload_class=${valueToPython(v.payload)},${
+${getTabs(3)}payload_class=${valueToPython(v.payload, false)},${
             v.returns
-              ? `\n${getTabs(3)}returns_class=${valueToPython(v.returns)},`
+              ? `\n${getTabs(3)}returns_class=${valueToPython(
+                  v.returns,
+                  false
+                )},`
               : ""
           }
 ${getTabs(2)})`;
