@@ -86,9 +86,9 @@ export const codegenPython: (schema: string) => string = (schema) => {
 
   const code = [
     `# flake8: noqa
-from typing import TYPE_CHECKING
-    
-if TYPE_CHECKING:
+import typing
+
+if typing.TYPE_CHECKING:
 ${getTabs(1)}from dataclasses import dataclass
 else:
 ${getTabs(1)}from memorix_client_redis import dataclass
