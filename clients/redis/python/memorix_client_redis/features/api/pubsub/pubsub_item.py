@@ -1,3 +1,5 @@
+import asyncio
+import functools
 from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json
 from ..api import Api
@@ -43,8 +45,17 @@ class PubSubItem(Generic[KT, PT]):
         return PubSubItemPublish(subscribers_size=subscribers_size)
 
     async def async_publish(self, key: KT, payload: PT) -> PubSubItemPublish:
-        print("publish async")
-        return PubSubItemPublish(subscribers_size=0)
+        loop = asyncio.get_running_loop()
+        res = await loop.run_in_executor(
+            None,
+            functools.partial(
+                PubSubItem.publish,
+                self=self,
+                key=key,
+                payload=payload,
+            ),
+        )
+        return res
 
     def subscribe(self, key: KT) -> Generator[PubSubItemSubscribe[PT], None, None]:
         sub = self._api._redis.pubsub()
@@ -59,8 +70,22 @@ class PubSubItem(Generic[KT, PT]):
         self,
         key: KT,
     ) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:
-        print("subscribe async")
-        yield cast(PubSubItemSubscribe[PT], None)
+        sub = self._api._redis.pubsub()
+        sub.subscribe(hash_key(self._id, key=key))
+        loop = asyncio.get_running_loop()
+        while True:
+            message = await loop.run_in_executor(
+                None,
+                functools.partial(
+                    sub.get_message,
+                    ignore_subscribe_messages=True,
+                ),
+            )
+            if message is not None:
+                data_bytes = message["data"]
+                if isinstance(data_bytes, bytes):
+                    data = from_json(value=data_bytes, data_class=self._payload_class)
+                    yield PubSubItemSubscribe(payload=data)
 
 
 class PubSubItemNoKey(PubSubItem[None, PT]):
@@ -77,5 +102,5 @@ class PubSubItemNoKey(PubSubItem[None, PT]):
         return PubSubItem.subscribe(self, key=None)
 
     # Different signature on purpose
-    async def async_subscribe(self) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:  # type: ignore
+    def async_subscribe(self) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:  # type: ignore
         return PubSubItem.async_subscribe(self, key=None)
