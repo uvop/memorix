@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/uvop/memorix/compare/v1.0.2...v1.0.3) (2023-01-17)
+
+
+### Bug Fixes
+
+* Python async no task ([#28](https://github.com/uvop/memorix/issues/28)) ([7c05653](https://github.com/uvop/memorix/commit/7c0565384b4d900db0e56af602fc2a7c9bab70da))
+
 ## [1.0.2](https://github.com/uvop/memorix/compare/v1.0.1...v1.0.2) (2023-01-11)
 
 
