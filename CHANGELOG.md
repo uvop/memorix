@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/uvop/memorix/compare/v1.0.5...v1.0.6) (2023-01-18)
+
+
+### Bug Fixes
+
+* json serialization failed for lists, cli version not right ([#32](https://github.com/uvop/memorix/issues/32)) ([bcefb0c](https://github.com/uvop/memorix/commit/bcefb0c56d5cce650352e9d5766a5ba5c21e10b4)), closes [#30](https://github.com/uvop/memorix/issues/30)
+
 ## [1.0.5](https://github.com/uvop/memorix/compare/v1.0.4...v1.0.5) (2023-01-17)
 
 
