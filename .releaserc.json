@@ -77,7 +77,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "(cd ./cli && yarn install && yarn build)",
+        "prepareCmd": "(cd ./cli && yarn install && sed -i '' \"s|\"version\": \".*\"|\"version\": \"${nextRelease.version}\"|1\" package.json && yarn build)",
         "publishCmd": "(cd ./cli && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
       }
     ],
