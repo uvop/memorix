@@ -13,6 +13,9 @@ Cache {
     bestStr {
         payload: string
     }
+    allUsers {
+        payload: [[User?]]
+    }
     favoriteAnimal {
         key: string
         payload: Animal

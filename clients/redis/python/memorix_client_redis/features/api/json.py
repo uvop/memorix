@@ -1,71 +1,57 @@
-from typing import Any, Dict, Type, TypeVar, cast
+import typing
 from dacite import from_dict as dacite_from_dict, Config
 from enum import Enum
 import json
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, dataclass
 
 encoding = "utf-8"
 
-TT = TypeVar("TT")
+TT = typing.TypeVar("TT")
 
 
-def order_dict(dict: Dict[str, Any]) -> Dict[str, Any]:
-    result = {}
-    for key, value in sorted(dict.items()):
-        if isinstance(value, Dict):
-            result[key] = order_dict(value)
-        else:
-            result[key] = value
-    return result
+def bytes_to_str(value: bytes) -> str:
+    return value.decode(encoding)
 
 
-def to_json_serializable(value: TT, sort_dict: bool = False) -> Any:
-    if is_dataclass(value):
-        dict = asdict(value)
-        if sort_dict:
-            dict = order_dict(dict)
-        return dict
+def _order_dict(value: TT) -> TT:
+    if isinstance(value, list):
+        return typing.cast(TT, [_order_dict(item) for item in value])
+    if isinstance(value, dict):
+        result = {}
+        for item_key, item_value in sorted(value.items()):
+            if isinstance(value, typing.Dict):
+                result[item_key] = _order_dict(item_value)
+            else:
+                result[item_key] = item_value
+        return typing.cast(TT, result)
     return value
 
 
-def to_json_from_json_serializable(value: TT) -> str:
-    return json.dumps(value, separators=(",", ":"))
-
-
 def to_json(value: TT, sort_dict: bool = False) -> str:
-    dict = to_json_serializable(value=value, sort_dict=sort_dict)
-    return to_json_from_json_serializable(value=dict)
+    @dataclass
+    class JSON(object):
+        value: TT
+
+    json_obj = JSON(value=value)
+    dict = asdict(json_obj)
+    if sort_dict:
+        dict = _order_dict(dict)
+    return json.dumps(dict["value"], separators=(",", ":"))
 
 
-def from_json(value: bytes, data_class: Type[TT]) -> TT:
-    value_str = value.decode(encoding)
-    if is_dataclass(data_class):
-        dict = json.loads(value_str)
+def from_json(value: str, data_class: typing.Type[TT]) -> TT:
+    data_class_any: typing.Any = data_class
 
-        return from_dict(
-            dict=dict,
-            data_class=data_class,
-        )
-    if issubclass(data_class, Enum):
-        return cast(TT, data_class(value_str))
+    @dataclass
+    class JSON(object):
+        value: data_class_any
 
-    return cast(TT, json.loads(value_str))
+    value_to_json = '{{"value":{0}}}'.format(value)
+    dict = json.loads(value_to_json)
+    json_obj = dacite_from_dict(
+        data=dict,
+        data_class=JSON,
+        config=Config(cast=[Enum]),
+    )
 
-
-def from_json_to_any(value: bytes) -> Any:
-    value_str = value.decode(encoding)
-    res = json.loads(value_str)
-    return res
-
-
-def from_dict(dict: Dict[str, Any], data_class: Type[TT]) -> TT:
-    if is_dataclass(data_class):
-        return dacite_from_dict(
-            data=dict,
-            data_class=data_class,
-            config=Config(cast=[Enum]),
-        )
-    if issubclass(data_class, Enum):
-        return cast(TT, data_class(dict))
-
-    return cast(TT, dict)
+    return typing.cast(TT, typing.cast(typing.Any, json_obj).value)
