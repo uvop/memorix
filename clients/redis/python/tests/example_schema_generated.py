@@ -59,7 +59,9 @@ class MemorixCacheApi(MemorixClientCacheApi):
             id="bestStr",
             payload_class=str,
         )
-        self.allUsers = MemorixClientCacheApiItemNoKey[typing.List[typing.List[typing.Optional["User"]]]](
+        self.allUsers = MemorixClientCacheApiItemNoKey[
+            typing.List[typing.List[typing.Optional["User"]]]
+        ](
             api=self._api,
             id="allUsers",
             payload_class=typing.List[typing.List[typing.Optional[User]]],
