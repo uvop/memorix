@@ -68,6 +68,24 @@ async def test_cache_async_no_key() -> None:
     assert best_str == "uv"
 
 
+def test_cache_list() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    memorix_api.cache.allUsers.set(
+        payload=[[User(name="uv", age=29), None], [None]],
+    )
+
+    users = memorix_api.cache.allUsers.get()
+    if users is None:
+        raise Exception("Didn't get user from redis")
+    user = users[0][0]
+    if user is None:
+        raise Exception("User should be defined")
+    assert user.age == 29
+    assert users[1][0] is None
+    assert users[0][1] is None
+
+
 def test_cache_complex_key() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 

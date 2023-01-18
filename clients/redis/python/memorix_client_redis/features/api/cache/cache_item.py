@@ -1,7 +1,7 @@
 import asyncio
 import functools
 from memorix_client_redis.features.api.hash_key import hash_key
-from memorix_client_redis.features.api.json import from_json, to_json
+from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
 from typing import Generic, Optional, Type, TypeVar, cast
 from ..api import Api, ApiDefaults
 from .cache_options import CacheSetOptions, CacheSetOptionsExpire
@@ -22,11 +22,12 @@ class CacheItem(Generic[KT, PT]):
         self._payload_class = payload_class
 
     def get(self, key: KT) -> Optional[PT]:
-        res = self._api._redis.get(hash_key(self._id, key=key))
-        if res is None:
+        data_bytes = self._api._redis.get(hash_key(self._id, key=key))
+        if data_bytes is None:
             return None
 
-        payload = from_json(value=res, data_class=self._payload_class)
+        data_str = bytes_to_str(data_bytes)
+        payload = from_json(value=data_str, data_class=self._payload_class)
         return payload
 
     async def async_get(self, key: KT) -> Optional[PT]:

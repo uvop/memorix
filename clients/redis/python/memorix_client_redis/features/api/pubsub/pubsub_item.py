@@ -1,7 +1,7 @@
 import asyncio
 import functools
 from memorix_client_redis.features.api.hash_key import hash_key
-from memorix_client_redis.features.api.json import from_json, to_json
+from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
 from ..api import Api
 from typing import AsyncGenerator, Dict, Generator, Generic, Type, TypeVar, Union, cast
 
@@ -63,7 +63,8 @@ class PubSubItem(Generic[KT, PT]):
         for message in cast(Generator[Dict[str, Union[int, bytes]], None, None], sub.listen()):  # type: ignore
             data_bytes = message["data"]
             if isinstance(data_bytes, bytes):
-                data = from_json(value=data_bytes, data_class=self._payload_class)
+                data_str = bytes_to_str(data_bytes)
+                data = from_json(value=data_str, data_class=self._payload_class)
                 yield PubSubItemSubscribe(payload=data)
 
     async def async_subscribe(
@@ -84,7 +85,8 @@ class PubSubItem(Generic[KT, PT]):
             if message is not None:
                 data_bytes = message["data"]
                 if isinstance(data_bytes, bytes):
-                    data = from_json(value=data_bytes, data_class=self._payload_class)
+                    data_str = bytes_to_str(data_bytes)
+                    data = from_json(value=data_str, data_class=self._payload_class)
                     yield PubSubItemSubscribe(payload=data)
 
 
