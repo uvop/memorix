@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/uvop/memorix/compare/v1.1.0...v1.1.1) (2023-01-19)
+
+
+### Bug Fixes
+
+* cache options for no key in python ([9b48e66](https://github.com/uvop/memorix/commit/9b48e667bcccca5cf5409fb43161d126389a096e))
+
 # [1.1.0](https://github.com/uvop/memorix/compare/v1.0.6...v1.1.0) (2023-01-19)
 
 
