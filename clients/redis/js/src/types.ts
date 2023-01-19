@@ -58,6 +58,7 @@ export type TaskItem<Key, Payload, Returns> = {
       options?: TaskDequequeOptions
     ]
   ): TaskDequeue;
+  clear(...args: [key: Key]): void;
 };
 export type TaskItemNoKey<Payload, Returns> = {
   queue(...args: [payload: Payload]): TaskQueue<Returns>;
@@ -67,4 +68,5 @@ export type TaskItemNoKey<Payload, Returns> = {
       options?: TaskDequequeOptions
     ]
   ): TaskDequeue;
+  clear(...args: []): void;
 };

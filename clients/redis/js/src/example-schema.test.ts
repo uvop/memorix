@@ -70,16 +70,21 @@ describe("example schema has", () => {
   });
   describe("task", () => {
     beforeEach(async () => {
-      const { stop } = await memorixApi.task.runAlgo.dequeue(() => {
-        return Animal.dog;
-      });
-      await new Promise((res) => setTimeout(res, 1000));
-      await stop();
+      await memorixApi.task.runAlgo.clear();
     });
     it("queue returns the queue size", async () => {
       await memorixApi.task.runAlgo.queue("uv1");
       const { queueSize } = await memorixApi.task.runAlgo.queue("uv2");
       expect(queueSize).toBe(2);
+    });
+    it("queue clears correctly", async () => {
+      await memorixApi.task.runAlgo.queue("uv1");
+      const { queueSize } = await memorixApi.task.runAlgo.queue("uv2");
+      expect(queueSize).toBe(2);
+      await memorixApi.task.runAlgo.clear();
+      const { queueSize: queueSizeAfterClear } =
+        await memorixApi.task.runAlgo.queue("uv2");
+      expect(queueSizeAfterClear).toBe(1);
     });
     it("dequeue receives a message", (done) => {
       memorixApi.task.runAlgo

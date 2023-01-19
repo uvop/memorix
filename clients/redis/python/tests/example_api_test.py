@@ -219,3 +219,18 @@ def test_task() -> None:
 
     task1.kill()
     task2.kill()
+
+
+def test_task_clear() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    try:
+        queue = memorix_api.task.runAlgo.queue(payload="send me cat")
+        queue = memorix_api.task.runAlgo.queue(payload="send me cat")
+        queue = memorix_api.task.runAlgo.queue(payload="send me cat")
+        assert queue.queue_size == 3
+        memorix_api.task.runAlgo.clear()
+        queue = memorix_api.task.runAlgo.queue(payload="send me cat")
+        assert queue.queue_size == 1
+    finally:
+        memorix_api.task.runAlgo.clear()
