@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/uvop/memorix/compare/v1.0.6...v1.1.0) (2023-01-19)
+
+
+### Features
+
+* Clear task queue ([#33](https://github.com/uvop/memorix/issues/33)) ([17f13ec](https://github.com/uvop/memorix/commit/17f13ec6c55dbb84e372edff0bda65889c5ee7f6))
+
 ## [1.0.6](https://github.com/uvop/memorix/compare/v1.0.5...v1.0.6) (2023-01-18)
 
 
