@@ -48,7 +48,10 @@ def test_cache() -> None:
 async def test_cache_async() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
-    await memorix_api.cache.user.async_set("uv", User(name="uv", age=29))
+    await memorix_api.cache.user.async_set(
+        "uv",
+        User(name="uv", age=29),
+    )
 
     user = await memorix_api.cache.user.async_get("uv")
     if user is None:
@@ -60,7 +63,15 @@ async def test_cache_async() -> None:
 async def test_cache_async_no_key() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
-    await memorix_api.cache.bestStr.async_set("uv")
+    await memorix_api.cache.bestStr.async_set(
+        "uv",
+        MemorixClientCacheSetOptions(
+            expire=MemorixClientCacheSetOptionsExpire(
+                value=500,
+                is_in_ms=True,
+            ),
+        ),
+    )
 
     best_str = await memorix_api.cache.bestStr.async_get()
     if best_str is None:

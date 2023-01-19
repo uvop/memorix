@@ -99,9 +99,22 @@ class CacheItemNoKey(CacheItem[None, PT]):
         return await CacheItem.async_get(casted_self, key=None)
 
     # Different signature on purpose
-    def set(self, payload: PT) -> Optional[bool]:  # type: ignore
-        return CacheItem.set(self, key=None, payload=payload)
+    def set(  # type: ignore
+        self,
+        payload: PT,
+        options: Optional[CacheSetOptions] = None,
+    ) -> Optional[bool]:
+        return CacheItem.set(self, key=None, payload=payload, options=options)
 
     # Different signature on purpose
-    async def async_set(self, payload: PT) -> Optional[bool]:  # type: ignore
-        return await CacheItem.async_set(self, key=None, payload=payload)
+    async def async_set(  # type: ignore
+        self,
+        payload: PT,
+        options: Optional[CacheSetOptions] = None,
+    ) -> Optional[bool]:
+        return await CacheItem.async_set(
+            self,
+            key=None,
+            payload=payload,
+            options=options,
+        )
