@@ -11,6 +11,10 @@
     {
       "name": "client-redis-python",
       "path": "clients/redis/python"
+    },
+    {
+      "name": "docs",
+      "path": "docs"
     }
   ],
   "settings": {

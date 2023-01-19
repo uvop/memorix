@@ -1,3 +1,5 @@
+import asyncio
+import functools
 from memorix_client_redis.features.api.hash_key import hash_key
 from uuid import uuid4
 from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
@@ -180,6 +182,22 @@ class TaskItem(typing.Generic[KT, PT, RT]):
         print("dequeue async")
         yield typing.cast(TaskItemDequeueWithReturns[PT], None)
 
+    def clear(self, key: KT) -> None:
+        self._api._redis.delete(
+            hash_key(self._id, key=key),
+        )
+
+    async def async_clear(self, key: KT) -> None:
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(
+            None,
+            functools.partial(
+                TaskItem.clear,
+                self=self,
+                key=key,
+            ),
+        )
+
 
 class TaskItemNoKey(TaskItem[None, PT, RT]):
     # Different signature on purpose
@@ -197,6 +215,14 @@ class TaskItemNoKey(TaskItem[None, PT, RT]):
     # Different signature on purpose
     async def async_dequeue(self) -> typing.AsyncGenerator[TaskItemDequeueWithReturns[PT], None]:  # type: ignore
         return TaskItem.async_dequeue(self, key=None)
+
+    # Different signature on purpose
+    def clear(self) -> None:  # type: ignore
+        TaskItem.clear(self, key=None)
+
+    # Different signature on purpose
+    async def async_clear(self) -> None:  # type: ignore
+        await TaskItem.async_clear(self, key=None)
 
 
 class TaskItemNoReturns(TaskItem[KT, PT, None]):
@@ -232,6 +258,14 @@ class TaskItemNoReturns(TaskItem[KT, PT, None]):
     async def async_dequeue(self, key: KT) -> typing.AsyncGenerator[TaskItemDequeue[PT], None]:  # type: ignore
         return TaskItem.async_dequeue(self, key=key)
 
+    # Different signature on purpose
+    def clear(self, key: KT) -> None:
+        TaskItem.clear(self, key=key)
+
+    # Different signature on purpose
+    async def async_clear(self, key: KT) -> None:
+        await TaskItem.async_clear(self, key=key)
+
 
 class TaskItemNoKeyNoReturns(TaskItemNoReturns[None, PT]):
     # Different signature on purpose
@@ -252,3 +286,11 @@ class TaskItemNoKeyNoReturns(TaskItemNoReturns[None, PT]):
     # Different signature on purpose
     async def async_dequeue(self) -> typing.AsyncGenerator[TaskItemDequeue[PT], None]:  # type: ignore
         return TaskItem.async_dequeue(self, key=None)
+
+    # Different signature on purpose
+    def clear(self) -> None:  # type: ignore
+        TaskItem.clear(self, key=None)
+
+    # Different signature on purpose
+    async def async_clear(self) -> None:  # type: ignore
+        await TaskItem.async_clear(self, key=None)

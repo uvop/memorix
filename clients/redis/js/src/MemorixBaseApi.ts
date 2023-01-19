@@ -255,6 +255,10 @@ export class MemorixBaseApi {
           },
         };
       },
+      clear: async (key) => {
+        const hashedKey = hashPubsubKey(key);
+        await this.redis.del(hashedKey);
+      },
     };
   }
 
@@ -266,6 +270,7 @@ export class MemorixBaseApi {
     return {
       queue: (...args) => item.queue(undefined, ...args),
       dequeue: (...args) => item.dequeue(undefined, ...args),
+      clear: (...args) => item.clear(undefined, ...args),
     };
   }
 }

@@ -268,6 +268,9 @@ await { stop } = memorixApi.task.addMessage.dequeue(async ({ payload }) => {
     await stop();
   }
 });
+
+// Clears queue
+await memorix_api.task.addMessage.clear();
 ```
 
 {{% /tab %}}
@@ -288,6 +291,8 @@ for res in memorix_api.task.addMessage.dequeque():
     if res.payload == "world"
       break
 
+# Clears queue
+memorix_api.task.addMessage.clear()
 ```
 
 {{% /tab %}}
