@@ -201,4 +201,38 @@ describe("python codegen", () => {
       ).toMatchSnapshot();
     });
   });
+  describe("config", () => {
+    it("can generate", () => {
+      expect(
+        codegenPython(
+          `
+            Config {
+              defaults: {
+                cache: {
+                  expire: {
+                    value: 5
+                  }
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+    it("can be null", () => {
+      expect(
+        codegenPython(
+          `
+            Config {
+              defaults: {
+                cache: {
+                  expire: null
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+  });
 });

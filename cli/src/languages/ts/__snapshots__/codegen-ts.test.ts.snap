@@ -57,7 +57,7 @@ exports[`ts codegen config can be null 1`] = `
 
 export class MemorixApi extends MemorixClientApi {
   constructor(options) {
-    const schemaConfig = [object Object];
+    const schemaConfig = {defaults:{cache:{}}};
     super({ ...schemaConfig, ...options });
   };
 }"
@@ -68,7 +68,7 @@ exports[`ts codegen config can generate 1`] = `
 
 export class MemorixApi extends MemorixClientApi {
   constructor(options) {
-    const schemaConfig = [object Object];
+    const schemaConfig = {defaults:{cache:{expire:{value:5}}}};
     super({ ...schemaConfig, ...options });
   };
 }"

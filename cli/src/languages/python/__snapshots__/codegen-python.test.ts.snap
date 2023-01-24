@@ -211,6 +211,74 @@ class MemorixApi(MemorixClientApi):
         self.cache = MemorixCacheApi(self)"
 `;
 
+exports[`python codegen config can be null 1`] = `
+"# flake8: noqa
+import typing
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+)
+
+
+MemorixClientApiDefaults = _MemorixClientApiDefaults
+
+
+class MemorixApi(MemorixClientApi):
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        schema_defaults=MemorixClientApiDefaults(
+            cache_set_options=MemorixClientCacheSetOptions(
+                expire=None,
+            ),
+        )
+        merged_defaults = schema_defaults + defaults
+        super().__init__(redis_url=redis_url, defaults=merged_defaults)"
+`;
+
+exports[`python codegen config can generate 1`] = `
+"# flake8: noqa
+import typing
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+)
+
+
+MemorixClientApiDefaults = _MemorixClientApiDefaults
+
+
+class MemorixApi(MemorixClientApi):
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        schema_defaults=MemorixClientApiDefaults(
+            cache_set_options=MemorixClientCacheSetOptions(
+                expire=MemorixClientCacheSetOptionsExpire(
+                    value=5,
+                ),
+            ),
+        )
+        merged_defaults = schema_defaults + defaults
+        super().__init__(redis_url=redis_url, defaults=merged_defaults)"
+`;
+
 exports[`python codegen enum can generate 1`] = `
 "# flake8: noqa
 import typing

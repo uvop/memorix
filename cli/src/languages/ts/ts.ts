@@ -81,7 +81,9 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
       // exclude type from config object
       // eslint-disable-next-line @typescript-eslint/naming-convention
       const { type: _ununsed, ...otherProps } = b;
-      return `${getTabs(2)}const schemaConfig = ${otherProps};`;
+      return `${getTabs(2)}const schemaConfig = ${JSON.stringify(
+        otherProps
+      ).replace(/"([^"]+)":/g, "$1:")};`;
     }
     default:
       assertUnreachable(b);

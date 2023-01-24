@@ -80,6 +80,40 @@ ${getTabs(2)})`;
         })
         .join("\n")}`;
     }
+    case BlockTypes.config: {
+      return `${getTabs(2)}schema_defaults=${
+        b.defaults
+          ? `MemorixClientApiDefaults(${
+              b.defaults.cache
+                ? `
+${getTabs(3)}cache_set_options=MemorixClientCacheSetOptions(
+${getTabs(4)}expire=${
+                    b.defaults.cache.expire
+                      ? `MemorixClientCacheSetOptionsExpire(
+${getTabs(5)}value=${b.defaults.cache.expire.value},${
+                          b.defaults.cache.expire.isInMs !== undefined
+                            ? `
+${getTabs(5)}is_in_ms=${b.defaults.cache.expire.isInMs},`
+                            : ""
+                        }
+${getTabs(4)})`
+                      : "None"
+                  },
+${getTabs(3)}),`
+                : ""
+            }${
+              b.defaults.task
+                ? `
+${getTabs(3)}task_dequeque_options=MemorixClientTaskDequequeOptions(
+${getTabs(4)}take_newest=${b.defaults.task.takeNewest ? "True" : "False"},
+${getTabs(3)}),`
+                : ""
+            }
+${getTabs(2)})`
+          : "None"
+      }
+${getTabs(2)}merged_defaults = schema_defaults + defaults`;
+    }
     default:
       assertUnreachable(b);
       return "";
@@ -89,12 +123,14 @@ ${getTabs(2)})`;
 export const codegenPython: (schema: string) => string = (schema) => {
   const blocks = flatBlocks(getBlocks(schema));
 
+  const hasConfig =
+    blocks.filter((b) => b.type === BlockTypes.config).length > 0;
   const hasEnum = blocks.filter((b) => b.type === BlockTypes.enum).length > 0;
   const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
     blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
   const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = hasCache || hasPubsub || hasTask;
+  const hasApi = hasConfig || hasCache || hasPubsub || hasTask;
 
   const code = [
     `# flake8: noqa
@@ -230,8 +266,18 @@ ${getTabs(1)}def __init__(
 ${getTabs(2)}self,
 ${getTabs(2)}redis_url: str,
 ${getTabs(2)}defaults: typing.Optional[MemorixClientApiDefaults] = None,
-${getTabs(1)}) -> None:
-${getTabs(2)}super().__init__(redis_url=redis_url, defaults=defaults)
+${getTabs(1)}) -> None:${
+            hasConfig
+              ? `
+${blocks
+  .filter((b) => b.type === BlockTypes.config)
+  .map(blockToPython)
+  .join("\n")}`
+              : ""
+          }
+${getTabs(2)}super().__init__(redis_url=redis_url, defaults=${
+            hasConfig ? "merged_defaults" : "defaults"
+          })
 
 ${[]
   .concat(hasCache ? `${getTabs(2)}self.cache = MemorixCacheApi(self)` : [])
