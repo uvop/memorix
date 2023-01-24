@@ -201,4 +201,38 @@ describe("ts codegen", () => {
       ).toMatchSnapshot();
     });
   });
+  describe("config", () => {
+    it("can generate", () => {
+      expect(
+        codegenTs(
+          `
+            Config {
+              defaults: {
+                cache: {
+                  expire: {
+                    value: 5
+                  }
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+    it("can be null", () => {
+      expect(
+        codegenTs(
+          `
+            Config {
+              defaults: {
+                cache: {
+                  expire: null
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+  });
 });

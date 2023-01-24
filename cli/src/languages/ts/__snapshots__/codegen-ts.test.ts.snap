@@ -52,6 +52,28 @@ export class MemorixApi extends MemorixClientApi {
 }"
 `;
 
+exports[`ts codegen config can be null 1`] = `
+"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+
+export class MemorixApi extends MemorixClientApi {
+  constructor(options) {
+    const schemaConfig = [object Object];
+    super({ ...schemaConfig, ...options });
+  };
+}"
+`;
+
+exports[`ts codegen config can generate 1`] = `
+"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+
+export class MemorixApi extends MemorixClientApi {
+  constructor(options) {
+    const schemaConfig = [object Object];
+    super({ ...schemaConfig, ...options });
+  };
+}"
+`;
+
 exports[`ts codegen enum can generate 1`] = `
 "export enum Animals {
   dog = \\"dog\\",

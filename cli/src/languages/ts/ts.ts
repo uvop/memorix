@@ -77,6 +77,12 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
         })
         .join("\n")}`;
     }
+    case BlockTypes.config: {
+      // exclude type from config object
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { type: _ununsed, ...otherProps } = b;
+      return `${getTabs(2)}const schemaConfig = ${otherProps};`;
+    }
     default:
       assertUnreachable(b);
       return "";
@@ -86,11 +92,13 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
 export const codegenTs: (schema: string) => string = (schema) => {
   const blocks = getBlocks(schema);
 
+  const hasConfig =
+    blocks.filter((b) => b.type === BlockTypes.config).length > 0;
   const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
     blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
   const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = hasCache || hasPubsub || hasTask;
+  const hasApi = hasCache || hasPubsub || hasTask || hasConfig;
 
   const code = []
     .concat(
@@ -106,6 +114,17 @@ export const codegenTs: (schema: string) => string = (schema) => {
       hasApi
         ? `export class MemorixApi extends MemorixClientApi {
 ${[]
+  .concat(
+    hasConfig
+      ? `${getTabs(1)}constructor(options) {
+${blocks
+  .filter((b) => b.type === BlockTypes.config)
+  .map(blockToTs)
+  .join("\n")}
+${getTabs(2)}super({ ...schemaConfig, ...options });
+${getTabs(1)}};`
+      : []
+  )
   .concat(
     hasCache
       ? `${getTabs(1)}cache = {

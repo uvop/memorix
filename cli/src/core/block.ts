@@ -7,6 +7,7 @@ import {
   SimpleValueType,
   ArrayValueType,
 } from "./value";
+import { getJsonFromString } from "./json";
 import {
   assertUnreachable,
   camelCase,
@@ -14,12 +15,32 @@ import {
 } from "./utilities";
 
 export enum BlockTypes {
+  config = "Config",
   model = "Model",
   enum = "Enum",
   cache = "Cache",
   pubsub = "PubSub",
   task = "Task",
 }
+
+export type CacheSetOptions = {
+  expire?: {
+    value: number;
+    isInMs?: boolean;
+  };
+};
+
+export type TaskDequequeOptions = {
+  takeNewest: boolean;
+};
+
+export type BlockConfig = {
+  type: BlockTypes.config;
+  defaults?: {
+    cache?: CacheSetOptions;
+    task?: TaskDequequeOptions;
+  };
+};
 
 export type BlockModel = {
   type: BlockTypes.model;
@@ -35,11 +56,11 @@ export type BlockEnum = {
 
 export type BlockCache = {
   type: BlockTypes.cache;
-  values: {
+  values: ({
     name: string;
     key?: ValueType;
     payload: ValueType;
-  }[];
+  } & CacheSetOptions)[];
 };
 export type BlockPubsub = {
   type: BlockTypes.pubsub;
@@ -51,15 +72,16 @@ export type BlockPubsub = {
 };
 export type BlockTask = {
   type: BlockTypes.task;
-  values: {
+  values: ({
     name: string;
     key?: ValueType;
     payload: ValueType;
     returns?: ValueType;
-  }[];
+  } & TaskDequequeOptions)[];
 };
 
 export type Block =
+  | BlockConfig
   | BlockModel
   | BlockEnum
   | BlockCache
@@ -71,14 +93,28 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
 
   const blocks = namespaces.map<Block>((n) => {
     const isNamelessNamespace =
-      [BlockTypes.cache, BlockTypes.pubsub, BlockTypes.task].indexOf(
-        n.name as BlockTypes
-      ) !== -1;
+      [
+        BlockTypes.cache,
+        BlockTypes.pubsub,
+        BlockTypes.task,
+        BlockTypes.config,
+      ].indexOf(n.name as BlockTypes) !== -1;
     if (isNamelessNamespace) {
       const blockType = n.name as
         | BlockTypes.cache
         | BlockTypes.pubsub
-        | BlockTypes.task;
+        | BlockTypes.task
+        | BlockTypes.config;
+      if (blockType === BlockTypes.config) {
+        const json = getJsonFromString(n.scope);
+        if (typeof json !== "object") {
+          throw new Error(`Expected object under "Config"`);
+        }
+        return {
+          type: blockType,
+          ...json,
+        };
+      }
       const cacheNamespaces = getNamespaces(removeBracketsOfScope(n.scope));
 
       return {
@@ -203,9 +239,10 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
   let newBlocks: Block[] = [];
 
   blocks
-    .filter((b) => [BlockTypes.enum].indexOf(b.type) === -1)
+    .filter((b) => [BlockTypes.enum, BlockTypes.config].indexOf(b.type) === -1)
     .forEach((b) => {
       switch (b.type) {
+        case BlockTypes.config:
         case BlockTypes.enum:
           break;
         case BlockTypes.model: {
@@ -329,5 +366,10 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
       }
     });
 
-  return [...blocks.filter((b) => b.type === BlockTypes.enum), ...newBlocks];
+  return [
+    ...blocks.filter(
+      (b) => [BlockTypes.enum, BlockTypes.config].indexOf(b.type) !== -1
+    ),
+    ...newBlocks,
+  ];
 };
