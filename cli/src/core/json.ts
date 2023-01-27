@@ -8,7 +8,7 @@ export const getJsonFromString: (content: string) => any = (content) => {
     let index = 0;
     while (index < content.length) {
       const contentFromIndex = arrayContent.substring(index);
-      const nextItemIndex = contentFromIndex.indexOf(",");
+      const nextItemIndex = contentFromIndex.indexOf("\n");
 
       if (nextItemIndex === -1) {
         arr.push(getJsonFromString(contentFromIndex));
@@ -99,4 +99,8 @@ export const getJsonFromString: (content: string) => any = (content) => {
     return undefined;
   }
   return JSON.parse(trimmedContent);
+  // try {
+  // } catch (err) {
+  // return trimmedContent;
+  // }
 };

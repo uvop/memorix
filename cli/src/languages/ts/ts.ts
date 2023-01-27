@@ -2,33 +2,50 @@ import { Block, BlockTypes, getBlocks } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import { assertUnreachable, getTabs } from "src/core/utilities";
 
+export const jsonStringify: (json: any) => string = (json) =>
+  JSON.stringify(json).replace(/"([^"]+)":/g, "$1:");
+
 const valueToTs: (
   value: ValueType,
   level?: number,
   isParentObject?: boolean
 ) => string = (value, level = 0, isParentObject = false) => {
   let valueTs;
-  if (value.type === ValueTypes.simple) {
-    if (value.name === "int" || value.name === "float") {
-      valueTs = "number";
-    } else {
-      valueTs = `${value.name}`;
+
+  switch (value.type) {
+    case ValueTypes.simple: {
+      if (value.name === "int" || value.name === "float") {
+        valueTs = "number";
+      } else {
+        valueTs = `${value.name}`;
+      }
+      break;
     }
-  } else if (value.type === ValueTypes.array) {
-    valueTs = `Array<${valueToTs(value.value, level)}>`;
-  } else {
-    valueTs = `{
+    case ValueTypes.array: {
+      valueTs = `Array<${valueToTs(value.value, level)}>`;
+      break;
+    }
+    case ValueTypes.object:
+      valueTs = `{
 ${getTabs(level + 1)}${value.properties
-      .map(
-        (prop) =>
-          `${prop.name}${prop.value.isOptional ? "?" : ""}: ${valueToTs(
-            prop.value,
-            level + 1,
-            true
-          )};`
-      )
-      .join(`\n${getTabs(level + 1)}`)}
+        .map(
+          (prop) =>
+            `${prop.name}${
+              prop.value.type !== ValueTypes.string && prop.value.isOptional
+                ? "?"
+                : ""
+            }: ${valueToTs(prop.value, level + 1, true)};`
+        )
+        .join(`\n${getTabs(level + 1)}`)}
 ${getTabs(level)}}`;
+      break;
+    case ValueTypes.string: {
+      throw new Error("Unexpected string value to type generation");
+    }
+    default: {
+      assertUnreachable(value);
+      return undefined as any;
+    }
   }
 
   return `${valueTs}${
@@ -73,7 +90,7 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
             b.type === BlockTypes.task
               ? `, ${v.returns ? "true" : "false"}`
               : ""
-          }),`;
+          }${v.options !== undefined ? `, ${jsonStringify(v.options)}` : ""}),`;
         })
         .join("\n")}`;
     }
@@ -81,9 +98,7 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
       // exclude type from config object
       // eslint-disable-next-line @typescript-eslint/naming-convention
       const { type: _ununsed, ...otherProps } = b;
-      return `${getTabs(2)}const schemaConfig = ${JSON.stringify(
-        otherProps
-      ).replace(/"([^"]+)":/g, "$1:")};`;
+      return `${jsonStringify(otherProps)}`;
     }
     default:
       assertUnreachable(b);
@@ -114,19 +129,15 @@ export const codegenTs: (schema: string) => string = (schema) => {
     .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToTs))
     .concat(
       hasApi
-        ? `export class MemorixApi extends MemorixClientApi {
+        ? `export class MemorixApi extends ${
+            hasConfig
+              ? `MemorixClientApi.fromConfig(${blocks
+                  .filter((b) => b.type === BlockTypes.config)
+                  .map(blockToTs)
+                  .join(", ")})`
+              : "MemorixClientApi"
+          } {
 ${[]
-  .concat(
-    hasConfig
-      ? `${getTabs(1)}constructor(options) {
-${blocks
-  .filter((b) => b.type === BlockTypes.config)
-  .map(blockToTs)
-  .join("\n")}
-${getTabs(2)}super({ ...schemaConfig, ...options });
-${getTabs(1)}};`
-      : []
-  )
   .concat(
     hasCache
       ? `${getTabs(1)}cache = {

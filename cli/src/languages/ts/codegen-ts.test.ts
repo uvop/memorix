@@ -97,6 +97,25 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
+    it("can have options", () => {
+      expect(
+        codegenTs(
+          `
+            Cache {
+              user {
+                key: int
+                payload: string
+                options: {
+                  expire: {
+                    value: 5
+                  }
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
     it("can generate with inline object type", () => {
       expect(
         codegenTs(
@@ -185,6 +204,24 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
+    it("can have options", () => {
+      expect(
+        codegenTs(
+          `
+            Task {
+              doIt {
+                key: int
+                payload: string
+                returns: boolean
+                options: {
+                  takeNewest: true
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
   });
   describe("enum", () => {
     it("can generate", () => {
@@ -207,11 +244,14 @@ describe("ts codegen", () => {
         codegenTs(
           `
             Config {
-              defaults: {
+              defaultOptions: {
                 cache: {
                   expire: {
                     value: 5
                   }
+                }
+                task: {
+                  takeNewest: true
                 }
               }
             }
@@ -224,7 +264,7 @@ describe("ts codegen", () => {
         codegenTs(
           `
             Config {
-              defaults: {
+              defaultOptions: {
                 cache: {
                   expire: null
                 }

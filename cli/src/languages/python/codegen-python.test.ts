@@ -97,6 +97,25 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
+    it("can have options", () => {
+      expect(
+        codegenPython(
+          `
+            Cache {
+              user {
+                key: int
+                payload: string
+                options: {
+                  expire: {
+                    value: 5
+                  }
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
     it("can generate with inline object type", () => {
       expect(
         codegenPython(
@@ -185,6 +204,24 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
+    it("can have options", () => {
+      expect(
+        codegenPython(
+          `
+            Task {
+              doIt {
+                key: int
+                payload: string
+                returns: boolean
+                options: {
+                  takeNewest: true
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
   });
   describe("enum", () => {
     it("can generate", () => {
@@ -207,11 +244,14 @@ describe("python codegen", () => {
         codegenPython(
           `
             Config {
-              defaults: {
+              defaultOptions: {
                 cache: {
                   expire: {
                     value: 5
                   }
+                }
+                task: {
+                  takeNewest: true
                 }
               }
             }
@@ -224,7 +264,7 @@ describe("python codegen", () => {
         codegenPython(
           `
             Config {
-              defaults: {
+              defaultOptions: {
                 cache: {
                   expire: null
                 }

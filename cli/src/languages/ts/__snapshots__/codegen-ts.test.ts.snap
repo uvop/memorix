@@ -52,25 +52,29 @@ export class MemorixApi extends MemorixClientApi {
 }"
 `;
 
-exports[`ts codegen config can be null 1`] = `
+exports[`ts codegen cache can have options 1`] = `
 "import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export class MemorixApi extends MemorixClientApi {
-  constructor(options) {
-    const schemaConfig = {defaults:{cache:{}}};
-    super({ ...schemaConfig, ...options });
+  cache = {
+    user: this.getCacheItem<number, string>(\\"user\\", {expire:{value:5}}),
   };
+}"
+`;
+
+exports[`ts codegen config can be null 1`] = `
+"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+
+export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{}}}) {
+
 }"
 `;
 
 exports[`ts codegen config can generate 1`] = `
 "import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
-export class MemorixApi extends MemorixClientApi {
-  constructor(options) {
-    const schemaConfig = {defaults:{cache:{expire:{value:5}}}};
-    super({ ...schemaConfig, ...options });
-  };
+export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:5}},task:{takeNewest:true}}}) {
+
 }"
 `;
 
@@ -150,6 +154,16 @@ exports[`ts codegen task can generate with inline types 1`] = `
 export class MemorixApi extends MemorixClientApi {
   task = {
     doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true),
+  };
+}"
+`;
+
+exports[`ts codegen task can have options 1`] = `
+"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+
+export class MemorixApi extends MemorixClientApi {
+  task = {
+    doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true, {takeNewest:true}),
   };
 }"
 `;

@@ -6,6 +6,7 @@ import {
   ValueTypes,
   SimpleValueType,
   ArrayValueType,
+  StringValueType,
 } from "./value";
 import { getJsonFromString } from "./json";
 import {
@@ -36,7 +37,7 @@ export type TaskDequequeOptions = {
 
 export type BlockConfig = {
   type: BlockTypes.config;
-  defaults?: {
+  defaultOptions?: {
     cache?: CacheSetOptions;
     task?: TaskDequequeOptions;
   };
@@ -56,11 +57,12 @@ export type BlockEnum = {
 
 export type BlockCache = {
   type: BlockTypes.cache;
-  values: ({
+  values: {
     name: string;
     key?: ValueType;
     payload: ValueType;
-  } & CacheSetOptions)[];
+    options?: CacheSetOptions;
+  }[];
 };
 export type BlockPubsub = {
   type: BlockTypes.pubsub;
@@ -72,12 +74,13 @@ export type BlockPubsub = {
 };
 export type BlockTask = {
   type: BlockTypes.task;
-  values: ({
+  values: {
     name: string;
     key?: ValueType;
     payload: ValueType;
     returns?: ValueType;
-  } & TaskDequequeOptions)[];
+    options?: TaskDequequeOptions;
+  }[];
 };
 
 export type Block =
@@ -120,15 +123,18 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
       return {
         type: blockType,
         values: cacheNamespaces.map((cn) => {
-          const value = getValueFromString(cn.scope);
+          const value = getValueFromString(cn.scope, ["options"]);
           if (value.type !== ValueTypes.object) {
             throw new Error(`Expected object under "${blockType}.${cn.name}"`);
           }
 
           const payload = value.properties.find((p) => p.name === "payload");
           if (!payload) {
-            throw new Error(`Couldn't find "payload" under Cache.${cn.name}`);
+            throw new Error(
+              `Couldn't find "payload" under ${blockType}.${cn.name}`
+            );
           }
+          const options = value.properties.find((p) => p.name === "options");
 
           return {
             name: cn.name,
@@ -137,6 +143,10 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
             returns:
               blockType === BlockTypes.task
                 ? value.properties.find((p) => p.name === "returns")?.value
+                : undefined,
+            options:
+              options !== undefined && options.value.type === ValueTypes.string
+                ? getJsonFromString(options.value.content)
                 : undefined,
           };
         }),
@@ -180,8 +190,9 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
 const getNonObjectValueFromValue = (
   value: ValueType,
   name: string
-): SimpleValueType | ArrayValueType => {
+): SimpleValueType | ArrayValueType | StringValueType => {
   switch (value.type) {
+    case ValueTypes.string:
     case ValueTypes.simple:
       return value;
     case ValueTypes.array:
@@ -206,6 +217,7 @@ const getBlockModelsFromValue = (
   name: string
 ): BlockModel[] => {
   switch (value.type) {
+    case ValueTypes.string:
     case ValueTypes.simple:
       return [];
     case ValueTypes.object:
