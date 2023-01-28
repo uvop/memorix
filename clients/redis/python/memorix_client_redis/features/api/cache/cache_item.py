@@ -4,7 +4,7 @@ from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
 from typing import Generic, Optional, Type, TypeVar, cast
 from ..api import Api, ApiDefaults
-from .cache_options import CacheSetOptions, CacheSetOptionsExpire
+from .cache_options import CacheSetOptions
 
 KT = TypeVar("KT")
 PT = TypeVar("PT")
