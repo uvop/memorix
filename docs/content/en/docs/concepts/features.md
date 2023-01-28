@@ -117,9 +117,43 @@ print(hello_value) # Should print "world"
 
 ### Cache options
 
-You can define cache options or override them within your usage
+You can define cache options or override them within your usage - either from schema or your code (preferably schema)
 
 {{< tabs >}}
+{{% tab name="Schema" %}}
+
+Global cache options and overriden cache options
+
+```
+Config {
+  defaultOptions: {
+    cache: {
+      expire: {
+        value: 5
+      }
+    }
+  }
+}
+
+Cache {
+    hello {
+        payload: string
+        options: {
+          expire: {
+            value: 10
+          }
+        }
+    }
+    helloForever {
+        payload: string
+        options: {
+          expire: null
+        }
+    }
+}
+```
+
+{{% /tab %}}
 {{% tab name="Node.js" %}}
 
 ```js
@@ -168,7 +202,7 @@ memorix_api.cache.hello.set(
 
 | name   | Type                                | Default       | Description                                                                                    |
 | :----- | :---------------------------------- | :------------ | :--------------------------------------------------------------------------------------------- |
-| expire | { value: `int`, isInMs: `boolean` } | No expiration | How many seconds (or milliseconds) until the data is expired and can be deleted from the cache |
+| expire | { value: `int`, isInMs: `boolean` } | `null` - No expiration | How many seconds (or milliseconds) until the data is expired and can be deleted from the cache |
 
 ## PubSub
 
@@ -359,9 +393,34 @@ print(res.value) # Should print "true"
 
 ### Task options
 
-You can define cache options or override them within your usage
+You can define task options or override them within your usage - either from schema or your code (preferably schema)
 
 {{< tabs >}}
+{{% tab name="Schema" %}}
+
+Global task options and overriden task options
+
+```
+Config {
+  defaultOptions: {
+    task: {
+      takeNewest: false
+    }
+  }
+}
+
+Task {
+  addMessage {
+    payload: string
+    returns: boolean
+    options: {
+      takeNewest: true
+    }
+  }
+}
+```
+
+{{% /tab %}}
 {{% tab name="Node.js" %}}
 
 ```js

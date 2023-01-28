@@ -1,3 +1,13 @@
+Config {
+    defaultOptions: {
+        cache: {
+            expire: {
+                value: 2
+            }
+        }
+    }
+}
+
 Enum Animal {
     dog
     cat
@@ -30,6 +40,16 @@ Cache {
         }
         payload: User
     }
+    userExpire {
+        key: string
+        payload: User
+        options: {
+            expire: {
+                value: 1000
+                isInMs: true
+            }
+        }
+    }
 }
 
 PubSub {
@@ -42,5 +62,12 @@ Task {
     runAlgo {
         payload: string
         returns: Animal
+    }
+    runAlgoNewest {
+        payload: string
+        returns: Animal
+        options: {
+            takeNewest: true
+        }
     }
 }

@@ -1,6 +1,7 @@
 import { getScopeEndIndex, removeBracketsOfScope } from "./utilities";
 
 export enum ValueTypes {
+  string,
   simple,
   object,
   array,
@@ -22,15 +23,26 @@ export type ObjectValueType = BaseValueType & {
   type: ValueTypes.object;
   properties: PropertyType[];
 };
+export type StringValueType = {
+  type: ValueTypes.string;
+  content: string;
+};
 
-export type ValueType = SimpleValueType | ArrayValueType | ObjectValueType;
+export type ValueType =
+  | SimpleValueType
+  | ArrayValueType
+  | ObjectValueType
+  | StringValueType;
 
 export type PropertyType = {
   name: string;
   value: ValueType;
 };
 
-export const getValueFromString: (content: string) => ValueType = (content) => {
+export const getValueFromString: (
+  content: string,
+  propertiesToKeepString?: string[]
+) => ValueType = (content, propertiesToKeepString = []) => {
   const isOptional = content[content.length - 1] === "?";
   const contentWithoutOptional = isOptional
     ? content.substring(0, content.length - 1)
@@ -98,8 +110,15 @@ export const getValueFromString: (content: string) => ValueType = (content) => {
 
         properties.push({
           name,
-          value: getValueFromString(scope),
+          value:
+            propertiesToKeepString.indexOf(name) === -1
+              ? getValueFromString(scope)
+              : {
+                  type: ValueTypes.string,
+                  content: scope,
+                },
         });
+
         index += bracketIndex + bracketEndIndex + 1;
       }
     }

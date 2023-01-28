@@ -1,8 +1,60 @@
-import { Block, BlockTypes, flatBlocks, getBlocks } from "src/core/block";
+import {
+  Block,
+  BlockCache,
+  BlockTask,
+  BlockTypes,
+  flatBlocks,
+  getBlocks,
+} from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import { assertUnreachable, getTabs as get2Tabs } from "src/core/utilities";
 
 const getTabs = (x: number) => get2Tabs(x * 2);
+
+const blockOptionsToPython: (
+  blockType: BlockTypes,
+  options: (BlockCache | BlockTask)["values"][number]["options"],
+  level: number
+) => string = (bType, options, level) => {
+  switch (bType) {
+    case BlockTypes.cache: {
+      const o = options as BlockCache["values"][number]["options"];
+      return o
+        ? `MemorixClientCacheSetOptions(
+${getTabs(level + 1)}expire=${
+            o.expire
+              ? `MemorixClientCacheSetOptionsExpire(
+${getTabs(level + 2)}value=${o.expire.value},${
+                  o.expire.isInMs !== undefined
+                    ? `
+${getTabs(level + 2)}is_in_ms=${o.expire.isInMs ? "True" : "False"},`
+                    : ""
+                }
+${getTabs(level + 1)})`
+              : "None"
+          },
+${getTabs(level)})`
+        : "None";
+    }
+    case BlockTypes.task: {
+      const o = options as BlockTask["values"][number]["options"];
+      return o
+        ? `MemorixClientTaskDequequeOptions(
+${getTabs(level + 1)}take_newest=${o.takeNewest ? "True" : "False"},
+${getTabs(level)})`
+        : "None";
+    }
+    case BlockTypes.enum:
+    case BlockTypes.pubsub:
+    case BlockTypes.model:
+    case BlockTypes.config: {
+      throw new Error("No options yet");
+    }
+    default:
+      assertUnreachable(bType);
+      return "";
+  }
+};
 
 const valueToPython: (value: ValueType, isType: boolean) => string = (
   value,
@@ -75,10 +127,45 @@ ${getTabs(3)}payload_class=${valueToPython(v.payload, false)},${
                   false
                 )},`
               : ""
+          }${
+            v.options !== undefined
+              ? `
+${getTabs(3)}options=${blockOptionsToPython(b.type, v.options, 3)},`
+              : ""
           }
 ${getTabs(2)})`;
         })
         .join("\n")}`;
+    }
+    case BlockTypes.config: {
+      return `
+${getTabs(1)}config=MemorixClientApi.Config(${
+        b.defaultOptions
+          ? `
+${getTabs(2)}default_options=MemorixClientApi.Config.DefaultOptions(${
+              b.defaultOptions.cache
+                ? `
+${getTabs(3)}cache=${blockOptionsToPython(
+                    BlockTypes.cache,
+                    b.defaultOptions.cache,
+                    3
+                  )},`
+                : ""
+            }${
+              b.defaultOptions.task
+                ? `
+${getTabs(3)}task=${blockOptionsToPython(
+                    BlockTypes.task,
+                    b.defaultOptions.task,
+                    3
+                  )},`
+                : ""
+            }
+${getTabs(2)}),`
+          : ""
+      }
+${getTabs(1)}),
+`;
     }
     default:
       assertUnreachable(b);
@@ -89,12 +176,14 @@ ${getTabs(2)})`;
 export const codegenPython: (schema: string) => string = (schema) => {
   const blocks = flatBlocks(getBlocks(schema));
 
+  const hasConfig =
+    blocks.filter((b) => b.type === BlockTypes.config).length > 0;
   const hasEnum = blocks.filter((b) => b.type === BlockTypes.enum).length > 0;
   const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
     blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
   const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = hasCache || hasPubsub || hasTask;
+  const hasApi = hasConfig || hasCache || hasPubsub || hasTask;
 
   const code = [
     `# flake8: noqa
@@ -126,6 +215,12 @@ ${[]
           `${getTabs(1)}MemorixClientCacheApi`,
           `${getTabs(1)}MemorixClientCacheApiItem`,
           `${getTabs(1)}MemorixClientCacheApiItemNoKey`,
+        ]
+      : []
+  )
+  .concat(
+    hasCache || hasConfig
+      ? [
           `${getTabs(
             1
           )}MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions`,
@@ -152,6 +247,12 @@ ${[]
           `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
           `${getTabs(1)}MemorixClientTaskApiItemNoReturns`,
           `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
+        ]
+      : []
+  )
+  .concat(
+    hasTask || hasConfig
+      ? [
           `${getTabs(
             1
           )}MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions`,
@@ -167,7 +268,7 @@ ${[]
           hasApi ? [`MemorixClientApiDefaults = _MemorixClientApiDefaults`] : []
         )
         .concat(
-          hasCache
+          hasCache || hasConfig
             ? [
                 `MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions`,
                 `MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire`,
@@ -175,7 +276,7 @@ ${[]
             : []
         )
         .concat(
-          hasTask
+          hasTask || hasConfig
             ? [
                 `MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions`,
               ]
@@ -225,7 +326,14 @@ ${blocks
     )
     .concat(
       hasApi
-        ? `class MemorixApi(MemorixClientApi):
+        ? `class MemorixApi(${
+            hasConfig
+              ? `MemorixClientApi.from_config(  # type: ignore${blocks
+                  .filter((b) => b.type === BlockTypes.config)
+                  .map(blockToPython)
+                  .join("\n")})`
+              : "MemorixClientApi"
+          }):
 ${getTabs(1)}def __init__(
 ${getTabs(2)}self,
 ${getTabs(2)}redis_url: str,

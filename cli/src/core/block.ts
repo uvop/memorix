@@ -6,7 +6,9 @@ import {
   ValueTypes,
   SimpleValueType,
   ArrayValueType,
+  StringValueType,
 } from "./value";
+import { getJsonFromString } from "./json";
 import {
   assertUnreachable,
   camelCase,
@@ -14,12 +16,32 @@ import {
 } from "./utilities";
 
 export enum BlockTypes {
+  config = "Config",
   model = "Model",
   enum = "Enum",
   cache = "Cache",
   pubsub = "PubSub",
   task = "Task",
 }
+
+export type CacheSetOptions = {
+  expire?: {
+    value: number;
+    isInMs?: boolean;
+  };
+};
+
+export type TaskDequequeOptions = {
+  takeNewest: boolean;
+};
+
+export type BlockConfig = {
+  type: BlockTypes.config;
+  defaultOptions?: {
+    cache?: CacheSetOptions;
+    task?: TaskDequequeOptions;
+  };
+};
 
 export type BlockModel = {
   type: BlockTypes.model;
@@ -39,6 +61,7 @@ export type BlockCache = {
     name: string;
     key?: ValueType;
     payload: ValueType;
+    options?: CacheSetOptions;
   }[];
 };
 export type BlockPubsub = {
@@ -56,10 +79,12 @@ export type BlockTask = {
     key?: ValueType;
     payload: ValueType;
     returns?: ValueType;
+    options?: TaskDequequeOptions;
   }[];
 };
 
 export type Block =
+  | BlockConfig
   | BlockModel
   | BlockEnum
   | BlockCache
@@ -71,28 +96,45 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
 
   const blocks = namespaces.map<Block>((n) => {
     const isNamelessNamespace =
-      [BlockTypes.cache, BlockTypes.pubsub, BlockTypes.task].indexOf(
-        n.name as BlockTypes
-      ) !== -1;
+      [
+        BlockTypes.cache,
+        BlockTypes.pubsub,
+        BlockTypes.task,
+        BlockTypes.config,
+      ].indexOf(n.name as BlockTypes) !== -1;
     if (isNamelessNamespace) {
       const blockType = n.name as
         | BlockTypes.cache
         | BlockTypes.pubsub
-        | BlockTypes.task;
+        | BlockTypes.task
+        | BlockTypes.config;
+      if (blockType === BlockTypes.config) {
+        const json = getJsonFromString(n.scope);
+        if (typeof json !== "object") {
+          throw new Error(`Expected object under "Config"`);
+        }
+        return {
+          type: blockType,
+          ...json,
+        };
+      }
       const cacheNamespaces = getNamespaces(removeBracketsOfScope(n.scope));
 
       return {
         type: blockType,
         values: cacheNamespaces.map((cn) => {
-          const value = getValueFromString(cn.scope);
+          const value = getValueFromString(cn.scope, ["options"]);
           if (value.type !== ValueTypes.object) {
             throw new Error(`Expected object under "${blockType}.${cn.name}"`);
           }
 
           const payload = value.properties.find((p) => p.name === "payload");
           if (!payload) {
-            throw new Error(`Couldn't find "payload" under Cache.${cn.name}`);
+            throw new Error(
+              `Couldn't find "payload" under ${blockType}.${cn.name}`
+            );
           }
+          const options = value.properties.find((p) => p.name === "options");
 
           return {
             name: cn.name,
@@ -101,6 +143,10 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
             returns:
               blockType === BlockTypes.task
                 ? value.properties.find((p) => p.name === "returns")?.value
+                : undefined,
+            options:
+              options !== undefined && options.value.type === ValueTypes.string
+                ? getJsonFromString(options.value.content)
                 : undefined,
           };
         }),
@@ -144,8 +190,9 @@ export const getBlocks: (schema: string) => Block[] = (schema) => {
 const getNonObjectValueFromValue = (
   value: ValueType,
   name: string
-): SimpleValueType | ArrayValueType => {
+): SimpleValueType | ArrayValueType | StringValueType => {
   switch (value.type) {
+    case ValueTypes.string:
     case ValueTypes.simple:
       return value;
     case ValueTypes.array:
@@ -170,6 +217,7 @@ const getBlockModelsFromValue = (
   name: string
 ): BlockModel[] => {
   switch (value.type) {
+    case ValueTypes.string:
     case ValueTypes.simple:
       return [];
     case ValueTypes.object:
@@ -203,9 +251,10 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
   let newBlocks: Block[] = [];
 
   blocks
-    .filter((b) => [BlockTypes.enum].indexOf(b.type) === -1)
+    .filter((b) => [BlockTypes.enum, BlockTypes.config].indexOf(b.type) === -1)
     .forEach((b) => {
       switch (b.type) {
+        case BlockTypes.config:
         case BlockTypes.enum:
           break;
         case BlockTypes.model: {
@@ -329,5 +378,10 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
       }
     });
 
-  return [...blocks.filter((b) => b.type === BlockTypes.enum), ...newBlocks];
+  return [
+    ...blocks.filter(
+      (b) => [BlockTypes.enum, BlockTypes.config].indexOf(b.type) !== -1
+    ),
+    ...newBlocks,
+  ];
 };

@@ -161,6 +161,44 @@ def test_cache_expire_defaults() -> None:
     assert user2 is None
 
 
+def test_cache_expire_schema() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+    )
+
+    memorix_api.cache.userExpire.set(
+        "uv",
+        User(name="uv", age=29),
+    )
+
+    user1 = memorix_api.cache.userExpire.get("uv")
+    if user1 is None:
+        raise Exception("Didn't get user from redis")
+    assert user1.age == 29
+    sleep(1.5)
+    user2 = memorix_api.cache.userExpire.get("uv")
+    assert user2 is None
+
+
+def test_cache_expire_defaults_config() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+    )
+
+    memorix_api.cache.user.set(
+        "uv",
+        User(name="uv", age=29),
+    )
+
+    user1 = memorix_api.cache.user.get("uv")
+    if user1 is None:
+        raise Exception("Didn't get user from redis")
+    assert user1.age == 29
+    sleep(2.5)
+    user2 = memorix_api.cache.user.get("uv")
+    assert user2 is None
+
+
 def test_pubsub() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
@@ -202,6 +240,7 @@ async def test_pubsub_async() -> None:
 
 def test_task_dequeue() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
+    memorix_api.task.runAlgo.clear()
     memorix_api.task.runAlgo.queue(payload="send me dog")
     sleep(0.1)
     for res in memorix_api.task.runAlgo.dequeue():
@@ -211,6 +250,7 @@ def test_task_dequeue() -> None:
 
 def test_task() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
+    memorix_api.task.runAlgo.clear()
 
     task1 = multiprocessing.Process(target=listen_to_algo)
     task2 = multiprocessing.Process(target=listen_to_algo)
@@ -234,6 +274,7 @@ def test_task() -> None:
 
 def test_task_clear() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
+    memorix_api.task.runAlgo.clear()
 
     try:
         queue = memorix_api.task.runAlgo.queue(payload="send me cat")
@@ -243,5 +284,19 @@ def test_task_clear() -> None:
         memorix_api.task.runAlgo.clear()
         queue = memorix_api.task.runAlgo.queue(payload="send me cat")
         assert queue.queue_size == 1
+    finally:
+        memorix_api.task.runAlgo.clear()
+
+
+def test_task_options_schema() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+    memorix_api.task.runAlgoNewest.clear()
+
+    try:
+        memorix_api.task.runAlgoNewest.queue(payload="send me cat")
+        memorix_api.task.runAlgoNewest.queue(payload="send me dog")
+        for res in memorix_api.task.runAlgoNewest.dequeue():
+            assert res.payload == "send me dog"
+            break
     finally:
         memorix_api.task.runAlgo.clear()

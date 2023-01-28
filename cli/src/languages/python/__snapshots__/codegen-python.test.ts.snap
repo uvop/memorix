@@ -211,6 +211,145 @@ class MemorixApi(MemorixClientApi):
         self.cache = MemorixCacheApi(self)"
 `;
 
+exports[`python codegen cache can have options 1`] = `
+"# flake8: noqa
+import typing
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientCacheApi,
+    MemorixClientCacheApiItem,
+    MemorixClientCacheApiItemNoKey,
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
+)
+
+
+MemorixClientApiDefaults = _MemorixClientApiDefaults
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
+
+
+class MemorixCacheApi(MemorixClientCacheApi):
+    def __init__(self, api: MemorixClientApi) -> None:
+        super().__init__(api=api)
+
+        self.user = MemorixClientCacheApiItem[int, str](
+            api=self._api,
+            id=\\"user\\",
+            payload_class=str,
+            options=MemorixClientCacheSetOptions(
+                expire=MemorixClientCacheSetOptionsExpire(
+                    value=5,
+                ),
+            ),
+        )
+
+
+class MemorixApi(MemorixClientApi):
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
+
+        self.cache = MemorixCacheApi(self)"
+`;
+
+exports[`python codegen config can be null 1`] = `
+"# flake8: noqa
+import typing
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
+    MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
+)
+
+
+MemorixClientApiDefaults = _MemorixClientApiDefaults
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
+MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
+
+
+class MemorixApi(MemorixClientApi.from_config(  # type: ignore
+    config=MemorixClientApi.Config(
+        default_options=MemorixClientApi.Config.DefaultOptions(
+            cache=MemorixClientCacheSetOptions(
+                expire=None,
+            ),
+        ),
+    ),
+)):
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)"
+`;
+
+exports[`python codegen config can generate 1`] = `
+"# flake8: noqa
+import typing
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
+    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
+    MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
+)
+
+
+MemorixClientApiDefaults = _MemorixClientApiDefaults
+MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
+MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
+MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
+
+
+class MemorixApi(MemorixClientApi.from_config(  # type: ignore
+    config=MemorixClientApi.Config(
+        default_options=MemorixClientApi.Config.DefaultOptions(
+            cache=MemorixClientCacheSetOptions(
+                expire=MemorixClientCacheSetOptionsExpire(
+                    value=5,
+                ),
+            ),
+            task=MemorixClientTaskDequequeOptions(
+                take_newest=True,
+            ),
+        ),
+    ),
+)):
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)"
+`;
+
 exports[`python codegen enum can generate 1`] = `
 "# flake8: noqa
 import typing
@@ -457,6 +596,57 @@ class MemorixTaskApi(MemorixClientTaskApi):
             id=\\"doIt\\",
             payload_class=str,
             returns_class=bool,
+        )
+
+
+class MemorixApi(MemorixClientApi):
+    def __init__(
+        self,
+        redis_url: str,
+        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, defaults=defaults)
+
+        self.task = MemorixTaskApi(self)"
+`;
+
+exports[`python codegen task can have options 1`] = `
+"# flake8: noqa
+import typing
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from memorix_client_redis import (
+    MemorixClientApi,
+    MemorixClientApiDefaults as _MemorixClientApiDefaults,
+    MemorixClientTaskApi,
+    MemorixClientTaskApiItem,
+    MemorixClientTaskApiItemNoKey,
+    MemorixClientTaskApiItemNoReturns,
+    MemorixClientTaskApiItemNoKeyNoReturns,
+    MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
+)
+
+
+MemorixClientApiDefaults = _MemorixClientApiDefaults
+MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
+
+
+class MemorixTaskApi(MemorixClientTaskApi):
+    def __init__(self, api: MemorixClientApi) -> None:
+        super().__init__(api=api)
+
+        self.doIt = MemorixClientTaskApiItem[int, str, bool](
+            api=self._api,
+            id=\\"doIt\\",
+            payload_class=str,
+            returns_class=bool,
+            options=MemorixClientTaskDequequeOptions(
+                take_newest=True,
+            ),
         )
 
 

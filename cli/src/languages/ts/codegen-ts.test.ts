@@ -97,6 +97,25 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
+    it("can have options", () => {
+      expect(
+        codegenTs(
+          `
+            Cache {
+              user {
+                key: int
+                payload: string
+                options: {
+                  expire: {
+                    value: 5
+                  }
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
     it("can generate with inline object type", () => {
       expect(
         codegenTs(
@@ -185,6 +204,24 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
+    it("can have options", () => {
+      expect(
+        codegenTs(
+          `
+            Task {
+              doIt {
+                key: int
+                payload: string
+                returns: boolean
+                options: {
+                  takeNewest: true
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
   });
   describe("enum", () => {
     it("can generate", () => {
@@ -195,6 +232,43 @@ describe("ts codegen", () => {
               dog
               cat
               person
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+  });
+  describe("config", () => {
+    it("can generate", () => {
+      expect(
+        codegenTs(
+          `
+            Config {
+              defaultOptions: {
+                cache: {
+                  expire: {
+                    value: 5
+                  }
+                }
+                task: {
+                  takeNewest: true
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+    it("can be null", () => {
+      expect(
+        codegenTs(
+          `
+            Config {
+              defaultOptions: {
+                cache: {
+                  expire: null
+                }
+              }
             }
           `
         )

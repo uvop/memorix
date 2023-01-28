@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { MemorixClientApi } from "./index";
 
 export enum Animal {
@@ -11,10 +12,13 @@ export type User = {
   age?: number;
 };
 
-export class MemorixApi extends MemorixClientApi {
+// prettier-ignore
+export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:2}}}}) {
   cache = {
     favoriteAnimal: this.getCacheItem<string, Animal>("favoriteAnimal"),
     user: this.getCacheItem<string, User>("user"),
+    // prettier-ignore
+    userExpire: this.getCacheItem<string, User>("userExpire", {expire:{value:1000,isInMs:true}}),
   };
 
   pubsub = {
@@ -23,5 +27,7 @@ export class MemorixApi extends MemorixClientApi {
 
   task = {
     runAlgo: this.getTaskItemNoKey<string, Animal>("runAlgo", true),
+    // prettier-ignore
+    runAlgoNewest: this.getTaskItemNoKey<string, Animal>("runAlgoNewest", true, {takeNewest:true}),
   };
 }
