@@ -300,7 +300,7 @@ ${blocks
     )
     .concat(
       hasPubsub
-        ? `class MemorixPubSubApi(MemorixClientPubSubApi.from_config()):
+        ? `class MemorixPubSubApi(MemorixClientPubSubApi):
 ${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
 ${getTabs(2)}super().__init__(api=api)
 

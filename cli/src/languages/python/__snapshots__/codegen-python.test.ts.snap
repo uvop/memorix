@@ -536,7 +536,7 @@ from memorix_client_redis import (
 MemorixClientApiDefaults = _MemorixClientApiDefaults
 
 
-class MemorixPubSubApi(MemorixClientPubSubApi.from_config()):
+class MemorixPubSubApi(MemorixClientPubSubApi):
     def __init__(self, api: MemorixClientApi) -> None:
         super().__init__(api=api)
 
