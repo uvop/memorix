@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/uvop/memorix/compare/v1.1.1...v1.2.0) (2023-01-28)
+
+
+### Features
+
+* Schema options for cache and task ([#35](https://github.com/uvop/memorix/issues/35)) ([247b823](https://github.com/uvop/memorix/commit/247b823858421ad3135526059b06489b32c4f779))
+
 ## [1.1.1](https://github.com/uvop/memorix/compare/v1.1.0...v1.1.1) (2023-01-19)
 
 
