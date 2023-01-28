@@ -81,6 +81,17 @@ class MemorixCacheApi(MemorixClientCacheApi):
             id="user2",
             payload_class=User,
         )
+        self.userExpire = MemorixClientCacheApiItem[str, "User"](
+            api=self._api,
+            id="userExpire",
+            payload_class=User,
+            options=MemorixClientCacheSetOptions(
+                expire=MemorixClientCacheSetOptionsExpire(
+                    value=1000,
+                    is_in_ms=True,
+                ),
+            ),
+        )
 
 
 class MemorixPubSubApi(MemorixClientPubSubApi):
@@ -104,9 +115,30 @@ class MemorixTaskApi(MemorixClientTaskApi):
             payload_class=str,
             returns_class=Animal,
         )
+        self.runAlgoNewest = MemorixClientTaskApiItemNoKey[str, "Animal"](
+            api=self._api,
+            id="runAlgoNewest",
+            payload_class=str,
+            returns_class=Animal,
+            options=MemorixClientTaskDequequeOptions(
+                take_newest=True,
+            ),
+        )
 
 
-class MemorixApi(MemorixClientApi):
+class MemorixApi(
+    MemorixClientApi.from_config(
+        config=MemorixClientApi.Config(
+            default_options=MemorixClientApi.Config.DefaultOptions(
+                cache=MemorixClientCacheSetOptions(
+                    expire=MemorixClientCacheSetOptionsExpire(
+                        value=2,
+                    ),
+                ),
+            ),
+        ),
+    )
+):
     def __init__(
         self,
         redis_url: str,

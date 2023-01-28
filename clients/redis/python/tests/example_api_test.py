@@ -161,6 +161,44 @@ def test_cache_expire_defaults() -> None:
     assert user2 is None
 
 
+def test_cache_expire_schema() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+    )
+
+    memorix_api.cache.userExpire.set(
+        "uv",
+        User(name="uv", age=29),
+    )
+
+    user1 = memorix_api.cache.userExpire.get("uv")
+    if user1 is None:
+        raise Exception("Didn't get user from redis")
+    assert user1.age == 29
+    sleep(1.5)
+    user2 = memorix_api.cache.userExpire.get("uv")
+    assert user2 is None
+
+
+def test_cache_expire_defaults_config() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+    )
+
+    memorix_api.cache.user.set(
+        "uv",
+        User(name="uv", age=29),
+    )
+
+    user1 = memorix_api.cache.user.get("uv")
+    if user1 is None:
+        raise Exception("Didn't get user from redis")
+    assert user1.age == 29
+    sleep(2.5)
+    user2 = memorix_api.cache.user.get("uv")
+    assert user2 is None
+
+
 def test_pubsub() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 

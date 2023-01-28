@@ -139,31 +139,33 @@ ${getTabs(2)})`;
     }
     case BlockTypes.config: {
       return `
-${getTabs(1)}defaultOptions=${
+${getTabs(1)}config=MemorixClientApi.Config(${
         b.defaultOptions
-          ? `MemorixClientApiDefaults(${
+          ? `
+${getTabs(2)}default_options=MemorixClientApi.Config.DefaultOptions(${
               b.defaultOptions.cache
                 ? `
-${getTabs(2)}cache=${blockOptionsToPython(
+${getTabs(3)}cache=${blockOptionsToPython(
                     BlockTypes.cache,
                     b.defaultOptions.cache,
-                    2
+                    3
                   )},`
                 : ""
             }${
               b.defaultOptions.task
                 ? `
-${getTabs(2)}task=${blockOptionsToPython(
+${getTabs(3)}task=${blockOptionsToPython(
                     BlockTypes.task,
                     b.defaultOptions.task,
-                    2
+                    3
                   )},`
                 : ""
             }
+${getTabs(2)}),`
+          : ""
+      }
 ${getTabs(1)}),
-${getTabs(0)}`
-          : "None"
-      }`;
+`;
     }
     default:
       assertUnreachable(b);

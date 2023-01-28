@@ -16,10 +16,12 @@ class CacheItem(Generic[KT, PT]):
         api: Api,
         id: str,
         payload_class: Type[PT],
+        options: Optional[CacheSetOptions] = None,
     ) -> None:
         self._api = api
         self._id = id
         self._payload_class = payload_class
+        self._options = None
 
     def get(self, key: KT) -> Optional[PT]:
         data_bytes = self._api._redis.get(hash_key(self._id, key=key))

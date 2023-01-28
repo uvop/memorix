@@ -288,9 +288,11 @@ MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
 class MemorixApi(MemorixClientApi.from_config(
-    defaultOptions=MemorixClientApiDefaults(
-        cache=MemorixClientCacheSetOptions(
-            expire=None,
+    config=MemorixClientApi.Config(
+        default_options=MemorixClientApi.Config.DefaultOptions(
+            cache=MemorixClientCacheSetOptions(
+                expire=None,
+            ),
         ),
     ),
 )):
@@ -327,14 +329,16 @@ MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
 class MemorixApi(MemorixClientApi.from_config(
-    defaultOptions=MemorixClientApiDefaults(
-        cache=MemorixClientCacheSetOptions(
-            expire=MemorixClientCacheSetOptionsExpire(
-                value=5,
+    config=MemorixClientApi.Config(
+        default_options=MemorixClientApi.Config.DefaultOptions(
+            cache=MemorixClientCacheSetOptions(
+                expire=MemorixClientCacheSetOptionsExpire(
+                    value=5,
+                ),
             ),
-        ),
-        task=MemorixClientTaskDequequeOptions(
-            take_newest=True,
+            task=MemorixClientTaskDequequeOptions(
+                take_newest=True,
+            ),
         ),
     ),
 )):

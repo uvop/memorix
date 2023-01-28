@@ -82,6 +82,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
         id: str,
         payload_class: typing.Type[PT],
         returns_class: typing.Optional[typing.Type[RT]] = None,
+        options: typing.Optional[TaskDequequeOptions] = None,
     ) -> None:
         self._api = api
         self._id = id
@@ -92,6 +93,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
                 id="{0}_returns".format(id),
                 payload_class=returns_class,
             )
+        self._options = options
 
     def queue(self, key: KT, payload: PT) -> TaskItemQueueWithReturns[RT]:
         returns_id: str | None = None
