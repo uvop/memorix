@@ -27,7 +27,7 @@ ${getTabs(level + 1)}expire=${
 ${getTabs(level + 2)}value=${o.expire.value},${
                   o.expire.isInMs !== undefined
                     ? `
-${getTabs(level + 2)}is_in_ms=${o.expire.isInMs},`
+${getTabs(level + 2)}is_in_ms=${o.expire.isInMs ? "True" : "False"},`
                     : ""
                 }
 ${getTabs(level + 1)})`
