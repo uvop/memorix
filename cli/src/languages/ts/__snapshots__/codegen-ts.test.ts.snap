@@ -1,7 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ts codegen cache can generate also with model 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export type User = {
   name: string;
@@ -17,7 +18,8 @@ export class MemorixApi extends MemorixClientApi {
 `;
 
 exports[`ts codegen cache can generate with inline object type 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
@@ -30,7 +32,8 @@ export class MemorixApi extends MemorixClientApi {
 `;
 
 exports[`ts codegen cache can generate with inline types 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
@@ -40,7 +43,8 @@ export class MemorixApi extends MemorixClientApi {
 `;
 
 exports[`ts codegen cache can generate with no key 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
@@ -53,33 +57,40 @@ export class MemorixApi extends MemorixClientApi {
 `;
 
 exports[`ts codegen cache can have options 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export class MemorixApi extends MemorixClientApi {
   cache = {
+    // prettier-ignore
     user: this.getCacheItem<number, string>(\\"user\\", {expire:{value:5}}),
   };
 }"
 `;
 
 exports[`ts codegen config can be null 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
+// prettier-ignore
 export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{}}}) {
 
 }"
 `;
 
 exports[`ts codegen config can generate 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
+// prettier-ignore
 export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:5}},task:{takeNewest:true}}}) {
 
 }"
 `;
 
 exports[`ts codegen enum can generate 1`] = `
-"export enum Animals {
+"/* eslint-disable */
+export enum Animals {
   dog = \\"dog\\",
   cat = \\"cat\\",
   person = \\"person\\",
@@ -87,7 +98,8 @@ exports[`ts codegen enum can generate 1`] = `
 `;
 
 exports[`ts codegen model can generate from 2 models 1`] = `
-"export type User1 = {
+"/* eslint-disable */
+export type User1 = {
   id: number;
 };
 
@@ -98,7 +110,8 @@ export type User2 = {
 `;
 
 exports[`ts codegen model can generate from model 1`] = `
-"export type User = {
+"/* eslint-disable */
+export type User = {
   id: number;
   name: string;
   age?: number;
@@ -106,7 +119,8 @@ exports[`ts codegen model can generate from model 1`] = `
 `;
 
 exports[`ts codegen model can generate from model with array 1`] = `
-"export type User = {
+"/* eslint-disable */
+export type User = {
   id: number;
   names: Array<string>;
   children?: Array<{
@@ -117,7 +131,8 @@ exports[`ts codegen model can generate from model with array 1`] = `
 `;
 
 exports[`ts codegen model can generate from model within model 1`] = `
-"export type User = {
+"/* eslint-disable */
+export type User = {
   id: number;
   papa: {
     name?: string;
@@ -126,7 +141,8 @@ exports[`ts codegen model can generate from model within model 1`] = `
 `;
 
 exports[`ts codegen model can generate from model within model within a model 1`] = `
-"export type User = {
+"/* eslint-disable */
+export type User = {
   id: number;
   papa: {
     name?: string;
@@ -139,7 +155,8 @@ exports[`ts codegen model can generate from model within model within a model 1`
 `;
 
 exports[`ts codegen pubsub can generate with inline types 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export class MemorixApi extends MemorixClientApi {
   pubsub = {
@@ -149,7 +166,8 @@ export class MemorixApi extends MemorixClientApi {
 `;
 
 exports[`ts codegen task can generate with inline types 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export class MemorixApi extends MemorixClientApi {
   task = {
@@ -159,10 +177,12 @@ export class MemorixApi extends MemorixClientApi {
 `;
 
 exports[`ts codegen task can have options 1`] = `
-"import { MemorixClientApi } from \\"@memorix/client-redis\\";
+"/* eslint-disable */
+import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 export class MemorixApi extends MemorixClientApi {
   task = {
+    // prettier-ignore
     doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true, {takeNewest:true}),
   };
 }"

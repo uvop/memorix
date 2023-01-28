@@ -77,12 +77,14 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
 
       return `${b.values
         .map((v) => {
-          return `${getTabs(2)}${v.name}: this.${itemFn}${
-            v.key ? "" : "NoKey"
-          }<${v.key ? `${valueToTs(v.key, 2)}, ` : ""}${valueToTs(
-            v.payload,
-            2
-          )}${
+          return `${
+            v.options !== undefined
+              ? `${getTabs(2)}// prettier-ignore
+`
+              : ""
+          }${getTabs(2)}${v.name}: this.${itemFn}${v.key ? "" : "NoKey"}<${
+            v.key ? `${valueToTs(v.key, 2)}, ` : ""
+          }${valueToTs(v.payload, 2)}${
             hasReturns && "returns" in v
               ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
               : ""
@@ -129,7 +131,12 @@ export const codegenTs: (schema: string) => string = (schema) => {
     .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToTs))
     .concat(
       hasApi
-        ? `export class MemorixApi extends ${
+        ? `${
+            hasConfig
+              ? `// prettier-ignore
+`
+              : ""
+          }export class MemorixApi extends ${
             hasConfig
               ? `MemorixClientApi.fromConfig(${blocks
                   .filter((b) => b.type === BlockTypes.config)
@@ -173,5 +180,6 @@ ${getTabs(1)}};`
         : []
     )
     .join("\n\n");
-  return `${code}\n`;
+  return `/* eslint-disable */
+${code}\n`;
 };
