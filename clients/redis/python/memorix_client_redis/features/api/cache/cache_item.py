@@ -50,27 +50,33 @@ class CacheItem(Generic[KT, PT]):
         payload: PT,
         options: Optional[CacheSetOptions] = None,
     ) -> Optional[bool]:
-        expire: Optional[CacheSetOptionsExpire] = None
+        merged_options = self._options
         try:
-            expire = cast(CacheSetOptions, options).expire
+            merged_options = CacheSetOptions.merge(
+                cast(ApiDefaults, self._api._defaults).cache_set_options,
+                self._options,
+            )
         except AttributeError:
-            try:
-                expire = cast(CacheSetOptions, self._options).expire
-            except AttributeError:
-                try:
-                    expire = cast(
-                        CacheSetOptions,
-                        cast(ApiDefaults, self._api._defaults).cache_set_options,
-                    ).expire
-                except AttributeError:
-                    pass
+            pass
+        merged_options = CacheSetOptions.merge(
+            merged_options,
+            options,
+        )
 
         payload_json = to_json(payload)
         return self._api._redis.set(
             hash_key(self._id, key=key),
             payload_json,
-            ex=expire.value if expire is not None and not expire.is_in_ms else None,
-            px=expire.value if expire is not None and expire.is_in_ms else None,
+            ex=merged_options.expire.value
+            if merged_options is not None
+            and merged_options.expire is not None
+            and not merged_options.expire.is_in_ms
+            else None,
+            px=merged_options.expire.value
+            if merged_options is not None
+            and merged_options.expire is not None
+            and merged_options.expire.is_in_ms
+            else None,
         )
 
     async def async_set(

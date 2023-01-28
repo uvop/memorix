@@ -131,29 +131,21 @@ class TaskItem(typing.Generic[KT, PT, RT]):
         key: KT,
         options: typing.Optional[TaskDequequeOptions] = None,
     ) -> typing.Generator[TaskItemDequeueWithReturns[PT], None, None]:
-        take_newest: typing.Optional[bool] = None
+        merged_options = self._options
         try:
-            take_newest = typing.cast(TaskDequequeOptions, options).take_newest
+            merged_options = TaskDequequeOptions.merge(
+                typing.cast(ApiDefaults, self._api._defaults).task_dequeque_options,
+                self._options,
+            )
         except AttributeError:
-            try:
-                take_newest = typing.cast(
-                    TaskDequequeOptions,
-                    self._options,
-                ).take_newest
-            except AttributeError:
-                try:
-                    take_newest = typing.cast(
-                        TaskDequequeOptions,
-                        typing.cast(
-                            ApiDefaults,
-                            self._api._defaults,
-                        ).task_dequeque_options,
-                    ).take_newest
-                except AttributeError:
-                    pass
+            pass
+        merged_options = TaskDequequeOptions.merge(
+            merged_options,
+            options,
+        )
 
         while True:
-            if take_newest:
+            if merged_options is not None and merged_options.take_newest:
                 [channel_bytes, data_bytes] = self._api._redis.brpop(
                     hash_key(self._id, key=key),
                 )
