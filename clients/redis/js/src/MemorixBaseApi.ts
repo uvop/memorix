@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import Redis from "ioredis";
 import { v4 as uuidv4 } from "uuid";
 import callbackToAsyncIterator from "callback-to-async-iterator";
@@ -20,6 +21,30 @@ type Defaults = {
 };
 
 export class MemorixBaseApi {
+  public static fromConfig: (config: {
+    defaultOptions: { cache?: CacheSetOptions; task?: TaskDequequeOptions };
+  }) => typeof MemorixBaseApi = ({ defaultOptions }) =>
+    class MemorixBaseApiWithConfig extends MemorixBaseApi {
+      constructor(options) {
+        super({
+          ...options,
+          defaults: {
+            ...(defaultOptions.cache
+              ? {
+                  cacheSetOptions: defaultOptions.cache,
+                }
+              : {}),
+            ...(defaultOptions.task
+              ? {
+                  taskDequequeOptions: defaultOptions.task,
+                }
+              : {}),
+            ...options.defaults,
+          },
+        });
+      }
+    };
+
   private readonly redis: Redis;
 
   private readonly redisSub: Redis;
@@ -49,7 +74,10 @@ export class MemorixBaseApi {
     });
   }
 
-  getCacheItem<Key, Payload>(identifier: string): CacheItem<Key, Payload> {
+  getCacheItem<Key, Payload>(
+    identifier: string,
+    iOptions?: CacheSetOptions
+  ): CacheItem<Key, Payload> {
     const hashCacheKey = (key: Key | undefined) => {
       return hashKey(key ? [identifier, key] : [identifier]);
     };
@@ -58,6 +86,7 @@ export class MemorixBaseApi {
       set: async (key, payload, options) => {
         const { expire = undefined } = {
           ...this.defaults?.cacheSetOptions,
+          ...iOptions,
           ...options,
         };
         const hashedKey = hashCacheKey(key);
@@ -158,7 +187,8 @@ export class MemorixBaseApi {
 
   getTaskItem<Key, Payload, Returns>(
     identifier: string,
-    hasReturns: Returns extends undefined ? false : true
+    hasReturns: Returns extends undefined ? false : true,
+    iOptions?: TaskDequequeOptions
   ): TaskItem<Key, Payload, Returns> {
     const hashPubsubKey = (key: Key | undefined) => {
       return hashKey(key ? [identifier, key] : [identifier]);
@@ -210,6 +240,7 @@ export class MemorixBaseApi {
         const hashedKey = hashPubsubKey(key);
         const { takeNewest = false } = {
           ...this.defaults?.taskDequequeOptions,
+          ...iOptions,
           ...options,
         };
 

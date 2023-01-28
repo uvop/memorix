@@ -15,6 +15,14 @@ describe("example schema has", () => {
     const user = await memorixApi.cache.user.get("uv");
     expect(user!.age).toBe(29);
   });
+  it("cache expire from config", async () => {
+    await memorixApi.cache.user.set("uv", { name: "uv", age: 29 });
+    const user1 = await memorixApi.cache.user.get("uv");
+    expect(user1!.age).toBe(29);
+    await new Promise((res) => setTimeout(res, 2500));
+    const user2 = await memorixApi.cache.user.get("uv");
+    expect(user2).toBe(null);
+  });
   it("cache expire", async () => {
     await memorixApi.cache.user.set(
       "uv",
@@ -25,6 +33,14 @@ describe("example schema has", () => {
     expect(user1!.age).toBe(29);
     await new Promise((res) => setTimeout(res, 1500));
     const user2 = await memorixApi.cache.user.get("uv");
+    expect(user2).toBe(null);
+  });
+  it("cache expire in schema", async () => {
+    await memorixApi.cache.userExpire.set("uv", { name: "uv", age: 29 });
+    const user1 = await memorixApi.cache.userExpire.get("uv");
+    expect(user1!.age).toBe(29);
+    await new Promise((res) => setTimeout(res, 1500));
+    const user2 = await memorixApi.cache.userExpire.get("uv");
     expect(user2).toBe(null);
   });
   describe("pubsub", () => {
@@ -71,6 +87,7 @@ describe("example schema has", () => {
   describe("task", () => {
     beforeEach(async () => {
       await memorixApi.task.runAlgo.clear();
+      await memorixApi.task.runAlgoNewest.clear();
     });
     it("queue returns the queue size", async () => {
       await memorixApi.task.runAlgo.queue("uv1");
@@ -143,6 +160,39 @@ describe("example schema has", () => {
                 },
                 { takeNewest: true }
               )
+              .then((args) => {
+                stop = args.stop;
+              });
+          });
+        })
+        .then(async ({ payloads, stop }: any) => {
+          expect(payloads).toStrictEqual(["uv7", "uv6"]);
+          await stop();
+          done();
+        })
+        .catch(done);
+    });
+    it("dequeue receives a message in opposite order if asked from schema", (done) => {
+      memorixApi.task.runAlgoNewest
+        .queue("uv6")
+        .then(() => memorixApi.task.runAlgoNewest.queue("uv7"))
+        .then(({ queueSize }) => {
+          expect(queueSize).toBe(2);
+
+          return new Promise((res) => {
+            const payloads: string[] = [];
+            let stop: any;
+            memorixApi.task.runAlgoNewest
+              .dequeue(({ payload }) => {
+                payloads.push(payload);
+                if (payloads.length === 2) {
+                  res({
+                    payloads,
+                    stop,
+                  });
+                }
+                return Animal.cat;
+              })
               .then((args) => {
                 stop = args.stop;
               });
