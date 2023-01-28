@@ -138,10 +138,19 @@ class TaskItem(typing.Generic[KT, PT, RT]):
             try:
                 take_newest = typing.cast(
                     TaskDequequeOptions,
-                    typing.cast(ApiDefaults, self._api._defaults).task_dequeque_options,
+                    self._options,
                 ).take_newest
             except AttributeError:
-                pass
+                try:
+                    take_newest = typing.cast(
+                        TaskDequequeOptions,
+                        typing.cast(
+                            ApiDefaults,
+                            self._api._defaults,
+                        ).task_dequeque_options,
+                    ).take_newest
+                except AttributeError:
+                    pass
 
         while True:
             if take_newest:

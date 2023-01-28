@@ -127,7 +127,7 @@ class MemorixTaskApi(MemorixClientTaskApi):
 
 
 class MemorixApi(
-    MemorixClientApi.from_config(
+    MemorixClientApi.from_config(  # type: ignore
         config=MemorixClientApi.Config(
             default_options=MemorixClientApi.Config.DefaultOptions(
                 cache=MemorixClientCacheSetOptions(

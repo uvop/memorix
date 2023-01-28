@@ -21,7 +21,7 @@ class CacheItem(Generic[KT, PT]):
         self._api = api
         self._id = id
         self._payload_class = payload_class
-        self._options = None
+        self._options = options
 
     def get(self, key: KT) -> Optional[PT]:
         data_bytes = self._api._redis.get(hash_key(self._id, key=key))
@@ -55,12 +55,15 @@ class CacheItem(Generic[KT, PT]):
             expire = cast(CacheSetOptions, options).expire
         except AttributeError:
             try:
-                expire = cast(
-                    CacheSetOptions,
-                    cast(ApiDefaults, self._api._defaults).cache_set_options,
-                ).expire
+                expire = cast(CacheSetOptions, self._options).expire
             except AttributeError:
-                pass
+                try:
+                    expire = cast(
+                        CacheSetOptions,
+                        cast(ApiDefaults, self._api._defaults).cache_set_options,
+                    ).expire
+                except AttributeError:
+                    pass
 
         payload_json = to_json(payload)
         return self._api._redis.set(

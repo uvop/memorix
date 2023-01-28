@@ -328,7 +328,7 @@ ${blocks
       hasApi
         ? `class MemorixApi(${
             hasConfig
-              ? `MemorixClientApi.from_config(${blocks
+              ? `MemorixClientApi.from_config(  # type: ignore${blocks
                   .filter((b) => b.type === BlockTypes.config)
                   .map(blockToPython)
                   .join("\n")})`
