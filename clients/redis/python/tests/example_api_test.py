@@ -199,6 +199,62 @@ def test_cache_expire_defaults_config() -> None:
     assert user2 is None
 
 
+def test_cache_expire_none() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+    )
+
+    memorix_api.cache.userExpire2.set(
+        "uv",
+        User(name="uv", age=29),
+    )
+
+    sleep(2.5)
+    user = memorix_api.cache.userExpire2.get("uv")
+    assert user is not None
+
+
+def test_cache_expire_none_defaults() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+        defaults=MemorixClientApiDefaults(
+            cache_set_options=MemorixClientCacheSetOptions(
+                expire=MemorixClientCacheSetOptionsExpire(value=1),
+            ),
+        ),
+    )
+
+    memorix_api.cache.userExpire2.set(
+        "uv",
+        User(name="uv", age=29),
+    )
+
+    sleep(1.5)
+    user = memorix_api.cache.userExpire2.get("uv")
+    assert user is not None
+
+
+def test_cache_expire_none_code() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+        defaults=MemorixClientApiDefaults(
+            cache_set_options=MemorixClientCacheSetOptions(
+                expire=MemorixClientCacheSetOptionsExpire(value=1),
+            ),
+        ),
+    )
+
+    memorix_api.cache.userExpire.set(
+        "uv",
+        User(name="uv", age=29),
+        options=MemorixClientCacheSetOptions(expire=None),
+    )
+
+    sleep(1.5)
+    user = memorix_api.cache.userExpire.get("uv")
+    assert user is not None
+
+
 def test_pubsub() -> None:
     memorix_api = MemorixApi(redis_url=redis_url)
 
