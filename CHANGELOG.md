@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/uvop/memorix/compare/v1.2.0...v1.2.1) (2023-02-02)
+
+
+### Bug Fixes
+
+* cache expire null not taking effect over default expire ([aedc132](https://github.com/uvop/memorix/commit/aedc1329279df36f32e4a4dffe6f24f5f16c54cf))
+
 # [1.2.0](https://github.com/uvop/memorix/compare/v1.1.1...v1.2.0) (2023-01-28)
 
 
