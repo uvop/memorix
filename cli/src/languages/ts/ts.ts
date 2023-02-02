@@ -3,7 +3,9 @@ import { ValueType, ValueTypes } from "src/core/value";
 import { assertUnreachable, getTabs } from "src/core/utilities";
 
 export const jsonStringify: (json: any) => string = (json) =>
-  JSON.stringify(json).replace(/"([^"]+)":/g, "$1:");
+  JSON.stringify(json, (k, v) => (v === undefined ? null : v))
+    .replace(/null/g, "undefined")
+    .replace(/"([^"]+)":/g, "$1:");
 
 const valueToTs: (
   value: ValueType,

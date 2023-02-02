@@ -92,6 +92,14 @@ class MemorixCacheApi(MemorixClientCacheApi):
                 ),
             ),
         )
+        self.userExpire2 = MemorixClientCacheApiItem[str, "User"](
+            api=self._api,
+            id="userExpire2",
+            payload_class=User,
+            options=MemorixClientCacheSetOptions(
+                expire=None,
+            ),
+        )
 
 
 class MemorixPubSubApi(MemorixClientPubSubApi):

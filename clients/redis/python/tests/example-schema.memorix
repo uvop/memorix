@@ -50,6 +50,13 @@ Cache {
             }
         }
     }
+    userExpire2 {
+        key: string
+        payload: User
+        options: {
+            expire: null
+        }
+    }
 }
 
 PubSub {

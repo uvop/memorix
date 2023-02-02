@@ -19,6 +19,8 @@ export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cac
     user: this.getCacheItem<string, User>("user"),
     // prettier-ignore
     userExpire: this.getCacheItem<string, User>("userExpire", {expire:{value:1000,isInMs:true}}),
+    // prettier-ignore
+    userExpire2: this.getCacheItem<string, User>("userExpire2", {expire:undefined}),
   };
 
   pubsub = {

@@ -43,6 +43,12 @@ describe("example schema has", () => {
     const user2 = await memorixApi.cache.userExpire.get("uv");
     expect(user2).toBe(null);
   });
+  it("cache expire none", async () => {
+    await memorixApi.cache.userExpire2.set("uv", { name: "uv", age: 29 });
+    await new Promise((res) => setTimeout(res, 2500));
+    const user = await memorixApi.cache.userExpire2.get("uv");
+    expect(user).not.toBe(null);
+  });
   describe("pubsub", () => {
     it("publish says how many subscribers", (done) => {
       memorixApi.pubsub.message

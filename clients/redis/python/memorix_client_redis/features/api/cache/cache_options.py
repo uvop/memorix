@@ -15,8 +15,6 @@ class CacheSetOptionsExpire(object):
         item1: typing.Optional["CacheSetOptionsExpire"],
         item2: typing.Optional["CacheSetOptionsExpire"],
     ) -> typing.Optional["CacheSetOptionsExpire"]:
-        if item2 is None:
-            return item1
         return item2
 
 
