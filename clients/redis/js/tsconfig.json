@@ -6,7 +6,7 @@
     "incremental": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "importHelpers": true,
+    "importHelpers": false,
     "experimentalDecorators": true,
     "target": "ES2018",
     "module": "commonjs",
