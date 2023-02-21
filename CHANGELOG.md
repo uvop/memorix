@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/uvop/memorix/compare/v1.2.1...v1.2.2) (2023-02-21)
+
+
+### Bug Fixes
+
+* No need tslib as dependency ([e6cd04f](https://github.com/uvop/memorix/commit/e6cd04fba20c382564090baa0ae533bbaf83ae7b))
+
 ## [1.2.1](https://github.com/uvop/memorix/compare/v1.2.0...v1.2.1) (2023-02-02)
 
 
