@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 import callbackToAsyncIterator from "callback-to-async-iterator";
 import {
   CacheItem,
-  CacheSetOptions,
-  TaskDequequeOptions,
+  CacheOptions,
+  TaskOptions,
   PubsubCallback,
   PubsubItem,
   TaskItem,
@@ -16,13 +16,13 @@ import {
 import { hashKey } from "./utils/hashKey";
 
 type Defaults = {
-  cacheSetOptions?: CacheSetOptions;
-  taskDequequeOptions?: TaskDequequeOptions;
+  cacheOptions?: CacheOptions;
+  taskOptions?: TaskOptions;
 };
 
 export class MemorixBaseApi {
   public static fromConfig: (config: {
-    defaultOptions: { cache?: CacheSetOptions; task?: TaskDequequeOptions };
+    defaultOptions: { cache?: CacheOptions; task?: TaskOptions };
   }) => typeof MemorixBaseApi = ({ defaultOptions }) =>
     class MemorixBaseApiWithConfig extends MemorixBaseApi {
       constructor(options) {
@@ -31,12 +31,12 @@ export class MemorixBaseApi {
           defaults: {
             ...(defaultOptions.cache
               ? {
-                  cacheSetOptions: defaultOptions.cache,
+                  cacheOptions: defaultOptions.cache,
                 }
               : {}),
             ...(defaultOptions.task
               ? {
-                  taskDequequeOptions: defaultOptions.task,
+                  taskOptions: defaultOptions.task,
                 }
               : {}),
             ...options.defaults,
@@ -76,16 +76,16 @@ export class MemorixBaseApi {
 
   getCacheItem<Key, Payload>(
     identifier: string,
-    iOptions?: CacheSetOptions
+    iOptions?: CacheOptions
   ): CacheItem<Key, Payload> {
     const hashCacheKey = (key: Key | undefined) => {
       return hashKey(key ? [identifier, key] : [identifier]);
     };
 
-    return {
+    const cacheItem: CacheItem<Key, Payload> = {
       set: async (key, payload, options) => {
         const { expire = undefined } = {
-          ...this.defaults?.cacheSetOptions,
+          ...this.defaults?.cacheOptions,
           ...iOptions,
           ...options,
         };
@@ -99,15 +99,41 @@ export class MemorixBaseApi {
           ...(params as any)
         );
       },
-      get: async (key) => {
+      get: async (key, options) => {
+        const { extendExpireOnGet } = {
+          ...this.defaults?.cacheOptions,
+          ...iOptions,
+          ...options,
+        };
         const hashedKey = hashCacheKey(key);
         const found = await this.redis.get(hashedKey);
+        if (extendExpireOnGet) {
+          await cacheItem.extend(key);
+        }
         if (found) {
           return JSON.parse(found) as Payload;
         }
         return null;
       },
+      extend: async (key) => {
+        const { expire = undefined } = {
+          ...this.defaults?.cacheOptions,
+          ...iOptions,
+        };
+
+        if (!expire) {
+          return;
+        }
+
+        const hashedKey = hashCacheKey(key);
+        if (expire.isInMs) {
+          await this.redis.pexpire(hashedKey, expire.value);
+        } else {
+          await this.redis.expire(hashedKey, expire.value);
+        }
+      },
     };
+    return cacheItem;
   }
 
   getCacheItemNoKey<Payload>(...itemArgs: any[]): CacheItemNoKey<Payload> {
@@ -116,6 +142,7 @@ export class MemorixBaseApi {
     return {
       get: (...args) => item.get(undefined, ...args),
       set: (...args) => item.set(undefined, ...args),
+      extend: (...args) => item.set(undefined, ...args),
     };
   }
 
@@ -188,7 +215,7 @@ export class MemorixBaseApi {
   getTaskItem<Key, Payload, Returns>(
     identifier: string,
     hasReturns: Returns extends undefined ? false : true,
-    iOptions?: TaskDequequeOptions
+    iOptions?: TaskOptions
   ): TaskItem<Key, Payload, Returns> {
     const hashPubsubKey = (key: Key | undefined) => {
       return hashKey(key ? [identifier, key] : [identifier]);
@@ -239,7 +266,7 @@ export class MemorixBaseApi {
       dequeue: async (key, callback, options) => {
         const hashedKey = hashPubsubKey(key);
         const { takeNewest = false } = {
-          ...this.defaults?.taskDequequeOptions,
+          ...this.defaults?.taskOptions,
           ...iOptions,
           ...options,
         };
