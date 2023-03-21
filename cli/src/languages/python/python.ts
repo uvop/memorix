@@ -32,7 +32,14 @@ ${getTabs(level + 2)}is_in_ms=${o.expire.isInMs ? "True" : "False"},`
                 }
 ${getTabs(level + 1)})`
               : "None"
-          },
+          },${
+            o.extendExpireOnGet !== undefined
+              ? `
+${getTabs(level + 1)}extend_expire_on_get=${
+                  o.extendExpireOnGet ? "True" : "False"
+                },`
+              : ""
+          }
 ${getTabs(level)})`
         : "None";
     }

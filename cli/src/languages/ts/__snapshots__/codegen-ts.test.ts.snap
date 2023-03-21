@@ -83,7 +83,7 @@ exports[`ts codegen config can generate 1`] = `
 import { MemorixClientApi } from \\"@memorix/client-redis\\";
 
 // prettier-ignore
-export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:5}},task:{takeNewest:true}}}) {
+export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:5},extendExpireOnGet:true},task:{takeNewest:true}}}) {
 
 }"
 `;

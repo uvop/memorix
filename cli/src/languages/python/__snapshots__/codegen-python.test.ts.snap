@@ -248,6 +248,7 @@ class MemorixCacheApi(MemorixClientCacheApi):
                 expire=MemorixClientCacheSetOptionsExpire(
                     value=5,
                 ),
+                extend_expire_on_get=True,
             ),
         )
 

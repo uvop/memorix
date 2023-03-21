@@ -249,6 +249,7 @@ describe("ts codegen", () => {
                   expire: {
                     value: 5
                   }
+                  extendExpireOnGet: true
                 }
                 task: {
                   takeNewest: true

@@ -109,6 +109,7 @@ describe("python codegen", () => {
                   expire: {
                     value: 5
                   }
+                  extendExpireOnGet: true
                 }
               }
             }
