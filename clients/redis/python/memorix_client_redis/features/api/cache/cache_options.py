@@ -24,8 +24,10 @@ class CacheSetOptions(object):
     def __init__(
         self,
         expire: typing.Optional[CacheSetOptionsExpire] = None,
+        extend_expire_on_get: typing.Optional[bool] = None,
     ) -> None:
         self.expire = expire
+        self.extend_expire_on_get = extend_expire_on_get
 
     @staticmethod
     def merge(
@@ -38,4 +40,7 @@ class CacheSetOptions(object):
             return item1
         return CacheSetOptions(
             expire=CacheSetOptions.Expire.merge(item1.expire, item2.expire),
+            extend_expire_on_get=item1.extend_expire_on_get
+            if item2.extend_expire_on_get is None
+            else item2.extend_expire_on_get,
         )

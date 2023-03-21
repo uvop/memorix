@@ -214,6 +214,23 @@ def test_cache_expire_none() -> None:
     assert user is not None
 
 
+def test_cache_expire_extending_on_get() -> None:
+    memorix_api = MemorixApi(
+        redis_url=redis_url,
+    )
+
+    memorix_api.cache.userExpire3.set(
+        "uv",
+        User(name="uv", age=29),
+    )
+
+    sleep(1.5)
+    memorix_api.cache.userExpire3.get("uv")
+    sleep(1.5)
+    user = memorix_api.cache.userExpire3.get("uv")
+    assert user is not None
+
+
 def test_cache_expire_none_defaults() -> None:
     memorix_api = MemorixApi(
         redis_url=redis_url,
