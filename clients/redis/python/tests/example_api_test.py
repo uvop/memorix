@@ -220,14 +220,14 @@ def test_cache_expire_extending_on_get() -> None:
     )
 
     memorix_api.cache.userExpire3.set(
-        "uv",
         User(name="uv", age=29),
     )
+    memorix_api.cache.userExpire3.extend()  # Or extend manually
 
     sleep(1.5)
-    memorix_api.cache.userExpire3.get("uv")
+    memorix_api.cache.userExpire3.get()
     sleep(1.5)
-    user = memorix_api.cache.userExpire3.get("uv")
+    user = memorix_api.cache.userExpire3.get()
     assert user is not None
 
 

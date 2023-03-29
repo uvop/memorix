@@ -58,7 +58,6 @@ Cache {
         }
     }
     userExpire3 {
-        key: string
         payload: User
         options: {
             expire: {

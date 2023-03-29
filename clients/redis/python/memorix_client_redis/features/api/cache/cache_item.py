@@ -49,7 +49,7 @@ class CacheItem(Generic[KT, PT]):
             and merged_options.expire is not None
             and merged_options.expire.extend_on_get
         ):
-            self.extend(key=key)
+            CacheItem.extend(self=self, key=key)
 
         data_str = bytes_to_str(data_bytes)
         payload = from_json(value=data_str, data_class=self._payload_class)
@@ -187,4 +187,19 @@ class CacheItemNoKey(CacheItem[None, PT]):
             key=None,
             payload=payload,
             options=options,
+        )
+
+    # Different signature on purpose
+    def extend(  # type: ignore
+        self,
+    ) -> None:
+        CacheItem.extend(self, key=None)
+
+    # Different signature on purpose
+    async def async_extend(  # type: ignore
+        self,
+    ) -> None:
+        await CacheItem.async_extend(
+            self,
+            key=None,
         )

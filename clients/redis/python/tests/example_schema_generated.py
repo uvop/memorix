@@ -100,7 +100,7 @@ class MemorixCacheApi(MemorixClientCacheApi):
                 expire=None,
             ),
         )
-        self.userExpire3 = MemorixClientCacheApiItem[str, "User"](
+        self.userExpire3 = MemorixClientCacheApiItemNoKey["User"](
             api=self._api,
             id="userExpire3",
             payload_class=User,
