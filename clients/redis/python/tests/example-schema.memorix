@@ -57,6 +57,15 @@ Cache {
             expire: null
         }
     }
+    userExpire3 {
+        payload: User
+        options: {
+            expire: {
+                value: 2
+                extendOnGet: true
+            }
+        }
+    }
 }
 
 PubSub {

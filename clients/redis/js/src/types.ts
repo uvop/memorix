@@ -1,17 +1,20 @@
-export type CacheSetOptions = {
+export type CacheOptions = {
   expire?: {
     value: number;
     isInMs?: boolean;
+    extendOnGet?: boolean;
   };
 };
 
 export type CacheItem<Key, Payload> = {
-  get(key: Key): Promise<Payload | null>;
-  set(key: Key, payload: Payload, options?: CacheSetOptions): Promise<void>;
+  get(key: Key, options?: CacheOptions): Promise<Payload | null>;
+  set(key: Key, payload: Payload, options?: CacheOptions): Promise<void>;
+  extend(key: Key): Promise<void>;
 };
 export type CacheItemNoKey<Payload> = {
-  get(): Promise<Payload | null>;
-  set(payload: Payload, options?: CacheSetOptions): Promise<void>;
+  get(options?: CacheOptions): Promise<Payload | null>;
+  set(payload: Payload, options?: CacheOptions): Promise<void>;
+  extend(): Promise<void>;
 };
 
 export type PubsubCallback<Payload> = (payload: Payload) => void;
@@ -32,7 +35,7 @@ export type PubsubItemNoKey<Payload> = {
   publish(payload: Payload): Promise<{ subscribersSize: number }>;
 };
 
-export type TaskDequequeOptions = {
+export type TaskOptions = {
   takeNewest: boolean;
 };
 
@@ -55,7 +58,7 @@ export type TaskItem<Key, Payload, Returns> = {
     ...args: [
       key: Key,
       callback: TaskDequeueCallback<Payload, Returns>,
-      options?: TaskDequequeOptions
+      options?: TaskOptions
     ]
   ): TaskDequeue;
   clear(...args: [key: Key]): void;
@@ -65,7 +68,7 @@ export type TaskItemNoKey<Payload, Returns> = {
   dequeue(
     ...args: [
       callback: TaskDequeueCallback<Payload, Returns>,
-      options?: TaskDequequeOptions
+      options?: TaskOptions
     ]
   ): TaskDequeue;
   clear(...args: []): void;

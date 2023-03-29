@@ -13,8 +13,8 @@ from memorix_client_redis import (
     MemorixClientCacheApi,
     MemorixClientCacheApiItem,
     MemorixClientCacheApiItemNoKey,
-    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
-    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
+    MemorixClientCacheOptions as _MemorixClientCacheOptions,
+    MemorixClientCacheOptionsExpire as _MemorixClientCacheOptionsExpire,
     MemorixClientPubSubApi,
     MemorixClientPubSubApiItem,
     MemorixClientPubSubApiItemNoKey,
@@ -28,8 +28,8 @@ from memorix_client_redis import (
 
 
 MemorixClientApiDefaults = _MemorixClientApiDefaults
-MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
-MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
+MemorixClientCacheOptions = _MemorixClientCacheOptions
+MemorixClientCacheOptionsExpire = _MemorixClientCacheOptionsExpire
 MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 

@@ -8,8 +8,8 @@ from .features.api.cache.cache_item import (
     CacheItemNoKey as MemorixClientCacheApiItemNoKey,
 )
 from .features.api.cache.cache_options import (
-    CacheSetOptions as MemorixClientCacheSetOptions,
-    CacheSetOptionsExpire as MemorixClientCacheSetOptionsExpire,
+    CacheOptions as MemorixClientCacheOptions,
+    CacheOptionsExpire as MemorixClientCacheOptionsExpire,
 )
 from .features.api.pubsub.pubsub_api import PubSubApi as MemorixClientPubSubApi
 from .features.api.pubsub.pubsub_item import (

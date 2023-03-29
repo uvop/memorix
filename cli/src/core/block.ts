@@ -24,22 +24,23 @@ export enum BlockTypes {
   task = "Task",
 }
 
-export type CacheSetOptions = {
+export type CacheOptions = {
   expire?: {
     value: number;
     isInMs?: boolean;
+    extendOnGet?: boolean;
   };
 };
 
-export type TaskDequequeOptions = {
+export type TaskOptions = {
   takeNewest: boolean;
 };
 
 export type BlockConfig = {
   type: BlockTypes.config;
   defaultOptions?: {
-    cache?: CacheSetOptions;
-    task?: TaskDequequeOptions;
+    cache?: CacheOptions;
+    task?: TaskOptions;
   };
 };
 
@@ -61,7 +62,7 @@ export type BlockCache = {
     name: string;
     key?: ValueType;
     payload: ValueType;
-    options?: CacheSetOptions;
+    options?: CacheOptions;
   }[];
 };
 export type BlockPubsub = {
@@ -79,7 +80,7 @@ export type BlockTask = {
     key?: ValueType;
     payload: ValueType;
     returns?: ValueType;
-    options?: TaskDequequeOptions;
+    options?: TaskOptions;
   }[];
 };
 

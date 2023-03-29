@@ -248,6 +248,7 @@ describe("ts codegen", () => {
                 cache: {
                   expire: {
                     value: 5
+                    extendOnGet: true
                   }
                 }
                 task: {
