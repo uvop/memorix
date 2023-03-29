@@ -60,10 +60,15 @@ export class MemorixBaseApi {
     redisUrl: string;
     defaults?: Defaults;
   }) {
-    this.redis = new Redis(redisUrl);
+    this.redis = new Redis(redisUrl, { lazyConnect: true });
     this.redisSub = this.redis.duplicate();
     this.redisTasks = [];
     this.defaults = defaults;
+  }
+
+  async connect(): Promise<void> {
+    await this.redis.connect();
+    await this.redisSub.connect();
   }
 
   disconnect(): void {
@@ -245,6 +250,7 @@ export class MemorixBaseApi {
         };
 
         const redisClient = this.redis.duplicate();
+        await redisClient.connect();
         this.redisTasks.push(redisClient);
 
         const stoppedPromise = new Promise((res) => {
