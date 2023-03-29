@@ -1,8 +1,10 @@
 export const camelCase = (str: string) => {
-  return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match) => {
-    if (+match === 0) return "";
-    return match.toUpperCase();
-  });
+  return str
+    .replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match) => {
+      if (+match === 0) return "";
+      return match.toUpperCase();
+    })
+    .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
 };
 
 export const removeBracketsOfScope = (scope: string) =>

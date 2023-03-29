@@ -97,6 +97,23 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
+    it("can generate with inline types and convert to CamelCase", () => {
+      expect(
+        codegenPython(
+          `
+            Cache {
+              user_by_number {
+                key: int
+                payload: {
+                  name: string
+                  age: int
+                }
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
     it("can have options", () => {
       expect(
         codegenPython(
