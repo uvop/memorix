@@ -100,14 +100,14 @@ export class MemorixBaseApi {
         );
       },
       get: async (key, options) => {
-        const { extendExpireOnGet } = {
+        const { expire } = {
           ...this.defaults?.cacheOptions,
           ...iOptions,
           ...options,
         };
         const hashedKey = hashCacheKey(key);
         const found = await this.redis.get(hashedKey);
-        if (extendExpireOnGet) {
+        if (expire?.extendOnGet) {
           await cacheItem.extend(key);
         }
         if (found) {

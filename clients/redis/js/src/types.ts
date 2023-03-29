@@ -2,8 +2,8 @@ export type CacheOptions = {
   expire?: {
     value: number;
     isInMs?: boolean;
+    extendOnGet?: boolean;
   };
-  extendExpireOnGet?: boolean;
 };
 
 export type CacheItem<Key, Payload> = {
