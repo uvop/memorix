@@ -2,10 +2,16 @@ import { MemorixApi, Animal } from "./example-schema.generated";
 
 const redisUrl = process.env.REDIS_URL!;
 
+it("example schmea will throw error if can't connect", async () => {
+  const memorixApi = new MemorixApi({ redisUrl: "redis://hello-world:6379/0" });
+  expect(memorixApi.connect()).rejects.toBeTruthy();
+});
+
 describe("example schema has", () => {
   let memorixApi: MemorixApi;
-  beforeEach(() => {
+  beforeEach(async () => {
     memorixApi = new MemorixApi({ redisUrl });
+    await memorixApi.connect();
   });
   afterEach(() => {
     memorixApi.disconnect();
