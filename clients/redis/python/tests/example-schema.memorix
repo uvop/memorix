@@ -61,7 +61,10 @@ Cache {
         key: string
         payload: User
         options: {
-            extendExpireOnGet: true
+            expire: {
+                value: 2
+                extendOnGet: true
+            }
         }
     }
 }

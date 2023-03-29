@@ -1,16 +1,16 @@
 from redis import Redis
 import typing
-from .cache.cache_options import CacheSetOptions as _CacheSetOptions
+from .cache.cache_options import CacheOptions as _CacheOptions
 from .task.task_options import TaskDequequeOptions as _TaskDequequeOptions
 
 
 class ApiDefaults(object):
-    CacheSetOptions = _CacheSetOptions
+    CacheOptions = _CacheOptions
     TaskDequequeOptions = _TaskDequequeOptions
 
     def __init__(
         self,
-        cache_set_options: typing.Optional[_CacheSetOptions] = None,
+        cache_set_options: typing.Optional[_CacheOptions] = None,
         task_dequeque_options: typing.Optional[_TaskDequequeOptions] = None,
     ) -> None:
         self.cache_set_options = cache_set_options
@@ -26,7 +26,7 @@ class ApiDefaults(object):
         if item2 is None:
             return item1
         return ApiDefaults(
-            cache_set_options=ApiDefaults.CacheSetOptions.merge(
+            cache_set_options=ApiDefaults.CacheOptions.merge(
                 item1.cache_set_options,
                 item2.cache_set_options,
             ),
@@ -40,7 +40,7 @@ class ApiDefaults(object):
 class _ApiConfigDefaultOptions(object):
     def __init__(
         self,
-        cache: typing.Optional[_CacheSetOptions] = None,
+        cache: typing.Optional[_CacheOptions] = None,
         task: typing.Optional[_TaskDequequeOptions] = None,
     ) -> None:
         self.cache = cache

@@ -23,12 +23,12 @@ jobs:
           redis-version: '7.x'
           auto-start: "true"
       - name: Install
-        run: poetry install
+        run: make install
       - name: Format
-        run: poetry run black --check .
+        run: make format-check
       - name: Lint
-        run: poetry run flake8 .
+        run: make lint
       - name: Typecheck
-        run: poetry run mypy --strict .
+        run: make typecheck
       - name: Test
-        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 poetry run pytest ./tests
+        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 make test

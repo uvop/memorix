@@ -13,8 +13,8 @@ from memorix_client_redis import (
     MemorixClientCacheApi,
     MemorixClientCacheApiItem,
     MemorixClientCacheApiItemNoKey,
-    MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions,
-    MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire,
+    MemorixClientCacheOptions as _MemorixClientCacheOptions,
+    MemorixClientCacheOptionsExpire as _MemorixClientCacheOptionsExpire,
     MemorixClientPubSubApi,
     MemorixClientPubSubApiItem,
     MemorixClientPubSubApiItemNoKey,
@@ -28,8 +28,8 @@ from memorix_client_redis import (
 
 
 MemorixClientApiDefaults = _MemorixClientApiDefaults
-MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions
-MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire
+MemorixClientCacheOptions = _MemorixClientCacheOptions
+MemorixClientCacheOptionsExpire = _MemorixClientCacheOptionsExpire
 MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
@@ -85,8 +85,8 @@ class MemorixCacheApi(MemorixClientCacheApi):
             api=self._api,
             id="userExpire",
             payload_class=User,
-            options=MemorixClientCacheSetOptions(
-                expire=MemorixClientCacheSetOptionsExpire(
+            options=MemorixClientCacheOptions(
+                expire=MemorixClientCacheOptionsExpire(
                     value=1000,
                     is_in_ms=True,
                 ),
@@ -96,7 +96,7 @@ class MemorixCacheApi(MemorixClientCacheApi):
             api=self._api,
             id="userExpire2",
             payload_class=User,
-            options=MemorixClientCacheSetOptions(
+            options=MemorixClientCacheOptions(
                 expire=None,
             ),
         )
@@ -104,9 +104,11 @@ class MemorixCacheApi(MemorixClientCacheApi):
             api=self._api,
             id="userExpire3",
             payload_class=User,
-            options=MemorixClientCacheSetOptions(
-                expire=None,
-                extend_expire_on_get=True,
+            options=MemorixClientCacheOptions(
+                expire=MemorixClientCacheOptionsExpire(
+                    value=2,
+                    extend_on_get=True,
+                ),
             ),
         )
 
@@ -147,8 +149,8 @@ class MemorixApi(
     MemorixClientApi.from_config(  # type: ignore
         config=MemorixClientApi.Config(
             default_options=MemorixClientApi.Config.DefaultOptions(
-                cache=MemorixClientCacheSetOptions(
-                    expire=MemorixClientCacheSetOptionsExpire(
+                cache=MemorixClientCacheOptions(
+                    expire=MemorixClientCacheOptionsExpire(
                         value=2,
                     ),
                 ),

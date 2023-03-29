@@ -20,10 +20,10 @@ const blockOptionsToPython: (
     case BlockTypes.cache: {
       const o = options as BlockCache["values"][number]["options"];
       return o
-        ? `MemorixClientCacheSetOptions(
+        ? `MemorixClientCacheOptions(
 ${getTabs(level + 1)}expire=${
             o.expire
-              ? `MemorixClientCacheSetOptionsExpire(
+              ? `MemorixClientCacheOptionsExpire(
 ${getTabs(level + 2)}value=${o.expire.value},${
                   o.expire.isInMs !== undefined
                     ? `
@@ -228,10 +228,10 @@ ${[]
       ? [
           `${getTabs(
             1
-          )}MemorixClientCacheSetOptions as _MemorixClientCacheSetOptions`,
+          )}MemorixClientCacheOptions as _MemorixClientCacheOptions`,
           `${getTabs(
             1
-          )}MemorixClientCacheSetOptionsExpire as _MemorixClientCacheSetOptionsExpire`,
+          )}MemorixClientCacheOptionsExpire as _MemorixClientCacheOptionsExpire`,
         ]
       : []
   )
@@ -275,8 +275,8 @@ ${[]
         .concat(
           hasCache || hasConfig
             ? [
-                `MemorixClientCacheSetOptions = _MemorixClientCacheSetOptions`,
-                `MemorixClientCacheSetOptionsExpire = _MemorixClientCacheSetOptionsExpire`,
+                `MemorixClientCacheOptions = _MemorixClientCacheOptions`,
+                `MemorixClientCacheOptionsExpire = _MemorixClientCacheOptionsExpire`,
               ]
             : []
         )

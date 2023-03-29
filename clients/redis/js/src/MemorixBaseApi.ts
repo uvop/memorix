@@ -107,13 +107,13 @@ export class MemorixBaseApi {
         };
         const hashedKey = hashCacheKey(key);
         const found = await this.redis.get(hashedKey);
+        if (!found) {
+          return null;
+        }
         if (expire?.extendOnGet) {
           await cacheItem.extend(key);
         }
-        if (found) {
-          return JSON.parse(found) as Payload;
-        }
-        return null;
+        return JSON.parse(found) as Payload;
       },
       extend: async (key) => {
         const { expire = undefined } = {
