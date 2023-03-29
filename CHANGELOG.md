@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/uvop/memorix/compare/v1.2.2...v1.2.3) (2023-03-29)
+
+
+### Bug Fixes
+
+* Adding connect function to api ([#41](https://github.com/uvop/memorix/issues/41)) ([068b204](https://github.com/uvop/memorix/commit/068b204f50c9760732fa602dfb3d6f4083addf28))
+
 ## [1.2.2](https://github.com/uvop/memorix/compare/v1.2.1...v1.2.2) (2023-02-21)
 
 
