@@ -2,6 +2,8 @@ from redis import Redis
 import typing
 from .cache.cache_options import CacheSetOptions as _CacheSetOptions
 from .task.task_options import TaskDequequeOptions as _TaskDequequeOptions
+import asyncio
+import functools
 
 
 class ApiDefaults(object):
@@ -88,3 +90,17 @@ class Api(object):
                 super().__init__(redis_url=redis_url, defaults=merged_defaults)
 
         return ApiWithConfig
+
+    def connect(self) -> None:
+        self._redis.ping()
+        self._pubsub.ping()
+
+    async def async_connect(self) -> None:
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(
+            None,
+            functools.partial(
+                Api.connect,
+                self=self,
+            ),
+        )

@@ -250,6 +250,7 @@ export class MemorixBaseApi {
         };
 
         const redisClient = this.redis.duplicate();
+        await redisClient.connect();
         this.redisTasks.push(redisClient);
 
         const stoppedPromise = new Promise((res) => {
