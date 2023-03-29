@@ -108,8 +108,8 @@ describe("python codegen", () => {
                 options: {
                   expire: {
                     value: 5
+                    extendOnGet: true
                   }
-                  extendExpireOnGet: true
                 }
               }
             }

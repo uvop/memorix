@@ -29,17 +29,15 @@ ${getTabs(level + 2)}value=${o.expire.value},${
                     ? `
 ${getTabs(level + 2)}is_in_ms=${o.expire.isInMs ? "True" : "False"},`
                     : ""
+                }${
+                  o.expire.extendOnGet !== undefined
+                    ? `
+${getTabs(level + 2)}extend_on_get=${o.expire.extendOnGet ? "True" : "False"},`
+                    : ""
                 }
 ${getTabs(level + 1)})`
               : "None"
-          },${
-            o.extendExpireOnGet !== undefined
-              ? `
-${getTabs(level + 1)}extend_expire_on_get=${
-                  o.extendExpireOnGet ? "True" : "False"
-                },`
-              : ""
-          }
+          },
 ${getTabs(level)})`
         : "None";
     }

@@ -28,8 +28,8 @@ export type CacheOptions = {
   expire?: {
     value: number;
     isInMs?: boolean;
+    extendOnGet?: boolean;
   };
-  extendExpireOnGet?: boolean;
 };
 
 export type TaskOptions = {
@@ -311,9 +311,9 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
                 ...v,
                 key: v.key
                   ? getNonObjectValueFromValue(
-                      v.key,
-                      `${b.type}${camelCase(v.name)}Key`
-                    )
+                    v.key,
+                    `${b.type}${camelCase(v.name)}Key`
+                  )
                   : undefined,
                 payload: getNonObjectValueFromValue(
                   v.payload,
@@ -321,9 +321,9 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
                 ),
                 returns: v.returns
                   ? getNonObjectValueFromValue(
-                      v.returns,
-                      `${b.type}${camelCase(v.name)}Returns`
-                    )
+                    v.returns,
+                    `${b.type}${camelCase(v.name)}Returns`
+                  )
                   : undefined,
               })),
             },
@@ -360,9 +360,9 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
                 ...v,
                 key: v.key
                   ? getNonObjectValueFromValue(
-                      v.key,
-                      `${b.type}${camelCase(v.name)}Key`
-                    )
+                    v.key,
+                    `${b.type}${camelCase(v.name)}Key`
+                  )
                   : undefined,
                 payload: getNonObjectValueFromValue(
                   v.payload,
