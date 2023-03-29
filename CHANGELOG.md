@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/uvop/memorix/compare/v1.2.3...v1.3.0) (2023-03-29)
+
+
+### Features
+
+* extend expiry cache items ([#39](https://github.com/uvop/memorix/issues/39)) ([4ce19e6](https://github.com/uvop/memorix/commit/4ce19e6512c14c5eddd43762f92c12ed2e746ecd))
+
 ## [1.2.3](https://github.com/uvop/memorix/compare/v1.2.2...v1.2.3) (2023-03-29)
 
 
