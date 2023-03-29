@@ -202,7 +202,10 @@ memorix_api.cache.hello.set(
 
 | name   | Type                                | Default       | Description                                                                                    |
 | :----- | :---------------------------------- | :------------ | :--------------------------------------------------------------------------------------------- |
-| expire | { value: `int`, isInMs: `boolean` } | `null` - No expiration | How many seconds (or milliseconds) until the data is expired and can be deleted from the cache |
+| expire | `object` | `null` - No expiration | Expiration options for the cache item |
+| expire.value | `int` | Required | The numerical value of how many seconds (or milliseconds) until the data is expired and can be deleted from the cache |
+| expire.isInMs | `boolean` | `false` | Whatever the `expire.value` is in seconds or milliseconds, not setting this will make it in seconds |
+| expire.extendOnGet | `boolean` | `false` | If is set to true, the item's expiration will be reset |
 
 ## PubSub
 
