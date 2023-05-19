@@ -39,11 +39,16 @@ export type TaskOptions = {
 
 export type BlockConfig = {
   type: BlockTypes.config;
-  extends?: [string];
-  output: {
-    language: Languages;
-    file: string;
-  }[];
+  extends?: string | string[];
+  output:
+    | {
+        language: Languages;
+        file: string;
+      }
+    | {
+        language: Languages;
+        file: string;
+      }[];
   defaultOptions?: {
     cache?: CacheOptions;
     task?: TaskOptions;

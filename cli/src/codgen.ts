@@ -24,7 +24,10 @@ const getSchemaBlocksNoConfig = async (
   }
 
   const blocksToAdd = await Promise.all(
-    blockConfig.extends.map(async (schemaExtendFilePath) =>
+    (Array.isArray(blockConfig.extends)
+      ? blockConfig.extends
+      : [blockConfig.extends]
+    ).map(async (schemaExtendFilePath) =>
       getSchemaBlocksNoConfig(schemaFolder, schemaExtendFilePath)
     )
   );
@@ -55,10 +58,12 @@ export const codegen = async ({
   const blocks = [blockConfig, ...otherBlocks];
 
   await Promise.all(
-    blockConfig.output.map(async ({ language, file }) => {
-      const filePath = path.resolve(schemaDirname, file);
-      const code = codegenByLanguage(blocks, language);
-      await fs.promises.writeFile(filePath, code);
-    })
+    Array.isArray(blockConfig.output)
+      ? blockConfig.output
+      : [blockConfig.output].map(async ({ language, file }) => {
+          const filePath = path.resolve(schemaDirname, file);
+          const code = codegenByLanguage(blocks, language);
+          await fs.promises.writeFile(filePath, code);
+        })
   );
 };
