@@ -1,12 +1,10 @@
-type NamespaceType = {
+type ScopeType = {
   name: string;
   scope: string;
 };
 
-export const getNamespaces: (content: string) => NamespaceType[] = (
-  content
-) => {
-  const namespaces: NamespaceType[] = [];
+export const getScopes: (content: string) => ScopeType[] = (content) => {
+  const namespaces: ScopeType[] = [];
   let index = 0;
 
   while (index < content.length) {
