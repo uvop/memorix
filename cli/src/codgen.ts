@@ -28,7 +28,7 @@ const getSchemaBlocksNoConfig = async (
       ? blockConfig.extends
       : [blockConfig.extends]
     ).map(async (schemaExtendFilePath) =>
-      getSchemaBlocksNoConfig(schemaFolder, schemaExtendFilePath)
+      getSchemaBlocksNoConfig(schemaExtendFilePath, schemaFolder)
     )
   );
 
