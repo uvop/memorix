@@ -13,7 +13,7 @@ export type User = {
 };
 
 // prettier-ignore
-export class MemorixApi extends MemorixClientApi.fromConfig({output:{language:"typescript",file:"example-schema.generated.ts"},defaultOptions:{cache:{expire:{value:2}}}}, {output:{language:"typescript",file:"example-schema.generated.ts"},defaultOptions:{cache:{expire:{value:2}}}}) {
+export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:2}}}}) {
   cache = {
     favoriteAnimal: this.getCacheItem<string, Animal>("favoriteAnimal"),
     user: this.getCacheItem<string, User>("user"),

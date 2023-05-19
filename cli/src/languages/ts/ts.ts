@@ -99,10 +99,8 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
         .join("\n")}`;
     }
     case BlockTypes.config: {
-      // exclude type from config object
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      const { type: _ununsed, ...otherProps } = b;
-      return `${jsonStringify(otherProps)}`;
+      const { defaultOptions } = b;
+      return `${jsonStringify({ defaultOptions })}`;
     }
     default:
       assertUnreachable(b);
