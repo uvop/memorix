@@ -14,13 +14,14 @@ const getSchemaBlocksNoConfig = async (
   const schemaFolder = path.dirname(schemaPath);
   const schema = await (await fs.promises.readFile(schemaPath)).toString();
   const blocks = getBlocks(schema);
+  const blocksNoConfig = blocks.filter((x) => x.type !== BlockTypes.config);
   const blockConfig = blocks.find((x) => x.type === BlockTypes.config);
   if (
     !blockConfig ||
     blockConfig.type !== BlockTypes.config ||
     !blockConfig.extends
   ) {
-    return blocks;
+    return blocksNoConfig;
   }
 
   const blocksToAdd = await Promise.all(
@@ -32,10 +33,7 @@ const getSchemaBlocksNoConfig = async (
     )
   );
 
-  return [
-    ...blocksToAdd.flat(),
-    ...blocks.filter((x) => x.type !== BlockTypes.config),
-  ];
+  return [...blocksToAdd.flat(), ...blocksNoConfig];
 };
 
 export const codegen = async ({
