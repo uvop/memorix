@@ -4,8 +4,6 @@ import { hideBin } from "yargs/helpers";
 import { codegen } from "./codgen";
 import { printLogo } from "./print-logo";
 
-printLogo();
-
 yargs(hideBin(process.argv))
   .command(
     "codegen <schemaFilePath>",

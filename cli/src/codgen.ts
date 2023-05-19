@@ -58,12 +58,13 @@ export const codegen = async ({
   const blocks = [blockConfig, ...otherBlocks];
 
   await Promise.all(
-    Array.isArray(blockConfig.output)
+    (Array.isArray(blockConfig.output)
       ? blockConfig.output
-      : [blockConfig.output].map(async ({ language, file }) => {
-          const filePath = path.resolve(schemaDirname, file);
-          const code = codegenByLanguage(blocks, language);
-          await fs.promises.writeFile(filePath, code);
-        })
+      : [blockConfig.output]
+    ).map(async ({ language, file }) => {
+      const filePath = path.resolve(schemaDirname, file);
+      const code = codegenByLanguage(blocks, language);
+      await fs.promises.writeFile(filePath, code);
+    })
   );
 };

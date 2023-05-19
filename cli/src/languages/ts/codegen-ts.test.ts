@@ -1,7 +1,10 @@
+import { getBlocks } from "src/core/block";
 import { Languages, codegenByLanguage } from "src/languages";
 
-const codegenTs = (schema: string) =>
-  codegenByLanguage(schema, Languages.typescript).trim();
+const codegenTs = (schema: string) => {
+  const blocks = getBlocks(schema);
+  return codegenByLanguage(blocks, Languages.typescript).trim();
+};
 
 describe("ts codegen", () => {
   describe("model", () => {
@@ -244,6 +247,16 @@ describe("ts codegen", () => {
         codegenTs(
           `
             Config {
+              output: [
+                  {
+                      language: "typescript"
+                      file: "example.generated.ts"
+                  }
+              ]
+              extends: [
+                "bla.memorix"
+                "bla2.memorix"
+              ]
               defaultOptions: {
                 cache: {
                   expire: {

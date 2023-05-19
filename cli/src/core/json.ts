@@ -8,6 +8,11 @@ export const getJsonFromString: (content: string) => any = (content) => {
     let index = 0;
     while (index < content.length) {
       const contentFromIndex = arrayContent.substring(index);
+
+      if (contentFromIndex.trim().length === 0) {
+        break;
+      }
+
       const nextItemIndex = contentFromIndex.indexOf("\n");
 
       if (nextItemIndex === -1) {
@@ -31,11 +36,17 @@ export const getJsonFromString: (content: string) => any = (content) => {
         const bracketEndIndex = getScopeEndIndex(contentFromIndex, brackets);
 
         const scope = contentFromIndex
-          .substring(bracketIndex, bracketIndex + bracketEndIndex)
+          .substring(bracketIndex, bracketIndex + bracketEndIndex + 1)
           .trim();
 
         arr.push(getJsonFromString(scope));
         index += bracketIndex + bracketEndIndex + 1;
+      } else {
+        const currentItem = contentFromIndex.substring(0, nextItemIndex).trim();
+        if (currentItem.length !== 0) {
+          arr.push(getJsonFromString(currentItem));
+        }
+        index += nextItemIndex + 1;
       }
     }
 

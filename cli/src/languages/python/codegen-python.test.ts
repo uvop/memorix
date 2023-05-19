@@ -1,7 +1,10 @@
+import { getBlocks } from "src/core/block";
 import { codegenByLanguage, Languages } from "src/languages";
 
-const codegenPython = (schema: string) =>
-  codegenByLanguage(schema, Languages.python).trim();
+const codegenPython = (schema: string) => {
+  const blocks = getBlocks(schema);
+  return codegenByLanguage(blocks, Languages.python).trim();
+};
 
 describe("python codegen", () => {
   describe("model", () => {
@@ -262,6 +265,9 @@ describe("python codegen", () => {
         codegenPython(
           `
             Config {
+              extends: [
+                "bla.memorix"
+              ]
               defaultOptions: {
                 cache: {
                   expire: {
