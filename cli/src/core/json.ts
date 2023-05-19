@@ -99,8 +99,4 @@ export const getJsonFromString: (content: string) => any = (content) => {
     return undefined;
   }
   return JSON.parse(trimmedContent);
-  // try {
-  // } catch (err) {
-  // return trimmedContent;
-  // }
 };

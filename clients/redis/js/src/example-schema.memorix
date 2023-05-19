@@ -1,4 +1,10 @@
 Config {
+    output: [
+        {
+            language: "typescript"
+            file: "example-schema.generated.ts"
+        }
+    ]
     defaultOptions: {
         cache: {
             expire: {

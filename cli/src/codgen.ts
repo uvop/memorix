@@ -1,59 +1,64 @@
 import path from "path";
 import fs from "fs";
-import { codegenByLanguage, Languages } from "./languages";
-import { assertUnreachable } from "./core/utilities";
+import { codegenByLanguage } from "./languages";
+import { Block, BlockTypes, getBlocks } from "./core/block";
 
-const createFileName = (schemaBasename: string, language: Languages) => {
-  switch (language) {
-    case Languages.python:
-      return `${schemaBasename
-        .split(/(?=[A-Z])/)
-        .join("_")
-        .toLowerCase()
-        .replace(/-/g, "_")}_generated.py`;
-    case Languages.typescript:
-      return `${schemaBasename}.generated.ts`;
-    default:
-      assertUnreachable(language);
-      return "";
+const getSchemaBlocksNoConfig = async (
+  schemaFilePath: string,
+  dirname?: string
+): Promise<Block[]> => {
+  const schemaPath =
+    dirname !== undefined
+      ? path.resolve(dirname, schemaFilePath)
+      : path.resolve(schemaFilePath);
+  const schemaFolder = path.dirname(schemaPath);
+  const schema = await (await fs.promises.readFile(schemaPath)).toString();
+  const blocks = getBlocks(schema);
+  const blockConfig = blocks.find((x) => x.type === BlockTypes.config);
+  if (
+    !blockConfig ||
+    blockConfig.type !== BlockTypes.config ||
+    !blockConfig.extends
+  ) {
+    return blocks;
   }
+
+  const blocksToAdd = await Promise.all(
+    blockConfig.extends.map(async (schemaExtendFilePath) =>
+      getSchemaBlocksNoConfig(schemaFolder, schemaExtendFilePath)
+    )
+  );
+
+  return [
+    ...blocksToAdd.flat(),
+    ...blocks.filter((x) => x.type !== BlockTypes.config),
+  ];
 };
 
 export const codegen = async ({
   schemaFilePath,
-  files,
 }: {
   schemaFilePath: string;
-  files: { language: Languages; dist: string }[];
 }) => {
   const schemaPath = path.resolve(schemaFilePath);
+  const schemaDirname = path.dirname(schemaPath);
+  const schema = await (await fs.promises.readFile(schemaPath)).toString();
+  const blockConfig = getBlocks(schema).find(
+    (x) => x.type === BlockTypes.config
+  );
+  if (!blockConfig || blockConfig.type !== BlockTypes.config) {
+    throw new Error(
+      `Must set a Config block to top level schema "${schemaPath}"`
+    );
+  }
+  const otherBlocks = await getSchemaBlocksNoConfig(schemaFilePath);
+  const blocks = [blockConfig, ...otherBlocks];
 
   await Promise.all(
-    files.map(async ({ language, dist: outputPath }) => {
-      const isOutputPathDefined = !!outputPath;
-      const isOutputPathADir =
-        isOutputPathDefined && path.extname(outputPath).length === 0;
-
-      // eslint-disable-next-line no-nested-ternary
-      const codeDir = isOutputPathDefined
-        ? isOutputPathADir
-          ? outputPath
-          : path.dirname(outputPath)
-        : path.dirname(schemaPath);
-      const codeFilename =
-        isOutputPathADir || !isOutputPathDefined
-          ? createFileName(
-              path.basename(schemaPath, path.extname(schemaPath)),
-              language
-            )
-          : path.basename(outputPath);
-      const codePath = path.join(codeDir, codeFilename);
-
-      const schema = await (await fs.promises.readFile(schemaPath)).toString();
-
-      const code = codegenByLanguage(schema, language);
-
-      await fs.promises.writeFile(codePath, code);
+    blockConfig.output.map(async ({ language, file }) => {
+      const filePath = path.resolve(schemaDirname, file);
+      const code = codegenByLanguage(blocks, language);
+      await fs.promises.writeFile(filePath, code);
     })
   );
 };

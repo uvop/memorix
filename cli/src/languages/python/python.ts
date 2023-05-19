@@ -4,7 +4,6 @@ import {
   BlockTask,
   BlockTypes,
   flatBlocks,
-  getBlocks,
 } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import { assertUnreachable, getTabs as get2Tabs } from "src/core/utilities";
@@ -178,8 +177,8 @@ ${getTabs(1)}),
   }
 };
 
-export const codegenPython: (schema: string) => string = (schema) => {
-  const blocks = flatBlocks(getBlocks(schema));
+export const codegenPython: (blocks: Block[]) => string = (nonFlatBlocks) => {
+  const blocks = flatBlocks(nonFlatBlocks);
 
   const hasConfig =
     blocks.filter((b) => b.type === BlockTypes.config).length > 0;

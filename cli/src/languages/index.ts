@@ -1,4 +1,5 @@
 import { assertUnreachable } from "src/core/utilities";
+import { Block } from "src/core/block";
 import { codegenTs } from "./ts/ts";
 import { codegenPython } from "./python/python";
 
@@ -7,14 +8,14 @@ export enum Languages {
   python = "python",
 }
 
-type CodegenByLanguageFn = (schema: string, language: Languages) => string;
+type CodegenByLanguageFn = (blocks: Block[], language: Languages) => string;
 
-export const codegenByLanguage: CodegenByLanguageFn = (scope, language) => {
+export const codegenByLanguage: CodegenByLanguageFn = (blocks, language) => {
   switch (language) {
     case Languages.typescript:
-      return codegenTs(scope);
+      return codegenTs(blocks);
     case Languages.python:
-      return codegenPython(scope);
+      return codegenPython(blocks);
     default:
       assertUnreachable(language);
       return "";

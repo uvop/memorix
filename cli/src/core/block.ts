@@ -1,3 +1,4 @@
+import { Languages } from "src/languages";
 import { getNamespaces } from "./namespace";
 import {
   getValueFromString,
@@ -38,6 +39,11 @@ export type TaskOptions = {
 
 export type BlockConfig = {
   type: BlockTypes.config;
+  extends?: [string];
+  output: {
+    language: Languages;
+    file: string;
+  }[];
   defaultOptions?: {
     cache?: CacheOptions;
     task?: TaskOptions;

@@ -1,4 +1,4 @@
-import { Block, BlockTypes, getBlocks } from "src/core/block";
+import { Block, BlockTypes } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import { assertUnreachable, getTabs } from "src/core/utilities";
 
@@ -110,9 +110,7 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
   }
 };
 
-export const codegenTs: (schema: string) => string = (schema) => {
-  const blocks = getBlocks(schema);
-
+export const codegenTs: (blocks: Block[]) => string = (blocks) => {
   const hasConfig =
     blocks.filter((b) => b.type === BlockTypes.config).length > 0;
   const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
