@@ -208,7 +208,6 @@ const getNamespace: (content: string) => Namespace = (content) => {
 
 export const getNamespaces: (schema: string) => Namespaces = (schema) => {
   const scopes = getScopes(schema);
-  console.log(scopes);
 
   return {
     global: getNamespace(schema),

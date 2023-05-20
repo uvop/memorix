@@ -16,7 +16,7 @@ const getAllNamespaces = async (
   const schema = await (await fs.promises.readFile(schemaPath)).toString();
   const ns = getNamespaces(schema);
   const config = getConfig(schema);
-  if (!config) {
+  if (!config || !config.extends) {
     return ns;
   }
 

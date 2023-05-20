@@ -288,7 +288,7 @@ describe("ts codegen", () => {
     });
   });
   describe("namespace", () => {
-    it.only("can generate", () => {
+    it("can generate", () => {
       expect(
         codegenTs(
           `
