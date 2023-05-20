@@ -1,9 +1,9 @@
-import { getBlocks } from "src/core/block";
+import { getNamespaces } from "src/core/block";
 import { Languages, codegenByLanguage } from "src/languages";
 
 const codegenTs = (schema: string) => {
-  const blocks = getBlocks(schema);
-  return codegenByLanguage(blocks, Languages.typescript).trim();
+  const ns = getNamespaces(schema);
+  return codegenByLanguage(ns, Languages.typescript).trim();
 };
 
 describe("ts codegen", () => {
@@ -257,16 +257,16 @@ describe("ts codegen", () => {
                 "bla.memorix"
                 "bla2.memorix"
               ]
-              defaultOptions: {
-                cache: {
-                  expire: {
-                    value: 5
-                    extendOnGet: true
-                  }
+            }
+            DefaultOptions {
+              cache: {
+                expire: {
+                  value: 5
+                  extendOnGet: true
                 }
-                task: {
-                  takeNewest: true
-                }
+              }
+              task: {
+                takeNewest: true
               }
             }
           `
@@ -277,11 +277,31 @@ describe("ts codegen", () => {
       expect(
         codegenTs(
           `
-            Config {
-              defaultOptions: {
-                cache: {
-                  expire: null
+            DefaultOptions {
+              cache: {
+                expire: null
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+  });
+  describe("namespace", () => {
+    it.only("can generate", () => {
+      expect(
+        codegenTs(
+          `
+            Namespace user {
+              Cache {
+                bio {
+                  payload: string
                 }
+              }
+            }
+            Cache {
+              favoriteUser {
+                payload: string
               }
             }
           `

@@ -1,4 +1,3 @@
-import { Languages } from "src/languages";
 import { getScopes } from "./scope";
 import {
   getValueFromString,
@@ -34,19 +33,6 @@ export type CacheDefaultOptions = {
 
 export type TaskDefaultOptions = {
   takeNewest: boolean;
-};
-
-export type Config = {
-  extends?: string | string[];
-  output:
-    | {
-        language: Languages;
-        file: string;
-      }
-    | {
-        language: Languages;
-        file: string;
-      }[];
 };
 
 export type DefaultOptions = {
@@ -111,99 +97,91 @@ export type Namespaces = {
   named: ({ name: string } & Namespace)[];
 };
 
-export const getConfig: (schema: string) => Config | undefined = (schema) => {
-  const scopes = getScopes(schema);
-  const configScope = scopes.find((x) => x.name === "Config");
-  if (!configScope) {
-    return undefined;
-  }
-
-  const json = getJsonFromString(configScope.scope);
-  if (typeof json !== "object") {
-    throw new Error(`Expected object under "Config"`);
-  }
-  return json;
-};
-
 const getBlocks: (content: string) => Block[] = (content) => {
   const namespaceScopes = getScopes(content);
 
-  const blocks = namespaceScopes.map<Block>((n) => {
-    const isNamelessNamespace =
-      [BlockTypes.cache, BlockTypes.pubsub, BlockTypes.task].indexOf(
-        n.name as BlockTypes
-      ) !== -1;
-    if (isNamelessNamespace) {
-      const blockType = n.name as
-        | BlockTypes.cache
-        | BlockTypes.pubsub
-        | BlockTypes.task;
+  const blocks = namespaceScopes
+    .filter((x) => !x.name.startsWith("Namespace"))
+    .filter((x) => ["Config", "DefaultOptions"].indexOf(x.name) === -1)
+    .map<Block>((n) => {
+      const isNamelessNamespace =
+        [BlockTypes.cache, BlockTypes.pubsub, BlockTypes.task].indexOf(
+          n.name as BlockTypes
+        ) !== -1;
+      if (isNamelessNamespace) {
+        const blockType = n.name as
+          | BlockTypes.cache
+          | BlockTypes.pubsub
+          | BlockTypes.task;
 
-      const scopes = getScopes(removeBracketsOfScope(n.scope));
+        const scopes = getScopes(removeBracketsOfScope(n.scope));
 
-      return {
-        type: blockType,
-        values: scopes.map((cn) => {
-          const value = getValueFromString(cn.scope, ["options"]);
-          if (value.type !== ValueTypes.object) {
-            throw new Error(`Expected object under "${blockType}.${cn.name}"`);
-          }
+        return {
+          type: blockType,
+          values: scopes.map((cn) => {
+            const value = getValueFromString(cn.scope, ["options"]);
+            if (value.type !== ValueTypes.object) {
+              throw new Error(
+                `Expected object under "${blockType}.${cn.name}"`
+              );
+            }
 
-          const payload = value.properties.find((p) => p.name === "payload");
-          if (!payload) {
-            throw new Error(
-              `Couldn't find "payload" under ${blockType}.${cn.name}`
-            );
-          }
-          const options = value.properties.find((p) => p.name === "options");
+            const payload = value.properties.find((p) => p.name === "payload");
+            if (!payload) {
+              throw new Error(
+                `Couldn't find "payload" under ${blockType}.${cn.name}`
+              );
+            }
+            const options = value.properties.find((p) => p.name === "options");
 
-          return {
-            name: cn.name,
-            key: value.properties.find((p) => p.name === "key")?.value,
-            payload: payload.value,
-            returns:
-              blockType === BlockTypes.task
-                ? value.properties.find((p) => p.name === "returns")?.value
-                : undefined,
-            options:
-              options !== undefined && options.value.type === ValueTypes.string
-                ? getJsonFromString(options.value.content)
-                : undefined,
-          };
-        }),
-      };
-    }
-    const match = /(?<type>(Model|Enum)) (?<name>.*)/g.exec(n.name);
+            return {
+              name: cn.name,
+              key: value.properties.find((p) => p.name === "key")?.value,
+              payload: payload.value,
+              returns:
+                blockType === BlockTypes.task
+                  ? value.properties.find((p) => p.name === "returns")?.value
+                  : undefined,
+              options:
+                options !== undefined &&
+                options.value.type === ValueTypes.string
+                  ? getJsonFromString(options.value.content)
+                  : undefined,
+            };
+          }),
+        };
+      }
+      const match = /(?<type>(Model|Enum)) (?<name>.*)/g.exec(n.name);
 
-    if (!match || !match.groups) {
-      throw new Error(`Invalid scope "${n.name}"`);
-    }
+      if (!match || !match.groups) {
+        throw new Error(`Invalid scope "${n.name}"`);
+      }
 
-    const blockType = match.groups.type as BlockTypes.model | BlockTypes.enum;
-    const name = match.groups.name.trim() as string;
+      const blockType = match.groups.type as BlockTypes.model | BlockTypes.enum;
+      const name = match.groups.name.trim() as string;
 
-    if (blockType === BlockTypes.enum) {
+      if (blockType === BlockTypes.enum) {
+        return {
+          type: blockType,
+          name,
+          values: removeBracketsOfScope(n.scope)
+            .split("\n")
+            .map((x) => x.trim())
+            .filter((x) => x.length > 0),
+        };
+      }
+
+      const value = getValueFromString(n.scope);
+      if (value.type !== ValueTypes.object) {
+        throw new Error(`Expected object under "${blockType}.${n.name}"`);
+      }
+
       return {
         type: blockType,
         name,
-        values: removeBracketsOfScope(n.scope)
-          .split("\n")
-          .map((x) => x.trim())
-          .filter((x) => x.length > 0),
+        properties: value.properties,
       };
-    }
-
-    const value = getValueFromString(n.scope);
-    if (value.type !== ValueTypes.object) {
-      throw new Error(`Expected object under "${blockType}.${n.name}"`);
-    }
-
-    return {
-      type: blockType,
-      name,
-      properties: value.properties,
-    };
-  });
+    });
 
   return blocks;
 };
@@ -230,6 +208,7 @@ const getNamespace: (content: string) => Namespace = (content) => {
 
 export const getNamespaces: (schema: string) => Namespaces = (schema) => {
   const scopes = getScopes(schema);
+  console.log(scopes);
 
   return {
     global: getNamespace(schema),
@@ -241,7 +220,7 @@ export const getNamespaces: (schema: string) => Namespaces = (schema) => {
 
         return {
           name,
-          ...getNamespace(s.scope),
+          ...getNamespace(removeBracketsOfScope(s.scope)),
         };
       }),
   };

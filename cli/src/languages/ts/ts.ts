@@ -1,13 +1,19 @@
-import { Block, BlockTypes } from "src/core/block";
+import {
+  Block,
+  BlockTypes,
+  DefaultOptions,
+  Namespace,
+  Namespaces,
+} from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
-import { assertUnreachable, getTabs } from "src/core/utilities";
+import { assertUnreachable, camelCase, getTabs } from "src/core/utilities";
 
 export const jsonStringify: (json: any) => string = (json) =>
   JSON.stringify(json, (k, v) => (v === undefined ? null : v))
     .replace(/null/g, "undefined")
     .replace(/"([^"]+)":/g, "$1:");
 
-const valueToTs: (
+const valueToCode: (
   value: ValueType,
   level?: number,
   isParentObject?: boolean
@@ -24,7 +30,7 @@ const valueToTs: (
       break;
     }
     case ValueTypes.array: {
-      valueTs = `Array<${valueToTs(value.value, level)}>`;
+      valueTs = `Array<${valueToCode(value.value, level)}>`;
       break;
     }
     case ValueTypes.object:
@@ -36,7 +42,7 @@ ${getTabs(level + 1)}${value.properties
               prop.value.type !== ValueTypes.string && prop.value.isOptional
                 ? "?"
                 : ""
-            }: ${valueToTs(prop.value, level + 1, true)};`
+            }: ${valueToCode(prop.value, level + 1, true)};`
         )
         .join(`\n${getTabs(level + 1)}`)}
 ${getTabs(level)}}`;
@@ -55,10 +61,10 @@ ${getTabs(level)}}`;
   }`;
 };
 
-const blockToTs: (block: Block) => string = (b) => {
+const blockToCode: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `export type ${b.name} = ${valueToTs({
+      return `export type ${b.name} = ${valueToCode({
         type: ValueTypes.object,
         isOptional: false,
         properties: b.properties,
@@ -85,10 +91,10 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
 `
               : ""
           }${getTabs(2)}${v.name}: this.${itemFn}${v.key ? "" : "NoKey"}<${
-            v.key ? `${valueToTs(v.key, 2)}, ` : ""
-          }${valueToTs(v.payload, 2)}${
+            v.key ? `${valueToCode(v.key, 2)}, ` : ""
+          }${valueToCode(v.payload, 2)}${
             hasReturns && "returns" in v
-              ? `, ${v.returns ? `${valueToTs(v.returns, 2)}` : "undefined"}`
+              ? `, ${v.returns ? `${valueToCode(v.returns, 2)}` : "undefined"}`
               : ""
           }>("${v.name}"${
             b.type === BlockTypes.task
@@ -98,57 +104,55 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
         })
         .join("\n")}`;
     }
-    case BlockTypes.config: {
-      const { defaultOptions } = b;
-      return `${jsonStringify({ defaultOptions })}`;
-    }
     default:
       assertUnreachable(b);
       return "";
   }
 };
 
-export const codegenTs: (blocks: Block[]) => string = (blocks) => {
-  const hasConfig =
-    blocks.filter((b) => b.type === BlockTypes.config).length > 0;
-  const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
+const defaultOptionsToCode: (defaultOptions: DefaultOptions) => string = (
+  defaultOptions
+) => {
+  return `${jsonStringify({ defaultOptions })}`;
+};
+
+const namespaceToCode: (name: string, ns: Namespace) => string = (name, ns) => {
+  const hasCache =
+    ns.blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
-    blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
-  const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = hasCache || hasPubsub || hasTask || hasConfig;
+    ns.blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
+  const hasTask =
+    ns.blocks.filter((b) => b.type === BlockTypes.task).length > 0;
+  const hasApi = hasCache || hasPubsub || hasTask;
 
   const code = []
     .concat(
-      hasApi
-        ? `import { ${([] as string[])
-            .concat(hasApi ? ["MemorixClientApi"] : [])
-            .join(", ")} } from "@memorix/client-redis";`
-        : []
+      ns.blocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode)
     )
-    .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToTs))
-    .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToTs))
+    .concat(
+      ns.blocks.filter((b) => b.type === BlockTypes.model).map(blockToCode)
+    )
     .concat(
       hasApi
         ? `${
-            hasConfig
+            ns.defaults
               ? `// prettier-ignore
 `
               : ""
-          }export class MemorixApi extends ${
-            hasConfig
-              ? `MemorixClientApi.fromConfig(${blocks
-                  .filter((b) => b.type === BlockTypes.config)
-                  .map(blockToTs)
-                  .join(", ")})`
-              : "MemorixClientApi"
+          }class Namespace${camelCase(name)} extends ${
+            ns.defaults
+              ? `MemorixNamespace.withDefaultOptions(${defaultOptionsToCode(
+                  ns.defaults
+                )})`
+              : "MemorixNamespace"
           } {
 ${[]
   .concat(
     hasCache
       ? `${getTabs(1)}cache = {
-${blocks
+${ns.blocks
   .filter((b) => b.type === BlockTypes.cache)
-  .map(blockToTs)
+  .map(blockToCode)
   .join("\n")}
 ${getTabs(1)}};`
       : []
@@ -156,9 +160,9 @@ ${getTabs(1)}};`
   .concat(
     hasPubsub
       ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
-${blocks
+${ns.blocks
   .filter((b) => b.type === BlockTypes.pubsub)
-  .map(blockToTs)
+  .map(blockToCode)
   .join("\n")}
 ${getTabs(1)}};`
       : []
@@ -166,9 +170,9 @@ ${getTabs(1)}};`
   .concat(
     hasTask
       ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
-${blocks
+${ns.blocks
   .filter((b) => b.type === BlockTypes.task)
-  .map(blockToTs)
+  .map(blockToCode)
   .join("\n")}
 ${getTabs(1)}};`
       : []
@@ -178,6 +182,55 @@ ${getTabs(1)}};`
         : []
     )
     .join("\n\n");
+
+  return `${code}`;
+};
+
+export const codegen: (namespaces: Namespaces) => string = (namespaces) => {
+  const allBlocks = [
+    ...namespaces.global.blocks,
+    ...namespaces.named.map((x) => x.blocks).flat(),
+  ];
+  const hasCache =
+    allBlocks.filter((b) => b.type === BlockTypes.cache).length > 0;
+  const hasPubsub =
+    allBlocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
+  const hasTask =
+    allBlocks.filter((b) => b.type === BlockTypes.task).length > 0;
+  const hasApi = hasCache || hasPubsub || hasTask || namespaces.global.defaults;
+
+  const code = []
+    .concat(
+      hasApi
+        ? `import { ${([] as string[])
+            .concat(hasApi ? ["createMemorixApi", "MemorixNamespace"] : [])
+            .join(", ")} } from "@memorix/client-redis";`
+        : []
+    )
+    .concat(
+      allBlocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode)
+    )
+    .concat(
+      allBlocks.filter((b) => b.type === BlockTypes.model).map(blockToCode)
+    )
+    .concat(namespaces.named.map((x) => namespaceToCode(x.name, x)))
+    .concat(namespaceToCode("global", namespaces.global))
+    .concat(
+      hasApi
+        ? `${
+            namespaces.global.defaults
+              ? `// prettier-ignore
+`
+              : ""
+          }export const MemorixApi = createMemorixApi(NamespaceGlobal, {
+${namespaces.named
+  .map((x) => `${getTabs(1)}${x.name}: Namespace${camelCase(x.name)},`)
+  .join("\n")}
+});`
+        : []
+    )
+    .join("\n\n");
+
   return `/* eslint-disable */
 ${code}\n`;
 };
