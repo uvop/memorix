@@ -1,7 +1,8 @@
 import typing
 import asyncio
 import functools
-from .namespace import Namespace, NamespaceApi
+from .namespace import Namespace
+from .redis_connection import RedisConnection
 
 _DefaultOptions = Namespace.DefaultOptions
 
@@ -25,7 +26,8 @@ class BaseApi(Namespace):
         default_options: typing.Optional[_DefaultOptions] = None,  # type: ignore
     ) -> None:
         super().__init__(
-            namespace_api=NamespaceApi(redis_url=redis_url),
+            name=None,
+            connection=RedisConnection(redis_url=redis_url),
             default_options=default_options,
         )
 
@@ -35,7 +37,6 @@ class BaseApi(Namespace):
             def __init__(
                 self,
                 redis_url: str,
-                default_options: typing.Optional[_DefaultOptions] = None,  # type: ignore
             ) -> None:
                 super().__init__(
                     redis_url=redis_url,
@@ -45,8 +46,8 @@ class BaseApi(Namespace):
         return ApiWithData
 
     def connect(self) -> None:
-        self._namespace_api.redis.ping()
-        self._namespace_api.pubsub.ping()
+        self._connection.redis.ping()
+        self._connection.pubsub.ping()
 
     async def async_connect(self) -> None:
         loop = asyncio.get_running_loop()

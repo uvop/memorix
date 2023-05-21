@@ -3,7 +3,7 @@ import functools
 from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
 from typing import Generic, Optional, Type, TypeVar, cast
-from ..base_api import BaseApi
+from ..namespace import Namespace
 from .cache_options import CacheOptions
 
 KT = TypeVar("KT")
@@ -15,7 +15,7 @@ class CacheItem(Generic[KT, PT]):
 
     def __init__(
         self,
-        api: BaseApi,
+        api: Namespace,
         id: str,
         payload_class: Type[PT],
         options: Optional[CacheOptions] = None,
@@ -41,7 +41,7 @@ class CacheItem(Generic[KT, PT]):
             options,
         )
 
-        data_bytes = self._api._namespace_api.redis.get(hash_key(self._id, key=key))
+        data_bytes = self._api._connection.redis.get(hash_key(self._id, key=key))
         if data_bytes is None:
             return None
         if (
@@ -85,7 +85,7 @@ class CacheItem(Generic[KT, PT]):
         )
 
         payload_json = to_json(payload)
-        return self._api._namespace_api.redis.set(
+        return self._api._connection.redis.set(
             hash_key(self._id, key=key),
             payload_json,
             ex=merged_options.expire.value
@@ -135,12 +135,12 @@ class CacheItem(Generic[KT, PT]):
         hashed_key = hash_key(self._id, key=key)
 
         if merged_options.expire.is_in_ms:
-            self._api._namespace_api.redis.pexpire(
+            self._api._connection.redis.pexpire(
                 hashed_key,
                 merged_options.expire.value,
             )
         else:
-            self._api._namespace_api.redis.expire(
+            self._api._connection.redis.expire(
                 hashed_key,
                 merged_options.expire.value,
             )

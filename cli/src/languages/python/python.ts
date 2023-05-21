@@ -11,6 +11,7 @@ import {
 import { ValueType, ValueTypes } from "src/core/value";
 import {
   assertUnreachable,
+  camelCase,
   // camelCase,
   getTabs as get2Tabs,
 } from "src/core/utilities";
@@ -128,7 +129,7 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
           }${valueToCode(v.payload, true)}${
             v.returns ? `, ${valueToCode(v.returns, true)}` : ""
           }](
-${getTabs(3)}api=self._api,
+${getTabs(3)}api=api,
 ${getTabs(3)}id="${v.name}",
 ${getTabs(3)}payload_class=${valueToCode(v.payload, false)},${
             v.returns
@@ -153,36 +154,28 @@ ${getTabs(2)})`;
 const defaultOptionsToCode: (defaultOptions: DefaultOptions) => string = (
   defaultOptions
 ) => {
-  return `
-${getTabs(1)}data=MemorixBaseApi.BaseApiWithGlobalData(${
-    defaultOptions
+  return `${getTabs(
+    2
+  )}default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(${
+    defaultOptions.cache
       ? `
-${getTabs(
-  2
-)}default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(${
-          defaultOptions.cache
-            ? `
 ${getTabs(3)}cache=${blockOptionsToCode(
-                BlockTypes.cache,
-                defaultOptions.cache,
-                3
-              )},`
-            : ""
-        }${
-          defaultOptions.task
-            ? `
+          BlockTypes.cache,
+          defaultOptions.cache,
+          3
+        )},`
+      : ""
+  }${
+    defaultOptions.task
+      ? `
 ${getTabs(3)}task=${blockOptionsToCode(
-                BlockTypes.task,
-                defaultOptions.task,
-                3
-              )},`
-            : ""
-        }
-${getTabs(2)}),`
+          BlockTypes.task,
+          defaultOptions.task,
+          3
+        )},`
       : ""
   }
-${getTabs(1)}),
-`;
+${getTabs(2)}),`;
 };
 
 const namespaceToCode: (
@@ -196,7 +189,7 @@ const namespaceToCode: (
         isApi: false;
         name: string;
       }
-) => string = (ns) => {
+) => string = (ns, options) => {
   const hasCache =
     ns.blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
@@ -205,38 +198,53 @@ const namespaceToCode: (
     ns.blocks.filter((b) => b.type === BlockTypes.task).length > 0;
   const hasApi = ns.defaults || hasCache || hasPubsub || hasTask;
 
-  // const detailedOptions =
-  //   options.isApi === true
-  //     ? {
-  //         export: true,
-  //         addPrettierIgnore: !!ns.defaults,
-  //         class: "MemorixApi",
-  //         classExtend: !ns.defaults
-  //           ? "MemorixBaseApi"
-  //           : `MemorixBaseApi.withGlobal(${jsonStringify({
-  //               defaultOptions: ns.defaults,
-  //             })})`,
-  //         namespaceNames: options.namespaceNames,
-  //       }
-  //     : {
-  //         export: false,
-  //         addPrettierIgnore: true,
-  //         class: `Namespace${camelCase(options.name)}`,
-  //         classExtend: !ns.defaults
-  //           ? `MemorixNamespace.with(${jsonStringify({
-  //               name: options.name,
-  //             })})`
-  //           : `MemorixNamespace.with(${jsonStringify({
-  //               name: options.name,
-  //               defaultOptions: ns.defaults,
-  //             })})`,
-  //         namespaceNames: [] as string[],
-  //       };
+  const detailedOptions =
+    options.isApi === true
+      ? {
+          cacheName: "MemorixCacheApi",
+          pubsubName: "MemorixPubSubApi",
+          taskName: "MemorixTaskApi",
+          apiName: "MemorixApi",
+          apiExtends: ns.defaults
+            ? `MemorixBaseApi.with_global_data(  # type: ignore
+${getTabs(1)}data=MemorixBaseApi.BaseApiWithGlobalData(${defaultOptionsToCode(
+                ns.defaults
+              )}
+${getTabs(1)}),
+)`
+            : "MemorixBaseApi",
+          namespaceNames: options.namespaceNames,
+          apiInit: `${getTabs(1)}def __init__(
+${getTabs(2)}self,
+${getTabs(2)}redis_url: str,
+${getTabs(1)}) -> None:
+${getTabs(2)}super().__init__(redis_url=redis_url)`,
+        }
+      : {
+          cacheName: `Memorix${camelCase(options.name)}CacheApi`,
+          pubsubName: `Memorix${camelCase(options.name)}PubSubApi`,
+          taskName: `Memorix${camelCase(options.name)}TaskApi`,
+          apiName: `Memorix${camelCase(options.name)}Namespace`,
+          apiExtends: ns.defaults
+            ? `MemorixNamespace.with_data(  # type: ignore
+${getTabs(1)}data=MemorixNamespace.NamespaceApiWithData(
+${getTabs(2)}name="${options.name}",
+${defaultOptionsToCode(ns.defaults)}
+${getTabs(1)}),
+)`
+            : "MemorixNamespace",
+          apiInit: `${getTabs(1)}def __init__(
+${getTabs(2)}self,
+${getTabs(2)}api: MemorixBaseApi,
+${getTabs(1)}) -> None:
+${getTabs(2)}super().__init__(connection=api._connection)`,
+          namespaceNames: [] as string[],
+        };
 
   const code = ([] as string[])
     .concat(
       hasCache
-        ? `class MemorixCacheApi(MemorixBaseCacheApi):
+        ? `class ${detailedOptions.cacheName}(MemorixBaseCacheApi):
 ${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
@@ -248,7 +256,7 @@ ${ns.blocks
     )
     .concat(
       hasPubsub
-        ? `class MemorixPubSubApi(MemorixBasePubSubApi):
+        ? `class ${detailedOptions.pubsubName}(MemorixBasePubSubApi):
 ${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
@@ -260,7 +268,7 @@ ${ns.blocks
     )
     .concat(
       hasTask
-        ? `class MemorixTaskApi(MemorixBaseTaskApi):
+        ? `class ${detailedOptions.taskName}(MemorixBaseTaskApi):
 ${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
@@ -272,28 +280,41 @@ ${ns.blocks
     )
     .concat(
       hasApi
-        ? `class MemorixApi(${
-            ns.defaults
-              ? `MemorixBaseApi.with_global_data(  # type: ignore${defaultOptionsToCode(
-                  ns.defaults
-                )})`
-              : "MemorixBaseApi"
-          }):
-${getTabs(1)}def __init__(
-${getTabs(2)}self,
-${getTabs(2)}redis_url: str,
-${getTabs(1)}) -> None:
-${getTabs(2)}super().__init__(redis_url=redis_url)
+        ? `class ${detailedOptions.apiName}(${detailedOptions.apiExtends}):
+${detailedOptions.apiInit}
 
-${[]
-  .concat(hasCache ? `${getTabs(2)}self.cache = MemorixCacheApi(self)` : [])
-  .concat(hasPubsub ? `${getTabs(2)}self.pubsub = MemorixPubSubApi(self)` : [])
-  .concat(hasTask ? `${getTabs(2)}self.task = MemorixTaskApi(self)` : [])
-  .join("\n")}`
+${
+  detailedOptions.namespaceNames.length > 0
+    ? `${detailedOptions.namespaceNames
+        .map(
+          (x) =>
+            `${getTabs(2)}self.${x} = Memorix${camelCase(x)}Namespace(self)`
+        )
+        .join("\n")}\n\n`
+    : ""
+}${[]
+            .concat(
+              hasCache
+                ? `${getTabs(2)}self.cache = ${detailedOptions.cacheName}(self)`
+                : []
+            )
+            .concat(
+              hasPubsub
+                ? `${getTabs(2)}self.pubsub = ${
+                    detailedOptions.pubsubName
+                  }(self)`
+                : []
+            )
+            .concat(
+              hasTask
+                ? `${getTabs(2)}self.task = ${detailedOptions.taskName}(self)`
+                : []
+            )
+            .join("\n")}`
         : []
     )
     .join("\n\n\n");
-  return `${code}\n`;
+  return `${code}`;
 };
 
 export const codegen: (namespaces: Namespaces) => string = (
@@ -340,6 +361,7 @@ from enum import Enum`
 from memorix_client_redis import (
 ${[]
   .concat(hasApi ? [`${getTabs(1)}MemorixBaseApi`] : [])
+  .concat(hasNamespaces ? [`${getTabs(1)}MemorixNamespace`] : [])
   .concat(
     hasCache
       ? [

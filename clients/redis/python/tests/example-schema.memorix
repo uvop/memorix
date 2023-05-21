@@ -7,6 +7,24 @@ Config {
     ]
 }
 
+Namespace spaceship {
+    DefaultOptions {
+        cache: {
+            expire: {
+                value: 1
+            }
+        }
+    }
+    
+    Cache {
+        pilot {
+            payload: {
+                name: string
+            }
+        }
+    }
+}
+
 DefaultOptions {
     cache: {
         expire: {

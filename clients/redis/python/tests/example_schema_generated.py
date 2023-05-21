@@ -9,6 +9,7 @@ else:
 from enum import Enum
 from memorix_client_redis import (
     MemorixBaseApi,
+    MemorixNamespace,
     MemorixBaseCacheApi,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
@@ -40,39 +41,78 @@ class CacheUser2Key(object):
     id: str
 
 
+@dataclass
+class CachePilotPayload(object):
+    name: str
+
+
+class MemorixSpaceshipCacheApi(MemorixBaseCacheApi):
+    def __init__(self, api: MemorixBaseApi) -> None:
+        super().__init__(api=api)
+
+        self.pilot = MemorixCacheItemNoKey["CachePilotPayload"](
+            api=api,
+            id="pilot",
+            payload_class=CachePilotPayload,
+        )
+
+
+class MemorixSpaceshipNamespace(
+    MemorixNamespace.with_data(  # type: ignore
+        data=MemorixNamespace.NamespaceApiWithData(
+            name="spaceship",
+            default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(
+                cache=MemorixCacheItem.Options(
+                    expire=MemorixCacheItem.Options.Expire(
+                        value=1,
+                    ),
+                ),
+            ),
+        ),
+    )
+):
+    def __init__(
+        self,
+        api: MemorixBaseApi,
+    ) -> None:
+        super().__init__(connection=api._connection)
+
+        self.cache = MemorixSpaceshipCacheApi(self)
+
+
 class MemorixCacheApi(MemorixBaseCacheApi):
     def __init__(self, api: MemorixBaseApi) -> None:
         super().__init__(api=api)
 
         self.bestStr = MemorixCacheItemNoKey[str](
-            api=self._api,
+            api=api,
             id="bestStr",
             payload_class=str,
         )
         self.allUsers = MemorixCacheItemNoKey[
             typing.List[typing.List[typing.Optional["User"]]]
         ](
-            api=self._api,
+            api=api,
             id="allUsers",
             payload_class=typing.List[typing.List[typing.Optional[User]]],
         )
         self.favoriteAnimal = MemorixCacheItem[str, "Animal"](
-            api=self._api,
+            api=api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
         self.user = MemorixCacheItem[str, "User"](
-            api=self._api,
+            api=api,
             id="user",
             payload_class=User,
         )
         self.user2 = MemorixCacheItem["CacheUser2Key", "User"](
-            api=self._api,
+            api=api,
             id="user2",
             payload_class=User,
         )
         self.userExpire = MemorixCacheItem[str, "User"](
-            api=self._api,
+            api=api,
             id="userExpire",
             payload_class=User,
             options=MemorixCacheItem.Options(
@@ -83,7 +123,7 @@ class MemorixCacheApi(MemorixBaseCacheApi):
             ),
         )
         self.userExpire2 = MemorixCacheItem[str, "User"](
-            api=self._api,
+            api=api,
             id="userExpire2",
             payload_class=User,
             options=MemorixCacheItem.Options(
@@ -91,7 +131,7 @@ class MemorixCacheApi(MemorixBaseCacheApi):
             ),
         )
         self.userExpire3 = MemorixCacheItemNoKey["User"](
-            api=self._api,
+            api=api,
             id="userExpire3",
             payload_class=User,
             options=MemorixCacheItem.Options(
@@ -108,7 +148,7 @@ class MemorixPubSubApi(MemorixBasePubSubApi):
         super().__init__(api=api)
 
         self.message = MemorixPubSubItemNoKey[str](
-            api=self._api,
+            api=api,
             id="message",
             payload_class=str,
         )
@@ -119,13 +159,13 @@ class MemorixTaskApi(MemorixBaseTaskApi):
         super().__init__(api=api)
 
         self.runAlgo = MemorixTaskItemNoKey[str, "Animal"](
-            api=self._api,
+            api=api,
             id="runAlgo",
             payload_class=str,
             returns_class=Animal,
         )
         self.runAlgoNewest = MemorixTaskItemNoKey[str, "Animal"](
-            api=self._api,
+            api=api,
             id="runAlgoNewest",
             payload_class=str,
             returns_class=Animal,
@@ -153,6 +193,8 @@ class MemorixApi(
         redis_url: str,
     ) -> None:
         super().__init__(redis_url=redis_url)
+
+        self.spaceship = MemorixSpaceshipNamespace(self)
 
         self.cache = MemorixCacheApi(self)
         self.pubsub = MemorixPubSubApi(self)

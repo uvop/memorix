@@ -5,6 +5,7 @@ import os
 from .example_schema_generated import (
     Animal,
     CacheUser2Key,
+    CachePilotPayload,
     MemorixApi,
     User,
 )
@@ -312,3 +313,19 @@ def test_task_options_schema() -> None:
             break
     finally:
         memorix_api.task.runAlgo.clear()
+
+
+def test_cache_namespace() -> None:
+    memorix_api = MemorixApi(redis_url=redis_url)
+
+    memorix_api.spaceship.cache.pilot.set(CachePilotPayload(name="uv"))
+
+    pilot = memorix_api.spaceship.cache.pilot.get()
+    if pilot is None:
+        raise Exception("Didn't get pilot from redis")
+    assert pilot.name == "uv"
+
+    sleep(1.5)
+    pilot2 = memorix_api.spaceship.cache.pilot.get()
+    if pilot2 is not None:
+        raise Exception("pilot should have been expired")
