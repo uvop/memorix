@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { MemorixClientApi } from "./index";
+import { BaseMemorixApi, MemorixNamespace } from "./index";
 
 export enum Animal {
   dog = "dog",
@@ -13,7 +13,18 @@ export type User = {
 };
 
 // prettier-ignore
-export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:2}}}}) {
+class NamespaceSpaceship extends MemorixNamespace.with({name:"spaceship"}) {
+  cache = {
+    pilot: this.getCacheItemNoKey<{
+      name: string;
+    }>("pilot"),
+  };
+}
+
+// prettier-ignore
+export class MemorixApi extends BaseMemorixApi.withGlobal({defaultOptions:{cache:{expire:{value:2}}}}) {
+  spaceship = this.getNamespaceItem(NamespaceSpaceship);
+
   cache = {
     favoriteAnimal: this.getCacheItem<string, Animal>("favoriteAnimal"),
     user: this.getCacheItem<string, User>("user"),

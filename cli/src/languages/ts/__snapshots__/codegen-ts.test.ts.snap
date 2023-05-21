@@ -156,23 +156,23 @@ export type User = {
 
 exports[`ts codegen namespace can generate 1`] = `
 "/* eslint-disable */
-import { createMemorixApi, MemorixNamespace } from \\"@memorix/client-redis\\";
+import { BaseMemorixApi, MemorixNamespace } from \\"@memorix/client-redis\\";
 
-class NamespaceUser extends MemorixNamespace {
+// prettier-ignore
+class NamespaceUser extends MemorixNamespace.with({name:\\"user\\",defaultOptions:{cache:{expire:{value:5}}}}) {
   cache = {
     bio: this.getCacheItemNoKey<string>(\\"bio\\"),
   };
 }
 
-class NamespaceGlobal extends MemorixNamespace {
+// prettier-ignore
+export class MemorixApi extends BaseMemorixApi.withGlobal({defaultOptions:{cache:{expire:{value:6}}}}) {
+  user = this.getNamespaceItem(NamespaceUser);
+
   cache = {
     favoriteUser: this.getCacheItemNoKey<string>(\\"favoriteUser\\"),
   };
-}
-
-export const MemorixApi = createMemorixApi(NamespaceGlobal, {
-  user: NamespaceUser,
-});"
+}"
 `;
 
 exports[`ts codegen pubsub can generate with inline types 1`] = `

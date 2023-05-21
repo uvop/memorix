@@ -1,7 +1,7 @@
-import { MemorixBaseApi } from "./MemorixBaseApi";
+import { Namespace } from "./namespace";
 
 const init = async () => {
-  const api = new MemorixBaseApi({
+  const api = new Namespace({
     redisUrl: process.env.REDIS_URL!,
   });
   const { get, set } = api.getCacheItem<string, string>("memo");

@@ -5,10 +5,21 @@ Config {
             file: "example-schema.generated.ts"
         }
     ]
-    defaultOptions: {
-        cache: {
-            expire: {
-                value: 2
+}
+
+DefaultOptions {
+    cache: {
+        expire: {
+            value: 2
+        }
+    }
+}
+
+Namespace spaceship {
+    Cache {
+        pilot {
+            payload: {
+                name: string
             }
         }
     }

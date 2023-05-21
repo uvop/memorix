@@ -235,4 +235,11 @@ describe("example schema has", () => {
       await stop();
     });
   });
+  describe("namespace", () => {
+    it("works for cache item", async () => {
+      await memorixApi.spaceship.cache.pilot.set({ name: "uv" });
+      const pilot = await memorixApi.spaceship.cache.pilot.get();
+      expect(pilot!.name).toBe("uv");
+    });
+  });
 });

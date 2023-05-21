@@ -288,14 +288,28 @@ describe("ts codegen", () => {
     });
   });
   describe("namespace", () => {
-    it("can generate", () => {
+    it.only("can generate", () => {
       expect(
         codegenTs(
           `
             Namespace user {
+              DefaultOptions {
+                cache: {
+                  expire: {
+                    value: 5
+                  }
+                }
+              }
               Cache {
                 bio {
                   payload: string
+                }
+              }
+            }
+            DefaultOptions {
+              cache: {
+                expire: {
+                  value: 6
                 }
               }
             }

@@ -1,10 +1,4 @@
-import {
-  Block,
-  BlockTypes,
-  DefaultOptions,
-  Namespace,
-  Namespaces,
-} from "src/core/block";
+import { Block, BlockTypes, Namespace, Namespaces } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import { assertUnreachable, camelCase, getTabs } from "src/core/utilities";
 
@@ -110,13 +104,18 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
   }
 };
 
-const defaultOptionsToCode: (defaultOptions: DefaultOptions) => string = (
-  defaultOptions
-) => {
-  return `${jsonStringify({ defaultOptions })}`;
-};
-
-const namespaceToCode: (name: string, ns: Namespace) => string = (name, ns) => {
+const namespaceToCode: (
+  ns: Namespace,
+  options:
+    | {
+        isApi: true;
+        namespaceNames: string[];
+      }
+    | {
+        isApi: false;
+        name: string;
+      }
+) => string = (ns, options) => {
   const hasCache =
     ns.blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
@@ -125,28 +124,57 @@ const namespaceToCode: (name: string, ns: Namespace) => string = (name, ns) => {
     ns.blocks.filter((b) => b.type === BlockTypes.task).length > 0;
   const hasApi = hasCache || hasPubsub || hasTask;
 
+  const detailedOptions =
+    options.isApi === true
+      ? {
+          export: true,
+          addPrettierIgnore: !!ns.defaults,
+          class: "MemorixApi",
+          classExtend: !ns.defaults
+            ? "BaseMemorixApi"
+            : `BaseMemorixApi.withGlobal(${jsonStringify({
+                defaultOptions: ns.defaults,
+              })})`,
+          namespaceNames: options.namespaceNames,
+        }
+      : {
+          export: false,
+          addPrettierIgnore: true,
+          class: `Namespace${camelCase(options.name)}`,
+          classExtend: !ns.defaults
+            ? `MemorixNamespace.with(${jsonStringify({
+                name: options.name,
+              })})`
+            : `MemorixNamespace.with(${jsonStringify({
+                name: options.name,
+                defaultOptions: ns.defaults,
+              })})`,
+          namespaceNames: [] as string[],
+        };
+
   const code = []
-    .concat(
-      ns.blocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode)
-    )
-    .concat(
-      ns.blocks.filter((b) => b.type === BlockTypes.model).map(blockToCode)
-    )
     .concat(
       hasApi
         ? `${
-            ns.defaults
+            detailedOptions.addPrettierIgnore
               ? `// prettier-ignore
 `
               : ""
-          }class Namespace${camelCase(name)} extends ${
-            ns.defaults
-              ? `MemorixNamespace.withDefaultOptions(${defaultOptionsToCode(
-                  ns.defaults
-                )})`
-              : "MemorixNamespace"
-          } {
+          }${detailedOptions.export ? "export " : ""}class ${
+            detailedOptions.class
+          } extends ${detailedOptions.classExtend} {
 ${[]
+  .concat(
+    detailedOptions.namespaceNames.map(
+      (namespaceName) =>
+        `${getTabs(
+          1
+        )}${namespaceName} = this.getNamespaceItem(Namespace${camelCase(
+          namespaceName
+        )});
+`
+    )
+  )
   .concat(
     hasCache
       ? `${getTabs(1)}cache = {
@@ -191,19 +219,26 @@ export const codegen: (namespaces: Namespaces) => string = (namespaces) => {
     ...namespaces.global.blocks,
     ...namespaces.named.map((x) => x.blocks).flat(),
   ];
+  const hasNamespaces = namespaces.named.length > 0;
   const hasCache =
     allBlocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
     allBlocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
   const hasTask =
     allBlocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = hasCache || hasPubsub || hasTask || namespaces.global.defaults;
+  const hasApi =
+    hasCache ||
+    hasPubsub ||
+    hasTask ||
+    hasNamespaces ||
+    namespaces.global.defaults;
 
   const code = []
     .concat(
       hasApi
         ? `import { ${([] as string[])
-            .concat(hasApi ? ["createMemorixApi", "MemorixNamespace"] : [])
+            .concat(hasApi ? ["BaseMemorixApi"] : [])
+            .concat(hasNamespaces ? ["MemorixNamespace"] : [])
             .join(", ")} } from "@memorix/client-redis";`
         : []
     )
@@ -213,20 +248,17 @@ export const codegen: (namespaces: Namespaces) => string = (namespaces) => {
     .concat(
       allBlocks.filter((b) => b.type === BlockTypes.model).map(blockToCode)
     )
-    .concat(namespaces.named.map((x) => namespaceToCode(x.name, x)))
-    .concat(namespaceToCode("global", namespaces.global))
+    .concat(
+      namespaces.named.map((x) =>
+        namespaceToCode(x, { isApi: false, name: x.name })
+      )
+    )
     .concat(
       hasApi
-        ? `${
-            namespaces.global.defaults
-              ? `// prettier-ignore
-`
-              : ""
-          }export const MemorixApi = createMemorixApi(NamespaceGlobal, {
-${namespaces.named
-  .map((x) => `${getTabs(1)}${x.name}: Namespace${camelCase(x.name)},`)
-  .join("\n")}
-});`
+        ? namespaceToCode(namespaces.global, {
+            isApi: true,
+            namespaceNames: namespaces.named.map((x) => x.name),
+          })
         : []
     )
     .join("\n\n");
