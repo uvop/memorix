@@ -17,8 +17,8 @@
     "lint:err": "npm run lint -- --quiet",
     "lint:fix": "npm run lint -- --fix",
     "start": "ts-node -r tsconfig-paths/register src/start.ts",
-    "test": "jest",
-    "test:dev": "yarn test --watch",
+    "test": "jest --forceExit",
+    "test:dev": "yarn test --watch --forceExit",
     "typecheck": "tsc --noEmit"
   },
   "jest": {
