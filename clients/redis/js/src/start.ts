@@ -1,4 +1,4 @@
-import { Namespace } from "./namespace";
+import { Namespace } from "./Namespace";
 
 const init = async () => {
   const api = new Namespace({

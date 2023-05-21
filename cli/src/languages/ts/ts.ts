@@ -122,7 +122,7 @@ const namespaceToCode: (
     ns.blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
   const hasTask =
     ns.blocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = hasCache || hasPubsub || hasTask;
+  const hasApi = hasCache || hasPubsub || hasTask || ns.defaults;
 
   const detailedOptions =
     options.isApi === true
@@ -131,8 +131,8 @@ const namespaceToCode: (
           addPrettierIgnore: !!ns.defaults,
           class: "MemorixApi",
           classExtend: !ns.defaults
-            ? "BaseMemorixApi"
-            : `BaseMemorixApi.withGlobal(${jsonStringify({
+            ? "MemorixBaseApi"
+            : `MemorixBaseApi.withGlobal(${jsonStringify({
                 defaultOptions: ns.defaults,
               })})`,
           namespaceNames: options.namespaceNames,
@@ -237,7 +237,7 @@ export const codegen: (namespaces: Namespaces) => string = (namespaces) => {
     .concat(
       hasApi
         ? `import { ${([] as string[])
-            .concat(hasApi ? ["BaseMemorixApi"] : [])
+            .concat(hasApi ? ["MemorixBaseApi"] : [])
             .concat(hasNamespaces ? ["MemorixNamespace"] : [])
             .join(", ")} } from "@memorix/client-redis";`
         : []

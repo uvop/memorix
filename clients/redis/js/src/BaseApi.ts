@@ -1,12 +1,12 @@
 // eslint-disable-next-line max-classes-per-file
 import Redis from "ioredis";
-import { Namespace, DefaultOptions, Api as NamespaceApi } from "./namespace";
+import { Namespace, DefaultOptions, Api as NamespaceApi } from "./Namespace";
 
-export class Api extends Namespace {
+export class BaseApi extends Namespace {
   public static withGlobal: (config: {
     defaultOptions?: DefaultOptions;
-  }) => typeof Api = (override) =>
-    class ApiWith extends Api {
+  }) => typeof BaseApi = (override) =>
+    class ApiWith extends BaseApi {
       constructor(options: {
         redisUrl: string;
         defaultOptions?: DefaultOptions;
