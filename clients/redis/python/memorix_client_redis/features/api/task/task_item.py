@@ -110,7 +110,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
             )
 
         queue_size = self._api._connection.redis.rpush(
-            hash_key(self._id, key=key),
+            hash_key(namespace=self._api._name, id=self._id, key=key),
             wrapped_payload_json,
         )
         if returns_id is None:
@@ -147,11 +147,11 @@ class TaskItem(typing.Generic[KT, PT, RT]):
         while True:
             if merged_options is not None and merged_options.take_newest:
                 [channel_bytes, data_bytes] = self._api._connection.redis.brpop(
-                    hash_key(self._id, key=key),
+                    hash_key(namespace=self._api._name, id=self._id, key=key),
                 )
             else:
                 [channel_bytes, data_bytes] = self._api._connection.redis.blpop(
-                    hash_key(self._id, key=key),
+                    hash_key(namespace=self._api._name, id=self._id, key=key),
                 )
 
             data_str = bytes_to_str(data_bytes)
@@ -187,7 +187,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
 
     def clear(self, key: KT) -> None:
         self._api._connection.redis.delete(
-            hash_key(self._id, key=key),
+            hash_key(namespace=self._api._name, id=self._id, key=key),
         )
 
     async def async_clear(self, key: KT) -> None:

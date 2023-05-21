@@ -39,7 +39,7 @@ class PubSubItem(Generic[KT, PT]):
     def publish(self, key: KT, payload: PT) -> PubSubItemPublish:
         payload_json = to_json(payload)
         subscribers_size = self._api._connection.redis.publish(
-            hash_key(self._id, key=key),
+            hash_key(namespace=self._api._name, id=self._id, key=key),
             payload_json,
         )
         return PubSubItemPublish(subscribers_size=subscribers_size)
@@ -59,7 +59,7 @@ class PubSubItem(Generic[KT, PT]):
 
     def subscribe(self, key: KT) -> Generator[PubSubItemSubscribe[PT], None, None]:
         sub = self._api._connection.redis.pubsub()
-        sub.subscribe(hash_key(self._id, key=key))
+        sub.subscribe(hash_key(namespace=self._api._name, id=self._id, key=key))
         for message in cast(
             Generator[Dict[str, Union[int, bytes]], None, None],
             sub.listen(),  # type: ignore
@@ -75,7 +75,7 @@ class PubSubItem(Generic[KT, PT]):
         key: KT,
     ) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:
         sub = self._api._connection.redis.pubsub()
-        sub.subscribe(hash_key(self._id, key=key))
+        sub.subscribe(hash_key(namespace=self._api._name, id=self._id, key=key))
         loop = asyncio.get_running_loop()
         while True:
             message = await loop.run_in_executor(

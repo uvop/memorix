@@ -41,7 +41,9 @@ class CacheItem(Generic[KT, PT]):
             options,
         )
 
-        data_bytes = self._api._connection.redis.get(hash_key(self._id, key=key))
+        data_bytes = self._api._connection.redis.get(
+            hash_key(namespace=self._api._name, id=self._id, key=key),
+        )
         if data_bytes is None:
             return None
         if (
@@ -86,7 +88,7 @@ class CacheItem(Generic[KT, PT]):
 
         payload_json = to_json(payload)
         return self._api._connection.redis.set(
-            hash_key(self._id, key=key),
+            hash_key(namespace=self._api._name, id=self._id, key=key),
             payload_json,
             ex=merged_options.expire.value
             if merged_options is not None
@@ -132,7 +134,7 @@ class CacheItem(Generic[KT, PT]):
         if merged_options is None or merged_options.expire is None:
             return
 
-        hashed_key = hash_key(self._id, key=key)
+        hashed_key = hash_key(namespace=self._api._name, id=self._id, key=key)
 
         if merged_options.expire.is_in_ms:
             self._api._connection.redis.pexpire(
