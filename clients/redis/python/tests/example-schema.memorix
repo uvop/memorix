@@ -1,9 +1,16 @@
 Config {
-    defaultOptions: {
-        cache: {
-            expire: {
-                value: 2
-            }
+    output: [
+        {
+            language: "python"
+            file: "example_schema_generated.py"
+        }
+    ]
+}
+
+DefaultOptions {
+    cache: {
+        expire: {
+            value: 2
         }
     }
 }

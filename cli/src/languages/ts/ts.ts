@@ -152,7 +152,7 @@ const namespaceToCode: (
           namespaceNames: [] as string[],
         };
 
-  const code = []
+  const code = ([] as string[])
     .concat(
       hasApi
         ? `${
@@ -233,7 +233,7 @@ export const codegen: (namespaces: Namespaces) => string = (namespaces) => {
     hasNamespaces ||
     namespaces.global.defaults;
 
-  const code = []
+  const code = ([] as string[])
     .concat(
       hasApi
         ? `import { ${([] as string[])

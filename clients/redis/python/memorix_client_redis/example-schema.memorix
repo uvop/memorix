@@ -1,3 +1,12 @@
+Config {
+    output: [
+        {
+            language: "python"
+            file: "example_schema_generated.py"
+        }
+    ]
+}
+
 Enum Animal {
     dog
     cat
