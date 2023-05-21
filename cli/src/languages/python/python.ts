@@ -12,7 +12,6 @@ import { ValueType, ValueTypes } from "src/core/value";
 import {
   assertUnreachable,
   camelCase,
-  // camelCase,
   getTabs as get2Tabs,
 } from "src/core/utilities";
 
