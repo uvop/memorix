@@ -1,8 +1,8 @@
-import { getBlocks } from "src/core/block";
+import { getNamespaces } from "src/core/block";
 import { codegenByLanguage, Languages } from "src/languages";
 
 const codegenPython = (schema: string) => {
-  const blocks = getBlocks(schema);
+  const blocks = getNamespaces(schema);
   return codegenByLanguage(blocks, Languages.python).trim();
 };
 
@@ -265,18 +265,26 @@ describe("python codegen", () => {
         codegenPython(
           `
             Config {
+              output: [
+                  {
+                      language: "typescript"
+                      file: "example.generated.ts"
+                  }
+              ]
               extends: [
                 "bla.memorix"
+                "bla2.memorix"
               ]
-              defaultOptions: {
-                cache: {
-                  expire: {
-                    value: 5
-                  }
+            }
+            DefaultOptions {
+              cache: {
+                expire: {
+                  value: 5
+                  extendOnGet: true
                 }
-                task: {
-                  takeNewest: true
-                }
+              }
+              task: {
+                takeNewest: true
               }
             }
           `
@@ -287,11 +295,45 @@ describe("python codegen", () => {
       expect(
         codegenPython(
           `
-            Config {
-              defaultOptions: {
+            DefaultOptions {
+              cache: {
+                expire: null
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+  });
+  describe("namespace", () => {
+    it("can generate", () => {
+      expect(
+        codegenPython(
+          `
+            Namespace user {
+              DefaultOptions {
                 cache: {
-                  expire: null
+                  expire: {
+                    value: 5
+                  }
                 }
+              }
+              Cache {
+                bio {
+                  payload: string
+                }
+              }
+            }
+            DefaultOptions {
+              cache: {
+                expire: {
+                  value: 6
+                }
+              }
+            }
+            Cache {
+              favoriteUser {
+                payload: string
               }
             }
           `

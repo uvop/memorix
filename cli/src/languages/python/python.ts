@@ -207,9 +207,8 @@ const namespaceToCode: (
           apiName: "MemorixApi",
           apiExtends: ns.defaults
             ? `MemorixBaseApi.with_global_data(  # type: ignore
-${getTabs(1)}data=MemorixBaseApi.BaseApiWithGlobalData(${defaultOptionsToCode(
-                ns.defaults
-              )}
+${getTabs(1)}data=MemorixBaseApi.BaseApiWithGlobalData(
+${defaultOptionsToCode(ns.defaults)}
 ${getTabs(1)}),
 )`
             : "MemorixBaseApi",
