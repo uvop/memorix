@@ -35,9 +35,9 @@ def test_connect_should_fail() -> None:
     memorix_api = MemorixApi(redis_url="redis://hello-world:6379/0")
     try:
         memorix_api.connect()
-    except AttributeError as err:
+    except AttributeError as err:  # noqa: WPS329
         raise err
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
 

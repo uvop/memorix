@@ -1,6 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import Redis from "ioredis";
-import { Namespace, DefaultOptions, Api as NamespaceApi } from "./Namespace";
+import { Namespace, DefaultOptions, Api as NamespaceApi } from "./namespace";
 
 export class BaseApi extends Namespace {
   public static withGlobal: (config: {

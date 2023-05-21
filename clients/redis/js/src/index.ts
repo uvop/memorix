@@ -1,2 +1,2 @@
-export { BaseApi as MemorixBaseApi } from "./BaseApi";
-export { Namespace as MemorixNamespace } from "./Namespace";
+export { BaseApi as MemorixBaseApi } from "./base-api";
+export { Namespace as MemorixNamespace } from "./namespace";
