@@ -3,7 +3,7 @@ import functools
 from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
 from typing import Generic, Optional, Type, TypeVar, cast
-from ..api import Api, ApiDefaults
+from ..base_api import BaseApi
 from .cache_options import CacheOptions
 
 KT = TypeVar("KT")
@@ -11,9 +11,11 @@ PT = TypeVar("PT")
 
 
 class CacheItem(Generic[KT, PT]):
+    Options = CacheOptions
+
     def __init__(
         self,
-        api: Api,
+        api: BaseApi,
         id: str,
         payload_class: Type[PT],
         options: Optional[CacheOptions] = None,
@@ -29,19 +31,17 @@ class CacheItem(Generic[KT, PT]):
         options: Optional[CacheOptions] = None,
     ) -> Optional[PT]:
         merged_options = self._options
-        try:
+        if self._api._default_options is not None:
             merged_options = CacheOptions.merge(
-                cast(ApiDefaults, self._api._defaults).cache_set_options,
+                self._api._default_options.cache,
                 self._options,
             )
-        except AttributeError:
-            pass
         merged_options = CacheOptions.merge(
             merged_options,
             options,
         )
 
-        data_bytes = self._api._redis.get(hash_key(self._id, key=key))
+        data_bytes = self._api._namespace_api.redis.get(hash_key(self._id, key=key))
         if data_bytes is None:
             return None
         if (
@@ -74,20 +74,18 @@ class CacheItem(Generic[KT, PT]):
         options: Optional[CacheOptions] = None,
     ) -> Optional[bool]:
         merged_options = self._options
-        try:
+        if self._api._default_options is not None:
             merged_options = CacheOptions.merge(
-                cast(ApiDefaults, self._api._defaults).cache_set_options,
+                self._api._default_options.cache,
                 self._options,
             )
-        except AttributeError:
-            pass
         merged_options = CacheOptions.merge(
             merged_options,
             options,
         )
 
         payload_json = to_json(payload)
-        return self._api._redis.set(
+        return self._api._namespace_api.redis.set(
             hash_key(self._id, key=key),
             payload_json,
             ex=merged_options.expire.value
@@ -126,22 +124,26 @@ class CacheItem(Generic[KT, PT]):
         key: KT,
     ) -> None:
         merged_options = self._options
-        try:
+        if self._api._default_options is not None:
             merged_options = CacheOptions.merge(
-                cast(ApiDefaults, self._api._defaults).cache_set_options,
+                self._api._default_options.cache,
                 self._options,
             )
-        except AttributeError:
-            pass
         if merged_options is None or merged_options.expire is None:
             return
 
         hashed_key = hash_key(self._id, key=key)
 
         if merged_options.expire.is_in_ms:
-            self._api._redis.pexpire(hashed_key, merged_options.expire.value)
+            self._api._namespace_api.redis.pexpire(
+                hashed_key,
+                merged_options.expire.value,
+            )
         else:
-            self._api._redis.expire(hashed_key, merged_options.expire.value)
+            self._api._namespace_api.redis.expire(
+                hashed_key,
+                merged_options.expire.value,
+            )
 
     async def async_extend(
         self,

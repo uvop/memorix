@@ -8,29 +8,19 @@ else:
 
 from enum import Enum
 from memorix_client_redis import (
-    MemorixClientApi,
-    MemorixClientApiDefaults as _MemorixClientApiDefaults,
-    MemorixClientCacheApi,
-    MemorixClientCacheApiItem,
-    MemorixClientCacheApiItemNoKey,
-    MemorixClientCacheOptions as _MemorixClientCacheOptions,
-    MemorixClientCacheOptionsExpire as _MemorixClientCacheOptionsExpire,
-    MemorixClientPubSubApi,
-    MemorixClientPubSubApiItem,
-    MemorixClientPubSubApiItemNoKey,
-    MemorixClientTaskApi,
-    MemorixClientTaskApiItem,
-    MemorixClientTaskApiItemNoKey,
-    MemorixClientTaskApiItemNoReturns,
-    MemorixClientTaskApiItemNoKeyNoReturns,
-    MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
+    MemorixBaseApi,
+    MemorixBaseCacheApi,
+    MemorixCacheItem,
+    MemorixCacheItemNoKey,
+    MemorixBasePubSubApi,
+    MemorixPubSubItem,
+    MemorixPubSubItemNoKey,
+    MemorixBaseTaskApi,
+    MemorixTaskItem,
+    MemorixTaskItemNoKey,
+    MemorixTaskItemNoReturns,
+    MemorixTaskItemNoKeyNoReturns,
 )
-
-
-MemorixClientApiDefaults = _MemorixClientApiDefaults
-MemorixClientCacheOptions = _MemorixClientCacheOptions
-MemorixClientCacheOptionsExpire = _MemorixClientCacheOptionsExpire
-MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
 class Animal(str, Enum):
@@ -50,62 +40,62 @@ class CacheUser2Key(object):
     id: str
 
 
-class MemorixCacheApi(MemorixClientCacheApi):
-    def __init__(self, api: MemorixClientApi) -> None:
+class MemorixCacheApi(MemorixBaseCacheApi):
+    def __init__(self, api: MemorixBaseApi) -> None:
         super().__init__(api=api)
 
-        self.bestStr = MemorixClientCacheApiItemNoKey[str](
+        self.bestStr = MemorixCacheItemNoKey[str](
             api=self._api,
             id="bestStr",
             payload_class=str,
         )
-        self.allUsers = MemorixClientCacheApiItemNoKey[
+        self.allUsers = MemorixCacheItemNoKey[
             typing.List[typing.List[typing.Optional["User"]]]
         ](
             api=self._api,
             id="allUsers",
             payload_class=typing.List[typing.List[typing.Optional[User]]],
         )
-        self.favoriteAnimal = MemorixClientCacheApiItem[str, "Animal"](
+        self.favoriteAnimal = MemorixCacheItem[str, "Animal"](
             api=self._api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixClientCacheApiItem[str, "User"](
+        self.user = MemorixCacheItem[str, "User"](
             api=self._api,
             id="user",
             payload_class=User,
         )
-        self.user2 = MemorixClientCacheApiItem["CacheUser2Key", "User"](
+        self.user2 = MemorixCacheItem["CacheUser2Key", "User"](
             api=self._api,
             id="user2",
             payload_class=User,
         )
-        self.userExpire = MemorixClientCacheApiItem[str, "User"](
+        self.userExpire = MemorixCacheItem[str, "User"](
             api=self._api,
             id="userExpire",
             payload_class=User,
-            options=MemorixClientCacheOptions(
-                expire=MemorixClientCacheOptionsExpire(
+            options=MemorixCacheItem.Options(
+                expire=MemorixCacheItem.Options.Expire(
                     value=1000,
                     is_in_ms=True,
                 ),
             ),
         )
-        self.userExpire2 = MemorixClientCacheApiItem[str, "User"](
+        self.userExpire2 = MemorixCacheItem[str, "User"](
             api=self._api,
             id="userExpire2",
             payload_class=User,
-            options=MemorixClientCacheOptions(
+            options=MemorixCacheItem.Options(
                 expire=None,
             ),
         )
-        self.userExpire3 = MemorixClientCacheApiItemNoKey["User"](
+        self.userExpire3 = MemorixCacheItemNoKey["User"](
             api=self._api,
             id="userExpire3",
             payload_class=User,
-            options=MemorixClientCacheOptions(
-                expire=MemorixClientCacheOptionsExpire(
+            options=MemorixCacheItem.Options(
+                expire=MemorixCacheItem.Options.Expire(
                     value=2,
                     extend_on_get=True,
                 ),
@@ -113,44 +103,44 @@ class MemorixCacheApi(MemorixClientCacheApi):
         )
 
 
-class MemorixPubSubApi(MemorixClientPubSubApi):
-    def __init__(self, api: MemorixClientApi) -> None:
+class MemorixPubSubApi(MemorixBasePubSubApi):
+    def __init__(self, api: MemorixBaseApi) -> None:
         super().__init__(api=api)
 
-        self.message = MemorixClientPubSubApiItemNoKey[str](
+        self.message = MemorixPubSubItemNoKey[str](
             api=self._api,
             id="message",
             payload_class=str,
         )
 
 
-class MemorixTaskApi(MemorixClientTaskApi):
-    def __init__(self, api: MemorixClientApi) -> None:
+class MemorixTaskApi(MemorixBaseTaskApi):
+    def __init__(self, api: MemorixBaseApi) -> None:
         super().__init__(api=api)
 
-        self.runAlgo = MemorixClientTaskApiItemNoKey[str, "Animal"](
+        self.runAlgo = MemorixTaskItemNoKey[str, "Animal"](
             api=self._api,
             id="runAlgo",
             payload_class=str,
             returns_class=Animal,
         )
-        self.runAlgoNewest = MemorixClientTaskApiItemNoKey[str, "Animal"](
+        self.runAlgoNewest = MemorixTaskItemNoKey[str, "Animal"](
             api=self._api,
             id="runAlgoNewest",
             payload_class=str,
             returns_class=Animal,
-            options=MemorixClientTaskDequequeOptions(
+            options=MemorixTaskItem.Options(
                 take_newest=True,
             ),
         )
 
 
 class MemorixApi(
-    MemorixClientApi.from_config(  # type: ignore
-        config=MemorixClientApi.Config(
-            default_options=MemorixClientApi.Config.DefaultOptions(
-                cache=MemorixClientCacheOptions(
-                    expire=MemorixClientCacheOptionsExpire(
+    MemorixBaseApi.with_global_data(  # type: ignore
+        data=MemorixBaseApi.BaseApiWithGlobalData(
+            default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(
+                cache=MemorixCacheItem.Options(
+                    expire=MemorixCacheItem.Options.Expire(
                         value=2,
                     ),
                 ),
@@ -161,9 +151,8 @@ class MemorixApi(
     def __init__(
         self,
         redis_url: str,
-        defaults: typing.Optional[MemorixClientApiDefaults] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url, defaults=defaults)
+        super().__init__(redis_url=redis_url)
 
         self.cache = MemorixCacheApi(self)
         self.pubsub = MemorixPubSubApi(self)

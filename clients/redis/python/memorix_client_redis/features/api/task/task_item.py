@@ -4,7 +4,7 @@ from memorix_client_redis.features.api.hash_key import hash_key
 from uuid import uuid4
 from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
 import typing
-from ..api import Api, ApiDefaults
+from ..base_api import BaseApi
 from .task_options import TaskDequequeOptions
 
 KT = typing.TypeVar("KT")
@@ -76,9 +76,11 @@ class TaskItemDequeueWithReturns(TaskItemDequeue[PT]):
 
 
 class TaskItem(typing.Generic[KT, PT, RT]):
+    Options = TaskDequequeOptions
+
     def __init__(
         self,
-        api: Api,
+        api: BaseApi,
         id: str,
         payload_class: typing.Type[PT],
         returns_class: typing.Optional[typing.Type[RT]] = None,
@@ -107,7 +109,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
                 [payload],
             )
 
-        queue_size = self._api._redis.rpush(
+        queue_size = self._api._namespace_api.redis.rpush(
             hash_key(self._id, key=key),
             wrapped_payload_json,
         )
@@ -132,13 +134,11 @@ class TaskItem(typing.Generic[KT, PT, RT]):
         options: typing.Optional[TaskDequequeOptions] = None,
     ) -> typing.Generator[TaskItemDequeueWithReturns[PT], None, None]:
         merged_options = self._options
-        try:
+        if self._api._default_options is not None:
             merged_options = TaskDequequeOptions.merge(
-                typing.cast(ApiDefaults, self._api._defaults).task_dequeque_options,
+                self._api._default_options.task,
                 self._options,
             )
-        except AttributeError:
-            pass
         merged_options = TaskDequequeOptions.merge(
             merged_options,
             options,
@@ -146,11 +146,11 @@ class TaskItem(typing.Generic[KT, PT, RT]):
 
         while True:
             if merged_options is not None and merged_options.take_newest:
-                [channel_bytes, data_bytes] = self._api._redis.brpop(
+                [channel_bytes, data_bytes] = self._api._namespace_api.redis.brpop(
                     hash_key(self._id, key=key),
                 )
             else:
-                [channel_bytes, data_bytes] = self._api._redis.blpop(
+                [channel_bytes, data_bytes] = self._api._namespace_api.redis.blpop(
                     hash_key(self._id, key=key),
                 )
 
@@ -186,7 +186,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
         yield typing.cast(TaskItemDequeueWithReturns[PT], None)
 
     def clear(self, key: KT) -> None:
-        self._api._redis.delete(
+        self._api._namespace_api.redis.delete(
             hash_key(self._id, key=key),
         )
 
@@ -231,7 +231,7 @@ class TaskItemNoKey(TaskItem[None, PT, RT]):
 class TaskItemNoReturns(TaskItem[KT, PT, None]):
     def __init__(
         self,
-        api: Api,
+        api: BaseApi,
         id: str,
         payload_class: typing.Type[PT],
     ) -> None:

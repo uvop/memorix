@@ -26,10 +26,10 @@ const blockOptionsToCode: (
     case BlockTypes.cache: {
       const o = options as BlockCache["values"][number]["options"];
       return o
-        ? `MemorixClientCacheOptions(
+        ? `MemorixCacheItem.Options(
 ${getTabs(level + 1)}expire=${
             o.expire
-              ? `MemorixClientCacheOptionsExpire(
+              ? `MemorixCacheItem.Options.Expire(
 ${getTabs(level + 2)}value=${o.expire.value},${
                   o.expire.isInMs !== undefined
                     ? `
@@ -50,7 +50,7 @@ ${getTabs(level)})`
     case BlockTypes.task: {
       const o = options as BlockTask["values"][number]["options"];
       return o
-        ? `MemorixClientTaskDequequeOptions(
+        ? `MemorixTaskItem.Options(
 ${getTabs(level + 1)}take_newest=${o.takeNewest ? "True" : "False"},
 ${getTabs(level)})`
         : "None";
@@ -113,9 +113,9 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
     case BlockTypes.pubsub:
     case BlockTypes.task: {
       const itemClass = {
-        [BlockTypes.cache]: "MemorixClientCacheApiItem",
-        [BlockTypes.pubsub]: "MemorixClientPubSubApiItem",
-        [BlockTypes.task]: "MemorixClientTaskApiItem",
+        [BlockTypes.cache]: "MemorixCacheItem",
+        [BlockTypes.pubsub]: "MemorixPubSubItem",
+        [BlockTypes.task]: "MemorixTaskItem",
       }[b.type];
       const hasReturns = b.type === BlockTypes.task;
 
@@ -154,10 +154,12 @@ const defaultOptionsToCode: (defaultOptions: DefaultOptions) => string = (
   defaultOptions
 ) => {
   return `
-${getTabs(1)}config=MemorixClientApi.Config(${
+${getTabs(1)}data=MemorixBaseApi.BaseApiWithGlobalData(${
     defaultOptions
       ? `
-${getTabs(2)}default_options=MemorixClientApi.Config.DefaultOptions(${
+${getTabs(
+  2
+)}default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(${
           defaultOptions.cache
             ? `
 ${getTabs(3)}cache=${blockOptionsToCode(
@@ -234,8 +236,8 @@ const namespaceToCode: (
   const code = ([] as string[])
     .concat(
       hasCache
-        ? `class MemorixCacheApi(MemorixClientCacheApi):
-${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
+        ? `class MemorixCacheApi(MemorixBaseCacheApi):
+${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
 ${ns.blocks
@@ -246,8 +248,8 @@ ${ns.blocks
     )
     .concat(
       hasPubsub
-        ? `class MemorixPubSubApi(MemorixClientPubSubApi):
-${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
+        ? `class MemorixPubSubApi(MemorixBasePubSubApi):
+${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
 ${ns.blocks
@@ -258,8 +260,8 @@ ${ns.blocks
     )
     .concat(
       hasTask
-        ? `class MemorixTaskApi(MemorixClientTaskApi):
-${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
+        ? `class MemorixTaskApi(MemorixBaseTaskApi):
+${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
 ${ns.blocks
@@ -272,17 +274,16 @@ ${ns.blocks
       hasApi
         ? `class MemorixApi(${
             ns.defaults
-              ? `MemorixClientApi.from_config(  # type: ignore${defaultOptionsToCode(
+              ? `MemorixBaseApi.with_global_data(  # type: ignore${defaultOptionsToCode(
                   ns.defaults
                 )})`
-              : "MemorixClientApi"
+              : "MemorixBaseApi"
           }):
 ${getTabs(1)}def __init__(
 ${getTabs(2)}self,
 ${getTabs(2)}redis_url: str,
-${getTabs(2)}defaults: typing.Optional[MemorixClientApiDefaults] = None,
 ${getTabs(1)}) -> None:
-${getTabs(2)}super().__init__(redis_url=redis_url, defaults=defaults)
+${getTabs(2)}super().__init__(redis_url=redis_url)
 
 ${[]
   .concat(hasCache ? `${getTabs(2)}self.cache = MemorixCacheApi(self)` : [])
@@ -304,8 +305,8 @@ export const codegen: (namespaces: Namespaces) => string = (
     ...namespaces.named.map((x) => x.blocks).flat(),
   ];
   const hasNamespaces = namespaces.named.length > 0;
-  const hasDefaultOptions =
-    !!namespaces.global.defaults || namespaces.named.some((x) => x.defaults);
+  // const hasDefaultOptions =
+  //   !!namespaces.global.defaults || namespaces.named.some((x) => x.defaults);
   const hasEnum =
     allBlocks.filter((b) => b.type === BlockTypes.enum).length > 0;
   const hasCache =
@@ -338,89 +339,39 @@ from enum import Enum`
 }
 from memorix_client_redis import (
 ${[]
-  .concat(
-    hasApi
-      ? [
-          `${getTabs(1)}MemorixClientApi`,
-          `${getTabs(1)}MemorixClientApiDefaults as _MemorixClientApiDefaults`,
-        ]
-      : []
-  )
+  .concat(hasApi ? [`${getTabs(1)}MemorixBaseApi`] : [])
   .concat(
     hasCache
       ? [
-          `${getTabs(1)}MemorixClientCacheApi`,
-          `${getTabs(1)}MemorixClientCacheApiItem`,
-          `${getTabs(1)}MemorixClientCacheApiItemNoKey`,
-        ]
-      : []
-  )
-  .concat(
-    hasCache || hasDefaultOptions
-      ? [
-          `${getTabs(
-            1
-          )}MemorixClientCacheOptions as _MemorixClientCacheOptions`,
-          `${getTabs(
-            1
-          )}MemorixClientCacheOptionsExpire as _MemorixClientCacheOptionsExpire`,
+          `${getTabs(1)}MemorixBaseCacheApi`,
+          `${getTabs(1)}MemorixCacheItem`,
+          `${getTabs(1)}MemorixCacheItemNoKey`,
         ]
       : []
   )
   .concat(
     hasPubsub
       ? [
-          `${getTabs(1)}MemorixClientPubSubApi`,
-          `${getTabs(1)}MemorixClientPubSubApiItem`,
-          `${getTabs(1)}MemorixClientPubSubApiItemNoKey`,
+          `${getTabs(1)}MemorixBasePubSubApi`,
+          `${getTabs(1)}MemorixPubSubItem`,
+          `${getTabs(1)}MemorixPubSubItemNoKey`,
         ]
       : []
   )
   .concat(
     hasTask
       ? [
-          `${getTabs(1)}MemorixClientTaskApi`,
-          `${getTabs(1)}MemorixClientTaskApiItem`,
-          `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
-          `${getTabs(1)}MemorixClientTaskApiItemNoReturns`,
-          `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
-        ]
-      : []
-  )
-  .concat(
-    hasTask || hasDefaultOptions
-      ? [
-          `${getTabs(
-            1
-          )}MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions`,
+          `${getTabs(1)}MemorixBaseTaskApi`,
+          `${getTabs(1)}MemorixTaskItem`,
+          `${getTabs(1)}MemorixTaskItemNoKey`,
+          `${getTabs(1)}MemorixTaskItemNoReturns`,
+          `${getTabs(1)}MemorixTaskItemNoKeyNoReturns`,
         ]
       : []
   )
   .join(",\n")},
 )`,
     ])
-    .concat(
-      []
-        .concat(
-          hasApi ? [`MemorixClientApiDefaults = _MemorixClientApiDefaults`] : []
-        )
-        .concat(
-          hasCache || hasDefaultOptions
-            ? [
-                `MemorixClientCacheOptions = _MemorixClientCacheOptions`,
-                `MemorixClientCacheOptionsExpire = _MemorixClientCacheOptionsExpire`,
-              ]
-            : []
-        )
-        .concat(
-          hasTask || hasDefaultOptions
-            ? [
-                `MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions`,
-              ]
-            : []
-        )
-        .join("\n")
-    )
     .concat(
       allBlocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode)
     )

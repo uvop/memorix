@@ -6,10 +6,7 @@ from .example_schema_generated import (
     Animal,
     CacheUser2Key,
     MemorixApi,
-    MemorixClientApiDefaults,
     User,
-    MemorixClientCacheOptions,
-    MemorixClientCacheOptionsExpire,
 )
 import multiprocessing
 from time import sleep
@@ -75,8 +72,8 @@ async def test_cache_async_no_key() -> None:
 
     await memorix_api.cache.bestStr.async_set(
         "uv",
-        MemorixClientCacheOptions(
-            expire=MemorixClientCacheOptionsExpire(
+        MemorixApi.DefaultOptions.Cache(
+            expire=MemorixApi.DefaultOptions.Cache.Expire(
                 value=500,
                 is_in_ms=True,
             ),
@@ -127,39 +124,12 @@ def test_cache_expire() -> None:
     memorix_api.cache.user.set(
         "uv",
         User(name="uv", age=29),
-        MemorixClientCacheOptions(
-            expire=MemorixClientCacheOptionsExpire(
+        MemorixApi.DefaultOptions.Cache(
+            expire=MemorixApi.DefaultOptions.Cache.Expire(
                 value=500,
                 is_in_ms=True,
             ),
         ),
-    )
-
-    user1 = memorix_api.cache.user.get("uv")
-    if user1 is None:
-        raise Exception("Didn't get user from redis")
-    assert user1.age == 29
-    sleep(0.7)
-    user2 = memorix_api.cache.user.get("uv")
-    assert user2 is None
-
-
-def test_cache_expire_defaults() -> None:
-    memorix_api = MemorixApi(
-        redis_url=redis_url,
-        defaults=MemorixClientApiDefaults(
-            cache_set_options=MemorixClientCacheOptions(
-                expire=MemorixClientCacheOptionsExpire(
-                    value=500,
-                    is_in_ms=True,
-                ),
-            ),
-        ),
-    )
-
-    memorix_api.cache.user.set(
-        "uv",
-        User(name="uv", age=29),
     )
 
     user1 = memorix_api.cache.user.get("uv")
@@ -238,47 +208,6 @@ def test_cache_expire_extending_on_get() -> None:
     memorix_api.cache.userExpire3.get()
     sleep(1.5)
     user = memorix_api.cache.userExpire3.get()
-    assert user is not None
-
-
-def test_cache_expire_none_defaults() -> None:
-    memorix_api = MemorixApi(
-        redis_url=redis_url,
-        defaults=MemorixClientApiDefaults(
-            cache_set_options=MemorixClientCacheOptions(
-                expire=MemorixClientCacheOptionsExpire(value=1),
-            ),
-        ),
-    )
-
-    memorix_api.cache.userExpire2.set(
-        "uv",
-        User(name="uv", age=29),
-    )
-
-    sleep(1.5)
-    user = memorix_api.cache.userExpire2.get("uv")
-    assert user is not None
-
-
-def test_cache_expire_none_code() -> None:
-    memorix_api = MemorixApi(
-        redis_url=redis_url,
-        defaults=MemorixClientApiDefaults(
-            cache_set_options=MemorixClientCacheOptions(
-                expire=MemorixClientCacheOptionsExpire(value=1),
-            ),
-        ),
-    )
-
-    memorix_api.cache.userExpire.set(
-        "uv",
-        User(name="uv", age=29),
-        options=MemorixClientCacheOptions(expire=None),
-    )
-
-    sleep(1.5)
-    user = memorix_api.cache.userExpire.get("uv")
     assert user is not None
 
 

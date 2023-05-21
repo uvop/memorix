@@ -2,7 +2,7 @@ import asyncio
 import functools
 from memorix_client_redis.features.api.hash_key import hash_key
 from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
-from ..api import Api
+from ..base_api import BaseApi
 from typing import AsyncGenerator, Dict, Generator, Generic, Type, TypeVar, Union, cast
 
 KT = TypeVar("KT")
@@ -28,7 +28,7 @@ class PubSubItemSubscribe(Generic[PT]):
 class PubSubItem(Generic[KT, PT]):
     def __init__(
         self,
-        api: Api,
+        api: BaseApi,
         id: str,
         payload_class: Type[PT],
     ) -> None:
@@ -38,7 +38,7 @@ class PubSubItem(Generic[KT, PT]):
 
     def publish(self, key: KT, payload: PT) -> PubSubItemPublish:
         payload_json = to_json(payload)
-        subscribers_size = self._api._redis.publish(
+        subscribers_size = self._api._namespace_api.redis.publish(
             hash_key(self._id, key=key),
             payload_json,
         )
@@ -58,9 +58,12 @@ class PubSubItem(Generic[KT, PT]):
         return res
 
     def subscribe(self, key: KT) -> Generator[PubSubItemSubscribe[PT], None, None]:
-        sub = self._api._redis.pubsub()
+        sub = self._api._namespace_api.redis.pubsub()
         sub.subscribe(hash_key(self._id, key=key))
-        for message in cast(Generator[Dict[str, Union[int, bytes]], None, None], sub.listen()):  # type: ignore
+        for message in cast(
+            Generator[Dict[str, Union[int, bytes]], None, None],
+            sub.listen(),  # type: ignore
+        ):
             data_bytes = message["data"]
             if isinstance(data_bytes, bytes):
                 data_str = bytes_to_str(data_bytes)
@@ -71,7 +74,7 @@ class PubSubItem(Generic[KT, PT]):
         self,
         key: KT,
     ) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:
-        sub = self._api._redis.pubsub()
+        sub = self._api._namespace_api.redis.pubsub()
         sub.subscribe(hash_key(self._id, key=key))
         loop = asyncio.get_running_loop()
         while True:

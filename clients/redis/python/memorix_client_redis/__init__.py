@@ -1,29 +1,20 @@
-from .features.api.api import (
-    Api as MemorixClientApi,
-    ApiDefaults as MemorixClientApiDefaults,
-)
-from .features.api.cache.cache_api import CacheApi as MemorixClientCacheApi
+from .features.api.base_api import BaseApi as MemorixBaseApi
+from .features.api.namespace import Namespace as MemorixNamespace
+from .features.api.cache.cache_api import CacheApi as MemorixBaseCacheApi
 from .features.api.cache.cache_item import (
-    CacheItem as MemorixClientCacheApiItem,
-    CacheItemNoKey as MemorixClientCacheApiItemNoKey,
+    CacheItem as MemorixCacheItem,
+    CacheItemNoKey as MemorixCacheItemNoKey,
 )
-from .features.api.cache.cache_options import (
-    CacheOptions as MemorixClientCacheOptions,
-    CacheOptionsExpire as MemorixClientCacheOptionsExpire,
-)
-from .features.api.pubsub.pubsub_api import PubSubApi as MemorixClientPubSubApi
+from .features.api.pubsub.pubsub_api import PubSubApi as MemorixBasePubSubApi
 from .features.api.pubsub.pubsub_item import (
-    PubSubItem as MemorixClientPubSubApiItem,
-    PubSubItemNoKey as MemorixClientPubSubApiItemNoKey,
+    PubSubItem as MemorixPubSubItem,
+    PubSubItemNoKey as MemorixPubSubItemNoKey,
 )
-from .features.api.task.task_api import TaskApi as MemorixClientTaskApi
+from .features.api.task.task_api import TaskApi as MemorixBaseTaskApi
 from .features.api.task.task_item import (
-    TaskItem as MemorixClientTaskApiItem,
-    TaskItemNoKey as MemorixClientTaskApiItemNoKey,
-    TaskItemNoReturns as MemorixClientTaskApiItemNoReturns,
-    TaskItemNoKeyNoReturns as MemorixClientTaskApiItemNoKeyNoReturns,
-)
-from .features.api.task.task_options import (
-    TaskDequequeOptions as MemorixClientTaskDequequeOptions,
+    TaskItem as MemorixTaskItem,
+    TaskItemNoKey as MemorixTaskItemNoKey,
+    TaskItemNoReturns as MemorixTaskItemNoReturns,
+    TaskItemNoKeyNoReturns as MemorixTaskItemNoKeyNoReturns,
 )
 from dataclasses import dataclass
