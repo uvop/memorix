@@ -117,20 +117,13 @@ print(hello_value) # Should print "world"
 
 ### Cache options
 
-You can define cache options or override them within your usage - either from schema or your code (preferably schema)
-
-{{< tabs >}}
-{{% tab name="Schema" %}}
-
-Global cache options and overriden cache options
+You can define cache options globally or per cache item in your schema to change it's behaviour
 
 ```
-Config {
-  defaultOptions: {
-    cache: {
-      expire: {
-        value: 5
-      }
+DefaultOptions {
+  cache: {
+    expire: {
+      value: 5
     }
   }
 }
@@ -153,52 +146,7 @@ Cache {
 }
 ```
 
-{{% /tab %}}
-{{% tab name="Node.js" %}}
-
-```js
-// Global cache options
-const memorixApi = new MemorixApi({
-  redisUrl: "redis://localhost:6379/0",
-  defaults: {
-    cacheSetOptions: { ... }
-  },
-});
-
-// Overriden cache options
-await memorixApi.cache.hello.set(
-  "world",
-  { ... }
-);
-```
-
-{{% /tab %}}
-{{% tab name="Python" %}}
-
-```python
-from src.generated_schema import (
-  MemorixApi,
-  MemorixClientApiDefaults,
-  MemorixClientCacheSetOptions,
-)
-
-# Global cache options
-memorix_api = MemorixApi(
-  redis_url="redis://localhost:6379/0",
-  defaults=MemorixClientApiDefaults(
-    cache_set_options=MemorixClientCacheSetOptions(...),
-  ),
-)
-
-# Overriden cache options
-memorix_api.cache.hello.set(
-  "world",
-  MemorixClientCacheSetOptions(...),
-)
-```
-
-{{% /tab %}}
-{{< /tabs >}}
+Here to defined that each cache item will expire in 5 seconds, but specifically `hello` will expire in 10 seconds and `helloForever` won't expire.
 
 | name   | Type                                | Default       | Description                                                                                    |
 | :----- | :---------------------------------- | :------------ | :--------------------------------------------------------------------------------------------- |
@@ -396,19 +344,12 @@ print(res.value) # Should print "true"
 
 ### Task options
 
-You can define task options or override them within your usage - either from schema or your code (preferably schema)
-
-{{< tabs >}}
-{{% tab name="Schema" %}}
-
-Global task options and overriden task options
+You can define task options globally or per task item in your schema to change it's behaviour
 
 ```
-Config {
-  defaultOptions: {
-    task: {
-      takeNewest: false
-    }
+DefaultOptions {
+  task: {
+    takeNewest: false
   }
 }
 
@@ -423,50 +364,66 @@ Task {
 }
 ```
 
-{{% /tab %}}
+| name       | Type      | Default | Description                                                              |
+| :--------- | :-------- | :------ | :----------------------------------------------------------------------- |
+| takeNewest | `boolean` | False   | By default dequeque is FIFO (first in first out), this option changes it |
+
+## Namespace
+
+Namespaces are useful when using multiple schemas in order to avoid name collisions, also great for microservices to define their own schema.  
+To use it simply surround your desired scopes with a namespace scope  
+
+`messages-schema.memorix`
+```
+Namespace messages {
+  PubSub {
+    addItem {
+      payload: int
+    }
+  }
+}
+```
+then you can import it in your main schema  
+
+`schema.memorix`
+```
+Config {
+  output: {
+    language: "typescript"
+    file: "memorix.generated.ts"
+  }
+  extend: [
+    "<path-to>/messages-schema.memorix"
+    "<path-to>/another-schema.memorix"
+  ]
+}
+
+PubSub {
+  addItem {
+    payload: string
+  }
+}
+```
+Even though we defined `PubSub.addItem` twice, since one is in a namespace, they won't collide with each other.  
+To use it in your project
+{{< tabs >}}
 {{% tab name="Node.js" %}}
 
 ```js
-// Global task options
-const memorixApi = new MemorixApi({
-  redisUrl: "redis://localhost:6379/0",
-  defaults: {
-    taskDequequeOptions: { ... }
-  },
-});
-
-// Overriden task options
-await { stop } = memorixApi.task.addMessage.dequeue(async ({ payload }) => {
-  console.log("Got payload: " + payload);
-}, { ... });
+await memorixApi.pubsub.addItem.publish(12);
+await memorixApi.messages.pubsub.addItem.publish("in 'messages' namespace");
 ```
 
 {{% /tab %}}
 {{% tab name="Python" %}}
 
+> You might want to consider also using a `Thread` or a `Process` just like we did with [`PubSub`](#pubsub), this example won't do that
+
 ```python
-from src.generated_schema import (
-  MemorixApi,
-  MemorixClientApiDefaults,
-  MemorixClientTaskDequeueOptions,
-)
-
-# Global task options
-memorix_api = MemorixApi(
-  redis_url="redis://localhost:6379/0",
-  defaults=MemorixClientApiDefaults(
-    task_dequeue_options=MemorixClientTaskDequeueOptions(...),
-  ),
-)
-
-# Overriden task options
-for res in memorix_api.task.addMessage.dequeque(MemorixClientTaskDequeueOptions(...)):
-    print("Got payload: ", res.payload)
+memorix_api.pubusb.addItem.publish(payload=12)
+memorix_api.messages.pubusb.addItem.publish(payload="woin 'messages' namespacerld")
 ```
 
 {{% /tab %}}
 {{< /tabs >}}
 
-| name       | Type      | Default | Description                                                              |
-| :--------- | :-------- | :------ | :----------------------------------------------------------------------- |
-| takeNewest | `boolean` | False   | By default dequeque is FIFO (first in first out), this option changes it |
