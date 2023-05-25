@@ -1,3 +1,6 @@
+import path from "path";
+import fs from "fs";
+import { Languages } from "src/languages";
 import { getScopes } from "./scope";
 import {
   getValueFromString,
@@ -15,14 +18,6 @@ import {
   removeBracketsOfScope,
 } from "./utilities";
 
-export enum BlockTypes {
-  model = "Model",
-  enum = "Enum",
-  cache = "Cache",
-  pubsub = "PubSub",
-  task = "Task",
-}
-
 export type CacheDefaultOptions = {
   expire?: {
     value: number;
@@ -39,6 +34,14 @@ export type DefaultOptions = {
   cache?: CacheDefaultOptions;
   task?: TaskDefaultOptions;
 };
+
+export enum BlockTypes {
+  model = "Model",
+  enum = "Enum",
+  cache = "Cache",
+  pubsub = "PubSub",
+  task = "Task",
+}
 
 export type BlockModel = {
   type: BlockTypes.model;
@@ -87,19 +90,9 @@ export type Block =
   | BlockPubsub
   | BlockTask;
 
-export type Namespace = {
-  defaults?: DefaultOptions;
-  blocks: Block[];
-};
-
-export type Namespaces = {
-  global: Namespace;
-  named: ({ name: string } & Namespace)[];
-};
-
-const getBlocks: (content: string) => Block[] = (content) => {
-  const namespaceScopes = getScopes(content);
-
+export const getBlocks: (scopes: ReturnType<typeof getScopes>) => Block[] = (
+  namespaceScopes
+) => {
   const blocks = namespaceScopes
     .filter((x) => !x.name.startsWith("Namespace"))
     .filter((x) => ["Config", "DefaultOptions"].indexOf(x.name) === -1)
@@ -186,17 +179,46 @@ const getBlocks: (content: string) => Block[] = (content) => {
   return blocks;
 };
 
-const getNamespace: (content: string) => Namespace = (content) => {
-  const blocks = getBlocks(content);
-  const scopes = getScopes(content);
-  const defaultOptions = scopes.find((x) => x.name === "DefaultOptions");
-  if (!defaultOptions) {
+export const getNamespace: (params: {
+  schemaFilePath: string;
+  dirname?: string;
+}) => Promise<Namespace> = async ({ schemaFilePath, dirname }) => {
+  const schemaPath =
+    dirname !== undefined
+      ? path.resolve(dirname, schemaFilePath)
+      : path.resolve(schemaFilePath);
+  const schemaFolder = path.dirname(schemaPath);
+  const schema = await (await fs.promises.readFile(schemaPath)).toString();
+
+  const scopes = getScopes(schema);
+  const configScope = scopes.find((x) => x.name === JsonScopeTypes.config);
+  const config = configScope
+    ? (getJsonFromString(configScope.scope) as Config)
+    : undefined;
+  const defaultOptionsScope = scopes.find(
+    (x) => x.name === JsonScopeTypes.defaultOptions
+  );
+  const defaultOptions = defaultOptionsScope
+    ? (getJsonFromString(defaultOptionsScope.scope) as DefaultOptions)
+    : undefined;
+
+  const blocks = getBlocks(scopes);
+
+  if (!config?.extends) {
+    return {
+      blocks,
+      subNamespaces: 
+    }
+  }
+
+  const { extend, ...otherConfig } = config;
+  if (!defaultOptionsScope) {
     return {
       blocks,
     };
   }
 
-  const json = getJsonFromString(defaultOptions.scope);
+  const json = getJsonFromString(defaultOptionsScope.scope);
   if (typeof json !== "object") {
     throw new Error(`Expected object under "DefaultOptions"`);
   }
@@ -206,8 +228,10 @@ const getNamespace: (content: string) => Namespace = (content) => {
   };
 };
 
-export const getNamespaces: (schema: string) => Namespaces = (schema) => {
+export const getNamespace: (schema: string) => Namespace = (schema) => {
   const scopes = getScopes(schema);
+
+  const;
 
   return {
     global: getNamespace(schema),

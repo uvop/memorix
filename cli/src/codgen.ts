@@ -1,42 +1,28 @@
 import path from "path";
 import fs from "fs";
 import { codegenByLanguage } from "./languages";
-import { getNamespaces, Namespaces } from "./core/block";
-import { getConfig } from "./core/config";
+import { Schema, getSchema } from "./core/schema";
+import { getNamespace } from "./core/namespace";
 
-const getAllNamespaces = async (
-  schemaFilePath: string,
-  dirname?: string
-): Promise<Namespaces> => {
-  const schemaPath =
-    dirname !== undefined
-      ? path.resolve(dirname, schemaFilePath)
-      : path.resolve(schemaFilePath);
-  const schemaFolder = path.dirname(schemaPath);
-  const schema = await (await fs.promises.readFile(schemaPath)).toString();
-  const ns = getNamespaces(schema);
-  const config = getConfig(schema);
-  if (!config || !config.extends) {
-    return ns;
+const codegenSchema: (schema: Schema) => Promise<void> = async (schema) => {
+  await Promise.all(schema.subSchemas.map(codegenSchema));
+
+  if (!schema.config?.output) {
+    return;
   }
 
-  const nsToAdd = await Promise.all(
-    (Array.isArray(config.extends) ? config.extends : [config.extends]).map(
-      async (schemaExtendFilePath) =>
-        getAllNamespaces(schemaExtendFilePath, schemaFolder)
-    )
-  );
+  const output = Array.isArray(schema.config.output)
+    ? schema.config.output
+    : [schema.config.output];
 
-  return {
-    global: {
-      defaults: ns.global.defaults,
-      blocks: [
-        ...ns.global.blocks,
-        ...nsToAdd.map((x) => x.global.blocks).flat(),
-      ],
-    },
-    named: [...ns.named, ...nsToAdd.map((x) => x.named).flat()],
-  };
+  const namespace = getNamespace(schema);
+  await Promise.all(
+    output.map(async ({ language, file }) => {
+      const filePath = path.resolve(schema.dirname, file);
+      const code = codegenByLanguage(namespace, language);
+      await fs.promises.writeFile(filePath, code);
+    })
+  );
 };
 
 export const codegen = async ({
@@ -44,22 +30,6 @@ export const codegen = async ({
 }: {
   schemaFilePath: string;
 }) => {
-  const schemaPath = path.resolve(schemaFilePath);
-  const schemaDirname = path.dirname(schemaPath);
-  const schema = await (await fs.promises.readFile(schemaPath)).toString();
-  const config = getConfig(schema);
-  if (!config) {
-    throw new Error(`Must set a Config in top level schema "${schemaPath}"`);
-  }
-  const ns = await getAllNamespaces(schemaFilePath);
-
-  await Promise.all(
-    (Array.isArray(config.output) ? config.output : [config.output]).map(
-      async ({ language, file }) => {
-        const filePath = path.resolve(schemaDirname, file);
-        const code = codegenByLanguage(ns, language);
-        await fs.promises.writeFile(filePath, code);
-      }
-    )
-  );
+  const schema = await getSchema({ schemaFilePath });
+  await codegenSchema(schema);
 };

@@ -1,8 +1,8 @@
-import { getNamespaces } from "src/core/block";
+import { getGlobalNamespace } from "src/core/block";
 import { codegenByLanguage, Languages } from "src/languages";
 
 const codegenPython = (schema: string) => {
-  const blocks = getNamespaces(schema);
+  const blocks = getGlobalNamespace(schema);
   return codegenByLanguage(blocks, Languages.python).trim();
 };
 

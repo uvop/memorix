@@ -1,8 +1,8 @@
-import { getNamespaces } from "src/core/block";
+import { getGlobalNamespace } from "src/core/block";
 import { Languages, codegenByLanguage } from "src/languages";
 
 const codegenTs = (schema: string) => {
-  const ns = getNamespaces(schema);
+  const ns = getGlobalNamespace(schema);
   return codegenByLanguage(ns, Languages.typescript).trim();
 };
 
@@ -316,6 +316,35 @@ describe("ts codegen", () => {
             Cache {
               favoriteUser {
                 payload: string
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+    it("re recursive", () => {
+      expect(
+        codegenTs(
+          `
+            Namespace user {
+              Namespace comment {
+                DefaultOptions {
+                  cache: {
+                    expire: {
+                      value: 5
+                    }
+                  }
+                }
+                Cache {
+                  get {
+                    payload: string
+                  }
+                }
+              }
+              Cache {
+                bio {
+                  payload: string
+                }
               }
             }
           `

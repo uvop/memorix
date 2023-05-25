@@ -175,6 +175,31 @@ export class MemorixApi extends MemorixBaseApi.withGlobal({defaultOptions:{cache
 }"
 `;
 
+exports[`ts codegen namespace re recursive 1`] = `
+"/* eslint-disable */
+import { MemorixBaseApi, MemorixNamespace } from \\"@memorix/client-redis\\";
+
+// prettier-ignore
+class NamespaceUserComment extends MemorixNamespace.with({name:\\"comment\\"}) {
+  cache = {
+    get: this.getCacheItemNoKey<string>(\\"get\\"),
+  };
+}
+
+// prettier-ignore
+class NamespaceUser extends MemorixNamespace.with({name:\\"user\\"}) {
+  comment = this.getNamespaceItem(NamespaceUserComment);
+
+  cache = {
+    bio: this.getCacheItemNoKey<string>(\\"bio\\"),
+  };
+}
+
+export class MemorixApi extends MemorixBaseApi {
+  user = this.getNamespaceItem(NamespaceUser);
+}"
+`;
+
 exports[`ts codegen pubsub can generate with inline types 1`] = `
 "/* eslint-disable */
 import { MemorixBaseApi } from \\"@memorix/client-redis\\";
