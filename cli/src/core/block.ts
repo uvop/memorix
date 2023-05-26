@@ -1,6 +1,3 @@
-import path from "path";
-import fs from "fs";
-import { Languages } from "src/languages";
 import { getScopes } from "./scope";
 import {
   getValueFromString,
@@ -179,76 +176,6 @@ export const getBlocks: (scopes: ReturnType<typeof getScopes>) => Block[] = (
   return blocks;
 };
 
-export const getNamespace: (params: {
-  schemaFilePath: string;
-  dirname?: string;
-}) => Promise<Namespace> = async ({ schemaFilePath, dirname }) => {
-  const schemaPath =
-    dirname !== undefined
-      ? path.resolve(dirname, schemaFilePath)
-      : path.resolve(schemaFilePath);
-  const schemaFolder = path.dirname(schemaPath);
-  const schema = await (await fs.promises.readFile(schemaPath)).toString();
-
-  const scopes = getScopes(schema);
-  const configScope = scopes.find((x) => x.name === JsonScopeTypes.config);
-  const config = configScope
-    ? (getJsonFromString(configScope.scope) as Config)
-    : undefined;
-  const defaultOptionsScope = scopes.find(
-    (x) => x.name === JsonScopeTypes.defaultOptions
-  );
-  const defaultOptions = defaultOptionsScope
-    ? (getJsonFromString(defaultOptionsScope.scope) as DefaultOptions)
-    : undefined;
-
-  const blocks = getBlocks(scopes);
-
-  if (!config?.extends) {
-    return {
-      blocks,
-      subNamespaces: 
-    }
-  }
-
-  const { extend, ...otherConfig } = config;
-  if (!defaultOptionsScope) {
-    return {
-      blocks,
-    };
-  }
-
-  const json = getJsonFromString(defaultOptionsScope.scope);
-  if (typeof json !== "object") {
-    throw new Error(`Expected object under "DefaultOptions"`);
-  }
-  return {
-    blocks,
-    defaults: json,
-  };
-};
-
-export const getNamespace: (schema: string) => Namespace = (schema) => {
-  const scopes = getScopes(schema);
-
-  const;
-
-  return {
-    global: getNamespace(schema),
-    named: scopes
-      .filter((s) => s.name.startsWith("Namespace"))
-      .map((s) => {
-        const match = /(?<type>(Namespace)) (?<name>.*)/g.exec(s.name);
-        const name = match.groups.name.trim() as string;
-
-        return {
-          name,
-          ...getNamespace(removeBracketsOfScope(s.scope)),
-        };
-      }),
-  };
-};
-
 const getNonObjectValueFromValue = (
   value: ValueType,
   name: string
@@ -309,7 +236,7 @@ const getBlockModelsFromValue = (
   }
 };
 
-const flatBlocks = (blocks: Block[]): Block[] => {
+export const flatBlocks = (blocks: Block[]): Block[] => {
   let newBlocks: Block[] = [];
 
   blocks
@@ -443,23 +370,4 @@ const flatBlocks = (blocks: Block[]): Block[] => {
     ...blocks.filter((b) => [BlockTypes.enum].indexOf(b.type) !== -1),
     ...newBlocks,
   ];
-};
-
-const flatNamespace: (namespace: Namespace) => Namespace = (namespace) => {
-  return {
-    ...namespace,
-    blocks: flatBlocks(namespace.blocks),
-  };
-};
-
-export const flatNamespaces: (namespaces: Namespaces) => Namespaces = (
-  namespaces
-) => {
-  return {
-    global: flatNamespace(namespaces.global),
-    named: namespaces.named.map((n) => ({
-      ...n,
-      ...flatNamespace(n),
-    })),
-  };
 };

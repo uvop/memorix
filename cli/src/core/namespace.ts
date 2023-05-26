@@ -20,7 +20,7 @@ const getNamespaceByScopes: (scopes: Schema["scopes"]) => Namespace = (
     : undefined;
   const subNamespacesByName = new Map<string, Namespace>();
   scopes.forEach((s) => {
-    const match = /(?<type>(Namespace)) (?<name>.*)/g.exec(s.name);
+    const match = /(?<type>Namespace) (?<name>.*)/g.exec(s.name);
     if (!match?.groups?.name) {
       return;
     }
@@ -31,6 +31,7 @@ const getNamespaceByScopes: (scopes: Schema["scopes"]) => Namespace = (
 
     subNamespacesByName.set(name, namespace);
   });
+
   return {
     defaultOptions,
     blocks,
@@ -48,6 +49,9 @@ export const getNamespace: (schema: Schema) => Namespace = (schema) => {
       ...subSchemaNamespaces.map((x) => x.blocks).flat(),
       ...schemaNamespace.blocks,
     ],
-    subNamespacesByName: new Map(),
+    subNamespacesByName: new Map([
+      ...subSchemaNamespaces.map((x) => x.subNamespacesByName).flat(),
+      ...schemaNamespace.subNamespacesByName,
+    ] as any),
   };
 };

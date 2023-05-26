@@ -6,19 +6,19 @@ import { printLogo } from "./print-logo";
 
 yargs(hideBin(process.argv))
   .command(
-    "codegen <schemaFilePath>",
+    "codegen <schemaFilePath..>",
     `Codegen memorix schema to code
 
 Example: memorix codegen ./schema.memorix`,
     (b) => {
       return b.positional("schemaFilePath", {
-        describe: "Memorix schema file",
+        describe: "Memorix schema files",
+        array: true,
+        type: "string",
       });
     },
     (argv) => {
-      const { schemaFilePath } = argv as {
-        schemaFilePath: string;
-      };
+      const schemaFilePath = argv.schemaFilePath!;
       printLogo();
       codegen({
         schemaFilePath,

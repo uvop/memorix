@@ -3,7 +3,7 @@ import { getScopeEndIndex, removeBracketsOfScope } from "./utilities";
 export const getJsonFromString: (content: string) => any = (content) => {
   if (content.indexOf("[") === 0) {
     const arrayContent = removeBracketsOfScope(content).trim();
-    const arr = [];
+    const arr = [] as string[];
 
     let index = 0;
     while (index < content.length) {

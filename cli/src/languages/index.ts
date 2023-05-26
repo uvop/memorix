@@ -1,5 +1,5 @@
 import { assertUnreachable } from "src/core/utilities";
-import { Namespaces } from "src/core/block";
+import { Namespace } from "src/core/namespace";
 import { codegen as codegenTs } from "./ts/ts";
 import { codegen as codegenPython } from "./python/python";
 
@@ -9,16 +9,16 @@ export enum Languages {
 }
 
 type CodegenByLanguageFn = (
-  namespaces: Namespaces,
+  namespace: Namespace,
   language: Languages
 ) => string;
 
-export const codegenByLanguage: CodegenByLanguageFn = (ns, language) => {
+export const codegenByLanguage: CodegenByLanguageFn = (namespace, language) => {
   switch (language) {
     case Languages.typescript:
-      return codegenTs(ns);
+      return codegenTs(namespace);
     case Languages.python:
-      return codegenPython(ns);
+      return codegenPython(namespace);
     default:
       assertUnreachable(language);
       return "";

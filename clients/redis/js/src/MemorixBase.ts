@@ -20,66 +20,63 @@ export type DefaultOptions = {
   task?: TaskOptions;
 };
 
-export type Api = {
-  readonly redis: Redis;
-  readonly redisSub: Redis;
-  redisTasks: Redis[];
-};
+export class MemorixBase {
+  protected namespaceNameTree: string[];
 
-export class Namespace {
-  public static with: (config: {
-    name?: string;
-    defaultOptions?: DefaultOptions;
-  }) => typeof Namespace = (override) =>
-    class MemorixNamespaceWith extends Namespace {
-      constructor(options) {
-        super({
-          ...override,
-          ...options,
-        });
-      }
-    };
+  protected defaultOptions?: DefaultOptions;
 
-  private readonly api: Api;
+  private redis: Redis;
 
-  private readonly name?: string;
+  private redisSub: Redis;
 
-  private readonly defaultOptions?: DefaultOptions;
+  private redisTasks: Redis[];
 
-  constructor({
-    api,
-    name,
-    defaultOptions,
-  }: {
-    api: Api;
-    name?: string;
-    defaultOptions?: DefaultOptions;
-  }) {
-    this.api = api;
-    this.name = name;
-    this.defaultOptions = defaultOptions;
+  static create: () => MemorixBase = () => {
+    return Object.create(this.prototype);
+  };
+
+  constructor({ redisUrl }: { redisUrl: string }, ref?: MemorixBase) {
+    if (ref) {
+      this.redis = ref.redis;
+      this.redisSub = ref.redisSub;
+      this.redisTasks = ref.redisTasks;
+    } else {
+      this.redis = new Redis(redisUrl, { lazyConnect: true });
+      this.redisSub = this.redis.duplicate();
+      this.redisTasks = [];
+    }
   }
 
-  protected getNamespaceItem<T extends Namespace>(
-    NamespaceClass: new (param: ConstructorParameters<typeof Namespace>[0]) => T
+  async connect(): Promise<void> {
+    await this.redis.connect();
+    await this.redisSub.connect();
+  }
+
+  disconnect(): void {
+    this.redis.disconnect();
+    this.redisSub.disconnect();
+    this.redisTasks.forEach((x) => {
+      x.disconnect();
+    });
+  }
+
+  protected getNamespaceItem<T extends MemorixBase>(
+    NamespaceClass: new (...arg: ConstructorParameters<typeof MemorixBase>) => T
   ): T {
-    return new NamespaceClass({ api: this.api });
+    return new NamespaceClass({ redisUrl: "unused" }, this);
   }
 
   protected getCacheItem<Key, Payload>(
     identifier: string,
     iOptions?: CacheOptions
   ): CacheItem<Key, Payload> {
-    const hashCacheKey =
-      this.name !== undefined
-        ? (key: Key | undefined) => {
-            return hashKey(
-              key ? [this.name, identifier, key] : [this.name, identifier]
-            );
-          }
-        : (key: Key | undefined) => {
-            return hashKey(key ? [identifier, key] : [identifier]);
-          };
+    const hashCacheKey = (key: Key | undefined) => {
+      return hashKey(
+        key
+          ? [...this.namespaceNameTree, identifier, key]
+          : [...this.namespaceNameTree, identifier]
+      );
+    };
 
     const cacheItem: CacheItem<Key, Payload> = {
       set: async (key, payload, options) => {
@@ -92,7 +89,7 @@ export class Namespace {
         const params = expire
           ? [expire.isInMs ? "PX" : "EX", expire.value.toString()]
           : [];
-        await this.api.redis.set(
+        await this.redis.set(
           hashedKey,
           JSON.stringify(payload),
           ...(params as any)
@@ -105,7 +102,7 @@ export class Namespace {
           ...options,
         };
         const hashedKey = hashCacheKey(key);
-        const found = await this.api.redis.get(hashedKey);
+        const found = await this.redis.get(hashedKey);
         if (!found) {
           return null;
         }
@@ -126,9 +123,9 @@ export class Namespace {
 
         const hashedKey = hashCacheKey(key);
         if (expire.isInMs) {
-          await this.api.redis.pexpire(hashedKey, expire.value);
+          await this.redis.pexpire(hashedKey, expire.value);
         } else {
-          await this.api.redis.expire(hashedKey, expire.value);
+          await this.redis.expire(hashedKey, expire.value);
         }
       },
     };
@@ -150,21 +147,18 @@ export class Namespace {
   protected getPubsubItem<Key, Payload>(
     identifier: string
   ): PubsubItem<Key, Payload> {
-    const hashPubsubKey =
-      this.name !== undefined
-        ? (key: Key | undefined) => {
-            return hashKey(
-              key ? [this.name, identifier, key] : [this.name, identifier]
-            );
-          }
-        : (key: Key | undefined) => {
-            return hashKey(key ? [identifier, key] : [identifier]);
-          };
+    const hashPubsubKey = (key: Key | undefined) => {
+      return hashKey(
+        key
+          ? [...this.namespaceNameTree, identifier, key]
+          : [...this.namespaceNameTree, identifier]
+      );
+    };
 
     return {
       publish: async (key, payload) => {
         const hashedKey = hashPubsubKey(key);
-        const subscribersSize = await this.api.redis.publish(
+        const subscribersSize = await this.redis.publish(
           hashedKey,
           JSON.stringify(payload)
         );
@@ -178,19 +172,19 @@ export class Namespace {
 
         const getListenPromise = (cb: NonNullable<typeof callback>) =>
           new Promise<{ stop(): Promise<void> }>((resolve, reject) => {
-            this.api.redisSub.subscribe(hashedKey, (err) => {
+            this.redisSub.subscribe(hashedKey, (err) => {
               if (err) {
                 reject(err);
               } else {
                 resolve({
                   stop: async () => {
-                    await this.api.redisSub.unsubscribe(hashedKey);
+                    await this.redisSub.unsubscribe(hashedKey);
                   },
                 });
               }
             });
 
-            this.api.redisSub.on("message", (group, payload) => {
+            this.redisSub.on("message", (group, payload) => {
               if (hashedKey === group) {
                 cb({ payload: JSON.parse(payload) });
               }
@@ -229,16 +223,13 @@ export class Namespace {
     hasReturns: Returns extends undefined ? false : true,
     iOptions?: TaskOptions
   ): TaskItem<Key, Payload, Returns> {
-    const hashPubsubKey =
-      this.name !== undefined
-        ? (key: Key | undefined) => {
-            return hashKey(
-              key ? [this.name, identifier, key] : [this.name, identifier]
-            );
-          }
-        : (key: Key | undefined) => {
-            return hashKey(key ? [identifier, key] : [identifier]);
-          };
+    const hashPubsubKey = (key: Key | undefined) => {
+      return hashKey(
+        key
+          ? [...this.namespaceNameTree, identifier, key]
+          : [...this.namespaceNameTree, identifier]
+      );
+    };
 
     const returnTask = hasReturns
       ? this.getTaskItem<string, Returns, undefined>(
@@ -252,7 +243,7 @@ export class Namespace {
         const hashedKey = hashPubsubKey(key);
         const returnsId = hasReturns ? uuidv4() : undefined;
 
-        const queueSize = await this.api.redis.rpush(
+        const queueSize = await this.redis.rpush(
           hashedKey,
           JSON.stringify(hasReturns ? [returnsId, payload] : [payload])
         );
@@ -290,9 +281,9 @@ export class Namespace {
           ...options,
         };
 
-        const redisClient = this.api.redis.duplicate();
+        const redisClient = this.redis.duplicate();
         await redisClient.connect();
-        this.api.redisTasks.push(redisClient);
+        this.redisTasks.push(redisClient);
 
         const stoppedPromise = new Promise((res) => {
           const cb = async (err: any, blpop: any) => {
@@ -325,9 +316,9 @@ export class Namespace {
         return {
           stop: async () => {
             redisClient.disconnect();
-            const indexToRemove = this.api.redisTasks.indexOf(redisClient);
+            const indexToRemove = this.redisTasks.indexOf(redisClient);
             if (indexToRemove !== -1) {
-              this.api.redisTasks.splice(indexToRemove, 1);
+              this.redisTasks.splice(indexToRemove, 1);
             }
             await stoppedPromise;
           },
@@ -335,7 +326,7 @@ export class Namespace {
       },
       clear: async (key) => {
         const hashedKey = hashPubsubKey(key);
-        await this.api.redis.del(hashedKey);
+        await this.redis.del(hashedKey);
       },
     };
   }

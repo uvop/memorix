@@ -1,74 +1,74 @@
-import { MemorixApi, Animal } from "./example-schema.generated";
+import { Memorix, Animal } from "./example-schema.generated";
 
 const redisUrl = process.env.REDIS_URL!;
 
 it("example schmea will throw error if can't connect", async () => {
-  const memorixApi = new MemorixApi({ redisUrl: "redis://hello-world:6379/0" });
-  expect(memorixApi.connect()).rejects.toBeTruthy();
+  const memorix = new Memorix({ redisUrl: "redis://hello-world:6379/0" });
+  expect(memorix.connect()).rejects.toBeTruthy();
 });
 
 describe("example schema has", () => {
-  let memorixApi: MemorixApi;
+  let memorix: Memorix;
   beforeEach(async () => {
-    memorixApi = new MemorixApi({ redisUrl });
-    await memorixApi.connect();
+    memorix = new Memorix({ redisUrl });
+    await memorix.connect();
   });
   afterEach(() => {
-    memorixApi.disconnect();
+    memorix.disconnect();
   });
   it("cache", async () => {
-    await memorixApi.cache.user.set("uv", { name: "uv", age: 29 });
-    const user = await memorixApi.cache.user.get("uv");
+    await memorix.cache.user.set("uv", { name: "uv", age: 29 });
+    const user = await memorix.cache.user.get("uv");
     expect(user!.age).toBe(29);
   });
   it("cache expire from config", async () => {
-    await memorixApi.cache.user.set("uv", { name: "uv", age: 29 });
-    const user1 = await memorixApi.cache.user.get("uv");
+    await memorix.cache.user.set("uv", { name: "uv", age: 29 });
+    const user1 = await memorix.cache.user.get("uv");
     expect(user1!.age).toBe(29);
     await new Promise((res) => setTimeout(res, 2500));
-    const user2 = await memorixApi.cache.user.get("uv");
+    const user2 = await memorix.cache.user.get("uv");
     expect(user2).toBe(null);
   });
   it("cache expire", async () => {
-    await memorixApi.cache.user.set(
+    await memorix.cache.user.set(
       "uv",
       { name: "uv", age: 29 },
       { expire: { value: 1 } }
     );
-    const user1 = await memorixApi.cache.user.get("uv");
+    const user1 = await memorix.cache.user.get("uv");
     expect(user1!.age).toBe(29);
     await new Promise((res) => setTimeout(res, 1500));
-    const user2 = await memorixApi.cache.user.get("uv");
+    const user2 = await memorix.cache.user.get("uv");
     expect(user2).toBe(null);
   });
   it("cache expire in schema", async () => {
-    await memorixApi.cache.userExpire.set("uv", { name: "uv", age: 29 });
-    const user1 = await memorixApi.cache.userExpire.get("uv");
+    await memorix.cache.userExpire.set("uv", { name: "uv", age: 29 });
+    const user1 = await memorix.cache.userExpire.get("uv");
     expect(user1!.age).toBe(29);
     await new Promise((res) => setTimeout(res, 1500));
-    const user2 = await memorixApi.cache.userExpire.get("uv");
+    const user2 = await memorix.cache.userExpire.get("uv");
     expect(user2).toBe(null);
   });
   it("cache expire none", async () => {
-    await memorixApi.cache.userExpire2.set("uv", { name: "uv", age: 29 });
+    await memorix.cache.userExpire2.set("uv", { name: "uv", age: 29 });
     await new Promise((res) => setTimeout(res, 2500));
-    const user = await memorixApi.cache.userExpire2.get("uv");
+    const user = await memorix.cache.userExpire2.get("uv");
     expect(user).not.toBe(null);
   });
   it("cache expire extending on get", async () => {
-    await memorixApi.cache.userExpire3.set("uv", { name: "uv", age: 29 });
+    await memorix.cache.userExpire3.set("uv", { name: "uv", age: 29 });
     await new Promise((res) => setTimeout(res, 1500));
-    await memorixApi.cache.userExpire3.get("uv");
+    await memorix.cache.userExpire3.get("uv");
     await new Promise((res) => setTimeout(res, 1500));
-    const user = await memorixApi.cache.userExpire3.get("uv");
+    const user = await memorix.cache.userExpire3.get("uv");
     expect(user).not.toBe(null);
   });
   describe("pubsub", () => {
     it("publish says how many subscribers", (done) => {
-      memorixApi.pubsub.message
+      memorix.pubsub.message
         .subscribe(() => {})
         .then(() => {
-          memorixApi.pubsub.message
+          memorix.pubsub.message
             .publish("hello uv")
             .then(({ subscribersSize }) => {
               try {
@@ -81,7 +81,7 @@ describe("example schema has", () => {
         });
     });
     it("subscribe gets payload", (done) => {
-      memorixApi.pubsub.message
+      memorix.pubsub.message
         .subscribe(({ payload }) => {
           try {
             expect(payload).toBe("hello uv");
@@ -91,14 +91,14 @@ describe("example schema has", () => {
           }
         })
         .then(() => {
-          memorixApi.pubsub.message.publish("hello uv");
+          memorix.pubsub.message.publish("hello uv");
         });
     });
     it("subscribe gets payload with AsyncIterableIterator", async () => {
       setTimeout(() => {
-        memorixApi.pubsub.message.publish("hello uv");
+        memorix.pubsub.message.publish("hello uv");
       }, 500);
-      for await (const { payload } of memorixApi.pubsub.message.subscribe()) {
+      for await (const { payload } of memorix.pubsub.message.subscribe()) {
         expect(payload).toBe("hello uv");
         break;
       }
@@ -106,34 +106,34 @@ describe("example schema has", () => {
   });
   describe("task", () => {
     beforeEach(async () => {
-      await memorixApi.task.runAlgo.clear();
-      await memorixApi.task.runAlgoNewest.clear();
+      await memorix.task.runAlgo.clear();
+      await memorix.task.runAlgoNewest.clear();
     });
     it("queue returns the queue size", async () => {
-      await memorixApi.task.runAlgo.queue("uv1");
-      const { queueSize } = await memorixApi.task.runAlgo.queue("uv2");
+      await memorix.task.runAlgo.queue("uv1");
+      const { queueSize } = await memorix.task.runAlgo.queue("uv2");
       expect(queueSize).toBe(2);
     });
     it("queue clears correctly", async () => {
-      await memorixApi.task.runAlgo.queue("uv1");
-      const { queueSize } = await memorixApi.task.runAlgo.queue("uv2");
+      await memorix.task.runAlgo.queue("uv1");
+      const { queueSize } = await memorix.task.runAlgo.queue("uv2");
       expect(queueSize).toBe(2);
-      await memorixApi.task.runAlgo.clear();
+      await memorix.task.runAlgo.clear();
       const { queueSize: queueSizeAfterClear } =
-        await memorixApi.task.runAlgo.queue("uv2");
+        await memorix.task.runAlgo.queue("uv2");
       expect(queueSizeAfterClear).toBe(1);
     });
     it("dequeue receives a message", (done) => {
-      memorixApi.task.runAlgo
+      memorix.task.runAlgo
         .queue("uv3")
-        .then(() => memorixApi.task.runAlgo.queue("uv4"))
+        .then(() => memorix.task.runAlgo.queue("uv4"))
         .then(({ queueSize }) => {
           expect(queueSize).toBe(2);
 
           return new Promise((res) => {
             const payloads: string[] = [];
             let stop: any;
-            memorixApi.task.runAlgo
+            memorix.task.runAlgo
               .dequeue(({ payload }) => {
                 payloads.push(payload);
                 if (payloads.length === 2) {
@@ -157,16 +157,16 @@ describe("example schema has", () => {
         .catch(done);
     });
     it("dequeue receives a message in opposite order if asked", (done) => {
-      memorixApi.task.runAlgo
+      memorix.task.runAlgo
         .queue("uv6")
-        .then(() => memorixApi.task.runAlgo.queue("uv7"))
+        .then(() => memorix.task.runAlgo.queue("uv7"))
         .then(({ queueSize }) => {
           expect(queueSize).toBe(2);
 
           return new Promise((res) => {
             const payloads: string[] = [];
             let stop: any;
-            memorixApi.task.runAlgo
+            memorix.task.runAlgo
               .dequeue(
                 ({ payload }) => {
                   payloads.push(payload);
@@ -193,16 +193,16 @@ describe("example schema has", () => {
         .catch(done);
     });
     it("dequeue receives a message in opposite order if asked from schema", (done) => {
-      memorixApi.task.runAlgoNewest
+      memorix.task.runAlgoNewest
         .queue("uv6")
-        .then(() => memorixApi.task.runAlgoNewest.queue("uv7"))
+        .then(() => memorix.task.runAlgoNewest.queue("uv7"))
         .then(({ queueSize }) => {
           expect(queueSize).toBe(2);
 
           return new Promise((res) => {
             const payloads: string[] = [];
             let stop: any;
-            memorixApi.task.runAlgoNewest
+            memorix.task.runAlgoNewest
               .dequeue(({ payload }) => {
                 payloads.push(payload);
                 if (payloads.length === 2) {
@@ -226,10 +226,10 @@ describe("example schema has", () => {
         .catch(done);
     });
     it("queue receives a returns", async () => {
-      const { stop } = await memorixApi.task.runAlgo.dequeue(({ payload }) =>
+      const { stop } = await memorix.task.runAlgo.dequeue(({ payload }) =>
         payload === "uv5" ? Animal.person : Animal.dog
       );
-      const { getReturns } = await memorixApi.task.runAlgo.queue("uv5");
+      const { getReturns } = await memorix.task.runAlgo.queue("uv5");
       const returns = await getReturns();
       expect(returns).toBe(Animal.person);
       await stop();
@@ -237,9 +237,14 @@ describe("example schema has", () => {
   });
   describe("namespace", () => {
     it("works for cache item", async () => {
-      await memorixApi.spaceship.cache.pilot.set({ name: "uv" });
-      const pilot = await memorixApi.spaceship.cache.pilot.get();
+      await memorix.spaceship.cache.pilot.set({ name: "uv" });
+      const pilot = await memorix.spaceship.cache.pilot.get();
       expect(pilot!.name).toBe("uv");
+    });
+    it("works for recursive cache item", async () => {
+      await memorix.spaceship.crew.cache.count.set(10);
+      const count = await memorix.spaceship.crew.cache.count.get();
+      expect(count).toBe(10);
     });
   });
 });

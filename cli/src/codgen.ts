@@ -28,8 +28,15 @@ const codegenSchema: (schema: Schema) => Promise<void> = async (schema) => {
 export const codegen = async ({
   schemaFilePath,
 }: {
-  schemaFilePath: string;
+  schemaFilePath: string[] | string;
 }) => {
-  const schema = await getSchema({ schemaFilePath });
-  await codegenSchema(schema);
+  await Promise.all(
+    (Array.isArray(schemaFilePath) ? schemaFilePath : [schemaFilePath]).map(
+      async (x) => {
+        const schema = await getSchema({ schemaFilePath: x });
+
+        await codegenSchema(schema);
+      }
+    )
+  );
 };

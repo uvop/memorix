@@ -23,6 +23,13 @@ Namespace spaceship {
             }
         }
     }
+    Namespace crew {
+        Cache {
+            count {
+                payload: int
+            }
+        }
+    }
 }
 
 Enum Animal {

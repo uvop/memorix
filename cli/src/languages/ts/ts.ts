@@ -1,6 +1,7 @@
-import { Block, BlockTypes, Namespace, Namespaces } from "src/core/block";
+import { Block, BlockTypes } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import { assertUnreachable, camelCase, getTabs } from "src/core/utilities";
+import { Namespace } from "src/core/namespace";
 
 export const jsonStringify: (json: any) => string = (json) =>
   JSON.stringify(json, (k, v) => (v === undefined ? null : v))
@@ -105,80 +106,84 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
 };
 
 const namespaceToCode: (
-  ns: Namespace,
-  options:
-    | {
-        isApi: true;
-        namespaceNames: string[];
-      }
-    | {
-        isApi: false;
-        name: string;
-      }
-) => string = (ns, options) => {
+  namespace: Namespace,
+  nameTree?: string[]
+) => { code: string; importBase: boolean } = (namespace, nameTree = []) => {
   const hasCache =
-    ns.blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
+    namespace.blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
-    ns.blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
+    namespace.blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
   const hasTask =
-    ns.blocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = hasCache || hasPubsub || hasTask || ns.defaults;
+    namespace.blocks.filter((b) => b.type === BlockTypes.task).length > 0;
 
-  const detailedOptions =
-    options.isApi === true
-      ? {
-          export: true,
-          addPrettierIgnore: !!ns.defaults,
-          class: "MemorixApi",
-          classExtend: !ns.defaults
-            ? "MemorixBaseApi"
-            : `MemorixBaseApi.withGlobal(${jsonStringify({
-                defaultOptions: ns.defaults,
-              })})`,
-          namespaceNames: options.namespaceNames,
-        }
-      : {
-          export: false,
-          addPrettierIgnore: true,
-          class: `Namespace${camelCase(options.name)}`,
-          classExtend: !ns.defaults
-            ? `MemorixNamespace.with(${jsonStringify({
-                name: options.name,
-              })})`
-            : `MemorixNamespace.with(${jsonStringify({
-                name: options.name,
-                defaultOptions: ns.defaults,
-              })})`,
-          namespaceNames: [] as string[],
-        };
+  const subSamespaces = Array.from(namespace.subNamespacesByName.keys()).map(
+    (name) =>
+      namespaceToCode(namespace.subNamespacesByName.get(name)!, [
+        ...nameTree,
+        name,
+      ])
+  );
+
+  const nameCamel = nameTree.map((x) => camelCase(x)).join("");
+
+  const hasApi =
+    hasCache ||
+    hasPubsub ||
+    hasTask ||
+    !!namespace.defaultOptions ||
+    subSamespaces.some((x) => x.importBase);
 
   const code = ([] as string[])
+    .concat(subSamespaces.map((x) => x.code))
+    .concat(
+      namespace.blocks
+        .filter((b) => b.type === BlockTypes.enum)
+        .map(blockToCode)
+    )
+    .concat(
+      namespace.blocks
+        .filter((b) => b.type === BlockTypes.model)
+        .map(blockToCode)
+    )
     .concat(
       hasApi
         ? `${
-            detailedOptions.addPrettierIgnore
-              ? `// prettier-ignore
-`
-              : ""
-          }${detailedOptions.export ? "export " : ""}class ${
-            detailedOptions.class
-          } extends ${detailedOptions.classExtend} {
-${[]
+            nameTree.length === 0 ? "export " : ""
+          }class Memorix${nameCamel} extends MemorixBase {
+${getTabs(1)}protected namespaceNameTree = [${nameTree
+            .map((x) => `"${x}"`)
+            .join(", ")}];
+
+${([] as string[])
   .concat(
-    detailedOptions.namespaceNames.map(
+    namespace.defaultOptions
+      ? `${getTabs(1)}// prettier-ignore
+${getTabs(1)}protected defaultOptions = ${jsonStringify(
+          namespace.defaultOptions
+        )};
+`
+      : []
+  )
+  .concat(
+    Array.from(namespace.subNamespacesByName.keys()).map(
       (namespaceName) =>
         `${getTabs(
           1
-        )}${namespaceName} = this.getNamespaceItem(Namespace${camelCase(
+        )}${namespaceName} = this.getNamespaceItem(Memorix${nameCamel}${camelCase(
           namespaceName
-        )});
-`
+        )});`
     )
+  )
+  .concat(
+    Array.from(namespace.subNamespacesByName.keys()).length !== 0 &&
+      (hasCache || hasPubsub || hasTask)
+      ? [""]
+      : []
   )
   .concat(
     hasCache
       ? `${getTabs(1)}cache = {
-${ns.blocks
+${namespace.blocks
   .filter((b) => b.type === BlockTypes.cache)
   .map(blockToCode)
   .join("\n")}
@@ -188,7 +193,7 @@ ${getTabs(1)}};`
   .concat(
     hasPubsub
       ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
-${ns.blocks
+${namespace.blocks
   .filter((b) => b.type === BlockTypes.pubsub)
   .map(blockToCode)
   .join("\n")}
@@ -198,7 +203,7 @@ ${getTabs(1)}};`
   .concat(
     hasTask
       ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
-${ns.blocks
+${namespace.blocks
   .filter((b) => b.type === BlockTypes.task)
   .map(blockToCode)
   .join("\n")}
@@ -211,58 +216,23 @@ ${getTabs(1)}};`
     )
     .join("\n\n");
 
-  return `${code}`;
+  return {
+    code,
+    importBase: hasApi || subSamespaces.some((x) => x.importBase),
+  };
 };
 
-export const codegen: (namespaces: Namespaces) => string = (namespaces) => {
-  const allBlocks = [
-    ...namespaces.global.blocks,
-    ...namespaces.named.map((x) => x.blocks).flat(),
-  ];
-  const hasNamespaces = namespaces.named.length > 0;
-  const hasCache =
-    allBlocks.filter((b) => b.type === BlockTypes.cache).length > 0;
-  const hasPubsub =
-    allBlocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
-  const hasTask =
-    allBlocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi =
-    hasCache ||
-    hasPubsub ||
-    hasTask ||
-    hasNamespaces ||
-    namespaces.global.defaults;
-
-  const code = ([] as string[])
-    .concat(
-      hasApi
-        ? `import { ${([] as string[])
-            .concat(hasApi ? ["MemorixBaseApi"] : [])
-            .concat(hasNamespaces ? ["MemorixNamespace"] : [])
-            .join(", ")} } from "@memorix/client-redis";`
-        : []
-    )
-    .concat(
-      allBlocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode)
-    )
-    .concat(
-      allBlocks.filter((b) => b.type === BlockTypes.model).map(blockToCode)
-    )
-    .concat(
-      namespaces.named.map((x) =>
-        namespaceToCode(x, { isApi: false, name: x.name })
-      )
-    )
-    .concat(
-      hasApi
-        ? namespaceToCode(namespaces.global, {
-            isApi: true,
-            namespaceNames: namespaces.named.map((x) => x.name),
-          })
-        : []
-    )
-    .join("\n\n");
-
+export const codegen: (
+  namespaces: Namespace,
+  shouldExport?: boolean
+) => string = (namespace) => {
+  const { code, importBase } = namespaceToCode(namespace);
   return `/* eslint-disable */
-${code}\n`;
+${
+  importBase
+    ? `import { MemorixBase } from "@memorix/client-redis";
+
+`
+    : ""
+}${code}`;
 };
