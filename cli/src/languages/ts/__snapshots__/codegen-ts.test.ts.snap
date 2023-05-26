@@ -16,7 +16,8 @@ export class Memorix extends MemorixBase {
     adminId: this.getCacheItemNoKey<string | undefined>(\\"adminId\\"),
     user: this.getCacheItem<string, User>(\\"user\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen cache can generate with inline object type 1`] = `
@@ -32,7 +33,8 @@ export class Memorix extends MemorixBase {
       age?: number;
     } | undefined>(\\"user\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen cache can generate with inline types 1`] = `
@@ -45,7 +47,8 @@ export class Memorix extends MemorixBase {
   cache = {
     user: this.getCacheItem<number, string>(\\"user\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen cache can generate with no key 1`] = `
@@ -61,7 +64,8 @@ export class Memorix extends MemorixBase {
       age?: number;
     } | undefined>(\\"user\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen cache can have options 1`] = `
@@ -75,7 +79,8 @@ export class Memorix extends MemorixBase {
     // prettier-ignore
     user: this.getCacheItem<number, string>(\\"user\\", {expire:{value:5}}),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen config can be null 1`] = `
@@ -88,7 +93,8 @@ export class Memorix extends MemorixBase {
   // prettier-ignore
   protected defaultOptions = {cache:{expire:undefined}};
 
-}"
+}
+"
 `;
 
 exports[`ts codegen config can generate 1`] = `
@@ -101,7 +107,8 @@ export class Memorix extends MemorixBase {
   // prettier-ignore
   protected defaultOptions = {cache:{expire:{value:5,extendOnGet:true}},task:{takeNewest:true}};
 
-}"
+}
+"
 `;
 
 exports[`ts codegen enum can generate 1`] = `
@@ -110,7 +117,8 @@ export enum Animals {
   dog = \\"dog\\",
   cat = \\"cat\\",
   person = \\"person\\",
-}"
+}
+"
 `;
 
 exports[`ts codegen model can generate from 2 models 1`] = `
@@ -122,7 +130,8 @@ export type User1 = {
 export type User2 = {
   name: string;
   age?: number;
-};"
+};
+"
 `;
 
 exports[`ts codegen model can generate from model 1`] = `
@@ -131,7 +140,8 @@ export type User = {
   id: number;
   name: string;
   age?: number;
-};"
+};
+"
 `;
 
 exports[`ts codegen model can generate from model with array 1`] = `
@@ -143,7 +153,8 @@ export type User = {
     id: number;
     name?: string;
   } | undefined>;
-};"
+};
+"
 `;
 
 exports[`ts codegen model can generate from model within model 1`] = `
@@ -153,7 +164,8 @@ export type User = {
   papa: {
     name?: string;
   };
-};"
+};
+"
 `;
 
 exports[`ts codegen model can generate from model within model within a model 1`] = `
@@ -167,7 +179,8 @@ export type User = {
     };
     age: number;
   };
-};"
+};
+"
 `;
 
 exports[`ts codegen namespace are recursive 1`] = `
@@ -199,7 +212,8 @@ export class Memorix extends MemorixBase {
   protected namespaceNameTree = [];
 
   user = this.getNamespaceItem(MemorixUser);
-}"
+}
+"
 `;
 
 exports[`ts codegen namespace can generate 1`] = `
@@ -228,7 +242,8 @@ export class Memorix extends MemorixBase {
   cache = {
     favoriteUser: this.getCacheItemNoKey<string>(\\"favoriteUser\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen pubsub can generate with inline types 1`] = `
@@ -241,7 +256,8 @@ export class Memorix extends MemorixBase {
   pubsub = {
     message: this.getPubsubItem<number, string>(\\"message\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen task can generate with inline types 1`] = `
@@ -254,7 +270,8 @@ export class Memorix extends MemorixBase {
   task = {
     doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen task can have options 1`] = `
@@ -268,5 +285,6 @@ export class Memorix extends MemorixBase {
     // prettier-ignore
     doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true, {takeNewest:true}),
   };
-}"
+}
+"
 `;

@@ -1,16 +1,52 @@
-import { getGlobalNamespace } from "src/core/block";
-import { codegenByLanguage, Languages } from "src/languages";
+import { Languages } from "src/languages";
+import { codegen } from "src/codgen";
+import fs from "fs";
 
-const codegenPython = (schema: string) => {
-  const blocks = getGlobalNamespace(schema);
-  return codegenByLanguage(blocks, Languages.python).trim();
-};
+jest.mock("fs", () => {
+  return {
+    promises: {
+      writeFile: jest.fn(),
+      readFile: jest.fn(),
+    },
+  };
+});
+
+const codegenPython: (
+  schema: string,
+  moreConfig?: string
+) => Promise<string> = (schema, moreConfig) =>
+  new Promise((res) => {
+    const schemaWithOutput = `
+  Config {
+    output: {
+      language: "${Languages.python}"
+      file: "generated.ts"
+    }
+    ${moreConfig}
+  }
+
+  ${schema}
+  `;
+
+    (fs.promises.readFile as jest.Mock).mockImplementation(async () => ({
+      async toString() {
+        return schemaWithOutput;
+      },
+    }));
+    (fs.promises.writeFile as jest.Mock).mockImplementation(
+      async (path, content) => {
+        res(content);
+      }
+    );
+
+    codegen({ schemaFilePath: "schema.memorix" });
+  });
 
 describe("python codegen", () => {
   describe("model", () => {
-    it("can generate from model", () => {
+    it("can generate from model", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Model User {
                 id: int
@@ -21,9 +57,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate from 2 models", () => {
+    it("can generate from 2 models", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Model User1 {
                 id: int
@@ -36,9 +72,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate from model within model", () => {
+    it("can generate from model within model", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Model User {
                 id: int
@@ -50,9 +86,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate from model within model within a model", () => {
+    it("can generate from model within model within a model", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Model User {
                 id: int
@@ -68,9 +104,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate from model with array", () => {
+    it("can generate from model with array", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Model User {
                 id: int
@@ -86,9 +122,9 @@ describe("python codegen", () => {
     });
   });
   describe("cache", () => {
-    it("can generate with inline types", () => {
+    it("can generate with inline types", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Cache {
               user {
@@ -100,9 +136,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate with inline types and convert to CamelCase", () => {
+    it("can generate with inline types and convert to CamelCase", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Cache {
               user_by_number {
@@ -117,9 +153,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can have options", () => {
+    it("can have options", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Cache {
               user {
@@ -137,9 +173,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate with inline object type", () => {
+    it("can generate with inline object type", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Cache {
               user {
@@ -154,9 +190,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate with no key", () => {
+    it("can generate with no key", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Cache {
               user {
@@ -170,9 +206,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate also with model", () => {
+    it("can generate also with model", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
           Cache {
             adminId {
@@ -194,9 +230,9 @@ describe("python codegen", () => {
     });
   });
   describe("pubsub", () => {
-    it("can generate with inline types", () => {
+    it("can generate with inline types", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             PubSub {
               message {
@@ -210,9 +246,9 @@ describe("python codegen", () => {
     });
   });
   describe("task", () => {
-    it("can generate with inline types", () => {
+    it("can generate with inline types", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Task {
               doIt {
@@ -225,9 +261,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can have options", () => {
+    it("can have options", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Task {
               doIt {
@@ -245,9 +281,9 @@ describe("python codegen", () => {
     });
   });
   describe("enum", () => {
-    it("can generate", () => {
+    it("can generate", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Enum Animals {
               dog
@@ -260,22 +296,10 @@ describe("python codegen", () => {
     });
   });
   describe("config", () => {
-    it("can generate", () => {
+    it("can generate", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
-            Config {
-              output: [
-                  {
-                      language: "typescript"
-                      file: "example.generated.ts"
-                  }
-              ]
-              extends: [
-                "bla.memorix"
-                "bla2.memorix"
-              ]
-            }
             DefaultOptions {
               cache: {
                 expire: {
@@ -291,9 +315,9 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can be null", () => {
+    it("can be null", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             DefaultOptions {
               cache: {
@@ -306,9 +330,9 @@ describe("python codegen", () => {
     });
   });
   describe("namespace", () => {
-    it("can generate", () => {
+    it("can generate", async () => {
       expect(
-        codegenPython(
+        await codegenPython(
           `
             Namespace user {
               DefaultOptions {

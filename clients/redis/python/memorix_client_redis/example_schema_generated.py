@@ -8,14 +8,14 @@ else:
 
 from enum import Enum
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
-    MemorixBasePubSubApi,
+    MemorixPubSubBase,
     MemorixPubSubItem,
     MemorixPubSubItemNoKey,
-    MemorixBaseTaskApi,
+    MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
     MemorixTaskItemNoReturns,
@@ -35,8 +35,8 @@ class User(object):
     age: typing.Optional[int]
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.favoriteAnimal = MemorixCacheItem[str, "Animal"](
@@ -51,8 +51,8 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixPubSubApi(MemorixBasePubSubApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixPubSub(MemorixPubSubBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.message = MemorixPubSubItemNoKey[str](
@@ -62,8 +62,8 @@ class MemorixPubSubApi(MemorixBasePubSubApi):
         )
 
 
-class MemorixTaskApi(MemorixBaseTaskApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixTask(MemorixTaskBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.runAlgo = MemorixTaskItemNoKey[str, "Animal"](
@@ -74,13 +74,16 @@ class MemorixTaskApi(MemorixBaseTaskApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixCacheApi(self)
-        self.pubsub = MemorixPubSubApi(self)
-        self.task = MemorixTaskApi(self)
+        self._namespace_name_tree = []
+
+        self.cache = MemorixCache(self)
+        self.pubsub = MemorixPubSub(self)
+        self.task = MemorixTask(self)

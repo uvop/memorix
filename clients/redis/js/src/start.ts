@@ -1,7 +1,7 @@
-import { BaseApi } from "./base-api";
+import { MemorixBase } from "./MemorixBase";
 
 const init = async () => {
-  const api = new BaseApi({
+  const api = new MemorixBase({
     redisUrl: process.env.REDIS_URL!,
   });
   console.log(api);

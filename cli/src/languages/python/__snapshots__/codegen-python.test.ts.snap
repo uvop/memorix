@@ -10,8 +10,8 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
 )
@@ -23,8 +23,8 @@ class User(object):
     age: typing.Optional[int]
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.adminId = MemorixCacheItemNoKey[typing.Optional[str]](
@@ -39,14 +39,17 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixCacheApi(self)"
+        self._namespace_name_tree = []
+
+        self.cache = MemorixCache(self)"
 `;
 
 exports[`python codegen cache can generate with inline object type 1`] = `
@@ -59,8 +62,8 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
 )
@@ -72,8 +75,8 @@ class CacheUserPayload(object):
     age: typing.Optional[int]
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.user = MemorixCacheItem[int, typing.Optional[\\"CacheUserPayload\\"]](
@@ -83,14 +86,17 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixCacheApi(self)"
+        self._namespace_name_tree = []
+
+        self.cache = MemorixCache(self)"
 `;
 
 exports[`python codegen cache can generate with inline types 1`] = `
@@ -103,15 +109,15 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
 )
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.user = MemorixCacheItem[int, str](
@@ -121,14 +127,17 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixCacheApi(self)"
+        self._namespace_name_tree = []
+
+        self.cache = MemorixCache(self)"
 `;
 
 exports[`python codegen cache can generate with inline types and convert to CamelCase 1`] = `
@@ -141,8 +150,8 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
 )
@@ -154,8 +163,8 @@ class CacheUserByNumberPayload(object):
     age: int
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.user_by_number = MemorixCacheItem[int, \\"CacheUserByNumberPayload\\"](
@@ -165,14 +174,17 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixCacheApi(self)"
+        self._namespace_name_tree = []
+
+        self.cache = MemorixCache(self)"
 `;
 
 exports[`python codegen cache can generate with no key 1`] = `
@@ -185,8 +197,8 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
 )
@@ -198,8 +210,8 @@ class CacheUserPayload(object):
     age: typing.Optional[int]
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.user = MemorixCacheItemNoKey[typing.Optional[\\"CacheUserPayload\\"]](
@@ -209,14 +221,17 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixCacheApi(self)"
+        self._namespace_name_tree = []
+
+        self.cache = MemorixCache(self)"
 `;
 
 exports[`python codegen cache can have options 1`] = `
@@ -229,15 +244,15 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
 )
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.user = MemorixCacheItem[int, str](
@@ -253,14 +268,17 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixCacheApi(self)"
+        self._namespace_name_tree = []
+
+        self.cache = MemorixCache(self)"
 `;
 
 exports[`python codegen config can be null 1`] = `
@@ -273,24 +291,26 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
+    MemorixBase,
 )
 
 
-class MemorixApi(MemorixBaseApi.with_global_data(  # type: ignore
-    data=MemorixBaseApi.BaseApiWithGlobalData(
-        default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(
-            cache=MemorixCacheItem.Options(
-                expire=None,
-            ),
-        ),
-    ),
-)):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)"
+        super().__init__(redis_url=redis_url, ref=ref)
+
+        self._namespace_name_tree = []
+        self._default_options = MemorixBase.DefaultOptions(
+            cache=MemorixCacheItem.Options(
+                expire=None,
+            ),
+        )
+
+"
 `;
 
 exports[`python codegen config can generate 1`] = `
@@ -303,13 +323,20 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
+    MemorixBase,
 )
 
 
-class MemorixApi(MemorixBaseApi.with_global_data(  # type: ignore
-    data=MemorixBaseApi.BaseApiWithGlobalData(
-        default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(
+class Memorix(MemorixBase):
+    def __init__(
+        self,
+        redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, ref=ref)
+
+        self._namespace_name_tree = []
+        self._default_options = MemorixBase.DefaultOptions(
             cache=MemorixCacheItem.Options(
                 expire=MemorixCacheItem.Options.Expire(
                     value=5,
@@ -319,14 +346,9 @@ class MemorixApi(MemorixBaseApi.with_global_data(  # type: ignore
             task=MemorixTaskItem.Options(
                 take_newest=True,
             ),
-        ),
-    ),
-)):
-    def __init__(
-        self,
-        redis_url: str,
-    ) -> None:
-        super().__init__(redis_url=redis_url)"
+        )
+
+"
 `;
 
 exports[`python codegen enum can generate 1`] = `
@@ -339,9 +361,6 @@ else:
     from memorix_client_redis import dataclass
 
 from enum import Enum
-from memorix_client_redis import (
-,
-)
 
 
 class Animals(str, Enum):
@@ -359,9 +378,6 @@ if typing.TYPE_CHECKING:
 else:
     from memorix_client_redis import dataclass
 
-from memorix_client_redis import (
-,
-)
 
 
 @dataclass
@@ -384,9 +400,6 @@ if typing.TYPE_CHECKING:
 else:
     from memorix_client_redis import dataclass
 
-from memorix_client_redis import (
-,
-)
 
 
 @dataclass
@@ -405,9 +418,6 @@ if typing.TYPE_CHECKING:
 else:
     from memorix_client_redis import dataclass
 
-from memorix_client_redis import (
-,
-)
 
 
 @dataclass
@@ -432,9 +442,6 @@ if typing.TYPE_CHECKING:
 else:
     from memorix_client_redis import dataclass
 
-from memorix_client_redis import (
-,
-)
 
 
 @dataclass
@@ -457,9 +464,6 @@ if typing.TYPE_CHECKING:
 else:
     from memorix_client_redis import dataclass
 
-from memorix_client_redis import (
-,
-)
 
 
 @dataclass
@@ -490,16 +494,15 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixNamespace,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
 )
 
 
-class MemorixUserCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCacheUser(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.bio = MemorixCacheItemNoKey[str](
@@ -509,29 +512,28 @@ class MemorixUserCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixUserNamespace(MemorixNamespace.with_data(  # type: ignore
-    data=MemorixNamespace.NamespaceApiWithData(
-        name=\\"user\\",
-        default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(
+class MemorixUser(MemorixBase):
+    def __init__(
+        self,
+        redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, ref=ref)
+
+        self._namespace_name_tree = [\\"user\\"]
+        self._default_options = MemorixBase.DefaultOptions(
             cache=MemorixCacheItem.Options(
                 expire=MemorixCacheItem.Options.Expire(
                     value=5,
                 ),
             ),
-        ),
-    ),
-)):
-    def __init__(
-        self,
-        api: MemorixBaseApi,
-    ) -> None:
-        super().__init__(connection=api._connection)
+        )
 
-        self.cache = MemorixUserCacheApi(self)
+        self.cache = MemorixCacheUser(self)
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.favoriteUser = MemorixCacheItemNoKey[str](
@@ -541,26 +543,26 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixApi(MemorixBaseApi.with_global_data(  # type: ignore
-    data=MemorixBaseApi.BaseApiWithGlobalData(
-        default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(
+class Memorix(MemorixBase):
+    def __init__(
+        self,
+        redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, ref=ref)
+
+        self._namespace_name_tree = []
+        self._default_options = MemorixBase.DefaultOptions(
             cache=MemorixCacheItem.Options(
                 expire=MemorixCacheItem.Options.Expire(
                     value=6,
                 ),
             ),
-        ),
-    ),
-)):
-    def __init__(
-        self,
-        redis_url: str,
-    ) -> None:
-        super().__init__(redis_url=redis_url)
+        )
 
-        self.user = MemorixUserNamespace(self)
+        self.user = MemorixUser(redis_url=redis_url, ref=self)
 
-        self.cache = MemorixCacheApi(self)"
+        self.cache = MemorixCache(self)"
 `;
 
 exports[`python codegen pubsub can generate with inline types 1`] = `
@@ -573,15 +575,15 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBasePubSubApi,
+    MemorixBase,
+    MemorixPubSubBase,
     MemorixPubSubItem,
     MemorixPubSubItemNoKey,
 )
 
 
-class MemorixPubSubApi(MemorixBasePubSubApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixPubSub(MemorixPubSubBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.message = MemorixPubSubItem[int, str](
@@ -591,14 +593,17 @@ class MemorixPubSubApi(MemorixBasePubSubApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.pubsub = MemorixPubSubApi(self)"
+        self._namespace_name_tree = []
+
+        self.pubsub = MemorixPubSub(self)"
 `;
 
 exports[`python codegen task can generate with inline types 1`] = `
@@ -611,8 +616,8 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseTaskApi,
+    MemorixBase,
+    MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
     MemorixTaskItemNoReturns,
@@ -620,8 +625,8 @@ from memorix_client_redis import (
 )
 
 
-class MemorixTaskApi(MemorixBaseTaskApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixTask(MemorixTaskBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.doIt = MemorixTaskItem[int, str, bool](
@@ -632,14 +637,17 @@ class MemorixTaskApi(MemorixBaseTaskApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.task = MemorixTaskApi(self)"
+        self._namespace_name_tree = []
+
+        self.task = MemorixTask(self)"
 `;
 
 exports[`python codegen task can have options 1`] = `
@@ -652,8 +660,8 @@ else:
     from memorix_client_redis import dataclass
 
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixBaseTaskApi,
+    MemorixBase,
+    MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
     MemorixTaskItemNoReturns,
@@ -661,8 +669,8 @@ from memorix_client_redis import (
 )
 
 
-class MemorixTaskApi(MemorixBaseTaskApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixTask(MemorixTaskBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.doIt = MemorixTaskItem[int, str, bool](
@@ -676,12 +684,15 @@ class MemorixTaskApi(MemorixBaseTaskApi):
         )
 
 
-class MemorixApi(MemorixBaseApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.task = MemorixTaskApi(self)"
+        self._namespace_name_tree = []
+
+        self.task = MemorixTask(self)"
 `;

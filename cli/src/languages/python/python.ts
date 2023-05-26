@@ -263,7 +263,6 @@ ${getTabs(2)}self._default_options = ${defaultOptionsToCode(
               : ""
           }
 
-
 ${Array.from(namespace.subNamespacesByName.keys()).map(
   (namespaceName) =>
     `${getTabs(2)}self.${namespaceName} = Memorix${nameCamel}${camelCase(
@@ -295,7 +294,7 @@ ${Array.from(namespace.subNamespacesByName.keys()).map(
     .join("\n\n\n");
 
   return {
-    code: `${code}\n`,
+    code,
     importBase: hasApi || subSamespaces.some((x) => x.importBase),
     importEnum: hasEnum || subSamespaces.some((x) => x.importEnum),
     importCache: hasCache || subSamespaces.some((x) => x.importCache),
@@ -328,7 +327,9 @@ ${
     ? `
 from enum import Enum`
     : ""
-}
+}${
+        importBase || importCache || importPubSub || importTask
+          ? `
 from memorix_client_redis import (
 ${([] as string[])
   .concat(importBase ? [`${getTabs(1)}MemorixBase`] : [])
@@ -362,10 +363,13 @@ ${([] as string[])
       : []
   )
   .join(",\n")},
-)`,
+)`
+          : ""
+      }`,
     ])
     .join("\n");
   return `${importCode}
+
 
 ${code}`;
 };

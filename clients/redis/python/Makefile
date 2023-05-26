@@ -6,6 +6,7 @@ install:
 	rm .tmp_poetry &&\
 	cat .vscode/settings_template.json | sed "s|\"python.defaultInterpreterPath\": \".*\"|\"python.defaultInterpreterPath\": \"$pythonPath/bin/python\"|1" > .vscode/settings.json
 codegen:
+	(cd ../../../cli && yarn cli codegen ../clients/redis/python/memorix_client_redis/example-schema.memorix) &&\
 	(cd ../../../cli && yarn cli codegen ../clients/redis/python/tests/example-schema.memorix) &&\
 	 \
 	make format
