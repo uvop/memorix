@@ -1,10 +1,10 @@
 import asyncio
 import functools
-from memorix_client_redis.features.api.hash_key import hash_key
+from memorix_client_redis.hash_key import hash_key
 from uuid import uuid4
-from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
+from memorix_client_redis.json import from_json, to_json, bytes_to_str
 import typing
-from ..namespace import Namespace
+from memorix_client_redis.memorix_base import MemorixBase
 from .task_options import TaskDequequeOptions
 
 KT = typing.TypeVar("KT")
@@ -80,7 +80,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
 
     def __init__(
         self,
-        api: Namespace,
+        api: MemorixBase,
         id: str,
         payload_class: typing.Type[PT],
         returns_class: typing.Optional[typing.Type[RT]] = None,
@@ -110,7 +110,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
             )
 
         queue_size = self._api._connection.redis.rpush(
-            hash_key(namespace=self._api._name, id=self._id, key=key),
+            hash_key(api=self._api, id=self._id, key=key),
             wrapped_payload_json,
         )
         if returns_id is None:
@@ -147,11 +147,11 @@ class TaskItem(typing.Generic[KT, PT, RT]):
         while True:
             if merged_options is not None and merged_options.take_newest:
                 [channel_bytes, data_bytes] = self._api._connection.redis.brpop(
-                    hash_key(namespace=self._api._name, id=self._id, key=key),
+                    hash_key(api=self._api, id=self._id, key=key),
                 )
             else:
                 [channel_bytes, data_bytes] = self._api._connection.redis.blpop(
-                    hash_key(namespace=self._api._name, id=self._id, key=key),
+                    hash_key(api=self._api, id=self._id, key=key),
                 )
 
             data_str = bytes_to_str(data_bytes)
@@ -187,7 +187,7 @@ class TaskItem(typing.Generic[KT, PT, RT]):
 
     def clear(self, key: KT) -> None:
         self._api._connection.redis.delete(
-            hash_key(namespace=self._api._name, id=self._id, key=key),
+            hash_key(api=self._api, id=self._id, key=key),
         )
 
     async def async_clear(self, key: KT) -> None:
@@ -231,7 +231,7 @@ class TaskItemNoKey(TaskItem[None, PT, RT]):
 class TaskItemNoReturns(TaskItem[KT, PT, None]):
     def __init__(
         self,
-        api: Namespace,
+        api: MemorixBase,
         id: str,
         payload_class: typing.Type[PT],
     ) -> None:

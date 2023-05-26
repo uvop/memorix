@@ -1,9 +1,9 @@
 import asyncio
 import functools
-from memorix_client_redis.features.api.hash_key import hash_key
-from memorix_client_redis.features.api.json import from_json, to_json, bytes_to_str
+from memorix_client_redis.hash_key import hash_key
+from memorix_client_redis.json import from_json, to_json, bytes_to_str
 from typing import Generic, Optional, Type, TypeVar, cast
-from ..namespace import Namespace
+from memorix_client_redis.memorix_base import MemorixBase
 from .cache_options import CacheOptions
 
 KT = TypeVar("KT")
@@ -15,7 +15,7 @@ class CacheItem(Generic[KT, PT]):
 
     def __init__(
         self,
-        api: Namespace,
+        api: MemorixBase,
         id: str,
         payload_class: Type[PT],
         options: Optional[CacheOptions] = None,
@@ -42,7 +42,7 @@ class CacheItem(Generic[KT, PT]):
         )
 
         data_bytes = self._api._connection.redis.get(
-            hash_key(namespace=self._api._name, id=self._id, key=key),
+            hash_key(api=self._api, id=self._id, key=key),
         )
         if data_bytes is None:
             return None
@@ -88,7 +88,7 @@ class CacheItem(Generic[KT, PT]):
 
         payload_json = to_json(payload)
         return self._api._connection.redis.set(
-            hash_key(namespace=self._api._name, id=self._id, key=key),
+            hash_key(api=self._api, id=self._id, key=key),
             payload_json,
             ex=merged_options.expire.value
             if merged_options is not None
@@ -134,7 +134,7 @@ class CacheItem(Generic[KT, PT]):
         if merged_options is None or merged_options.expire is None:
             return
 
-        hashed_key = hash_key(namespace=self._api._name, id=self._id, key=key)
+        hashed_key = hash_key(api=self._api, id=self._id, key=key)
 
         if merged_options.expire.is_in_ms:
             self._api._connection.redis.pexpire(

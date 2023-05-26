@@ -4,9 +4,7 @@ import {
   BlockTask,
   BlockTypes,
   DefaultOptions,
-  Namespace,
-  Namespaces,
-  flatNamespaces,
+  flatBlocks,
 } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import {
@@ -14,6 +12,7 @@ import {
   camelCase,
   getTabs as get2Tabs,
 } from "src/core/utilities";
+import { Namespace } from "src/core/namespace";
 
 const getTabs = (x: number) => get2Tabs(x * 2);
 
@@ -153,9 +152,7 @@ ${getTabs(2)})`;
 const defaultOptionsToCode: (defaultOptions: DefaultOptions) => string = (
   defaultOptions
 ) => {
-  return `${getTabs(
-    2
-  )}default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(${
+  return `MemorixBase.DefaultOptions(${
     defaultOptions.cache
       ? `
 ${getTabs(3)}cache=${blockOptionsToCode(
@@ -174,79 +171,48 @@ ${getTabs(3)}task=${blockOptionsToCode(
         )},`
       : ""
   }
-${getTabs(2)}),`;
+${getTabs(2)})`;
 };
 
 const namespaceToCode: (
-  ns: Namespace,
-  options:
-    | {
-        isApi: true;
-        namespaceNames: string[];
-      }
-    | {
-        isApi: false;
-        name: string;
-      }
-) => string = (ns, options) => {
-  const hasCache =
-    ns.blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
+  namespace: Namespace,
+  nameTree?: string[]
+) => {
+  code: string;
+  importBase: boolean;
+  importCache: boolean;
+  importPubSub: boolean;
+  importTask: boolean;
+  importEnum: boolean;
+} = (namespace, nameTree = []) => {
+  const blocks = flatBlocks(namespace.blocks);
+  const hasEnum = blocks.filter((b) => b.type === BlockTypes.enum).length > 0;
+  const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
-    ns.blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
-  const hasTask =
-    ns.blocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = ns.defaults || hasCache || hasPubsub || hasTask;
+    blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
+  const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
+  const hasApi = hasCache || hasPubsub || hasTask || !!namespace.defaultOptions;
 
-  const detailedOptions =
-    options.isApi === true
-      ? {
-          cacheName: "MemorixCacheApi",
-          pubsubName: "MemorixPubSubApi",
-          taskName: "MemorixTaskApi",
-          apiName: "MemorixApi",
-          apiExtends: ns.defaults
-            ? `MemorixBaseApi.with_global_data(  # type: ignore
-${getTabs(1)}data=MemorixBaseApi.BaseApiWithGlobalData(
-${defaultOptionsToCode(ns.defaults)}
-${getTabs(1)}),
-)`
-            : "MemorixBaseApi",
-          namespaceNames: options.namespaceNames,
-          apiInit: `${getTabs(1)}def __init__(
-${getTabs(2)}self,
-${getTabs(2)}redis_url: str,
-${getTabs(1)}) -> None:
-${getTabs(2)}super().__init__(redis_url=redis_url)`,
-        }
-      : {
-          cacheName: `Memorix${camelCase(options.name)}CacheApi`,
-          pubsubName: `Memorix${camelCase(options.name)}PubSubApi`,
-          taskName: `Memorix${camelCase(options.name)}TaskApi`,
-          apiName: `Memorix${camelCase(options.name)}Namespace`,
-          apiExtends: ns.defaults
-            ? `MemorixNamespace.with_data(  # type: ignore
-${getTabs(1)}data=MemorixNamespace.NamespaceApiWithData(
-${getTabs(2)}name="${options.name}",
-${defaultOptionsToCode(ns.defaults)}
-${getTabs(1)}),
-)`
-            : "MemorixNamespace",
-          apiInit: `${getTabs(1)}def __init__(
-${getTabs(2)}self,
-${getTabs(2)}api: MemorixBaseApi,
-${getTabs(1)}) -> None:
-${getTabs(2)}super().__init__(connection=api._connection)`,
-          namespaceNames: [] as string[],
-        };
+  const subSamespaces = Array.from(namespace.subNamespacesByName.keys()).map(
+    (name) =>
+      namespaceToCode(namespace.subNamespacesByName.get(name)!, [
+        ...nameTree,
+        name,
+      ])
+  );
+  const nameCamel = nameTree.map((x) => camelCase(x)).join("");
 
   const code = ([] as string[])
+    .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode))
+    .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToCode))
+    .concat(subSamespaces.map((x) => x.code))
     .concat(
       hasCache
-        ? `class ${detailedOptions.cacheName}(MemorixBaseCacheApi):
-${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
+        ? `class MemorixCache${nameCamel}(MemorixCacheBase):
+${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
-${ns.blocks
+${blocks
   .filter((b) => b.type === BlockTypes.cache)
   .map(blockToCode)
   .join("\n")}`
@@ -254,11 +220,11 @@ ${ns.blocks
     )
     .concat(
       hasPubsub
-        ? `class ${detailedOptions.pubsubName}(MemorixBasePubSubApi):
-${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
+        ? `class MemorixPubSub${nameCamel}(MemorixPubSubBase):
+${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
-${ns.blocks
+${blocks
   .filter((b) => b.type === BlockTypes.pubsub)
   .map(blockToCode)
   .join("\n")}`
@@ -266,11 +232,11 @@ ${ns.blocks
     )
     .concat(
       hasTask
-        ? `class ${detailedOptions.taskName}(MemorixBaseTaskApi):
-${getTabs(1)}def __init__(self, api: MemorixBaseApi) -> None:
+        ? `class MemorixTask${nameCamel}(MemorixTaskBase):
+${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
-${ns.blocks
+${blocks
   .filter((b) => b.type === BlockTypes.task)
   .map(blockToCode)
   .join("\n")}`
@@ -278,70 +244,77 @@ ${ns.blocks
     )
     .concat(
       hasApi
-        ? `class ${detailedOptions.apiName}(${detailedOptions.apiExtends}):
-${detailedOptions.apiInit}
+        ? `class Memorix${nameCamel}(MemorixBase):
+${getTabs(1)}def __init__(
+${getTabs(2)}self,
+${getTabs(2)}redis_url: str,
+${getTabs(2)}ref: typing.Optional[MemorixBase] = None,
+${getTabs(1)}) -> None:
+${getTabs(2)}super().__init__(redis_url=redis_url, ref=ref)
 
-${
-  detailedOptions.namespaceNames.length > 0
-    ? `${detailedOptions.namespaceNames
-        .map(
-          (x) =>
-            `${getTabs(2)}self.${x} = Memorix${camelCase(x)}Namespace(self)`
-        )
-        .join("\n")}\n\n`
-    : ""
-}${[]
+${getTabs(2)}self._namespace_name_tree = [${nameTree
+            .map((x) => `"${x}"`)
+            .join(", ")}]${
+            namespace.defaultOptions
+              ? `
+${getTabs(2)}self._default_options = ${defaultOptionsToCode(
+                  namespace.defaultOptions
+                )}`
+              : ""
+          }
+
+
+${Array.from(namespace.subNamespacesByName.keys()).map(
+  (namespaceName) =>
+    `${getTabs(2)}self.${namespaceName} = Memorix${nameCamel}${camelCase(
+      namespaceName
+    )}(redis_url=redis_url, ref=self)`
+)}${
+            Array.from(namespace.subNamespacesByName.keys()).length !== 0
+              ? "\n\n"
+              : ""
+          }${([] as string[])
             .concat(
               hasCache
-                ? `${getTabs(2)}self.cache = ${detailedOptions.cacheName}(self)`
+                ? `${getTabs(2)}self.cache = MemorixCache${nameCamel}(self)`
                 : []
             )
             .concat(
               hasPubsub
-                ? `${getTabs(2)}self.pubsub = ${
-                    detailedOptions.pubsubName
-                  }(self)`
+                ? `${getTabs(2)}self.pubsub = MemorixPubSub${nameCamel}(self)`
                 : []
             )
             .concat(
               hasTask
-                ? `${getTabs(2)}self.task = ${detailedOptions.taskName}(self)`
+                ? `${getTabs(2)}self.task = MemorixTask${nameCamel}(self)`
                 : []
             )
             .join("\n")}`
         : []
     )
     .join("\n\n\n");
-  return `${code}`;
+
+  return {
+    code: `${code}\n`,
+    importBase: hasApi || subSamespaces.some((x) => x.importBase),
+    importEnum: hasEnum || subSamespaces.some((x) => x.importEnum),
+    importCache: hasCache || subSamespaces.some((x) => x.importCache),
+    importPubSub: hasPubsub || subSamespaces.some((x) => x.importPubSub),
+    importTask: hasTask || subSamespaces.some((x) => x.importTask),
+  };
 };
 
-export const codegen: (namespaces: Namespaces) => string = (
-  nonFlatNamespaces
-) => {
-  const namespaces = flatNamespaces(nonFlatNamespaces);
-  const allBlocks = [
-    ...namespaces.global.blocks,
-    ...namespaces.named.map((x) => x.blocks).flat(),
-  ];
-  const hasNamespaces = namespaces.named.length > 0;
-  // const hasDefaultOptions =
-  //   !!namespaces.global.defaults || namespaces.named.some((x) => x.defaults);
-  const hasEnum =
-    allBlocks.filter((b) => b.type === BlockTypes.enum).length > 0;
-  const hasCache =
-    allBlocks.filter((b) => b.type === BlockTypes.cache).length > 0;
-  const hasPubsub =
-    allBlocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
-  const hasTask =
-    allBlocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi =
-    hasCache ||
-    hasPubsub ||
-    hasTask ||
-    hasNamespaces ||
-    namespaces.global.defaults;
+export const codegen: (namespaces: Namespace) => string = (namespace) => {
+  const {
+    code,
+    importBase,
+    importEnum,
+    importCache,
+    importPubSub,
+    importTask,
+  } = namespaceToCode(namespace);
 
-  const code = ([] as string[])
+  const importCode = ([] as string[])
     .concat([
       `# flake8: noqa
 import typing
@@ -351,37 +324,36 @@ ${getTabs(1)}from dataclasses import dataclass
 else:
 ${getTabs(1)}from memorix_client_redis import dataclass
 ${
-  hasEnum
+  importEnum
     ? `
 from enum import Enum`
     : ""
 }
 from memorix_client_redis import (
-${[]
-  .concat(hasApi ? [`${getTabs(1)}MemorixBaseApi`] : [])
-  .concat(hasNamespaces ? [`${getTabs(1)}MemorixNamespace`] : [])
+${([] as string[])
+  .concat(importBase ? [`${getTabs(1)}MemorixBase`] : [])
   .concat(
-    hasCache
+    importCache
       ? [
-          `${getTabs(1)}MemorixBaseCacheApi`,
+          `${getTabs(1)}MemorixCacheBase`,
           `${getTabs(1)}MemorixCacheItem`,
           `${getTabs(1)}MemorixCacheItemNoKey`,
         ]
       : []
   )
   .concat(
-    hasPubsub
+    importPubSub
       ? [
-          `${getTabs(1)}MemorixBasePubSubApi`,
+          `${getTabs(1)}MemorixPubSubBase`,
           `${getTabs(1)}MemorixPubSubItem`,
           `${getTabs(1)}MemorixPubSubItemNoKey`,
         ]
       : []
   )
   .concat(
-    hasTask
+    importTask
       ? [
-          `${getTabs(1)}MemorixBaseTaskApi`,
+          `${getTabs(1)}MemorixTaskBase`,
           `${getTabs(1)}MemorixTaskItem`,
           `${getTabs(1)}MemorixTaskItemNoKey`,
           `${getTabs(1)}MemorixTaskItemNoReturns`,
@@ -392,26 +364,8 @@ ${[]
   .join(",\n")},
 )`,
     ])
-    .concat(
-      allBlocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode)
-    )
-    .concat(
-      allBlocks.filter((b) => b.type === BlockTypes.model).map(blockToCode)
-    )
-    .concat(
-      namespaces.named.map((x) =>
-        namespaceToCode(x, { isApi: false, name: x.name })
-      )
-    )
-    .concat(
-      hasApi
-        ? namespaceToCode(namespaces.global, {
-            isApi: true,
-            namespaceNames: namespaces.named.map((x) => x.name),
-          })
-        : []
-    )
-    .join("\n\n\n");
+    .join("\n");
+  return `${importCode}
 
-  return `${code}\n`;
+${code}`;
 };

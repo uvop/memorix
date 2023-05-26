@@ -8,15 +8,14 @@ else:
 
 from enum import Enum
 from memorix_client_redis import (
-    MemorixBaseApi,
-    MemorixNamespace,
-    MemorixBaseCacheApi,
+    MemorixBase,
+    MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
-    MemorixBasePubSubApi,
+    MemorixPubSubBase,
     MemorixPubSubItem,
     MemorixPubSubItemNoKey,
-    MemorixBaseTaskApi,
+    MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
     MemorixTaskItemNoReturns,
@@ -46,8 +45,32 @@ class CachePilotPayload(object):
     name: str
 
 
-class MemorixSpaceshipCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCacheSpaceshipCrew(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
+        super().__init__(api=api)
+
+        self.count = MemorixCacheItemNoKey[int](
+            api=api,
+            id="count",
+            payload_class=int,
+        )
+
+
+class MemorixSpaceshipCrew(MemorixBase):
+    def __init__(
+        self,
+        redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, ref=ref)
+
+        self._namespace_name_tree = ["spaceship", "crew"]
+
+        self.cache = MemorixCacheSpaceshipCrew(self)
+
+
+class MemorixCacheSpaceship(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.pilot = MemorixCacheItemNoKey["CachePilotPayload"](
@@ -57,31 +80,30 @@ class MemorixSpaceshipCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixSpaceshipNamespace(
-    MemorixNamespace.with_data(  # type: ignore
-        data=MemorixNamespace.NamespaceApiWithData(
-            name="spaceship",
-            default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(
-                cache=MemorixCacheItem.Options(
-                    expire=MemorixCacheItem.Options.Expire(
-                        value=1,
-                    ),
-                ),
-            ),
-        ),
-    )
-):
+class MemorixSpaceship(MemorixBase):
     def __init__(
         self,
-        api: MemorixBaseApi,
+        redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(connection=api._connection)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixSpaceshipCacheApi(self)
+        self._namespace_name_tree = ["spaceship"]
+        self._default_options = MemorixBase.DefaultOptions(
+            cache=MemorixCacheItem.Options(
+                expire=MemorixCacheItem.Options.Expire(
+                    value=1,
+                ),
+            ),
+        )
+
+        self.crew = MemorixSpaceshipCrew(redis_url=redis_url, ref=self)
+
+        self.cache = MemorixCacheSpaceship(self)
 
 
-class MemorixCacheApi(MemorixBaseCacheApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.bestStr = MemorixCacheItemNoKey[str](
@@ -143,8 +165,8 @@ class MemorixCacheApi(MemorixBaseCacheApi):
         )
 
 
-class MemorixPubSubApi(MemorixBasePubSubApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixPubSub(MemorixPubSubBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.message = MemorixPubSubItemNoKey[str](
@@ -154,8 +176,8 @@ class MemorixPubSubApi(MemorixBasePubSubApi):
         )
 
 
-class MemorixTaskApi(MemorixBaseTaskApi):
-    def __init__(self, api: MemorixBaseApi) -> None:
+class MemorixTask(MemorixTaskBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
         self.runAlgo = MemorixTaskItemNoKey[str, "Animal"](
@@ -175,27 +197,25 @@ class MemorixTaskApi(MemorixBaseTaskApi):
         )
 
 
-class MemorixApi(
-    MemorixBaseApi.with_global_data(  # type: ignore
-        data=MemorixBaseApi.BaseApiWithGlobalData(
-            default_options=MemorixBaseApi.BaseApiWithGlobalData.DefaultOptions(
-                cache=MemorixCacheItem.Options(
-                    expire=MemorixCacheItem.Options.Expire(
-                        value=2,
-                    ),
-                ),
-            ),
-        ),
-    )
-):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.spaceship = MemorixSpaceshipNamespace(self)
+        self._namespace_name_tree = []
+        self._default_options = MemorixBase.DefaultOptions(
+            cache=MemorixCacheItem.Options(
+                expire=MemorixCacheItem.Options.Expire(
+                    value=2,
+                ),
+            ),
+        )
 
-        self.cache = MemorixCacheApi(self)
-        self.pubsub = MemorixPubSubApi(self)
-        self.task = MemorixTaskApi(self)
+        self.spaceship = MemorixSpaceship(redis_url=redis_url, ref=self)
+
+        self.cache = MemorixCache(self)
+        self.pubsub = MemorixPubSub(self)
+        self.task = MemorixTask(self)

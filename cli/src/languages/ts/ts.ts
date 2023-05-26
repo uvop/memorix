@@ -222,10 +222,7 @@ ${getTabs(1)}};`
   };
 };
 
-export const codegen: (
-  namespaces: Namespace,
-  shouldExport?: boolean
-) => string = (namespace) => {
+export const codegen: (namespaces: Namespace) => string = (namespace) => {
   const { code, importBase } = namespaceToCode(namespace);
   return `/* eslint-disable */
 ${
