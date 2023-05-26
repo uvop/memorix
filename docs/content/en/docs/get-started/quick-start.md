@@ -65,14 +65,14 @@ Here is a code example of how to use the schema we created
 {{% tab name="Node.js" %}}
 
 ```js
-import MemorixApi from "src/memorix.generated";
+import Memorix from "src/memorix.generated";
 
 const start = async () => {
-  const memorixApi = new MemorixApi({ redisUrl: "redis://localhost:6379/0" });
+  const memorix = new Memorix({ redisUrl: "redis://localhost:6379/0" });
 
-  await memorixApi.cache.hello.set("world");
-  await memorixApi.cache.rating.set(10);
-  const helloValue = await memorixApi.cache.hello.get();
+  await memorix.cache.hello.set("world");
+  await memorix.cache.rating.set(10);
+  const helloValue = await memorix.cache.hello.get();
 
   console.log(helloValue); // Should print "world"
 };
@@ -84,13 +84,13 @@ start();
 {{% tab name="Python" %}}
 
 ```python
-from src.memorix_generated import MemorixApi
+from src.memorix_generated import Memorix
 
-memorix_api = MemorixApi(redis_url="redis://localhost:6379/0")
+memorix = Memorix(redis_url="redis://localhost:6379/0")
 
-memorix_api.cache.hello.set("world")
-memorix_api.cache.rating.set(10)
-hello_value = memorix_api.cache.hello.get()
+memorix.cache.hello.set("world")
+memorix.cache.rating.set(10)
+hello_value = memorix.cache.hello.get()
 
 print(hello_value) # Should print "world"
 ```
