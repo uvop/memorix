@@ -50,8 +50,10 @@ export const getNamespace: (schema: Schema) => Namespace = (schema) => {
       ...schemaNamespace.blocks,
     ],
     subNamespacesByName: new Map([
-      ...subSchemaNamespaces.map((x) => x.subNamespacesByName).flat(),
-      ...schemaNamespace.subNamespacesByName,
+      ...subSchemaNamespaces
+        .map((x) => Array.from(x.subNamespacesByName.entries()))
+        .flat(),
+      ...Array.from(schemaNamespace.subNamespacesByName.entries()),
     ] as any),
   };
 };
