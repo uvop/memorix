@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/uvop/memorix/compare/v1.4.0...v1.4.1) (2023-05-26)
+
+
+### Bug Fixes
+
+* Api changed import ([#44](https://github.com/uvop/memorix/issues/44)) ([60a2214](https://github.com/uvop/memorix/commit/60a2214a8d9dad5bae14bbe174a52b85f16c2250))
+
 # [1.4.0](https://github.com/uvop/memorix/compare/v1.3.0...v1.4.0) (2023-05-26)
 
 
