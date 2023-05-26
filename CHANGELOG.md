@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/uvop/memorix/compare/v1.3.0...v1.4.0) (2023-05-26)
+
+
+### Features
+
+* namespaces, extending schemas and define output by schema ([#43](https://github.com/uvop/memorix/issues/43)) ([233ae31](https://github.com/uvop/memorix/commit/233ae31e72057ca36fd8a9096c1a07038a15622a))
+
 # [1.3.0](https://github.com/uvop/memorix/compare/v1.2.3...v1.3.0) (2023-03-29)
 
 
