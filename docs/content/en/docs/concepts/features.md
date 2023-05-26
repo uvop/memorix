@@ -33,23 +33,23 @@ And to use it in your project
 {{% tab name="Node.js" %}}
 
 ```js
-await memorixApi.cache.adminUser.set({
+await memorix.cache.adminUser.set({
   email: "me@mail.com",
   password: "Aa123456",
 });
-const adminUser = await memorixApi.cache.adminUser.get();
+const adminUser = await memorix.cache.adminUser.get();
 ```
 
 {{% /tab %}}
 {{% tab name="Python" %}}
 
 ```python
-from src.generated_schema import MemorixApi, CacheAdminUser
+from src.generated_schema import Memorix, CacheAdminUser
 
 ...
 
-memorix_api.cache.adminUser.set(CacheAdminUser(email="me@mail.com", password="Aa123456"))
-admin_user = memorix_api.cache.adminUser.get()
+memorix.cache.adminUser.set(CacheAdminUser(email="me@mail.com", password="Aa123456"))
+admin_user = memorix.cache.adminUser.get()
 
 print(hello_value) # Should print "world"
 ```
@@ -78,34 +78,34 @@ And to use it in your project
 {{% tab name="Node.js" %}}
 
 ```js
-await memorixApi.cache.user.set(1, {
+await memorix.cache.user.set(1, {
   email: "me@mail.com",
   password: "Aa123456",
 });
-await memorixApi.cache.user.set(2, {
+await memorix.cache.user.set(2, {
   email: "you@mail.com",
   password: "Aa123456",
 });
-const me = await memorixApi.cache.user.get(1);
+const me = await memorix.cache.user.get(1);
 ```
 
 {{% /tab %}}
 {{% tab name="Python" %}}
 
 ```python
-from src.generated_schema import MemorixApi, CacheUser
+from src.generated_schema import Memorix, CacheUser
 
 ...
 
-memorix_api.cache.user.set(
+memorix.cache.user.set(
   1,
   CacheAdminUser(email="me@mail.com", password="Aa123456"),
 )
-memorix_api.cache.user.set(
+memorix.cache.user.set(
   2,
   CacheAdminUser(email="you@mail.com", password="Aa123456"),
 )
-me = memorix_api.cache.adminUser.get(1)
+me = memorix.cache.adminUser.get(1)
 
 print(hello_value) # Should print "world"
 ```
@@ -174,20 +174,20 @@ And to use it in your project
 {{% tab name="Node.js" %}}
 
 ```js
-await { stop } = memorixApi.pubsub.message.subscribe(({ payload }) => {
+await { stop } = memorix.pubsub.message.subscribe(({ payload }) => {
   // Will be called twice with "hello" then "world"
   console.log("Got payload: " + payload);
 });
-await memorixApi.pubsub.message.publish("hello");
-await memorixApi.pubsub.message.publish("world");
+await memorix.pubsub.message.publish("hello");
+await memorix.pubsub.message.publish("world");
 await stop();
-await memorixApi.pubsub.message.publish("Will be published but no one is listening");
+await memorix.pubsub.message.publish("Will be published but no one is listening");
 ```
 
 You can also subscribe to an [`Async iterable`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) if you don't pass a callback
 
 ```js
-for await (const { payload } of memorixApi.pubsub.message.subscribe()) {
+for await (const { payload } of memorix.pubsub.message.subscribe()) {
   console.log("Got payload: " + payload);
 }
 ```
@@ -200,18 +200,18 @@ To use python pubsub, you need to subscribe on a `Thread` or a `Process` since i
 import multiprocessing
 
 def listen_to_message() -> None:
-    for res in memorix_api.pubsub.message.subscribe():
+    for res in memorix.pubsub.message.subscribe():
         # Will be called twice with "hello" then "world"
         print("Got payload: ", res.payload)
 
 process = multiprocessing.Process(target=listen_to_message)
 
-memorix_api.pubsub.message.publish(payload="hello")
-memorix_api.pubsub.message.publish(payload="world")
+memorix.pubsub.message.publish(payload="hello")
+memorix.pubsub.message.publish(payload="world")
 
 process1.kill()
 
-memorix_api.pubsub.message.publish(payload="Will be published but no one is listening")
+memorix.pubsub.message.publish(payload="Will be published but no one is listening")
 ```
 
 {{% /tab %}}
@@ -242,9 +242,9 @@ And to use it in your project
 {{% tab name="Node.js" %}}
 
 ```js
-await memorixApi.task.addMessage.queue("hello");
-await memorixApi.task.addMessage.queue("world");
-await { stop } = memorixApi.task.addMessage.dequeue(async ({ payload }) => {
+await memorix.task.addMessage.queue("hello");
+await memorix.task.addMessage.queue("world");
+await { stop } = memorix.task.addMessage.dequeue(async ({ payload }) => {
   // Will be called twice with "hello" then "world"
   console.log("Got payload: " + payload);
 
@@ -255,7 +255,7 @@ await { stop } = memorixApi.task.addMessage.dequeue(async ({ payload }) => {
 });
 
 // Clears queue
-await memorix_api.task.addMessage.clear();
+await memorix.task.addMessage.clear();
 ```
 
 {{% /tab %}}
@@ -265,10 +265,10 @@ await memorix_api.task.addMessage.clear();
 
 ```python
 
-memorix_api.task.addMessage.queue(payload="hello")
-memorix_api.task.addMessage.queue(payload="world")
+memorix.task.addMessage.queue(payload="hello")
+memorix.task.addMessage.queue(payload="world")
 
-for res in memorix_api.task.addMessage.dequeque():
+for res in memorix.task.addMessage.dequeque():
     # Will be called twice with "hello" then "world"
     print("Got payload: ", res.payload)
 
@@ -277,7 +277,7 @@ for res in memorix_api.task.addMessage.dequeque():
       break
 
 # Clears queue
-memorix_api.task.addMessage.clear()
+memorix.task.addMessage.clear()
 ```
 
 {{% /tab %}}
@@ -306,13 +306,13 @@ And to use it in your project
 {{% tab name="Node.js" %}}
 
 ```js
-memorixApi.task.addMessage.dequeue(async ({ payload }) => {
+memorix.task.addMessage.dequeue(async ({ payload }) => {
   console.log("Got payload: " + payload);
 
   return true;
 });
 
-const { getReturns } = await memorixApi.task.addMessage.queue("hello");
+const { getReturns } = await memorix.task.addMessage.queue("hello");
 
 const isAddSuccessful = await getReturns();
 
@@ -324,14 +324,14 @@ console.log(isAddSuccessful); // Should print "true"
 
 ```python
 def listen_to_message() -> None:
-    for res in memorix_api.task.addMessage.dequeque():
+    for res in memorix.task.addMessage.dequeque():
         print("Got payload: ", res.payload)
 
         res.send_returns(returns=True)
 
 process = multiprocessing.Process(target=listen_to_message)
 
-queue = memorix_api.task.addMessage.queue(payload="hello")
+queue = memorix.task.addMessage.queue(payload="hello")
 
 res = queue.get_returns()
 
@@ -410,8 +410,8 @@ To use it in your project
 {{% tab name="Node.js" %}}
 
 ```js
-await memorixApi.pubsub.addItem.publish(12);
-await memorixApi.messages.pubsub.addItem.publish("in 'messages' namespace");
+await memorix.pubsub.addItem.publish(12);
+await memorix.messages.pubsub.addItem.publish("in 'messages' namespace");
 ```
 
 {{% /tab %}}
@@ -420,8 +420,8 @@ await memorixApi.messages.pubsub.addItem.publish("in 'messages' namespace");
 > You might want to consider also using a `Thread` or a `Process` just like we did with [`PubSub`](#pubsub), this example won't do that
 
 ```python
-memorix_api.pubusb.addItem.publish(payload=12)
-memorix_api.messages.pubusb.addItem.publish(payload="woin 'messages' namespacerld")
+memorix.pubusb.addItem.publish(payload=12)
+memorix.messages.pubusb.addItem.publish(payload="woin 'messages' namespacerld")
 ```
 
 {{% /tab %}}
