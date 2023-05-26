@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/uvop/memorix/compare/v1.4.1...v1.4.2) (2023-05-26)
+
+
+### Bug Fixes
+
+* codegen not working with extends ([55d7cfb](https://github.com/uvop/memorix/commit/55d7cfb1f033294be17d1069c1eed5f71818b2a0))
+
 ## [1.4.1](https://github.com/uvop/memorix/compare/v1.4.0...v1.4.1) (2023-05-26)
 
 
