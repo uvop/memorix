@@ -1,13 +1,55 @@
-import { Languages, codegenByLanguage } from "src/languages";
+import { Languages } from "src/languages";
+import { codegen } from "src/codgen";
+import fs from "fs";
 
-const codegenTs = (schema: string) =>
-  codegenByLanguage(schema, Languages.typescript).trim();
+jest.mock("fs", () => {
+  return {
+    promises: {
+      writeFile: jest.fn(),
+      readFile: jest.fn(),
+    },
+  };
+});
+
+const codegenTs: (schema: string, moreConfig?: string) => Promise<string> = (
+  schema,
+  moreConfig
+) =>
+  new Promise((res) => {
+    const schemaWithOutput = `
+  Config {
+    output: {
+      language: "${Languages.typescript}"
+      file: "generated.ts"
+    }
+    ${moreConfig}
+  }
+
+  ${schema}
+  `;
+
+    (fs.promises.readFile as jest.Mock).mockImplementation(async () => ({
+      async toString() {
+        return schemaWithOutput;
+      },
+    }));
+    (fs.promises.writeFile as jest.Mock).mockImplementation(
+      async (path, content) => {
+        res(content);
+      }
+    );
+
+    codegen({ schemaFilePath: "schema.memorix" });
+  });
 
 describe("ts codegen", () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
   describe("model", () => {
-    it("can generate from model", () => {
+    it("can generate from model", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Model User {
                 id: int
@@ -18,9 +60,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate from 2 models", () => {
+    it("can generate from 2 models", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Model User1 {
                 id: int
@@ -33,9 +75,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate from model within model", () => {
+    it("can generate from model within model", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Model User {
                 id: int
@@ -47,9 +89,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate from model within model within a model", () => {
+    it("can generate from model within model within a model", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Model User {
                 id: int
@@ -65,9 +107,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate from model with array", () => {
+    it("can generate from model with array", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Model User {
                 id: int
@@ -83,9 +125,9 @@ describe("ts codegen", () => {
     });
   });
   describe("cache", () => {
-    it("can generate with inline types", () => {
+    it("can generate with inline types", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Cache {
               user {
@@ -97,9 +139,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can have options", () => {
+    it("can have options", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Cache {
               user {
@@ -116,9 +158,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate with inline object type", () => {
+    it("can generate with inline object type", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Cache {
               user {
@@ -133,9 +175,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate with no key", () => {
+    it("can generate with no key", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Cache {
               user {
@@ -149,9 +191,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can generate also with model", () => {
+    it("can generate also with model", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
           Cache {
             adminId {
@@ -173,9 +215,9 @@ describe("ts codegen", () => {
     });
   });
   describe("pubsub", () => {
-    it("can generate with inline types", () => {
+    it("can generate with inline types", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             PubSub {
               message {
@@ -189,9 +231,9 @@ describe("ts codegen", () => {
     });
   });
   describe("task", () => {
-    it("can generate with inline types", () => {
+    it("can generate with inline types", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Task {
               doIt {
@@ -204,9 +246,9 @@ describe("ts codegen", () => {
         )
       ).toMatchSnapshot();
     });
-    it("can have options", () => {
+    it("can have options", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Task {
               doIt {
@@ -224,9 +266,9 @@ describe("ts codegen", () => {
     });
   });
   describe("enum", () => {
-    it("can generate", () => {
+    it("can generate", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
             Enum Animals {
               dog
@@ -239,35 +281,96 @@ describe("ts codegen", () => {
     });
   });
   describe("config", () => {
-    it("can generate", () => {
+    it("can generate", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
-            Config {
-              defaultOptions: {
-                cache: {
-                  expire: {
-                    value: 5
-                    extendOnGet: true
-                  }
+            DefaultOptions {
+              cache: {
+                expire: {
+                  value: 5
+                  extendOnGet: true
                 }
-                task: {
-                  takeNewest: true
-                }
+              }
+              task: {
+                takeNewest: true
               }
             }
           `
         )
       ).toMatchSnapshot();
     });
-    it("can be null", () => {
+    it("can be null", async () => {
       expect(
-        codegenTs(
+        await codegenTs(
           `
-            Config {
-              defaultOptions: {
+            DefaultOptions {
+              cache: {
+                expire: null
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+  });
+  describe("namespace", () => {
+    it("can generate", async () => {
+      expect(
+        await codegenTs(
+          `
+            Namespace user {
+              DefaultOptions {
                 cache: {
-                  expire: null
+                  expire: {
+                    value: 5
+                  }
+                }
+              }
+              Cache {
+                bio {
+                  payload: string
+                }
+              }
+            }
+            DefaultOptions {
+              cache: {
+                expire: {
+                  value: 6
+                }
+              }
+            }
+            Cache {
+              favoriteUser {
+                payload: string
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
+    it("are recursive", async () => {
+      expect(
+        await codegenTs(
+          `
+            Namespace user {
+              Namespace comment {
+                DefaultOptions {
+                  cache: {
+                    expire: {
+                      value: 5
+                    }
+                  }
+                }
+                Cache {
+                  get {
+                    payload: string
+                  }
+                }
+              }
+              Cache {
+                bio {
+                  payload: string
                 }
               }
             }

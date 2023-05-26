@@ -9,7 +9,7 @@
     "build": "tsc --project tsconfig.json",
     "codegen": "yarn codegen-example",
     "codegen-example": "yarn codegen-example-1 && yarn codegen-example-replace-1",
-    "codegen-example-1": "(cd ../../../cli && yarn cli codegen ../clients/redis/js/src/example-schema.memorix typescript ../clients/redis/js/src)",
+    "codegen-example-1": "(cd ../../../cli && yarn cli codegen ../clients/redis/js/src/example-schema.memorix)",
     "codegen-example-replace-1": "sed -i '' 's|@memorix/client-redis|./index|g' ./src/example-schema.generated.ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
@@ -17,8 +17,8 @@
     "lint:err": "npm run lint -- --quiet",
     "lint:fix": "npm run lint -- --fix",
     "start": "ts-node -r tsconfig-paths/register src/start.ts",
-    "test": "jest",
-    "test:dev": "yarn test --watch",
+    "test": "jest --forceExit",
+    "test:dev": "yarn test --watch --forceExit",
     "typecheck": "tsc --noEmit"
   },
   "jest": {

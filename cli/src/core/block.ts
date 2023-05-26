@@ -1,4 +1,4 @@
-import { getNamespaces } from "./namespace";
+import { getScopes } from "./scope";
 import {
   getValueFromString,
   ValueType,
@@ -15,16 +15,7 @@ import {
   removeBracketsOfScope,
 } from "./utilities";
 
-export enum BlockTypes {
-  config = "Config",
-  model = "Model",
-  enum = "Enum",
-  cache = "Cache",
-  pubsub = "PubSub",
-  task = "Task",
-}
-
-export type CacheOptions = {
+export type CacheDefaultOptions = {
   expire?: {
     value: number;
     isInMs?: boolean;
@@ -32,17 +23,22 @@ export type CacheOptions = {
   };
 };
 
-export type TaskOptions = {
+export type TaskDefaultOptions = {
   takeNewest: boolean;
 };
 
-export type BlockConfig = {
-  type: BlockTypes.config;
-  defaultOptions?: {
-    cache?: CacheOptions;
-    task?: TaskOptions;
-  };
+export type DefaultOptions = {
+  cache?: CacheDefaultOptions;
+  task?: TaskDefaultOptions;
 };
+
+export enum BlockTypes {
+  model = "Model",
+  enum = "Enum",
+  cache = "Cache",
+  pubsub = "PubSub",
+  task = "Task",
+}
 
 export type BlockModel = {
   type: BlockTypes.model;
@@ -62,7 +58,7 @@ export type BlockCache = {
     name: string;
     key?: ValueType;
     payload: ValueType;
-    options?: CacheOptions;
+    options?: CacheDefaultOptions;
   }[];
 };
 export type BlockPubsub = {
@@ -80,110 +76,102 @@ export type BlockTask = {
     key?: ValueType;
     payload: ValueType;
     returns?: ValueType;
-    options?: TaskOptions;
+    options?: TaskDefaultOptions;
   }[];
 };
 
 export type Block =
-  | BlockConfig
   | BlockModel
   | BlockEnum
   | BlockCache
   | BlockPubsub
   | BlockTask;
 
-export const getBlocks: (schema: string) => Block[] = (schema) => {
-  const namespaces = getNamespaces(schema);
+export const getBlocks: (scopes: ReturnType<typeof getScopes>) => Block[] = (
+  namespaceScopes
+) => {
+  const blocks = namespaceScopes
+    .filter((x) => !x.name.startsWith("Namespace"))
+    .filter((x) => ["Config", "DefaultOptions"].indexOf(x.name) === -1)
+    .map<Block>((n) => {
+      const isNamelessNamespace =
+        [BlockTypes.cache, BlockTypes.pubsub, BlockTypes.task].indexOf(
+          n.name as BlockTypes
+        ) !== -1;
+      if (isNamelessNamespace) {
+        const blockType = n.name as
+          | BlockTypes.cache
+          | BlockTypes.pubsub
+          | BlockTypes.task;
 
-  const blocks = namespaces.map<Block>((n) => {
-    const isNamelessNamespace =
-      [
-        BlockTypes.cache,
-        BlockTypes.pubsub,
-        BlockTypes.task,
-        BlockTypes.config,
-      ].indexOf(n.name as BlockTypes) !== -1;
-    if (isNamelessNamespace) {
-      const blockType = n.name as
-        | BlockTypes.cache
-        | BlockTypes.pubsub
-        | BlockTypes.task
-        | BlockTypes.config;
-      if (blockType === BlockTypes.config) {
-        const json = getJsonFromString(n.scope);
-        if (typeof json !== "object") {
-          throw new Error(`Expected object under "Config"`);
-        }
+        const scopes = getScopes(removeBracketsOfScope(n.scope));
+
         return {
           type: blockType,
-          ...json,
+          values: scopes.map((cn) => {
+            const value = getValueFromString(cn.scope, ["options"]);
+            if (value.type !== ValueTypes.object) {
+              throw new Error(
+                `Expected object under "${blockType}.${cn.name}"`
+              );
+            }
+
+            const payload = value.properties.find((p) => p.name === "payload");
+            if (!payload) {
+              throw new Error(
+                `Couldn't find "payload" under ${blockType}.${cn.name}`
+              );
+            }
+            const options = value.properties.find((p) => p.name === "options");
+
+            return {
+              name: cn.name,
+              key: value.properties.find((p) => p.name === "key")?.value,
+              payload: payload.value,
+              returns:
+                blockType === BlockTypes.task
+                  ? value.properties.find((p) => p.name === "returns")?.value
+                  : undefined,
+              options:
+                options !== undefined &&
+                options.value.type === ValueTypes.string
+                  ? getJsonFromString(options.value.content)
+                  : undefined,
+            };
+          }),
         };
       }
-      const cacheNamespaces = getNamespaces(removeBracketsOfScope(n.scope));
+      const match = /(?<type>(Model|Enum)) (?<name>.*)/g.exec(n.name);
 
-      return {
-        type: blockType,
-        values: cacheNamespaces.map((cn) => {
-          const value = getValueFromString(cn.scope, ["options"]);
-          if (value.type !== ValueTypes.object) {
-            throw new Error(`Expected object under "${blockType}.${cn.name}"`);
-          }
+      if (!match || !match.groups) {
+        throw new Error(`Invalid scope "${n.name}"`);
+      }
 
-          const payload = value.properties.find((p) => p.name === "payload");
-          if (!payload) {
-            throw new Error(
-              `Couldn't find "payload" under ${blockType}.${cn.name}`
-            );
-          }
-          const options = value.properties.find((p) => p.name === "options");
+      const blockType = match.groups.type as BlockTypes.model | BlockTypes.enum;
+      const name = match.groups.name.trim() as string;
 
-          return {
-            name: cn.name,
-            key: value.properties.find((p) => p.name === "key")?.value,
-            payload: payload.value,
-            returns:
-              blockType === BlockTypes.task
-                ? value.properties.find((p) => p.name === "returns")?.value
-                : undefined,
-            options:
-              options !== undefined && options.value.type === ValueTypes.string
-                ? getJsonFromString(options.value.content)
-                : undefined,
-          };
-        }),
-      };
-    }
-    const match = /(?<type>(Model|Enum)) (?<name>.*)/g.exec(n.name);
+      if (blockType === BlockTypes.enum) {
+        return {
+          type: blockType,
+          name,
+          values: removeBracketsOfScope(n.scope)
+            .split("\n")
+            .map((x) => x.trim())
+            .filter((x) => x.length > 0),
+        };
+      }
 
-    if (!match || !match.groups) {
-      throw new Error(`Invalid namespace "${n.name}"`);
-    }
+      const value = getValueFromString(n.scope);
+      if (value.type !== ValueTypes.object) {
+        throw new Error(`Expected object under "${blockType}.${n.name}"`);
+      }
 
-    const blockType = match.groups.type as BlockTypes.model | BlockTypes.enum;
-    const name = match.groups.name.trim() as string;
-
-    if (blockType === BlockTypes.enum) {
       return {
         type: blockType,
         name,
-        values: removeBracketsOfScope(n.scope)
-          .split("\n")
-          .map((x) => x.trim())
-          .filter((x) => x.length > 0),
+        properties: value.properties,
       };
-    }
-
-    const value = getValueFromString(n.scope);
-    if (value.type !== ValueTypes.object) {
-      throw new Error(`Expected object under "${blockType}.${n.name}"`);
-    }
-
-    return {
-      type: blockType,
-      name,
-      properties: value.properties,
-    };
-  });
+    });
 
   return blocks;
 };
@@ -252,10 +240,9 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
   let newBlocks: Block[] = [];
 
   blocks
-    .filter((b) => [BlockTypes.enum, BlockTypes.config].indexOf(b.type) === -1)
+    .filter((b) => [BlockTypes.enum].indexOf(b.type) === -1)
     .forEach((b) => {
       switch (b.type) {
-        case BlockTypes.config:
         case BlockTypes.enum:
           break;
         case BlockTypes.model: {
@@ -380,9 +367,7 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
     });
 
   return [
-    ...blocks.filter(
-      (b) => [BlockTypes.enum, BlockTypes.config].indexOf(b.type) !== -1
-    ),
+    ...blocks.filter((b) => [BlockTypes.enum].indexOf(b.type) !== -1),
     ...newBlocks,
   ];
 };

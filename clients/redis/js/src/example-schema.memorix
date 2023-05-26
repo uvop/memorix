@@ -1,8 +1,32 @@
 Config {
-    defaultOptions: {
-        cache: {
-            expire: {
-                value: 2
+    output: [
+        {
+            language: "typescript"
+            file: "example-schema.generated.ts"
+        }
+    ]
+}
+
+DefaultOptions {
+    cache: {
+        expire: {
+            value: 2
+        }
+    }
+}
+
+Namespace spaceship {
+    Cache {
+        pilot {
+            payload: {
+                name: string
+            }
+        }
+    }
+    Namespace crew {
+        Cache {
+            count {
+                payload: int
             }
         }
     }

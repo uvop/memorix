@@ -8,29 +8,19 @@ else:
 
 from enum import Enum
 from memorix_client_redis import (
-    MemorixClientApi,
-    MemorixClientApiDefaults as _MemorixClientApiDefaults,
-    MemorixClientCacheApi,
-    MemorixClientCacheApiItem,
-    MemorixClientCacheApiItemNoKey,
-    MemorixClientCacheOptions as _MemorixClientCacheOptions,
-    MemorixClientCacheOptionsExpire as _MemorixClientCacheOptionsExpire,
-    MemorixClientPubSubApi,
-    MemorixClientPubSubApiItem,
-    MemorixClientPubSubApiItemNoKey,
-    MemorixClientTaskApi,
-    MemorixClientTaskApiItem,
-    MemorixClientTaskApiItemNoKey,
-    MemorixClientTaskApiItemNoReturns,
-    MemorixClientTaskApiItemNoKeyNoReturns,
-    MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions,
+    MemorixBase,
+    MemorixCacheBase,
+    MemorixCacheItem,
+    MemorixCacheItemNoKey,
+    MemorixPubSubBase,
+    MemorixPubSubItem,
+    MemorixPubSubItemNoKey,
+    MemorixTaskBase,
+    MemorixTaskItem,
+    MemorixTaskItemNoKey,
+    MemorixTaskItemNoReturns,
+    MemorixTaskItemNoKeyNoReturns,
 )
-
-
-MemorixClientApiDefaults = _MemorixClientApiDefaults
-MemorixClientCacheOptions = _MemorixClientCacheOptions
-MemorixClientCacheOptionsExpire = _MemorixClientCacheOptionsExpire
-MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions
 
 
 class Animal(str, Enum):
@@ -45,53 +35,55 @@ class User(object):
     age: typing.Optional[int]
 
 
-class MemorixCacheApi(MemorixClientCacheApi):
-    def __init__(self, api: MemorixClientApi) -> None:
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.favoriteAnimal = MemorixClientCacheApiItem[str, "Animal"](
-            api=self._api,
+        self.favoriteAnimal = MemorixCacheItem[str, "Animal"](
+            api=api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixClientCacheApiItem[str, "User"](
-            api=self._api,
+        self.user = MemorixCacheItem[str, "User"](
+            api=api,
             id="user",
             payload_class=User,
         )
 
 
-class MemorixPubSubApi(MemorixClientPubSubApi):
-    def __init__(self, api: MemorixClientApi) -> None:
+class MemorixPubSub(MemorixPubSubBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.message = MemorixClientPubSubApiItemNoKey[str](
-            api=self._api,
+        self.message = MemorixPubSubItemNoKey[str](
+            api=api,
             id="message",
             payload_class=str,
         )
 
 
-class MemorixTaskApi(MemorixClientTaskApi):
-    def __init__(self, api: MemorixClientApi) -> None:
+class MemorixTask(MemorixTaskBase):
+    def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.runAlgo = MemorixClientTaskApiItemNoKey[str, "Animal"](
-            api=self._api,
+        self.runAlgo = MemorixTaskItemNoKey[str, "Animal"](
+            api=api,
             id="runAlgo",
             payload_class=str,
             returns_class=Animal,
         )
 
 
-class MemorixApi(MemorixClientApi):
+class Memorix(MemorixBase):
     def __init__(
         self,
         redis_url: str,
-        defaults: typing.Optional[MemorixClientApiDefaults] = None,
+        ref: typing.Optional[MemorixBase] = None,
     ) -> None:
-        super().__init__(redis_url=redis_url, defaults=defaults)
+        super().__init__(redis_url=redis_url, ref=ref)
 
-        self.cache = MemorixCacheApi(self)
-        self.pubsub = MemorixPubSubApi(self)
-        self.task = MemorixTaskApi(self)
+        self._namespace_name_tree = []
+
+        self.cache = MemorixCache(self)
+        self.pubsub = MemorixPubSub(self)
+        self.task = MemorixTask(self)

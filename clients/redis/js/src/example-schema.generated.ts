@@ -1,5 +1,25 @@
 /* eslint-disable */
-import { MemorixClientApi } from "./index";
+import { MemorixBase } from "./index";
+
+class MemorixSpaceshipCrew extends MemorixBase {
+  protected namespaceNameTree = ["spaceship", "crew"];
+
+  cache = {
+    count: this.getCacheItemNoKey<number>("count"),
+  };
+}
+
+class MemorixSpaceship extends MemorixBase {
+  protected namespaceNameTree = ["spaceship"];
+
+  crew = this.getNamespaceItem(MemorixSpaceshipCrew);
+
+  cache = {
+    pilot: this.getCacheItemNoKey<{
+      name: string;
+    }>("pilot"),
+  };
+}
 
 export enum Animal {
   dog = "dog",
@@ -12,8 +32,14 @@ export type User = {
   age?: number;
 };
 
-// prettier-ignore
-export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:2}}}}) {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
+  // prettier-ignore
+  protected defaultOptions = {cache:{expire:{value:2}}};
+
+  spaceship = this.getNamespaceItem(MemorixSpaceship);
+
   cache = {
     favoriteAnimal: this.getCacheItem<string, Animal>("favoriteAnimal"),
     user: this.getCacheItem<string, User>("user"),

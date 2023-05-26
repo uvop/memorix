@@ -2,90 +2,113 @@
 
 exports[`ts codegen cache can generate also with model 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
 export type User = {
   name: string;
   age?: number;
 };
 
-export class MemorixApi extends MemorixClientApi {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
   cache = {
     adminId: this.getCacheItemNoKey<string | undefined>(\\"adminId\\"),
     user: this.getCacheItem<string, User>(\\"user\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen cache can generate with inline object type 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-export class MemorixApi extends MemorixClientApi {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
   cache = {
     user: this.getCacheItem<number, {
       name: string;
       age?: number;
     } | undefined>(\\"user\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen cache can generate with inline types 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-export class MemorixApi extends MemorixClientApi {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
   cache = {
     user: this.getCacheItem<number, string>(\\"user\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen cache can generate with no key 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-export class MemorixApi extends MemorixClientApi {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
   cache = {
     user: this.getCacheItemNoKey<{
       name: string;
       age?: number;
     } | undefined>(\\"user\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen cache can have options 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-export class MemorixApi extends MemorixClientApi {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
   cache = {
     // prettier-ignore
     user: this.getCacheItem<number, string>(\\"user\\", {expire:{value:5}}),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen config can be null 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-// prettier-ignore
-export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:undefined}}}) {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
 
-}"
+  // prettier-ignore
+  protected defaultOptions = {cache:{expire:undefined}};
+
+}
+"
 `;
 
 exports[`ts codegen config can generate 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-// prettier-ignore
-export class MemorixApi extends MemorixClientApi.fromConfig({defaultOptions:{cache:{expire:{value:5,extendOnGet:true}},task:{takeNewest:true}}}) {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
 
-}"
+  // prettier-ignore
+  protected defaultOptions = {cache:{expire:{value:5,extendOnGet:true}},task:{takeNewest:true}};
+
+}
+"
 `;
 
 exports[`ts codegen enum can generate 1`] = `
@@ -94,7 +117,8 @@ export enum Animals {
   dog = \\"dog\\",
   cat = \\"cat\\",
   person = \\"person\\",
-}"
+}
+"
 `;
 
 exports[`ts codegen model can generate from 2 models 1`] = `
@@ -106,7 +130,8 @@ export type User1 = {
 export type User2 = {
   name: string;
   age?: number;
-};"
+};
+"
 `;
 
 exports[`ts codegen model can generate from model 1`] = `
@@ -115,7 +140,8 @@ export type User = {
   id: number;
   name: string;
   age?: number;
-};"
+};
+"
 `;
 
 exports[`ts codegen model can generate from model with array 1`] = `
@@ -127,7 +153,8 @@ export type User = {
     id: number;
     name?: string;
   } | undefined>;
-};"
+};
+"
 `;
 
 exports[`ts codegen model can generate from model within model 1`] = `
@@ -137,7 +164,8 @@ export type User = {
   papa: {
     name?: string;
   };
-};"
+};
+"
 `;
 
 exports[`ts codegen model can generate from model within model within a model 1`] = `
@@ -151,39 +179,112 @@ export type User = {
     };
     age: number;
   };
-};"
+};
+"
+`;
+
+exports[`ts codegen namespace are recursive 1`] = `
+"/* eslint-disable */
+import { MemorixBase } from \\"@memorix/client-redis\\";
+
+class MemorixUserComment extends MemorixBase {
+  protected namespaceNameTree = [\\"user\\", \\"comment\\"];
+
+  // prettier-ignore
+  protected defaultOptions = {cache:{expire:{value:5}}};
+
+  cache = {
+    get: this.getCacheItemNoKey<string>(\\"get\\"),
+  };
+}
+
+class MemorixUser extends MemorixBase {
+  protected namespaceNameTree = [\\"user\\"];
+
+  comment = this.getNamespaceItem(MemorixUserComment);
+
+  cache = {
+    bio: this.getCacheItemNoKey<string>(\\"bio\\"),
+  };
+}
+
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
+  user = this.getNamespaceItem(MemorixUser);
+}
+"
+`;
+
+exports[`ts codegen namespace can generate 1`] = `
+"/* eslint-disable */
+import { MemorixBase } from \\"@memorix/client-redis\\";
+
+class MemorixUser extends MemorixBase {
+  protected namespaceNameTree = [\\"user\\"];
+
+  // prettier-ignore
+  protected defaultOptions = {cache:{expire:{value:5}}};
+
+  cache = {
+    bio: this.getCacheItemNoKey<string>(\\"bio\\"),
+  };
+}
+
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
+  // prettier-ignore
+  protected defaultOptions = {cache:{expire:{value:6}}};
+
+  user = this.getNamespaceItem(MemorixUser);
+
+  cache = {
+    favoriteUser: this.getCacheItemNoKey<string>(\\"favoriteUser\\"),
+  };
+}
+"
 `;
 
 exports[`ts codegen pubsub can generate with inline types 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-export class MemorixApi extends MemorixClientApi {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
   pubsub = {
     message: this.getPubsubItem<number, string>(\\"message\\"),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen task can generate with inline types 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-export class MemorixApi extends MemorixClientApi {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
   task = {
     doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true),
   };
-}"
+}
+"
 `;
 
 exports[`ts codegen task can have options 1`] = `
 "/* eslint-disable */
-import { MemorixClientApi } from \\"@memorix/client-redis\\";
+import { MemorixBase } from \\"@memorix/client-redis\\";
 
-export class MemorixApi extends MemorixClientApi {
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
   task = {
     // prettier-ignore
     doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true, {takeNewest:true}),
   };
-}"
+}
+"
 `;

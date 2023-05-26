@@ -1,44 +1,57 @@
-type NamespaceType = {
-  name: string;
-  scope: string;
+import { Block, DefaultOptions, getBlocks } from "./block";
+import { getJsonFromString } from "./json";
+import { Schema } from "./schema";
+import { getScopes } from "./scope";
+import { removeBracketsOfScope } from "./utilities";
+
+export type Namespace = {
+  defaultOptions?: DefaultOptions;
+  blocks: Block[];
+  subNamespacesByName: Map<string, Namespace>;
 };
 
-export const getNamespaces: (content: string) => NamespaceType[] = (
-  content
+const getNamespaceByScopes: (scopes: Schema["scopes"]) => Namespace = (
+  scopes
 ) => {
-  const namespaces: NamespaceType[] = [];
-  let index = 0;
-
-  while (index < content.length) {
-    const contentFromIndex = content.substring(index);
-    const scopeIndex = contentFromIndex.indexOf("{");
-    if (scopeIndex === -1) {
-      break;
+  const blocks = getBlocks(scopes);
+  const defaultOptionsScope = scopes.find((x) => x.name === "DefaultOptions");
+  const defaultOptions = defaultOptionsScope
+    ? (getJsonFromString(defaultOptionsScope.scope) as DefaultOptions)
+    : undefined;
+  const subNamespacesByName = new Map<string, Namespace>();
+  scopes.forEach((s) => {
+    const match = /(?<type>Namespace) (?<name>.*)/g.exec(s.name);
+    if (!match?.groups?.name) {
+      return;
     }
-    const name = contentFromIndex.substring(0, scopeIndex).trim();
+    const name = match.groups.name.trim();
+    const namespace = getNamespaceByScopes(
+      getScopes(removeBracketsOfScope(s.scope))
+    );
 
-    let unclosedBracketCount = 1;
-    let scopeEndIndex = scopeIndex + 1;
-    while (unclosedBracketCount !== 0) {
-      const contentForSearch = contentFromIndex.substring(scopeEndIndex);
-      const nextBracketOpen = contentForSearch.indexOf("{");
-      const nextBracketClose = contentForSearch.indexOf("}");
-      if (nextBracketOpen === -1 || nextBracketClose < nextBracketOpen) {
-        unclosedBracketCount -= 1;
-        scopeEndIndex += nextBracketClose + 1;
-      } else {
-        unclosedBracketCount += 1;
-        scopeEndIndex += nextBracketOpen + 1;
-      }
-    }
+    subNamespacesByName.set(name, namespace);
+  });
 
-    const scope = contentFromIndex.substring(scopeIndex, scopeEndIndex);
-    index += scopeEndIndex;
-    namespaces.push({
-      name,
-      scope,
-    });
-  }
+  return {
+    defaultOptions,
+    blocks,
+    subNamespacesByName,
+  };
+};
 
-  return namespaces;
+export const getNamespace: (schema: Schema) => Namespace = (schema) => {
+  const schemaNamespace = getNamespaceByScopes(schema.scopes);
+  const subSchemaNamespaces = schema.subSchemas.map((x) => getNamespace(x));
+
+  return {
+    defaultOptions: schemaNamespace.defaultOptions,
+    blocks: [
+      ...subSchemaNamespaces.map((x) => x.blocks).flat(),
+      ...schemaNamespace.blocks,
+    ],
+    subNamespacesByName: new Map([
+      ...subSchemaNamespaces.map((x) => x.subNamespacesByName).flat(),
+      ...schemaNamespace.subNamespacesByName,
+    ] as any),
+  };
 };

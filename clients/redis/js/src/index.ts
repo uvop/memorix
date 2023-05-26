@@ -1,1 +1,1 @@
-export { MemorixBaseApi as MemorixClientApi } from "./MemorixBaseApi";
+export { MemorixBase } from "./MemorixBase";

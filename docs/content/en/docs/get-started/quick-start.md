@@ -17,8 +17,21 @@ Now we have all the tools needed to create our schema and start using it!
 
 First, lets create a basic schema.
 
-- Create a file with name `schema.memorix` in the root of your project
+- Create a file with name `schema.memorix` in the root of your project (remove unwanted output languages)
   ```
+  Config {
+    output: [
+        {
+            language: "typescript"
+            file: "memorix.generated.ts"
+        }
+        {
+            language: "python"
+            file: "memorix_generated.py"
+        }
+    ]
+  }
+
   Cache {
       hello {
           payload: string
@@ -27,46 +40,18 @@ First, lets create a basic schema.
           payload: int
       }
   }
+
   PubSub {
       message {
           payload: string
       }
   }
   ```
-- Now we can generate code for the schema we created using the `Memorix CLI` (and on future schema changes)
-  {{< tabs >}}
-  {{% tab name="Node.js" %}}
-  Add this to your `package.json`
-
-  ```json
-  "scripts": {
-    ...
-    "memorix": "memorix codegen ./schema.memorix typescript src/memorix-api.ts"
-  }
-  ```
-
-  Now run this in your terminal
+- Now we can generate code for the schema we created using the `Memorix CLI` (and on future schema changes), simply un this in your terminal
 
   ```bash
-  npm run memorix
+  memorix codegen ./schema.memorix
   ```
-
-  or
-
-  ```bash
-  yarn memorix
-  ```
-
-  {{% /tab %}}
-  {{% tab name="Python" %}}
-  Run this in your terminal
-
-  ```bash
-  memorix codegen ./schema.memorix python <projects_name>/memorix_api.py
-  ```
-
-  {{% /tab %}}
-  {{< /tabs >}}
 
   - Now API files have been generated in your source code folder, you can start using the API.
 
@@ -80,7 +65,7 @@ Here is a code example of how to use the schema we created
 {{% tab name="Node.js" %}}
 
 ```js
-import MemorixApi from "src/generated-schema";
+import MemorixApi from "src/memorix.generated";
 
 const start = async () => {
   const memorixApi = new MemorixApi({ redisUrl: "redis://localhost:6379/0" });
@@ -99,7 +84,7 @@ start();
 {{% tab name="Python" %}}
 
 ```python
-from src.generated_schema import MemorixApi
+from src.memorix_generated import MemorixApi
 
 memorix_api = MemorixApi(redis_url="redis://localhost:6379/0")
 

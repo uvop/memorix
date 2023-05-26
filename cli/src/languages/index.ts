@@ -1,20 +1,24 @@
 import { assertUnreachable } from "src/core/utilities";
-import { codegenTs } from "./ts/ts";
-import { codegenPython } from "./python/python";
+import { Namespace } from "src/core/namespace";
+import { codegen as codegenTs } from "./ts/ts";
+import { codegen as codegenPython } from "./python/python";
 
 export enum Languages {
   typescript = "typescript",
   python = "python",
 }
 
-type CodegenByLanguageFn = (schema: string, language: Languages) => string;
+type CodegenByLanguageFn = (
+  namespace: Namespace,
+  language: Languages
+) => string;
 
-export const codegenByLanguage: CodegenByLanguageFn = (scope, language) => {
+export const codegenByLanguage: CodegenByLanguageFn = (namespace, language) => {
   switch (language) {
     case Languages.typescript:
-      return codegenTs(scope);
+      return codegenTs(namespace);
     case Languages.python:
-      return codegenPython(scope);
+      return codegenPython(namespace);
     default:
       assertUnreachable(language);
       return "";

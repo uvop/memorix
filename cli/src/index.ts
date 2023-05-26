@@ -1,60 +1,27 @@
 #!/usr/bin/env node
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-import { Languages } from "./languages";
 import { codegen } from "./codgen";
 import { printLogo } from "./print-logo";
 
-printLogo();
-
 yargs(hideBin(process.argv))
   .command(
-    "codegen <schemaFilePath> <files...>",
+    "codegen <schemaFilePath..>",
     `Codegen memorix schema to code
 
-Example: memorix codegen ./schema.memorix python ./schema_generated.py`,
+Example: memorix codegen ./schema.memorix`,
     (b) => {
-      return b
-        .positional("schemaFilePath", {
-          describe: "Memorix schema file",
-        })
-        .positional("files", {
-          describe: "Pairs of language to codegen and destination file",
-        });
+      return b.positional("schemaFilePath", {
+        describe: "Memorix schema files",
+        array: true,
+        type: "string",
+      });
     },
     (argv) => {
-      const { schemaFilePath, files } = argv as {
-        schemaFilePath: string;
-        files: string[];
-      };
-      const parsedFiles: Parameters<typeof codegen>[0]["files"] = [];
-
-      for (let index = 0; index < files.length; index += 2) {
-        const languageStr = files[index];
-        const dist = files[index + 1];
-        const language = Languages[languageStr];
-        if (language === undefined) {
-          throw new Error(
-            `Unknown language, got "${languageStr}", expected one of "${Object.keys(
-              Languages
-            ).join(", ")}"`
-          );
-        }
-        if (dist === undefined) {
-          throw new Error(`Must pass path for "${language}" codegen`);
-        }
-        parsedFiles.push({
-          dist,
-          language,
-        });
-      }
-      if (parsedFiles.length === 0) {
-        throw new Error(`Didn't get any languages to codegen`);
-      }
+      const schemaFilePath = argv.schemaFilePath!;
       printLogo();
       codegen({
         schemaFilePath,
-        files: parsedFiles,
       });
     }
   )

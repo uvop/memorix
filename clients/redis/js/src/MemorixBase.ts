@@ -15,55 +15,36 @@ import {
 } from "./types";
 import { hashKey } from "./utils/hashKey";
 
-type Defaults = {
-  cacheOptions?: CacheOptions;
-  taskOptions?: TaskOptions;
+export type DefaultOptions = {
+  cache?: CacheOptions;
+  task?: TaskOptions;
 };
 
-export class MemorixBaseApi {
-  public static fromConfig: (config: {
-    defaultOptions: { cache?: CacheOptions; task?: TaskOptions };
-  }) => typeof MemorixBaseApi = ({ defaultOptions }) =>
-    class MemorixBaseApiWithConfig extends MemorixBaseApi {
-      constructor(options) {
-        super({
-          ...options,
-          defaults: {
-            ...(defaultOptions.cache
-              ? {
-                  cacheOptions: defaultOptions.cache,
-                }
-              : {}),
-            ...(defaultOptions.task
-              ? {
-                  taskOptions: defaultOptions.task,
-                }
-              : {}),
-            ...options.defaults,
-          },
-        });
-      }
-    };
+export class MemorixBase {
+  protected namespaceNameTree: string[];
 
-  private readonly redis: Redis;
+  protected defaultOptions?: DefaultOptions;
 
-  private readonly redisSub: Redis;
+  private redis: Redis;
 
-  private readonly defaults?: Defaults;
+  private redisSub: Redis;
 
   private redisTasks: Redis[];
 
-  constructor({
-    redisUrl,
-    defaults,
-  }: {
-    redisUrl: string;
-    defaults?: Defaults;
-  }) {
-    this.redis = new Redis(redisUrl, { lazyConnect: true });
-    this.redisSub = this.redis.duplicate();
-    this.redisTasks = [];
-    this.defaults = defaults;
+  static create: () => MemorixBase = () => {
+    return Object.create(this.prototype);
+  };
+
+  constructor({ redisUrl }: { redisUrl: string }, ref?: MemorixBase) {
+    if (ref) {
+      this.redis = ref.redis;
+      this.redisSub = ref.redisSub;
+      this.redisTasks = ref.redisTasks;
+    } else {
+      this.redis = new Redis(redisUrl, { lazyConnect: true });
+      this.redisSub = this.redis.duplicate();
+      this.redisTasks = [];
+    }
   }
 
   async connect(): Promise<void> {
@@ -79,18 +60,28 @@ export class MemorixBaseApi {
     });
   }
 
-  getCacheItem<Key, Payload>(
+  protected getNamespaceItem<T extends MemorixBase>(
+    NamespaceClass: new (...arg: ConstructorParameters<typeof MemorixBase>) => T
+  ): T {
+    return new NamespaceClass({ redisUrl: "unused" }, this);
+  }
+
+  protected getCacheItem<Key, Payload>(
     identifier: string,
     iOptions?: CacheOptions
   ): CacheItem<Key, Payload> {
     const hashCacheKey = (key: Key | undefined) => {
-      return hashKey(key ? [identifier, key] : [identifier]);
+      return hashKey(
+        key
+          ? [...this.namespaceNameTree, identifier, key]
+          : [...this.namespaceNameTree, identifier]
+      );
     };
 
     const cacheItem: CacheItem<Key, Payload> = {
       set: async (key, payload, options) => {
         const { expire = undefined } = {
-          ...this.defaults?.cacheOptions,
+          ...this.defaultOptions?.cache,
           ...iOptions,
           ...options,
         };
@@ -106,7 +97,7 @@ export class MemorixBaseApi {
       },
       get: async (key, options) => {
         const { expire } = {
-          ...this.defaults?.cacheOptions,
+          ...this.defaultOptions?.cache,
           ...iOptions,
           ...options,
         };
@@ -122,7 +113,7 @@ export class MemorixBaseApi {
       },
       extend: async (key) => {
         const { expire = undefined } = {
-          ...this.defaults?.cacheOptions,
+          ...this.defaultOptions?.cache,
           ...iOptions,
         };
 
@@ -141,7 +132,9 @@ export class MemorixBaseApi {
     return cacheItem;
   }
 
-  getCacheItemNoKey<Payload>(...itemArgs: any[]): CacheItemNoKey<Payload> {
+  protected getCacheItemNoKey<Payload>(
+    ...itemArgs: any[]
+  ): CacheItemNoKey<Payload> {
     const item = (this.getCacheItem as any)(...itemArgs);
 
     return {
@@ -151,9 +144,15 @@ export class MemorixBaseApi {
     };
   }
 
-  getPubsubItem<Key, Payload>(identifier: string): PubsubItem<Key, Payload> {
+  protected getPubsubItem<Key, Payload>(
+    identifier: string
+  ): PubsubItem<Key, Payload> {
     const hashPubsubKey = (key: Key | undefined) => {
-      return hashKey(key ? [identifier, key] : [identifier]);
+      return hashKey(
+        key
+          ? [...this.namespaceNameTree, identifier, key]
+          : [...this.namespaceNameTree, identifier]
+      );
     };
 
     return {
@@ -208,7 +207,9 @@ export class MemorixBaseApi {
     };
   }
 
-  getPubsubItemNoKey<Payload>(...itemArgs: any[]): PubsubItemNoKey<Payload> {
+  protected getPubsubItemNoKey<Payload>(
+    ...itemArgs: any[]
+  ): PubsubItemNoKey<Payload> {
     const item = (this.getPubsubItem as any)(...itemArgs);
 
     return {
@@ -217,13 +218,17 @@ export class MemorixBaseApi {
     };
   }
 
-  getTaskItem<Key, Payload, Returns>(
+  protected getTaskItem<Key, Payload, Returns>(
     identifier: string,
     hasReturns: Returns extends undefined ? false : true,
     iOptions?: TaskOptions
   ): TaskItem<Key, Payload, Returns> {
     const hashPubsubKey = (key: Key | undefined) => {
-      return hashKey(key ? [identifier, key] : [identifier]);
+      return hashKey(
+        key
+          ? [...this.namespaceNameTree, identifier, key]
+          : [...this.namespaceNameTree, identifier]
+      );
     };
 
     const returnTask = hasReturns
@@ -271,7 +276,7 @@ export class MemorixBaseApi {
       dequeue: async (key, callback, options) => {
         const hashedKey = hashPubsubKey(key);
         const { takeNewest = false } = {
-          ...this.defaults?.taskOptions,
+          ...this.defaultOptions?.task,
           ...iOptions,
           ...options,
         };
@@ -326,7 +331,7 @@ export class MemorixBaseApi {
     };
   }
 
-  getTaskItemNoKey<Payload, Returns>(
+  protected getTaskItemNoKey<Payload, Returns>(
     ...itemArgs: any[]
   ): TaskItemNoKey<Payload, Returns> {
     const item = (this.getTaskItem as any)(...itemArgs);

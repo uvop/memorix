@@ -3,15 +3,20 @@ import {
   BlockCache,
   BlockTask,
   BlockTypes,
+  DefaultOptions,
   flatBlocks,
-  getBlocks,
 } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
-import { assertUnreachable, getTabs as get2Tabs } from "src/core/utilities";
+import {
+  assertUnreachable,
+  camelCase,
+  getTabs as get2Tabs,
+} from "src/core/utilities";
+import { Namespace } from "src/core/namespace";
 
 const getTabs = (x: number) => get2Tabs(x * 2);
 
-const blockOptionsToPython: (
+const blockOptionsToCode: (
   blockType: BlockTypes,
   options: (BlockCache | BlockTask)["values"][number]["options"],
   level: number
@@ -20,10 +25,10 @@ const blockOptionsToPython: (
     case BlockTypes.cache: {
       const o = options as BlockCache["values"][number]["options"];
       return o
-        ? `MemorixClientCacheOptions(
+        ? `MemorixCacheItem.Options(
 ${getTabs(level + 1)}expire=${
             o.expire
-              ? `MemorixClientCacheOptionsExpire(
+              ? `MemorixCacheItem.Options.Expire(
 ${getTabs(level + 2)}value=${o.expire.value},${
                   o.expire.isInMs !== undefined
                     ? `
@@ -44,15 +49,14 @@ ${getTabs(level)})`
     case BlockTypes.task: {
       const o = options as BlockTask["values"][number]["options"];
       return o
-        ? `MemorixClientTaskDequequeOptions(
+        ? `MemorixTaskItem.Options(
 ${getTabs(level + 1)}take_newest=${o.takeNewest ? "True" : "False"},
 ${getTabs(level)})`
         : "None";
     }
     case BlockTypes.enum:
     case BlockTypes.pubsub:
-    case BlockTypes.model:
-    case BlockTypes.config: {
+    case BlockTypes.model: {
       throw new Error("No options yet");
     }
     default:
@@ -61,7 +65,7 @@ ${getTabs(level)})`
   }
 };
 
-const valueToPython: (value: ValueType, isType: boolean) => string = (
+const valueToCode: (value: ValueType, isType: boolean) => string = (
   value,
   isType
 ) => {
@@ -81,7 +85,7 @@ const valueToPython: (value: ValueType, isType: boolean) => string = (
       valuePython = `${value.name}`;
     }
   } else if (value.type === ValueTypes.array) {
-    valuePython = `typing.List[${valueToPython(value.value, isType)}]`;
+    valuePython = `typing.List[${valueToCode(value.value, isType)}]`;
   } else {
     throw new Error(
       "Shouldn't get here, all inline objects became models, maybe forgot 'flatBlocks()?'"
@@ -93,13 +97,13 @@ const valueToPython: (value: ValueType, isType: boolean) => string = (
   }`;
 };
 
-const blockToPython: (block: Block) => string = (b) => {
+const blockToCode: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
       return `@dataclass
 class ${b.name}(object):
 ${b.properties
-  .map((p) => `${getTabs(1)}${p.name}: ${valueToPython(p.value, true)}`)
+  .map((p) => `${getTabs(1)}${p.name}: ${valueToCode(p.value, true)}`)
   .join(`\n`)}`;
     case BlockTypes.enum:
       return `class ${b.name}(str, Enum):
@@ -108,9 +112,9 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
     case BlockTypes.pubsub:
     case BlockTypes.task: {
       const itemClass = {
-        [BlockTypes.cache]: "MemorixClientCacheApiItem",
-        [BlockTypes.pubsub]: "MemorixClientPubSubApiItem",
-        [BlockTypes.task]: "MemorixClientTaskApiItem",
+        [BlockTypes.cache]: "MemorixCacheItem",
+        [BlockTypes.pubsub]: "MemorixPubSubItem",
+        [BlockTypes.task]: "MemorixTaskItem",
       }[b.type];
       const hasReturns = b.type === BlockTypes.task;
 
@@ -119,58 +123,25 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
           return `${getTabs(2)}self.${v.name} = ${itemClass}${
             v.key ? "" : "NoKey"
           }${hasReturns && !v.returns ? "NoReturns" : ""}[${
-            v.key ? `${valueToPython(v.key, true)}, ` : ""
-          }${valueToPython(v.payload, true)}${
-            v.returns ? `, ${valueToPython(v.returns, true)}` : ""
+            v.key ? `${valueToCode(v.key, true)}, ` : ""
+          }${valueToCode(v.payload, true)}${
+            v.returns ? `, ${valueToCode(v.returns, true)}` : ""
           }](
-${getTabs(3)}api=self._api,
+${getTabs(3)}api=api,
 ${getTabs(3)}id="${v.name}",
-${getTabs(3)}payload_class=${valueToPython(v.payload, false)},${
+${getTabs(3)}payload_class=${valueToCode(v.payload, false)},${
             v.returns
-              ? `\n${getTabs(3)}returns_class=${valueToPython(
-                  v.returns,
-                  false
-                )},`
+              ? `\n${getTabs(3)}returns_class=${valueToCode(v.returns, false)},`
               : ""
           }${
             v.options !== undefined
               ? `
-${getTabs(3)}options=${blockOptionsToPython(b.type, v.options, 3)},`
+${getTabs(3)}options=${blockOptionsToCode(b.type, v.options, 3)},`
               : ""
           }
 ${getTabs(2)})`;
         })
         .join("\n")}`;
-    }
-    case BlockTypes.config: {
-      return `
-${getTabs(1)}config=MemorixClientApi.Config(${
-        b.defaultOptions
-          ? `
-${getTabs(2)}default_options=MemorixClientApi.Config.DefaultOptions(${
-              b.defaultOptions.cache
-                ? `
-${getTabs(3)}cache=${blockOptionsToPython(
-                    BlockTypes.cache,
-                    b.defaultOptions.cache,
-                    3
-                  )},`
-                : ""
-            }${
-              b.defaultOptions.task
-                ? `
-${getTabs(3)}task=${blockOptionsToPython(
-                    BlockTypes.task,
-                    b.defaultOptions.task,
-                    3
-                  )},`
-                : ""
-            }
-${getTabs(2)}),`
-          : ""
-      }
-${getTabs(1)}),
-`;
     }
     default:
       assertUnreachable(b);
@@ -178,20 +149,173 @@ ${getTabs(1)}),
   }
 };
 
-export const codegenPython: (schema: string) => string = (schema) => {
-  const blocks = flatBlocks(getBlocks(schema));
+const defaultOptionsToCode: (defaultOptions: DefaultOptions) => string = (
+  defaultOptions
+) => {
+  return `MemorixBase.DefaultOptions(${
+    defaultOptions.cache
+      ? `
+${getTabs(3)}cache=${blockOptionsToCode(
+          BlockTypes.cache,
+          defaultOptions.cache,
+          3
+        )},`
+      : ""
+  }${
+    defaultOptions.task
+      ? `
+${getTabs(3)}task=${blockOptionsToCode(
+          BlockTypes.task,
+          defaultOptions.task,
+          3
+        )},`
+      : ""
+  }
+${getTabs(2)})`;
+};
 
-  const hasConfig =
-    blocks.filter((b) => b.type === BlockTypes.config).length > 0;
+const namespaceToCode: (
+  namespace: Namespace,
+  nameTree?: string[]
+) => {
+  code: string;
+  importBase: boolean;
+  importCache: boolean;
+  importPubSub: boolean;
+  importTask: boolean;
+  importEnum: boolean;
+} = (namespace, nameTree = []) => {
+  const blocks = flatBlocks(namespace.blocks);
   const hasEnum = blocks.filter((b) => b.type === BlockTypes.enum).length > 0;
   const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
   const hasPubsub =
     blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
   const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
-  const hasApi = hasConfig || hasCache || hasPubsub || hasTask;
+  const hasApi = hasCache || hasPubsub || hasTask || !!namespace.defaultOptions;
 
-  const code = [
-    `# flake8: noqa
+  const subSamespaces = Array.from(namespace.subNamespacesByName.keys()).map(
+    (name) =>
+      namespaceToCode(namespace.subNamespacesByName.get(name)!, [
+        ...nameTree,
+        name,
+      ])
+  );
+  const nameCamel = nameTree.map((x) => camelCase(x)).join("");
+
+  const code = ([] as string[])
+    .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode))
+    .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToCode))
+    .concat(subSamespaces.map((x) => x.code))
+    .concat(
+      hasCache
+        ? `class MemorixCache${nameCamel}(MemorixCacheBase):
+${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
+${getTabs(2)}super().__init__(api=api)
+
+${blocks
+  .filter((b) => b.type === BlockTypes.cache)
+  .map(blockToCode)
+  .join("\n")}`
+        : []
+    )
+    .concat(
+      hasPubsub
+        ? `class MemorixPubSub${nameCamel}(MemorixPubSubBase):
+${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
+${getTabs(2)}super().__init__(api=api)
+
+${blocks
+  .filter((b) => b.type === BlockTypes.pubsub)
+  .map(blockToCode)
+  .join("\n")}`
+        : []
+    )
+    .concat(
+      hasTask
+        ? `class MemorixTask${nameCamel}(MemorixTaskBase):
+${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
+${getTabs(2)}super().__init__(api=api)
+
+${blocks
+  .filter((b) => b.type === BlockTypes.task)
+  .map(blockToCode)
+  .join("\n")}`
+        : []
+    )
+    .concat(
+      hasApi
+        ? `class Memorix${nameCamel}(MemorixBase):
+${getTabs(1)}def __init__(
+${getTabs(2)}self,
+${getTabs(2)}redis_url: str,
+${getTabs(2)}ref: typing.Optional[MemorixBase] = None,
+${getTabs(1)}) -> None:
+${getTabs(2)}super().__init__(redis_url=redis_url, ref=ref)
+
+${getTabs(2)}self._namespace_name_tree = [${nameTree
+            .map((x) => `"${x}"`)
+            .join(", ")}]${
+            namespace.defaultOptions
+              ? `
+${getTabs(2)}self._default_options = ${defaultOptionsToCode(
+                  namespace.defaultOptions
+                )}`
+              : ""
+          }
+
+${Array.from(namespace.subNamespacesByName.keys()).map(
+  (namespaceName) =>
+    `${getTabs(2)}self.${namespaceName} = Memorix${nameCamel}${camelCase(
+      namespaceName
+    )}(redis_url=redis_url, ref=self)`
+)}${
+            Array.from(namespace.subNamespacesByName.keys()).length !== 0
+              ? "\n\n"
+              : ""
+          }${([] as string[])
+            .concat(
+              hasCache
+                ? `${getTabs(2)}self.cache = MemorixCache${nameCamel}(self)`
+                : []
+            )
+            .concat(
+              hasPubsub
+                ? `${getTabs(2)}self.pubsub = MemorixPubSub${nameCamel}(self)`
+                : []
+            )
+            .concat(
+              hasTask
+                ? `${getTabs(2)}self.task = MemorixTask${nameCamel}(self)`
+                : []
+            )
+            .join("\n")}`
+        : []
+    )
+    .join("\n\n\n");
+
+  return {
+    code,
+    importBase: hasApi || subSamespaces.some((x) => x.importBase),
+    importEnum: hasEnum || subSamespaces.some((x) => x.importEnum),
+    importCache: hasCache || subSamespaces.some((x) => x.importCache),
+    importPubSub: hasPubsub || subSamespaces.some((x) => x.importPubSub),
+    importTask: hasTask || subSamespaces.some((x) => x.importTask),
+  };
+};
+
+export const codegen: (namespaces: Namespace) => string = (namespace) => {
+  const {
+    code,
+    importBase,
+    importEnum,
+    importCache,
+    importPubSub,
+    importTask,
+  } = namespaceToCode(namespace);
+
+  const importCode = ([] as string[])
+    .concat([
+      `# flake8: noqa
 import typing
 
 if typing.TYPE_CHECKING:
@@ -199,160 +323,53 @@ ${getTabs(1)}from dataclasses import dataclass
 else:
 ${getTabs(1)}from memorix_client_redis import dataclass
 ${
-  hasEnum
+  importEnum
     ? `
 from enum import Enum`
     : ""
-}
+}${
+        importBase || importCache || importPubSub || importTask
+          ? `
 from memorix_client_redis import (
-${[]
+${([] as string[])
+  .concat(importBase ? [`${getTabs(1)}MemorixBase`] : [])
   .concat(
-    hasApi
+    importCache
       ? [
-          `${getTabs(1)}MemorixClientApi`,
-          `${getTabs(1)}MemorixClientApiDefaults as _MemorixClientApiDefaults`,
+          `${getTabs(1)}MemorixCacheBase`,
+          `${getTabs(1)}MemorixCacheItem`,
+          `${getTabs(1)}MemorixCacheItemNoKey`,
         ]
       : []
   )
   .concat(
-    hasCache
+    importPubSub
       ? [
-          `${getTabs(1)}MemorixClientCacheApi`,
-          `${getTabs(1)}MemorixClientCacheApiItem`,
-          `${getTabs(1)}MemorixClientCacheApiItemNoKey`,
+          `${getTabs(1)}MemorixPubSubBase`,
+          `${getTabs(1)}MemorixPubSubItem`,
+          `${getTabs(1)}MemorixPubSubItemNoKey`,
         ]
       : []
   )
   .concat(
-    hasCache || hasConfig
+    importTask
       ? [
-          `${getTabs(
-            1
-          )}MemorixClientCacheOptions as _MemorixClientCacheOptions`,
-          `${getTabs(
-            1
-          )}MemorixClientCacheOptionsExpire as _MemorixClientCacheOptionsExpire`,
-        ]
-      : []
-  )
-  .concat(
-    hasPubsub
-      ? [
-          `${getTabs(1)}MemorixClientPubSubApi`,
-          `${getTabs(1)}MemorixClientPubSubApiItem`,
-          `${getTabs(1)}MemorixClientPubSubApiItemNoKey`,
-        ]
-      : []
-  )
-  .concat(
-    hasTask
-      ? [
-          `${getTabs(1)}MemorixClientTaskApi`,
-          `${getTabs(1)}MemorixClientTaskApiItem`,
-          `${getTabs(1)}MemorixClientTaskApiItemNoKey`,
-          `${getTabs(1)}MemorixClientTaskApiItemNoReturns`,
-          `${getTabs(1)}MemorixClientTaskApiItemNoKeyNoReturns`,
-        ]
-      : []
-  )
-  .concat(
-    hasTask || hasConfig
-      ? [
-          `${getTabs(
-            1
-          )}MemorixClientTaskDequequeOptions as _MemorixClientTaskDequequeOptions`,
+          `${getTabs(1)}MemorixTaskBase`,
+          `${getTabs(1)}MemorixTaskItem`,
+          `${getTabs(1)}MemorixTaskItemNoKey`,
+          `${getTabs(1)}MemorixTaskItemNoReturns`,
+          `${getTabs(1)}MemorixTaskItemNoKeyNoReturns`,
         ]
       : []
   )
   .join(",\n")},
-)`,
-  ]
-    .concat(
-      []
-        .concat(
-          hasApi ? [`MemorixClientApiDefaults = _MemorixClientApiDefaults`] : []
-        )
-        .concat(
-          hasCache || hasConfig
-            ? [
-                `MemorixClientCacheOptions = _MemorixClientCacheOptions`,
-                `MemorixClientCacheOptionsExpire = _MemorixClientCacheOptionsExpire`,
-              ]
-            : []
-        )
-        .concat(
-          hasTask || hasConfig
-            ? [
-                `MemorixClientTaskDequequeOptions = _MemorixClientTaskDequequeOptions`,
-              ]
-            : []
-        )
-        .join("\n")
-    )
-    .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToPython))
-    .concat(
-      blocks.filter((b) => b.type === BlockTypes.model).map(blockToPython)
-    )
-    .concat(
-      hasCache
-        ? `class MemorixCacheApi(MemorixClientCacheApi):
-${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
-${getTabs(2)}super().__init__(api=api)
+)`
+          : ""
+      }`,
+    ])
+    .join("\n");
+  return `${importCode}
 
-${blocks
-  .filter((b) => b.type === BlockTypes.cache)
-  .map(blockToPython)
-  .join("\n")}`
-        : []
-    )
-    .concat(
-      hasPubsub
-        ? `class MemorixPubSubApi(MemorixClientPubSubApi):
-${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
-${getTabs(2)}super().__init__(api=api)
 
-${blocks
-  .filter((b) => b.type === BlockTypes.pubsub)
-  .map(blockToPython)
-  .join("\n")}`
-        : []
-    )
-    .concat(
-      hasTask
-        ? `class MemorixTaskApi(MemorixClientTaskApi):
-${getTabs(1)}def __init__(self, api: MemorixClientApi) -> None:
-${getTabs(2)}super().__init__(api=api)
-
-${blocks
-  .filter((b) => b.type === BlockTypes.task)
-  .map(blockToPython)
-  .join("\n")}`
-        : []
-    )
-    .concat(
-      hasApi
-        ? `class MemorixApi(${
-            hasConfig
-              ? `MemorixClientApi.from_config(  # type: ignore${blocks
-                  .filter((b) => b.type === BlockTypes.config)
-                  .map(blockToPython)
-                  .join("\n")})`
-              : "MemorixClientApi"
-          }):
-${getTabs(1)}def __init__(
-${getTabs(2)}self,
-${getTabs(2)}redis_url: str,
-${getTabs(2)}defaults: typing.Optional[MemorixClientApiDefaults] = None,
-${getTabs(1)}) -> None:
-${getTabs(2)}super().__init__(redis_url=redis_url, defaults=defaults)
-
-${[]
-  .concat(hasCache ? `${getTabs(2)}self.cache = MemorixCacheApi(self)` : [])
-  .concat(hasPubsub ? `${getTabs(2)}self.pubsub = MemorixPubSubApi(self)` : [])
-  .concat(hasTask ? `${getTabs(2)}self.task = MemorixTaskApi(self)` : [])
-  .join("\n")}`
-        : []
-    )
-    .join("\n\n\n");
-  return `${code}\n`;
+${code}`;
 };
