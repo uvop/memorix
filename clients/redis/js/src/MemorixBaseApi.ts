@@ -170,6 +170,8 @@ export class MemorixBaseApi {
         const hashedKey = hashPubsubKey(key);
         await this.redisSub.subscribe(hashedKey);
 
+        let asyncIterators: ReturnType<typeof callbackToAsyncIterator<Payload>>[] = [];
+
         return {
           listen: ((callback?: (payload: Payload) => void) => {
             const listen = (cb: NonNullable<typeof callback>) => {
@@ -181,17 +183,30 @@ export class MemorixBaseApi {
             }
 
             if (!callback) {
-              return callbackToAsyncIterator<Payload>(async (cb) => { listen(cb); }, {
+              const asyncIterator = callbackToAsyncIterator<Payload>(async (cb) => { listen(cb); }, {
                 onClose: () => {
+                  asyncIterators.splice(asyncIterators.indexOf(asyncIterator), 1);
                   this.redisSub.unsubscribe(hashedKey);
                 }
               })
+              asyncIterators.push(asyncIterator);
+              return asyncIterator;
             }
             listen(callback);
             return undefined;
           }) as any,
           stop: async () => {
             await this.redisSub.unsubscribe(hashedKey);
+            await Promise.all(asyncIterators.map(async (asyncIterator) => {
+              if (asyncIterator.throw) {
+                try {
+                  await asyncIterator.throw();
+                } catch (error) {
+
+                }
+              }
+            }));
+            asyncIterators = [];
           }
         }
       }),
