@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/uvop/memorix/compare/v1.3.0...v1.3.1) (2023-06-06)
+
+
+### Bug Fixes
+
+* Better subscription in js-client 1.3 ([#46](https://github.com/uvop/memorix/issues/46)) ([5041e98](https://github.com/uvop/memorix/commit/5041e98ea92f93dc34de083a7e0b75becd260c11))
+
 # [1.3.0](https://github.com/uvop/memorix/compare/v1.2.3...v1.3.0) (2023-03-29)
 
 
