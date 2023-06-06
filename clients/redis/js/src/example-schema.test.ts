@@ -65,20 +65,18 @@ describe("example schema has", () => {
   });
   describe("pubsub", () => {
     it("publish says how many subscribers", (done) => {
-      memorixApi.pubsub.message
-        .subscribe()
-        .then(() => {
-          memorixApi.pubsub.message
-            .publish("hello uv")
-            .then(({ subscribersSize }) => {
-              try {
-                expect(subscribersSize).toBe(1);
-                done();
-              } catch (error) {
-                done(error);
-              }
-            });
-        });
+      memorixApi.pubsub.message.subscribe().then(() => {
+        memorixApi.pubsub.message
+          .publish("hello uv")
+          .then(({ subscribersSize }) => {
+            try {
+              expect(subscribersSize).toBe(1);
+              done();
+            } catch (error) {
+              done(error);
+            }
+          });
+      });
     });
     it("subscribe gets payload", (done) => {
       memorixApi.pubsub.message
@@ -93,7 +91,7 @@ describe("example schema has", () => {
               stop();
               done(error);
             }
-          })
+          });
         })
         .then(() => {
           memorixApi.pubsub.message.publish("hello uv");
@@ -103,7 +101,9 @@ describe("example schema has", () => {
       setTimeout(() => {
         memorixApi.pubsub.message.publish("hello uv");
       }, 500);
-      for await (const payload of (await memorixApi.pubsub.message.subscribe()).listen()) {
+      for await (const payload of (
+        await memorixApi.pubsub.message.subscribe()
+      ).listen()) {
         expect(payload).toBe("hello uv");
         break;
       }

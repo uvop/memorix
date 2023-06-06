@@ -23,26 +23,26 @@ export class MemorixBaseApi {
   public static fromConfig: (config: {
     defaultOptions: { cache?: CacheOptions; task?: TaskOptions };
   }) => typeof MemorixBaseApi = ({ defaultOptions }) =>
-      class MemorixBaseApiWithConfig extends MemorixBaseApi {
-        constructor(options) {
-          super({
-            ...options,
-            defaults: {
-              ...(defaultOptions.cache
-                ? {
+    class MemorixBaseApiWithConfig extends MemorixBaseApi {
+      constructor(options) {
+        super({
+          ...options,
+          defaults: {
+            ...(defaultOptions.cache
+              ? {
                   cacheOptions: defaultOptions.cache,
                 }
-                : {}),
-              ...(defaultOptions.task
-                ? {
+              : {}),
+            ...(defaultOptions.task
+              ? {
                   taskOptions: defaultOptions.task,
                 }
-                : {}),
-              ...options.defaults,
-            },
-          });
-        }
-      };
+              : {}),
+            ...options.defaults,
+          },
+        });
+      }
+    };
 
   private readonly redis: Redis;
 
@@ -164,13 +164,13 @@ export class MemorixBaseApi {
         );
         return { subscribersSize };
       },
-      subscribe: (async (
-        key: Key
-      ) => {
+      subscribe: async (key: Key) => {
         const hashedKey = hashPubsubKey(key);
         await this.redisSub.subscribe(hashedKey);
 
-        let asyncIterators: ReturnType<typeof callbackToAsyncIterator<Payload>>[] = [];
+        let asyncIterators: ReturnType<
+          typeof callbackToAsyncIterator<Payload>
+        >[] = [];
 
         return {
           listen: ((callback?: (payload: Payload) => void) => {
@@ -180,15 +180,23 @@ export class MemorixBaseApi {
                   cb(JSON.parse(payload));
                 }
               });
-            }
+            };
 
             if (!callback) {
-              const asyncIterator = callbackToAsyncIterator<Payload>(async (cb) => { listen(cb); }, {
-                onClose: () => {
-                  asyncIterators.splice(asyncIterators.indexOf(asyncIterator), 1);
-                  this.redisSub.unsubscribe(hashedKey);
+              const asyncIterator = callbackToAsyncIterator<Payload>(
+                async (cb) => {
+                  listen(cb);
+                },
+                {
+                  onClose: () => {
+                    asyncIterators.splice(
+                      asyncIterators.indexOf(asyncIterator),
+                      1
+                    );
+                    this.redisSub.unsubscribe(hashedKey);
+                  },
                 }
-              })
+              );
               asyncIterators.push(asyncIterator);
               return asyncIterator;
             }
@@ -197,19 +205,21 @@ export class MemorixBaseApi {
           }) as any,
           stop: async () => {
             await this.redisSub.unsubscribe(hashedKey);
-            await Promise.all(asyncIterators.map(async (asyncIterator) => {
-              if (asyncIterator.throw) {
-                try {
-                  await asyncIterator.throw();
-                } catch (error) {
-
+            await Promise.all(
+              asyncIterators.map(async (asyncIterator) => {
+                if (asyncIterator.throw) {
+                  try {
+                    await asyncIterator.throw();
+                  } catch (error) {
+                    // Ignore error
+                  }
                 }
-              }
-            }));
+              })
+            );
             asyncIterators = [];
-          }
-        }
-      }),
+          },
+        };
+      },
     };
   }
 
@@ -233,9 +243,9 @@ export class MemorixBaseApi {
 
     const returnTask = hasReturns
       ? this.getTaskItem<string, Returns, undefined>(
-        `${identifier}_returns`,
-        false
-      )
+          `${identifier}_returns`,
+          false
+        )
       : undefined;
 
     return {
@@ -250,17 +260,17 @@ export class MemorixBaseApi {
 
         const returnsPromise = hasReturns
           ? new Promise((res, rej) => {
-            let stop: () => Promise<void> | undefined;
-            returnTask!
-              .dequeue(returnsId!, ({ payload: returns }) => {
-                stop();
-                res(returns);
-              })
-              .then((dequeueObj) => {
-                stop = dequeueObj.stop;
-              })
-              .catch(rej);
-          })
+              let stop: () => Promise<void> | undefined;
+              returnTask!
+                .dequeue(returnsId!, ({ payload: returns }) => {
+                  stop();
+                  res(returns);
+                })
+                .then((dequeueObj) => {
+                  stop = dequeueObj.stop;
+                })
+                .catch(rej);
+            })
           : undefined;
 
         if (hasReturns) {
