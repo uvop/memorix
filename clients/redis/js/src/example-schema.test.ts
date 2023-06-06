@@ -65,30 +65,33 @@ describe("example schema has", () => {
   });
   describe("pubsub", () => {
     it("publish says how many subscribers", (done) => {
-      memorix.pubsub.message
-        .subscribe(() => {})
-        .then(() => {
-          memorix.pubsub.message
-            .publish("hello uv")
-            .then(({ subscribersSize }) => {
-              try {
-                expect(subscribersSize).toBe(1);
-                done();
-              } catch (error) {
-                done(error);
-              }
-            });
-        });
+      memorix.pubsub.message.subscribe().then(() => {
+        memorix.pubsub.message
+          .publish("hello uv")
+          .then(({ subscribersSize }) => {
+            try {
+              expect(subscribersSize).toBe(1);
+              done();
+            } catch (error) {
+              done(error);
+            }
+          });
+      });
     });
     it("subscribe gets payload", (done) => {
       memorix.pubsub.message
-        .subscribe(({ payload }) => {
-          try {
-            expect(payload).toBe("hello uv");
-            done();
-          } catch (error) {
-            done(error);
-          }
+        .subscribe()
+        .then(({ listen, stop }) => {
+          listen((payload) => {
+            try {
+              expect(payload).toBe("hello uv");
+              stop();
+              done();
+            } catch (error) {
+              stop();
+              done(error);
+            }
+          });
         })
         .then(() => {
           memorix.pubsub.message.publish("hello uv");
@@ -98,7 +101,9 @@ describe("example schema has", () => {
       setTimeout(() => {
         memorix.pubsub.message.publish("hello uv");
       }, 500);
-      for await (const { payload } of memorix.pubsub.message.subscribe()) {
+      for await (const payload of (
+        await memorix.pubsub.message.subscribe()
+      ).listen()) {
         expect(payload).toBe("hello uv");
         break;
       }

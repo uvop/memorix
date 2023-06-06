@@ -6,7 +6,6 @@ import {
   CacheItem,
   CacheOptions,
   TaskOptions,
-  PubsubCallback,
   PubsubItem,
   TaskItem,
   CacheItemNoKey,
@@ -164,46 +163,60 @@ export class MemorixBase {
         );
         return { subscribersSize };
       },
-      subscribe: ((
-        key: Key,
-        callback: PubsubCallback<{ payload: Payload }> | undefined
-      ) => {
+      subscribe: async (key: Key) => {
         const hashedKey = hashPubsubKey(key);
+        await this.redisSub.subscribe(hashedKey);
 
-        const getListenPromise = (cb: NonNullable<typeof callback>) =>
-          new Promise<{ stop(): Promise<void> }>((resolve, reject) => {
-            this.redisSub.subscribe(hashedKey, (err) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve({
-                  stop: async () => {
-                    await this.redisSub.unsubscribe(hashedKey);
+        let asyncIterators: AsyncIterableIterator<Payload>[] = [];
+
+        return {
+          listen: ((callback?: (payload: Payload) => void) => {
+            const listen = (cb: NonNullable<typeof callback>) => {
+              this.redisSub.on("message", (group, payload) => {
+                if (hashedKey === group) {
+                  cb(JSON.parse(payload));
+                }
+              });
+            };
+
+            if (!callback) {
+              const asyncIterator = callbackToAsyncIterator<Payload>(
+                async (cb) => {
+                  listen(cb);
+                },
+                {
+                  onClose: () => {
+                    asyncIterators.splice(
+                      asyncIterators.indexOf(asyncIterator),
+                      1
+                    );
+                    this.redisSub.unsubscribe(hashedKey);
                   },
-                });
-              }
-            });
-
-            this.redisSub.on("message", (group, payload) => {
-              if (hashedKey === group) {
-                cb({ payload: JSON.parse(payload) });
-              }
-            });
-          });
-
-        if (callback === undefined) {
-          return callbackToAsyncIterator<
-            { payload: Payload },
-            { stop: () => Promise<void> }
-          >((cb) => getListenPromise(cb), {
-            onClose({ stop }) {
-              stop();
-            },
-          });
-        }
-
-        return getListenPromise(callback);
-      }) as any,
+                }
+              );
+              asyncIterators.push(asyncIterator);
+              return asyncIterator;
+            }
+            listen(callback);
+            return undefined;
+          }) as any,
+          stop: async () => {
+            await this.redisSub.unsubscribe(hashedKey);
+            await Promise.all(
+              asyncIterators.map(async (asyncIterator) => {
+                if (asyncIterator.throw) {
+                  try {
+                    await asyncIterator.throw();
+                  } catch (error) {
+                    // Ignore error
+                  }
+                }
+              })
+            );
+            asyncIterators = [];
+          },
+        };
+      },
     };
   }
 
