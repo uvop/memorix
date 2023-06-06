@@ -6,7 +6,6 @@ import {
   CacheItem,
   CacheOptions,
   TaskOptions,
-  PubsubCallback,
   PubsubItem,
   TaskItem,
   CacheItemNoKey,
@@ -24,26 +23,26 @@ export class MemorixBaseApi {
   public static fromConfig: (config: {
     defaultOptions: { cache?: CacheOptions; task?: TaskOptions };
   }) => typeof MemorixBaseApi = ({ defaultOptions }) =>
-    class MemorixBaseApiWithConfig extends MemorixBaseApi {
-      constructor(options) {
-        super({
-          ...options,
-          defaults: {
-            ...(defaultOptions.cache
-              ? {
+      class MemorixBaseApiWithConfig extends MemorixBaseApi {
+        constructor(options) {
+          super({
+            ...options,
+            defaults: {
+              ...(defaultOptions.cache
+                ? {
                   cacheOptions: defaultOptions.cache,
                 }
-              : {}),
-            ...(defaultOptions.task
-              ? {
+                : {}),
+              ...(defaultOptions.task
+                ? {
                   taskOptions: defaultOptions.task,
                 }
-              : {}),
-            ...options.defaults,
-          },
-        });
-      }
-    };
+                : {}),
+              ...options.defaults,
+            },
+          });
+        }
+      };
 
   private readonly redis: Redis;
 
@@ -165,46 +164,37 @@ export class MemorixBaseApi {
         );
         return { subscribersSize };
       },
-      subscribe: ((
-        key: Key,
-        callback: PubsubCallback<{ payload: Payload }> | undefined
+      subscribe: (async (
+        key: Key
       ) => {
         const hashedKey = hashPubsubKey(key);
+        await this.redisSub.subscribe(hashedKey);
 
-        const getListenPromise = (cb: NonNullable<typeof callback>) =>
-          new Promise<{ stop(): Promise<void> }>((resolve, reject) => {
-            this.redisSub.subscribe(hashedKey, (err) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve({
-                  stop: async () => {
-                    await this.redisSub.unsubscribe(hashedKey);
-                  },
-                });
-              }
-            });
+        return {
+          listen: ((callback?: (payload: Payload) => void) => {
+            const listen = (cb: NonNullable<typeof callback>) => {
+              this.redisSub.on("message", (group, payload) => {
+                if (hashedKey === group) {
+                  cb(JSON.parse(payload));
+                }
+              });
+            }
 
-            this.redisSub.on("message", (group, payload) => {
-              if (hashedKey === group) {
-                cb({ payload: JSON.parse(payload) });
-              }
-            });
-          });
-
-        if (callback === undefined) {
-          return callbackToAsyncIterator<
-            { payload: Payload },
-            { stop: () => Promise<void> }
-          >((cb) => getListenPromise(cb), {
-            onClose({ stop }) {
-              stop();
-            },
-          });
+            if (!callback) {
+              return callbackToAsyncIterator<Payload>(async (cb) => { listen(cb); }, {
+                onClose: () => {
+                  this.redisSub.unsubscribe(hashedKey);
+                }
+              })
+            }
+            listen(callback);
+            return undefined;
+          }) as any,
+          stop: async () => {
+            await this.redisSub.unsubscribe(hashedKey);
+          }
         }
-
-        return getListenPromise(callback);
-      }) as any,
+      }),
     };
   }
 
@@ -228,9 +218,9 @@ export class MemorixBaseApi {
 
     const returnTask = hasReturns
       ? this.getTaskItem<string, Returns, undefined>(
-          `${identifier}_returns`,
-          false
-        )
+        `${identifier}_returns`,
+        false
+      )
       : undefined;
 
     return {
@@ -245,17 +235,17 @@ export class MemorixBaseApi {
 
         const returnsPromise = hasReturns
           ? new Promise((res, rej) => {
-              let stop: () => Promise<void> | undefined;
-              returnTask!
-                .dequeue(returnsId!, ({ payload: returns }) => {
-                  stop();
-                  res(returns);
-                })
-                .then((dequeueObj) => {
-                  stop = dequeueObj.stop;
-                })
-                .catch(rej);
-            })
+            let stop: () => Promise<void> | undefined;
+            returnTask!
+              .dequeue(returnsId!, ({ payload: returns }) => {
+                stop();
+                res(returns);
+              })
+              .then((dequeueObj) => {
+                stop = dequeueObj.stop;
+              })
+              .catch(rej);
+          })
           : undefined;
 
         if (hasReturns) {
