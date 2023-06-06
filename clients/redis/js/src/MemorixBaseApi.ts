@@ -168,9 +168,7 @@ export class MemorixBaseApi {
         const hashedKey = hashPubsubKey(key);
         await this.redisSub.subscribe(hashedKey);
 
-        let asyncIterators: ReturnType<
-          typeof callbackToAsyncIterator<Payload>
-        >[] = [];
+        let asyncIterators: AsyncIterableIterator<Payload>[] = [];
 
         return {
           listen: ((callback?: (payload: Payload) => void) => {
