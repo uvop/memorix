@@ -13,5 +13,5 @@ brew tap uvop/memorix brew install memorix memorix --version Done!
 if successful, you should see this in your terminal</description></item><item><title>Quick start</title><link>https://uvop.github.io/memorix/docs/get-started/quick-start/</link><pubDate>Mon, 16 Nov 2020 13:59:39 +0100</pubDate><guid>https://uvop.github.io/memorix/docs/get-started/quick-start/</guid><description>Now we have all the tools needed to create our schema and start using it!
 Creating schema #
 First, lets create a basic schema.
-Create a file with name schema.memorix in the root of your project (remove unwanted output languages)
-Config { output: [ { language: &amp;quot;typescript&amp;quot; file: &amp;quot;memorix.generated.ts&amp;quot; } { language: &amp;quot;python&amp;quot; file: &amp;quot;memorix_generated.py&amp;quot; } ] } Cache { hello { payload: string } rating { payload: int } } PubSub { message { payload: string } } Now we can generate code for the schema we created using the Memorix CLI (and on future schema changes), simply un this in your terminal</description></item></channel></rss>
+Create a file with name schema.memorix in the root of your project
+Cache { hello { payload: string } rating { payload: int } } PubSub { message { payload: string } } Now we can generate code for the schema we created using the Memorix CLI (and on future schema changes) Node.</description></item></channel></rss>
