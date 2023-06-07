@@ -81,15 +81,19 @@ describe("example schema has", () => {
     it("subscribe gets payload", (done) => {
       memorix.pubsub.message
         .subscribe()
-        .then(({ listen, stop }) => {
-          listen((payload) => {
+        .then(({ listen, unsubscribe }) => {
+          const stop = listen((payload) => {
             try {
               expect(payload).toBe("hello uv");
               stop();
-              done();
+              unsubscribe().then(() => {
+                done();
+              });
             } catch (error) {
               stop();
-              done(error);
+              unsubscribe().finally(() => {
+                done(error);
+              });
             }
           });
         })
@@ -101,12 +105,12 @@ describe("example schema has", () => {
       setTimeout(() => {
         memorix.pubsub.message.publish("hello uv");
       }, 500);
-      for await (const payload of (
-        await memorix.pubsub.message.subscribe()
-      ).listen()) {
+      const subscription = await memorix.pubsub.message.subscribe();
+      for await (const payload of subscription.listen().asyncIterator) {
         expect(payload).toBe("hello uv");
         break;
       }
+      await subscription.unsubscribe();
     });
   });
   describe("task", () => {

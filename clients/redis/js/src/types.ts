@@ -21,17 +21,23 @@ export type PubsubCallback<Payload> = (payload: Payload) => void;
 
 export type PubsubItem<Key, Payload> = {
   subscribe(key: Key): Promise<{
-    stop: () => Promise<void>;
-    listen(cb: (payload: Payload) => void): void;
-    listen(): AsyncIterableIterator<Payload>;
+    unsubscribe: () => Promise<void>;
+    listen(cb: (payload: Payload) => void): () => void;
+    listen(): {
+      asyncIterator: AsyncIterableIterator<Payload>;
+      stop: () => Promise<void>;
+    };
   }>;
   publish(key: Key, payload: Payload): Promise<{ subscribersSize: number }>;
 };
 export type PubsubItemNoKey<Payload> = {
   subscribe(): Promise<{
-    stop: () => Promise<void>;
-    listen(cb: (payload: Payload) => void): void;
-    listen(): AsyncIterableIterator<Payload>;
+    unsubscribe: () => Promise<void>;
+    listen(cb: (payload: Payload) => void): () => void;
+    listen(): {
+      asyncIterator: AsyncIterableIterator<Payload>;
+      stop: () => Promise<void>;
+    };
   }>;
   publish(payload: Payload): Promise<{ subscribersSize: number }>;
 };
