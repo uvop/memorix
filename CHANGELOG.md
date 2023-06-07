@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/uvop/memorix/compare/v1.4.2...v1.4.3) (2023-06-07)
+
+
+### Bug Fixes
+
+* 47 subscription api better on nodejs ([#48](https://github.com/uvop/memorix/issues/48)) ([fa3f3ae](https://github.com/uvop/memorix/commit/fa3f3ae5e826b1ac8404e07ac7230d70260673d6)), closes [#46](https://github.com/uvop/memorix/issues/46)
+
 ## [1.4.2](https://github.com/uvop/memorix/compare/v1.4.1...v1.4.2) (2023-05-26)
 
 
