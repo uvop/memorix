@@ -37,10 +37,12 @@ export class MemorixBase {
       this.redis = ref.redis;
       this.redisSub = ref.redisSub;
       this.redisTasks = ref.redisTasks;
+      this.subscriptionCallbacks = ref.subscriptionCallbacks;
     } else {
       this.redis = new Redis(redisUrl, { lazyConnect: true });
       this.redisSub = this.redis.duplicate();
       this.redisTasks = [];
+      this.subscriptionCallbacks = new Map();
     }
   }
 

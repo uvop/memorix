@@ -1,19 +1,30 @@
 import { MemorixBase } from "./MemorixBase";
 
+class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
+  cache = {
+    memo: this.getCacheItem<string, string>("memo"),
+  };
+
+  pubsub = {
+    testPubSub: this.getPubsubItemNoKey<number>("testPubSub"),
+  };
+}
+
 const init = async () => {
-  const api = new MemorixBase({
+  const memorix = new Memorix({
     redisUrl: process.env.REDIS_URL!,
   });
-  console.log(api);
-  const { get, set } = api.getCacheItem<string, string>("memo");
-  set("key", "success");
-  const cachedData = await get("key");
+  await memorix.connect();
+  memorix.cache.memo.set("key", "success");
+  const cachedData = await memorix.cache.memo.get("key");
   console.log(`chached data ${cachedData}`);
 
-  const { publish, subscribe } = api.getPubsubItemNoKey<number>("testPubSub");
-  const { asyncIterator, unsubscribe } = await subscribe();
+  const { asyncIterator, unsubscribe } =
+    await memorix.pubsub.testPubSub.subscribe();
   const interval = setInterval(() => {
-    publish(Date.now());
+    memorix.pubsub.testPubSub.publish(Date.now());
   }, 400);
   setTimeout(async () => {
     await unsubscribe();
@@ -23,7 +34,7 @@ const init = async () => {
   }
   console.log("out");
   clearInterval(interval);
-  await api.disconnect();
+  await memorix.disconnect();
 };
 
 init();
