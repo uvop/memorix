@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/uvop/memorix/compare/v1.3.2...v1.3.3) (2023-06-07)
+
+
+### Bug Fixes
+
+* less complicated subscribe ([ab02bff](https://github.com/uvop/memorix/commit/ab02bff35c3008ceb23a03887b830210d49038c1))
+
 ## [1.3.2](https://github.com/uvop/memorix/compare/v1.3.1...v1.3.2) (2023-06-07)
 
 
