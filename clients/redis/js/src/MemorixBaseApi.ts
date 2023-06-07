@@ -52,6 +52,8 @@ export class MemorixBaseApi {
 
   private redisTasks: Redis[];
 
+  private subscriptionCallbacks: Map<string, ((payload: any) => void)[]>;
+
   constructor({
     redisUrl,
     defaults,
@@ -59,10 +61,24 @@ export class MemorixBaseApi {
     redisUrl: string;
     defaults?: Defaults;
   }) {
-    this.redis = new Redis(redisUrl, { lazyConnect: true });
+    this.redis = new Redis(redisUrl, {
+      lazyConnect: true,
+    });
     this.redisSub = this.redis.duplicate();
     this.redisTasks = [];
     this.defaults = defaults;
+    this.subscriptionCallbacks = new Map();
+
+    this.redisSub.on("message", (group, payload) => {
+      const callbacks = this.subscriptionCallbacks.get(group);
+      if (!callbacks) {
+        return;
+      }
+      const parsedPayload = JSON.parse(payload);
+      callbacks.forEach((cb) => {
+        cb(parsedPayload);
+      });
+    });
   }
 
   async connect(): Promise<void> {
@@ -168,53 +184,71 @@ export class MemorixBaseApi {
         const hashedKey = hashPubsubKey(key);
         await this.redisSub.subscribe(hashedKey);
 
-        let asyncIterators: AsyncIterableIterator<Payload>[] = [];
-
         return {
           listen: ((callback?: (payload: Payload) => void) => {
-            const listen = (cb: NonNullable<typeof callback>) => {
-              this.redisSub.on("message", (group, payload) => {
-                if (hashedKey === group) {
-                  cb(JSON.parse(payload));
-                }
-              });
-            };
-
             if (!callback) {
-              const asyncIterator = callbackToAsyncIterator<Payload>(
+              const asyncIterator = callbackToAsyncIterator<
+                Payload,
+                (payload: Payload) => void
+              >(
                 async (cb) => {
-                  listen(cb);
+                  this.subscriptionCallbacks.set(hashedKey, [
+                    ...(this.subscriptionCallbacks.get(hashedKey) ?? []),
+                    cb,
+                  ]);
+                  return cb;
                 },
                 {
-                  onClose: () => {
-                    asyncIterators.splice(
-                      asyncIterators.indexOf(asyncIterator),
-                      1
+                  onClose: (cb) => {
+                    const callbacks = this.subscriptionCallbacks.get(hashedKey);
+                    if (!callbacks) {
+                      return;
+                    }
+                    const callbackIndex = callbacks.indexOf(cb);
+                    if (callbackIndex === -1) {
+                      return;
+                    }
+                    this.subscriptionCallbacks.set(
+                      hashedKey,
+                      callbacks.filter((_, i) => i !== callbackIndex)
                     );
-                    this.redisSub.unsubscribe(hashedKey);
                   },
                 }
               );
-              asyncIterators.push(asyncIterator);
-              return asyncIterator;
-            }
-            listen(callback);
-            return undefined;
-          }) as any,
-          stop: async () => {
-            await this.redisSub.unsubscribe(hashedKey);
-            await Promise.all(
-              asyncIterators.map(async (asyncIterator) => {
-                if (asyncIterator.throw) {
-                  try {
-                    await asyncIterator.throw();
-                  } catch (error) {
-                    // Ignore error
+              return {
+                asyncIterator,
+                stop: async () => {
+                  if (asyncIterator.throw) {
+                    try {
+                      await asyncIterator.throw();
+                    } catch (error) {
+                      // Ignore error
+                    }
                   }
-                }
-              })
-            );
-            asyncIterators = [];
+                },
+              };
+            }
+            this.subscriptionCallbacks.set(hashedKey, [
+              ...(this.subscriptionCallbacks.get(hashedKey) ?? []),
+              callback,
+            ]);
+            return () => {
+              const callbacks = this.subscriptionCallbacks.get(hashedKey);
+              if (!callbacks) {
+                return;
+              }
+              const callbackIndex = callbacks.indexOf(callback);
+              if (callbackIndex === -1) {
+                return;
+              }
+              this.subscriptionCallbacks.set(
+                hashedKey,
+                callbacks.filter((_, i) => i !== callbackIndex)
+              );
+            };
+          }) as any,
+          unsubscribe: async () => {
+            await this.redisSub.unsubscribe(hashedKey);
           },
         };
       },
