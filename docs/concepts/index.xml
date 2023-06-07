@@ -4,4 +4,4 @@ Primitive #
 Here are the basic primities you can use in your schema</description></item><item><title>Features</title><link>https://uvop.github.io/memorix/docs/concepts/features/</link><pubDate>Tue, 06 Oct 2020 08:49:31 +0000</pubDate><guid>https://uvop.github.io/memorix/docs/concepts/features/</guid><description>We&amp;rsquo;ll show the different applications you can use Memorix for, and how to do so
 Cache #
 Cache is the most basic use of an in-memory service, to use it simply add a line to your Cache scope in schema.memorix:
-Cache { adminUser { payload: { email: string password: string } } } And to use it in your project Node.js Python await memorixApi.cache.adminUser.set({ email: &amp;quot;me@mail.com&amp;quot;, password: &amp;quot;Aa123456&amp;quot;, }); const adminUser = await memorixApi.</description></item></channel></rss>
+Cache { adminUser { payload: { email: string password: string } } } And to use it in your project Node.js Python await memorix.cache.adminUser.set({ email: &amp;quot;me@mail.com&amp;quot;, password: &amp;quot;Aa123456&amp;quot;, }); const adminUser = await memorix.</description></item></channel></rss>
