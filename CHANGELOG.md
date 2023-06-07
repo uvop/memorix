@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/uvop/memorix/compare/v1.3.1...v1.3.2) (2023-06-07)
+
+
+### Bug Fixes
+
+* single message subscribe to all subs ([b5d00c8](https://github.com/uvop/memorix/commit/b5d00c8f0afd5d313b0331ac46ad9542282b8890))
+
 ## [1.3.1](https://github.com/uvop/memorix/compare/v1.3.0...v1.3.1) (2023-06-06)
 
 
