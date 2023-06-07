@@ -180,77 +180,74 @@ export class MemorixBaseApi {
         );
         return { subscribersSize };
       },
-      subscribe: async (key: Key) => {
+      subscribe: async (key: Key, callback?: (payload: Payload) => void) => {
         const hashedKey = hashPubsubKey(key);
         await this.redisSub.subscribe(hashedKey);
 
-        return {
-          listen: ((callback?: (payload: Payload) => void) => {
-            if (!callback) {
-              const asyncIterator = callbackToAsyncIterator<
-                Payload,
-                (payload: Payload) => void
-              >(
-                async (cb) => {
-                  this.subscriptionCallbacks.set(hashedKey, [
-                    ...(this.subscriptionCallbacks.get(hashedKey) ?? []),
-                    cb,
-                  ]);
-                  return cb;
-                },
-                {
-                  onClose: (cb) => {
-                    const callbacks = this.subscriptionCallbacks.get(hashedKey);
-                    if (!callbacks) {
-                      return;
-                    }
-                    const callbackIndex = callbacks.indexOf(cb);
-                    if (callbackIndex === -1) {
-                      return;
-                    }
-                    this.subscriptionCallbacks.set(
-                      hashedKey,
-                      callbacks.filter((_, i) => i !== callbackIndex)
-                    );
-                  },
+        if (!callback) {
+          const asyncIterator = callbackToAsyncIterator<
+            Payload,
+            (payload: Payload) => void
+          >(
+            async (cb) => {
+              this.subscriptionCallbacks.set(hashedKey, [
+                ...(this.subscriptionCallbacks.get(hashedKey) ?? []),
+                cb,
+              ]);
+              return cb;
+            },
+            {
+              onClose: (cb) => {
+                const callbacks = this.subscriptionCallbacks.get(hashedKey);
+                if (!callbacks) {
+                  return;
                 }
-              );
-              return {
-                asyncIterator,
-                stop: async () => {
-                  if (asyncIterator.throw) {
-                    try {
-                      await asyncIterator.throw();
-                    } catch (error) {
-                      // Ignore error
-                    }
-                  }
-                },
-              };
+                const callbackIndex = callbacks.indexOf(cb);
+                if (callbackIndex === -1) {
+                  return;
+                }
+                this.subscriptionCallbacks.set(
+                  hashedKey,
+                  callbacks.filter((_, i) => i !== callbackIndex)
+                );
+              },
             }
-            this.subscriptionCallbacks.set(hashedKey, [
-              ...(this.subscriptionCallbacks.get(hashedKey) ?? []),
-              callback,
-            ]);
-            return () => {
-              const callbacks = this.subscriptionCallbacks.get(hashedKey);
-              if (!callbacks) {
-                return;
+          );
+          return {
+            asyncIterator,
+            unsubscribe: async () => {
+              await this.redisSub.unsubscribe(hashedKey);
+              if (asyncIterator.throw) {
+                try {
+                  await asyncIterator.throw();
+                } catch (error) {
+                  // Ignore error
+                }
               }
-              const callbackIndex = callbacks.indexOf(callback);
-              if (callbackIndex === -1) {
-                return;
-              }
-              this.subscriptionCallbacks.set(
-                hashedKey,
-                callbacks.filter((_, i) => i !== callbackIndex)
-              );
-            };
-          }) as any,
+            },
+          };
+        }
+        this.subscriptionCallbacks.set(hashedKey, [
+          ...(this.subscriptionCallbacks.get(hashedKey) ?? []),
+          callback,
+        ]);
+        return {
           unsubscribe: async () => {
             await this.redisSub.unsubscribe(hashedKey);
+            const callbacks = this.subscriptionCallbacks.get(hashedKey);
+            if (!callbacks) {
+              return;
+            }
+            const callbackIndex = callbacks.indexOf(callback);
+            if (callbackIndex === -1) {
+              return;
+            }
+            this.subscriptionCallbacks.set(
+              hashedKey,
+              callbacks.filter((_, i) => i !== callbackIndex)
+            );
           },
-        };
+        } as any;
       },
     };
   }

@@ -10,14 +10,12 @@ const init = async () => {
   console.log(`chached data ${cachedData}`);
 
   const { publish, subscribe } = api.getPubsubItemNoKey<number>("testPubSub");
-  const { listen, unsubscribe } = await subscribe();
-  const { asyncIterator, stop } = listen();
+  const { asyncIterator, unsubscribe } = await subscribe();
   const interval = setInterval(() => {
     publish(Date.now());
   }, 400);
   setTimeout(async () => {
     await unsubscribe();
-    await stop();
   }, 1000);
   for await (const payload of asyncIterator) {
     console.log(`subscriber got payload ${payload}`);

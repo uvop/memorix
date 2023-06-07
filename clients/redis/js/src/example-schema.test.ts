@@ -79,23 +79,26 @@ describe("example schema has", () => {
       });
     });
     it("subscribe gets payload", (done) => {
+      let unsubscribe = (() => Promise.reject()) as () => Promise<void>;
       memorixApi.pubsub.message
-        .subscribe()
-        .then(({ listen, unsubscribe }) => {
-          const stop = listen((payload) => {
-            try {
-              expect(payload).toBe("hello uv");
-              stop();
-              unsubscribe().then(() => {
+        .subscribe((payload) => {
+          try {
+            expect(payload).toBe("hello uv");
+            unsubscribe()
+              .then(() => {
                 done();
+              })
+              .catch((err) => {
+                done(err);
               });
-            } catch (error) {
-              stop();
-              unsubscribe().finally(() => {
-                done(error);
-              });
-            }
-          });
+          } catch (error) {
+            unsubscribe().finally(() => {
+              done(error);
+            });
+          }
+        })
+        .then(({ unsubscribe: x }) => {
+          unsubscribe = x;
         })
         .then(() => {
           memorixApi.pubsub.message.publish("hello uv");
@@ -106,7 +109,7 @@ describe("example schema has", () => {
         memorixApi.pubsub.message.publish("hello uv");
       }, 500);
       const subscription = await memorixApi.pubsub.message.subscribe();
-      for await (const payload of subscription.listen().asyncIterator) {
+      for await (const payload of subscription.asyncIterator) {
         expect(payload).toBe("hello uv");
         break;
       }
