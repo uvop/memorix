@@ -187,7 +187,8 @@ await memorix.pubsub.message.publish("Will be published but no one is listening"
 You can also subscribe to an [`Async iterable`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) if you don't pass a callback
 
 ```js
-for await (const { payload } of memorix.pubsub.message.subscribe()) {
+const subscription = await memorix.pubsub.message.subscribe();
+for await (const { payload } of subscription.asyncIterator) {
   console.log("Got payload: " + payload);
 }
 ```

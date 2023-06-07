@@ -1,23 +1,40 @@
 import { MemorixBase } from "./MemorixBase";
 
+class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
+  cache = {
+    memo: this.getCacheItem<string, string>("memo"),
+  };
+
+  pubsub = {
+    testPubSub: this.getPubsubItemNoKey<number>("testPubSub"),
+  };
+}
+
 const init = async () => {
-  const api = new MemorixBase({
+  const memorix = new Memorix({
     redisUrl: process.env.REDIS_URL!,
   });
-  console.log(api);
-  // const { get, set } = api.getCacheItem<string, string>("memo");
-  // set("key", "success");
-  // const cachedData = await get("key");
-  // console.log(`chached data ${cachedData}`);
+  await memorix.connect();
+  memorix.cache.memo.set("key", "success");
+  const cachedData = await memorix.cache.memo.get("key");
+  console.log(`chached data ${cachedData}`);
 
-  // const { publish, subscribe } = api.getPubsubItemNoKey<number>("testPubSub");
-  // subscribe((payload) => {
-  //   console.log(`subscriber got payload ${payload}`);
-  // });
-
-  // setInterval(() => {
-  //   publish(Date.now());
-  // }, 400);
+  const { asyncIterator, unsubscribe } =
+    await memorix.pubsub.testPubSub.subscribe();
+  const interval = setInterval(() => {
+    memorix.pubsub.testPubSub.publish(Date.now());
+  }, 400);
+  setTimeout(async () => {
+    await unsubscribe();
+  }, 1000);
+  for await (const payload of asyncIterator) {
+    console.log(`subscriber got payload ${payload}`);
+  }
+  console.log("out");
+  clearInterval(interval);
+  await memorix.disconnect();
 };
 
 init();

@@ -65,30 +65,40 @@ describe("example schema has", () => {
   });
   describe("pubsub", () => {
     it("publish says how many subscribers", (done) => {
-      memorix.pubsub.message
-        .subscribe(() => {})
-        .then(() => {
-          memorix.pubsub.message
-            .publish("hello uv")
-            .then(({ subscribersSize }) => {
-              try {
-                expect(subscribersSize).toBe(1);
-                done();
-              } catch (error) {
-                done(error);
-              }
-            });
-        });
+      memorix.pubsub.message.subscribe().then(() => {
+        memorix.pubsub.message
+          .publish("hello uv")
+          .then(({ subscribersSize }) => {
+            try {
+              expect(subscribersSize).toBe(1);
+              done();
+            } catch (error) {
+              done(error);
+            }
+          });
+      });
     });
     it("subscribe gets payload", (done) => {
+      let unsubscribe = (() => Promise.reject()) as () => Promise<void>;
       memorix.pubsub.message
-        .subscribe(({ payload }) => {
+        .subscribe((payload) => {
           try {
             expect(payload).toBe("hello uv");
-            done();
+            unsubscribe()
+              .then(() => {
+                done();
+              })
+              .catch((err) => {
+                done(err);
+              });
           } catch (error) {
-            done(error);
+            unsubscribe().finally(() => {
+              done(error);
+            });
           }
+        })
+        .then(({ unsubscribe: x }) => {
+          unsubscribe = x;
         })
         .then(() => {
           memorix.pubsub.message.publish("hello uv");
@@ -98,10 +108,12 @@ describe("example schema has", () => {
       setTimeout(() => {
         memorix.pubsub.message.publish("hello uv");
       }, 500);
-      for await (const { payload } of memorix.pubsub.message.subscribe()) {
+      const subscription = await memorix.pubsub.message.subscribe();
+      for await (const payload of subscription.asyncIterator) {
         expect(payload).toBe("hello uv");
         break;
       }
+      await subscription.unsubscribe();
     });
   });
   describe("task", () => {

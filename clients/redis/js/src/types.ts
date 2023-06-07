@@ -20,18 +20,26 @@ export type CacheItemNoKey<Payload> = {
 export type PubsubCallback<Payload> = (payload: Payload) => void;
 
 export type PubsubItem<Key, Payload> = {
+  subscribe(key: Key): Promise<{
+    asyncIterator: AsyncIterableIterator<Payload>;
+    unsubscribe: () => Promise<void>;
+  }>;
   subscribe(
     key: Key,
-    callback: PubsubCallback<{ payload: Payload }>
-  ): Promise<{ stop: () => Promise<void> }>;
-  subscribe(key: Key): AsyncIterableIterator<{ payload: Payload }>;
+    cb: (payload: Payload) => void
+  ): Promise<{
+    unsubscribe: () => Promise<void>;
+  }>;
   publish(key: Key, payload: Payload): Promise<{ subscribersSize: number }>;
 };
 export type PubsubItemNoKey<Payload> = {
-  subscribe(
-    callback: PubsubCallback<{ payload: Payload }>
-  ): Promise<{ stop: () => Promise<void> }>;
-  subscribe(): AsyncIterableIterator<{ payload: Payload }>;
+  subscribe(): Promise<{
+    asyncIterator: AsyncIterableIterator<Payload>;
+    unsubscribe: () => Promise<void>;
+  }>;
+  subscribe(cb: (payload: Payload) => void): Promise<{
+    unsubscribe: () => Promise<void>;
+  }>;
   publish(payload: Payload): Promise<{ subscribersSize: number }>;
 };
 
