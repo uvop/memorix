@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/uvop/memorix/compare/v1.4.3...v1.4.4) (2023-06-08)
+
+
+### Bug Fixes
+
+* duplication handeling ([#49](https://github.com/uvop/memorix/issues/49)) ([e8d63ac](https://github.com/uvop/memorix/commit/e8d63ac0b1cda57baf1567cb0263267eb6873768))
+
 ## [1.4.3](https://github.com/uvop/memorix/compare/v1.4.2...v1.4.3) (2023-06-07)
 
 
