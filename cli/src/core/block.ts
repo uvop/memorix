@@ -54,30 +54,36 @@ export type BlockEnum = {
 
 export type BlockCache = {
   type: BlockTypes.cache;
-  values: {
-    name: string;
-    key?: ValueType;
-    payload: ValueType;
-    options?: CacheDefaultOptions;
-  }[];
+  values: Map<
+    string,
+    {
+      key?: ValueType;
+      payload: ValueType;
+      options?: CacheDefaultOptions;
+    }
+  >;
 };
 export type BlockPubsub = {
   type: BlockTypes.pubsub;
-  values: {
-    name: string;
-    key?: ValueType;
-    payload: ValueType;
-  }[];
+  values: Map<
+    string,
+    {
+      key?: ValueType;
+      payload: ValueType;
+    }
+  >;
 };
 export type BlockTask = {
   type: BlockTypes.task;
-  values: {
-    name: string;
-    key?: ValueType;
-    payload: ValueType;
-    returns?: ValueType;
-    options?: TaskDefaultOptions;
-  }[];
+  values: Map<
+    string,
+    {
+      key?: ValueType;
+      payload: ValueType;
+      returns?: ValueType;
+      options?: TaskDefaultOptions;
+    }
+  >;
 };
 
 export type Block =
@@ -104,42 +110,47 @@ export const getBlocks: (scopes: ReturnType<typeof getScopes>) => Block[] = (
           | BlockTypes.pubsub
           | BlockTypes.task;
 
+        const values:
+          | BlockCache["values"]
+          | BlockPubsub["values"]
+          | BlockTask["values"] = new Map();
         const scopes = getScopes(removeBracketsOfScope(n.scope));
+        scopes.forEach((cn) => {
+          const value = getValueFromString(cn.scope, ["options"]);
+          if (value.type !== ValueTypes.object) {
+            throw new Error(`Expected object under "${blockType}.${cn.name}"`);
+          }
+
+          const payload = value.properties.find((p) => p.name === "payload");
+          if (!payload) {
+            throw new Error(
+              `Couldn't find "payload" under ${blockType}.${cn.name}`
+            );
+          }
+          const existingValue = values.get(cn.name);
+          if (existingValue) {
+            throw new Error(`${blockType}.${cn.name} is already defined once.`);
+          }
+          const options = value.properties.find((p) => p.name === "options");
+
+          values.set(cn.name, {
+            key: value.properties.find((p) => p.name === "key")?.value,
+            payload: payload.value,
+            returns:
+              blockType === BlockTypes.task
+                ? value.properties.find((p) => p.name === "returns")?.value
+                : undefined,
+            options:
+              options !== undefined && options.value.type === ValueTypes.string
+                ? getJsonFromString(options.value.content)
+                : undefined,
+          });
+        });
 
         return {
           type: blockType,
-          values: scopes.map((cn) => {
-            const value = getValueFromString(cn.scope, ["options"]);
-            if (value.type !== ValueTypes.object) {
-              throw new Error(
-                `Expected object under "${blockType}.${cn.name}"`
-              );
-            }
-
-            const payload = value.properties.find((p) => p.name === "payload");
-            if (!payload) {
-              throw new Error(
-                `Couldn't find "payload" under ${blockType}.${cn.name}`
-              );
-            }
-            const options = value.properties.find((p) => p.name === "options");
-
-            return {
-              name: cn.name,
-              key: value.properties.find((p) => p.name === "key")?.value,
-              payload: payload.value,
-              returns:
-                blockType === BlockTypes.task
-                  ? value.properties.find((p) => p.name === "returns")?.value
-                  : undefined,
-              options:
-                options !== undefined &&
-                options.value.type === ValueTypes.string
-                  ? getJsonFromString(options.value.content)
-                  : undefined,
-            };
-          }),
-        };
+          values,
+        } as BlockCache | BlockPubsub | BlockTask;
       }
       const match = /(?<type>(Model|Enum)) (?<name>.*)/g.exec(n.name);
 
@@ -260,33 +271,33 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
         }
         case BlockTypes.task: {
           newBlocks = newBlocks.concat(
-            b.values
-              .filter((v) => v.key !== undefined)
-              .map((v) =>
+            Array.from(b.values.entries())
+              .filter(([, v]) => v.key !== undefined)
+              .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.key!,
-                  `${b.type}${camelCase(v.name)}Key`
+                  `${b.type}${camelCase(name)}Key`
                 )
               )
               .flat()
           );
           newBlocks = newBlocks.concat(
-            b.values
-              .map((v) =>
+            Array.from(b.values.entries())
+              .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.payload,
-                  `${b.type}${camelCase(v.name)}Payload`
+                  `${b.type}${camelCase(name)}Payload`
                 )
               )
               .flat()
           );
           newBlocks = newBlocks.concat(
-            b.values
-              .filter((v) => v.returns !== undefined)
-              .map((v) =>
+            Array.from(b.values.entries())
+              .filter(([, v]) => v.returns !== undefined)
+              .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.returns!,
-                  `${b.type}${camelCase(v.name)}Returns`
+                  `${b.type}${camelCase(name)}Returns`
                 )
               )
               .flat()
@@ -294,25 +305,30 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
           newBlocks = newBlocks.concat([
             {
               type: BlockTypes.task,
-              values: b.values.map((v) => ({
-                ...v,
-                key: v.key
-                  ? getNonObjectValueFromValue(
-                      v.key,
-                      `${b.type}${camelCase(v.name)}Key`
-                    )
-                  : undefined,
-                payload: getNonObjectValueFromValue(
-                  v.payload,
-                  `${b.type}${camelCase(v.name)}Payload`
-                ),
-                returns: v.returns
-                  ? getNonObjectValueFromValue(
-                      v.returns,
-                      `${b.type}${camelCase(v.name)}Returns`
-                    )
-                  : undefined,
-              })),
+              values: new Map(
+                Array.from(b.values.entries()).map(([name, v]) => [
+                  name,
+                  {
+                    ...v,
+                    key: v.key
+                      ? getNonObjectValueFromValue(
+                          v.key,
+                          `${b.type}${camelCase(name)}Key`
+                        )
+                      : undefined,
+                    payload: getNonObjectValueFromValue(
+                      v.payload,
+                      `${b.type}${camelCase(name)}Payload`
+                    ),
+                    returns: v.returns
+                      ? getNonObjectValueFromValue(
+                          v.returns,
+                          `${b.type}${camelCase(name)}Returns`
+                        )
+                      : undefined,
+                  },
+                ])
+              ),
             },
           ]);
           break;
@@ -320,22 +336,22 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
         case BlockTypes.cache:
         case BlockTypes.pubsub: {
           newBlocks = newBlocks.concat(
-            b.values
-              .filter((v) => v.key !== undefined)
-              .map((v) =>
+            Array.from(b.values.entries())
+              .filter(([, v]) => v.key !== undefined)
+              .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.key!,
-                  `${b.type}${camelCase(v.name)}Key`
+                  `${b.type}${camelCase(name)}Key`
                 )
               )
               .flat()
           );
           newBlocks = newBlocks.concat(
-            b.values
-              .map((v) =>
+            Array.from(b.values.entries())
+              .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.payload,
-                  `${b.type}${camelCase(v.name)}Payload`
+                  `${b.type}${camelCase(name)}Payload`
                 )
               )
               .flat()
@@ -343,19 +359,24 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
           newBlocks = newBlocks.concat([
             {
               type: b.type,
-              values: b.values.map((v) => ({
-                ...v,
-                key: v.key
-                  ? getNonObjectValueFromValue(
-                      v.key,
-                      `${b.type}${camelCase(v.name)}Key`
-                    )
-                  : undefined,
-                payload: getNonObjectValueFromValue(
-                  v.payload,
-                  `${b.type}${camelCase(v.name)}Payload`
-                ),
-              })),
+              values: new Map(
+                Array.from(b.values.entries()).map(([name, v]) => [
+                  name,
+                  {
+                    ...v,
+                    key: v.key
+                      ? getNonObjectValueFromValue(
+                          v.key,
+                          `${b.type}${camelCase(name)}Key`
+                        )
+                      : undefined,
+                    payload: getNonObjectValueFromValue(
+                      v.payload,
+                      `${b.type}${camelCase(name)}Payload`
+                    ),
+                  },
+                ])
+              ),
             },
           ]);
           break;

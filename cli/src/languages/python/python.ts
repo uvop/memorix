@@ -13,17 +13,18 @@ import {
   getTabs as get2Tabs,
 } from "src/core/utilities";
 import { Namespace } from "src/core/namespace";
+import { MapValue } from "src/core/generics";
 
 const getTabs = (x: number) => get2Tabs(x * 2);
 
 const blockOptionsToCode: (
   blockType: BlockTypes,
-  options: (BlockCache | BlockTask)["values"][number]["options"],
+  options: MapValue<(BlockCache | BlockTask)["values"]>["options"],
   level: number
 ) => string = (bType, options, level) => {
   switch (bType) {
     case BlockTypes.cache: {
-      const o = options as BlockCache["values"][number]["options"];
+      const o = options as MapValue<BlockCache["values"]>["options"];
       return o
         ? `MemorixCacheItem.Options(
 ${getTabs(level + 1)}expire=${
@@ -47,7 +48,7 @@ ${getTabs(level)})`
         : "None";
     }
     case BlockTypes.task: {
-      const o = options as BlockTask["values"][number]["options"];
+      const o = options as MapValue<BlockTask["values"]>["options"];
       return o
         ? `MemorixTaskItem.Options(
 ${getTabs(level + 1)}take_newest=${o.takeNewest ? "True" : "False"},
@@ -118,9 +119,14 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
       }[b.type];
       const hasReturns = b.type === BlockTypes.task;
 
-      return `${b.values
-        .map((v) => {
-          return `${getTabs(2)}self.${v.name} = ${itemClass}${
+      return `${(
+        Array.from(b.values.entries()) as [
+          string,
+          MapValue<typeof b["values"]>
+        ][]
+      )
+        .map(([name, v]) => {
+          return `${getTabs(2)}self.${name} = ${itemClass}${
             v.key ? "" : "NoKey"
           }${hasReturns && !v.returns ? "NoReturns" : ""}[${
             v.key ? `${valueToCode(v.key, true)}, ` : ""
@@ -128,7 +134,7 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
             v.returns ? `, ${valueToCode(v.returns, true)}` : ""
           }](
 ${getTabs(3)}api=api,
-${getTabs(3)}id="${v.name}",
+${getTabs(3)}id="${name}",
 ${getTabs(3)}payload_class=${valueToCode(v.payload, false)},${
             v.returns
               ? `\n${getTabs(3)}returns_class=${valueToCode(v.returns, false)},`

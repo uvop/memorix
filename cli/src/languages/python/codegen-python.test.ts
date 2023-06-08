@@ -120,6 +120,20 @@ describe("python codegen", () => {
         )
       ).toMatchSnapshot();
     });
+    it("throws if model appears twice", async () => {
+      expect(
+        await codegenPython(
+          `
+            Model User {
+                id: int
+            }
+            Model User {
+                id: int
+            }
+          `
+        )
+      ).toThrowError();
+    });
   });
   describe("cache", () => {
     it("can generate with inline types", async () => {

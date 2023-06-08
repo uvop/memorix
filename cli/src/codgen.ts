@@ -18,7 +18,7 @@ const codegenSchema: (schema: Schema) => Promise<void> = async (schema) => {
   const namespace = getNamespace(schema);
   await Promise.all(
     output.map(async ({ language, file }) => {
-      const filePath = path.resolve(schema.dirname, file);
+      const filePath = path.resolve(path.dirname(schema.path), file);
       const code = codegenByLanguage(namespace, language);
       await fs.promises.writeFile(filePath, code);
     })

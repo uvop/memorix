@@ -18,7 +18,7 @@ export type Config = {
 };
 
 export type Schema = {
-  dirname: string;
+  path: string;
   config?: Omit<Config, "extends">;
   subSchemas: Schema[];
   scopes: ReturnType<typeof getScopes>;
@@ -50,7 +50,7 @@ export const getSchema: (params: {
     : [];
 
   return {
-    dirname: schemaFolder,
+    path: schemaPath,
     config,
     scopes,
     subSchemas: await Promise.all(
