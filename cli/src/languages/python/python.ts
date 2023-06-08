@@ -4,7 +4,6 @@ import {
   BlockTask,
   BlockTypes,
   DefaultOptions,
-  flatBlocks,
 } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import {
@@ -12,7 +11,7 @@ import {
   camelCase,
   getTabs as get2Tabs,
 } from "src/core/utilities";
-import { Namespace } from "src/core/namespace";
+import { Namespace, flatNamespace } from "src/core/namespace";
 import { MapValue } from "src/core/generics";
 
 const getTabs = (x: number) => get2Tabs(x * 2);
@@ -128,21 +127,46 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}"`).join(`\n`)}`;
         .map(([name, v]) => {
           return `${getTabs(2)}self.${name} = ${itemClass}${
             v.key ? "" : "NoKey"
-          }${hasReturns && !v.returns ? "NoReturns" : ""}[${
-            v.key ? `${valueToCode(v.key, true)}, ` : ""
-          }${valueToCode(v.payload, true)}${
-            v.returns ? `, ${valueToCode(v.returns, true)}` : ""
+          }${
+            hasReturns && !(v as MapValue<BlockTask["values"]>).returns
+              ? "NoReturns"
+              : ""
+          }[${v.key ? `${valueToCode(v.key, true)}, ` : ""}${valueToCode(
+            v.payload,
+            true
+          )}${
+            (v as MapValue<BlockTask["values"]>).returns
+              ? `, ${valueToCode(
+                  (v as MapValue<BlockTask["values"]>).returns!,
+                  true
+                )}`
+              : ""
           }](
 ${getTabs(3)}api=api,
 ${getTabs(3)}id="${name}",
 ${getTabs(3)}payload_class=${valueToCode(v.payload, false)},${
-            v.returns
-              ? `\n${getTabs(3)}returns_class=${valueToCode(v.returns, false)},`
+            (v as MapValue<BlockTask["values"]>).returns
+              ? `\n${getTabs(3)}returns_class=${valueToCode(
+                  (v as MapValue<BlockTask["values"]>).returns!,
+                  false
+                )},`
               : ""
           }${
-            v.options !== undefined
+            (
+              v as
+                | MapValue<BlockCache["values"]>
+                | MapValue<BlockTask["values"]>
+            ).options !== undefined
               ? `
-${getTabs(3)}options=${blockOptionsToCode(b.type, v.options, 3)},`
+${getTabs(3)}options=${blockOptionsToCode(
+                  b.type,
+                  (
+                    v as
+                      | MapValue<BlockCache["values"]>
+                      | MapValue<BlockTask["values"]>
+                  ).options!,
+                  3
+                )},`
               : ""
           }
 ${getTabs(2)})`;
@@ -191,12 +215,10 @@ const namespaceToCode: (
   importTask: boolean;
   importEnum: boolean;
 } = (namespace, nameTree = []) => {
-  const blocks = flatBlocks(namespace.blocks);
-  const hasEnum = blocks.filter((b) => b.type === BlockTypes.enum).length > 0;
-  const hasCache = blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
-  const hasPubsub =
-    blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
-  const hasTask = blocks.filter((b) => b.type === BlockTypes.task).length > 0;
+  const hasEnum = namespace.enums.size > 0;
+  const hasCache = !!namespace.cache;
+  const hasPubsub = !!namespace.pubsub;
+  const hasTask = !!namespace.task;
   const hasApi = hasCache || hasPubsub || hasTask || !!namespace.defaultOptions;
 
   const subSamespaces = Array.from(namespace.subNamespacesByName.keys()).map(
@@ -209,8 +231,8 @@ const namespaceToCode: (
   const nameCamel = nameTree.map((x) => camelCase(x)).join("");
 
   const code = ([] as string[])
-    .concat(blocks.filter((b) => b.type === BlockTypes.enum).map(blockToCode))
-    .concat(blocks.filter((b) => b.type === BlockTypes.model).map(blockToCode))
+    .concat(Array.from(namespace.enums.values()).map(blockToCode))
+    .concat(Array.from(namespace.models.values()).map(blockToCode))
     .concat(subSamespaces.map((x) => x.code))
     .concat(
       hasCache
@@ -218,10 +240,7 @@ const namespaceToCode: (
 ${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
-${blocks
-  .filter((b) => b.type === BlockTypes.cache)
-  .map(blockToCode)
-  .join("\n")}`
+${blockToCode(namespace.cache!)}`
         : []
     )
     .concat(
@@ -230,10 +249,7 @@ ${blocks
 ${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
-${blocks
-  .filter((b) => b.type === BlockTypes.pubsub)
-  .map(blockToCode)
-  .join("\n")}`
+${blockToCode(namespace.pubsub!)}`
         : []
     )
     .concat(
@@ -242,10 +258,7 @@ ${blocks
 ${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
 ${getTabs(2)}super().__init__(api=api)
 
-${blocks
-  .filter((b) => b.type === BlockTypes.task)
-  .map(blockToCode)
-  .join("\n")}`
+${blockToCode(namespace.task!)}`
         : []
     )
     .concat(
@@ -309,7 +322,10 @@ ${Array.from(namespace.subNamespacesByName.keys()).map(
   };
 };
 
-export const codegen: (namespaces: Namespace) => string = (namespace) => {
+export const codegen: (namespaces: Namespace) => string = (
+  unflattenNamespace
+) => {
+  const namespace = flatNamespace(unflattenNamespace);
   const {
     code,
     importBase,

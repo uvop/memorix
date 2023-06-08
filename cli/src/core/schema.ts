@@ -25,17 +25,23 @@ export type Schema = {
 };
 
 export const getSchema: (params: {
-  schemaFilePath: string;
-  dirname?: string;
-}) => Promise<Schema> = async ({ schemaFilePath, dirname }) => {
-  const schemaPath =
-    dirname !== undefined
-      ? path.resolve(dirname, schemaFilePath)
-      : path.resolve(schemaFilePath);
-  const schemaFolder = path.dirname(schemaPath);
-  const schema = await (await fs.promises.readFile(schemaPath)).toString();
+  schemaPath: string;
+  existingSchemasByPath?: Map<string, Schema>;
+}) => Promise<Schema> = async ({
+  schemaPath,
+  existingSchemasByPath: parentExistingSchemasByPath,
+}) => {
+  const existingSchemasByPath =
+    parentExistingSchemasByPath ?? new Map<string, Schema>();
+  const existingSchema = existingSchemasByPath.get(schemaPath);
+  if (existingSchema !== undefined) {
+    return existingSchema;
+  }
+  const schemaContent = await (
+    await fs.promises.readFile(schemaPath)
+  ).toString();
 
-  const scopes = getScopes(schema);
+  const scopes = getScopes(schemaContent);
   const configScope = scopes.find((x) => x.name === "Config");
   const config = configScope
     ? (getJsonFromString(configScope.scope) as Config)
@@ -49,17 +55,22 @@ export const getSchema: (params: {
       : [config.extends]
     : [];
 
-  return {
+  const schema: Schema = {
     path: schemaPath,
     config,
     scopes,
     subSchemas: await Promise.all(
       schemaExtendFilePaths.map((schemaExtendFilePath) =>
         getSchema({
-          schemaFilePath: schemaExtendFilePath,
-          dirname: schemaFolder,
+          schemaPath: path.resolve(
+            path.dirname(schemaPath),
+            schemaExtendFilePath
+          ),
+          existingSchemasByPath,
         })
       )
     ),
   };
+  existingSchemasByPath.set(schemaPath, schema);
+  return schema;
 };

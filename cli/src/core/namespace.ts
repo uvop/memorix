@@ -6,12 +6,17 @@ import {
   BlockTask,
   BlockTypes,
   DefaultOptions,
+  flatBlocks,
   getBlocks,
 } from "./block";
 import { getJsonFromString } from "./json";
 import { Schema } from "./schema";
 import { getScopes } from "./scope";
-import { assertUnreachable, removeBracketsOfScope } from "./utilities";
+import {
+  assertUnreachable,
+  mergeMaps,
+  removeBracketsOfScope,
+} from "./utilities";
 
 type BlockWithValues = BlockCache | BlockPubsub | BlockTask;
 
@@ -131,60 +136,30 @@ const getNamespaceBySchema: (schema: Schema) => Namespace = ({
   };
 };
 
-const mergeMaps = <T, F>(
-  values: T[],
-  {
-    getMap,
-    getDuplicateMsg,
-  }: {
-    getMap: (obj: T) => Map<string, F>;
-    getDuplicateMsg: (
-      name: string,
-      existing: {
-        item: F;
-        value: T;
-      },
-      current: {
-        item: F;
-        value: T;
-      }
-    ) => string;
-  }
-) => {
-  const mergedMap = new Map<
-    string,
-    {
-      item: F;
-      value: T;
-    }
-  >();
+export const getNamespace: (
+  schema: Schema,
+  parentNamespacesByPath?: Map<string, true>
+) => Namespace = (schema, parentNamespacesByPath) => {
+  const namespacesByPath = parentNamespacesByPath ?? new Map<string, true>();
 
-  values.forEach((value) => {
-    Array.from(getMap(value).entries()).forEach(([name, item]) => {
-      const existing = mergedMap.get(name);
-      const current = { item, value };
-      if (existing) {
-        throw new Error(getDuplicateMsg(name, existing, current));
-      }
+  namespacesByPath.set(schema.path, true);
 
-      mergedMap.set(name, current);
-    });
-  });
-
-  return new Map<string, F>(
-    Array.from(mergedMap.entries()).map(([name, { item }]) => [name, item])
-  );
-};
-
-export const getNamespace: (schema: Schema) => Namespace = (schema) => {
   const schemaNamespace = {
     schemaPath: schema.path,
     namespace: getNamespaceBySchema(schema),
   };
-  const subSchemaNamespaces = schema.subSchemas.map((x) => ({
-    schemaPath: x.path,
-    namespace: getNamespace(x),
-  }));
+  const subSchemaNamespaces = schema.subSchemas.reduce((agg, x) => {
+    if (namespacesByPath.get(x.path)) {
+      return agg;
+    }
+    return [
+      ...agg,
+      {
+        schemaPath: x.path,
+        namespace: getNamespace(x, namespacesByPath),
+      },
+    ];
+  }, [] as { schemaPath: string; namespace: Namespace }[]);
 
   const schemaNamespaces = [...subSchemaNamespaces, schemaNamespace];
 
@@ -274,5 +249,78 @@ Now: "${current.value.schemaPath}".`,
 First time: "${existing.value.schemaPath}".
 Now: "${current.value.schemaPath}".`,
     }),
+  };
+};
+
+export const flatNamespace: (namespace: Namespace) => Namespace = (
+  namespace
+) => {
+  const blocks = [
+    namespace.cache!,
+    namespace.pubsub!,
+    namespace.task!,
+    ...namespace.enums.values(),
+    ...namespace.models.values(),
+  ].filter((x) => x);
+  const flattenBlocks = flatBlocks(blocks);
+  const cache = flattenBlocks.find((x) => x.type === BlockTypes.cache) as
+    | BlockCache
+    | undefined;
+  const pubsub = flattenBlocks.find((x) => x.type === BlockTypes.pubsub) as
+    | BlockPubsub
+    | undefined;
+  const task = flattenBlocks.find((x) => x.type === BlockTypes.task) as
+    | BlockTask
+    | undefined;
+
+  const enums = new Map<string, BlockEnum>();
+  const models = new Map<string, BlockModel>();
+
+  flattenBlocks.forEach((block) => {
+    switch (block.type) {
+      case BlockTypes.enum:
+      case BlockTypes.model: {
+        const map = {
+          [BlockTypes.enum]: enums,
+          [BlockTypes.model]: models,
+        }[block.type];
+        const existingBlock = map.get(block.name);
+        if (existingBlock) {
+          throw new Error(
+            `${block.type}.${block.name} is already defined by flattening.`
+          );
+        }
+        if (block.type === BlockTypes.enum) {
+          enums.set(block.name, block);
+        } else {
+          models.set(block.name, block);
+        }
+        break;
+      }
+      case BlockTypes.cache:
+      case BlockTypes.pubsub:
+      case BlockTypes.task: {
+        break;
+      }
+      default: {
+        assertUnreachable(block);
+        break;
+      }
+    }
+  });
+
+  return {
+    cache,
+    pubsub,
+    task,
+    defaultOptions: namespace.defaultOptions,
+    enums,
+    models,
+    subNamespacesByName: new Map(
+      Array.from(namespace.subNamespacesByName.entries()).map(([name, x]) => [
+        name,
+        flatNamespace(x),
+      ])
+    ),
   };
 };

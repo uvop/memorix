@@ -33,7 +33,7 @@ export const codegen = async ({
   await Promise.all(
     (Array.isArray(schemaFilePath) ? schemaFilePath : [schemaFilePath]).map(
       async (x) => {
-        const schema = await getSchema({ schemaFilePath: x });
+        const schema = await getSchema({ schemaPath: path.resolve(x) });
 
         await codegenSchema(schema);
       }
