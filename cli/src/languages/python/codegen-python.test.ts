@@ -15,7 +15,7 @@ const codegenPython: (
   schema: string,
   moreConfig?: string
 ) => Promise<string> = (schema, moreConfig) =>
-  new Promise((res) => {
+  new Promise((res, rej) => {
     const schemaWithOutput = `
   Config {
     output: {
@@ -39,7 +39,7 @@ const codegenPython: (
       }
     );
 
-    codegen({ schemaFilePath: "schema.memorix" });
+    codegen({ schemaFilePath: "schema.memorix" }).catch(rej);
   });
 
 describe("python codegen", () => {
@@ -119,6 +119,24 @@ describe("python codegen", () => {
           `
         )
       ).toMatchSnapshot();
+    });
+    it("throws if model appears twice", (done) => {
+      codegenPython(
+        `
+          Model User {
+              id: int
+          }
+          Model User {
+              id: int
+          }
+        `
+      )
+        .then(() => {
+          done("Was supposed to throw");
+        })
+        .catch(() => {
+          done();
+        });
     });
   });
   describe("cache", () => {

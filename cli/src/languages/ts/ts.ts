@@ -1,7 +1,8 @@
-import { Block, BlockTypes } from "src/core/block";
+import { Block, BlockCache, BlockTask, BlockTypes } from "src/core/block";
 import { ValueType, ValueTypes } from "src/core/value";
 import { assertUnreachable, camelCase, getTabs } from "src/core/utilities";
 import { Namespace } from "src/core/namespace";
+import { MapValue } from "src/core/generics";
 
 export const jsonStringify: (json: any) => string = (json) =>
   JSON.stringify(json, (k, v) => (v === undefined ? null : v))
@@ -78,24 +79,48 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
       }[b.type];
       const hasReturns = b.type === BlockTypes.task;
 
-      return `${b.values
-        .map((v) => {
+      return `${Array.from(b.values.keys())
+        .map((name) => {
+          const v = b.values.get(name)!;
           return `${
-            v.options !== undefined
+            (
+              v as
+                | MapValue<BlockCache["values"]>
+                | MapValue<BlockTask["values"]>
+            ).options !== undefined
               ? `${getTabs(2)}// prettier-ignore
 `
               : ""
-          }${getTabs(2)}${v.name}: this.${itemFn}${v.key ? "" : "NoKey"}<${
+          }${getTabs(2)}${name}: this.${itemFn}${v.key ? "" : "NoKey"}<${
             v.key ? `${valueToCode(v.key, 2)}, ` : ""
           }${valueToCode(v.payload, 2)}${
-            hasReturns && "returns" in v
-              ? `, ${v.returns ? `${valueToCode(v.returns, 2)}` : "undefined"}`
+            hasReturns
+              ? `, ${
+                  (v as MapValue<BlockTask["values"]>).returns
+                    ? `${valueToCode(
+                        (v as MapValue<BlockTask["values"]>).returns!,
+                        2
+                      )}`
+                    : "undefined"
+                }`
               : ""
-          }>("${v.name}"${
-            b.type === BlockTypes.task
-              ? `, ${v.returns ? "true" : "false"}`
+          }>("${name}"${
+            hasReturns ? `, ${"returns" in v ? "true" : "false"}` : ""
+          }${
+            (
+              v as
+                | MapValue<BlockCache["values"]>
+                | MapValue<BlockTask["values"]>
+            ).options !== undefined
+              ? `, ${jsonStringify(
+                  (
+                    v as
+                      | MapValue<BlockCache["values"]>
+                      | MapValue<BlockTask["values"]>
+                  ).options!
+                )}`
               : ""
-          }${v.options !== undefined ? `, ${jsonStringify(v.options)}` : ""}),`;
+          }),`;
         })
         .join("\n")}`;
     }
@@ -109,12 +134,9 @@ const namespaceToCode: (
   namespace: Namespace,
   nameTree?: string[]
 ) => { code: string; importBase: boolean } = (namespace, nameTree = []) => {
-  const hasCache =
-    namespace.blocks.filter((b) => b.type === BlockTypes.cache).length > 0;
-  const hasPubsub =
-    namespace.blocks.filter((b) => b.type === BlockTypes.pubsub).length > 0;
-  const hasTask =
-    namespace.blocks.filter((b) => b.type === BlockTypes.task).length > 0;
+  const hasCache = !!namespace.cache;
+  const hasPubsub = !!namespace.pubsub;
+  const hasTask = !!namespace.task;
 
   const subSamespaces = Array.from(namespace.subNamespacesByName.keys()).map(
     (name) =>
@@ -135,16 +157,8 @@ const namespaceToCode: (
 
   const code = ([] as string[])
     .concat(subSamespaces.map((x) => x.code))
-    .concat(
-      namespace.blocks
-        .filter((b) => b.type === BlockTypes.enum)
-        .map(blockToCode)
-    )
-    .concat(
-      namespace.blocks
-        .filter((b) => b.type === BlockTypes.model)
-        .map(blockToCode)
-    )
+    .concat(Array.from(namespace.enums.values()).map(blockToCode))
+    .concat(Array.from(namespace.models.values()).map(blockToCode))
     .concat(
       hasApi
         ? `${
@@ -183,30 +197,21 @@ ${getTabs(1)}protected defaultOptions = ${jsonStringify(
   .concat(
     hasCache
       ? `${getTabs(1)}cache = {
-${namespace.blocks
-  .filter((b) => b.type === BlockTypes.cache)
-  .map(blockToCode)
-  .join("\n")}
+${blockToCode(namespace.cache!)}
 ${getTabs(1)}};`
       : []
   )
   .concat(
     hasPubsub
       ? `${hasCache ? "\n" : ""}${getTabs(1)}pubsub = {
-${namespace.blocks
-  .filter((b) => b.type === BlockTypes.pubsub)
-  .map(blockToCode)
-  .join("\n")}
+${blockToCode(namespace.pubsub!)}
 ${getTabs(1)}};`
       : []
   )
   .concat(
     hasTask
       ? `${hasCache || hasPubsub ? "\n" : ""}${getTabs(1)}task = {
-${namespace.blocks
-  .filter((b) => b.type === BlockTypes.task)
-  .map(blockToCode)
-  .join("\n")}
+${blockToCode(namespace.task!)}
 ${getTabs(1)}};`
       : []
   )

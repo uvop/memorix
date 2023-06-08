@@ -393,7 +393,7 @@ Config {
     language: "typescript"
     file: "memorix.generated.ts"
   }
-  extend: [
+  extends: [
     "<path-to>/messages-schema.memorix"
     "<path-to>/another-schema.memorix"
   ]

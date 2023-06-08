@@ -61,3 +61,48 @@ export const indexOfSmallest = (numArr: number[]) => {
   }
   return lowest;
 };
+
+export const mergeMaps = <T, F>(
+  values: T[],
+  {
+    getMap,
+    getDuplicateMsg,
+  }: {
+    getMap: (obj: T) => Map<string, F>;
+    getDuplicateMsg: (
+      name: string,
+      existing: {
+        item: F;
+        value: T;
+      },
+      current: {
+        item: F;
+        value: T;
+      }
+    ) => string;
+  }
+) => {
+  const mergedMap = new Map<
+    string,
+    {
+      item: F;
+      value: T;
+    }
+  >();
+
+  values.forEach((value) => {
+    Array.from(getMap(value).entries()).forEach(([name, item]) => {
+      const existing = mergedMap.get(name);
+      const current = { item, value };
+      if (existing) {
+        throw new Error(getDuplicateMsg(name, existing, current));
+      }
+
+      mergedMap.set(name, current);
+    });
+  });
+
+  return new Map<string, F>(
+    Array.from(mergedMap.entries()).map(([name, { item }]) => [name, item])
+  );
+};
