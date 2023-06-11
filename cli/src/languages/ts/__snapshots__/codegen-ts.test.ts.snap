@@ -231,17 +231,22 @@ class MemorixUser extends MemorixBase {
   };
 }
 
+class MemorixSpaceship extends MemorixBase {
+  protected namespaceNameTree = [\\"spaceship\\"];
+
+  // prettier-ignore
+  protected defaultOptions = {cache:{expire:{value:5}}};
+
+  cache = {
+    bio: this.getCacheItemNoKey<string>(\\"bio\\"),
+  };
+}
+
 export class Memorix extends MemorixBase {
   protected namespaceNameTree = [];
 
-  // prettier-ignore
-  protected defaultOptions = {cache:{expire:{value:6}}};
-
   user = this.getNamespaceItem(MemorixUser);
-
-  cache = {
-    favoriteUser: this.getCacheItemNoKey<string>(\\"favoriteUser\\"),
-  };
+  spaceship = this.getNamespaceItem(MemorixSpaceship);
 }
 "
 `;
@@ -269,6 +274,20 @@ export class Memorix extends MemorixBase {
 
   task = {
     doIt: this.getTaskItem<number, string, boolean>(\\"doIt\\", true),
+  };
+}
+"
+`;
+
+exports[`ts codegen task can generate with no returns 1`] = `
+"/* eslint-disable */
+import { MemorixBase } from \\"@memorix/client-redis\\";
+
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
+  task = {
+    doIt: this.getTaskItem<number, string, undefined>(\\"doIt\\", false),
   };
 }
 "

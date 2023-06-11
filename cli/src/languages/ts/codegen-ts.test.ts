@@ -249,6 +249,20 @@ describe("ts codegen", () => {
     });
   });
   describe("task", () => {
+    it("can generate with no returns", async () => {
+      expect(
+        await codegenTs(
+          `
+            Task {
+              doIt {
+                key: int
+                payload: string
+              }
+            }
+          `
+        )
+      ).toMatchSnapshot();
+    });
     it("can generate with inline types", async () => {
       expect(
         await codegenTs(
@@ -351,16 +365,18 @@ describe("ts codegen", () => {
                 }
               }
             }
-            DefaultOptions {
-              cache: {
-                expire: {
-                  value: 6
+            Namespace spaceship {
+              DefaultOptions {
+                cache: {
+                  expire: {
+                    value: 5
+                  }
                 }
               }
-            }
-            Cache {
-              favoriteUser {
-                payload: string
+              Cache {
+                bio {
+                  payload: string
+                }
               }
             }
           `

@@ -181,7 +181,7 @@ Now: "${current.value.schemaPath}".`,
         name,
         existing,
         current
-      ) => `Enum.${name} is already defined once.
+      ) => `Model.${name} is already defined once.
 First time: "${existing.value.schemaPath}".
 Now: "${current.value.schemaPath}".`,
     }),
