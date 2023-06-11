@@ -366,6 +366,20 @@ describe("python codegen", () => {
                 }
               }
             }
+            Namespace spaceship {
+              DefaultOptions {
+                cache: {
+                  expire: {
+                    value: 5
+                  }
+                }
+              }
+              Cache {
+                bio {
+                  payload: string
+                }
+              }
+            }
             DefaultOptions {
               cache: {
                 expire: {

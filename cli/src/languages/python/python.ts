@@ -282,12 +282,14 @@ ${getTabs(2)}self._default_options = ${defaultOptionsToCode(
               : ""
           }
 
-${Array.from(namespace.subNamespacesByName.keys()).map(
-  (namespaceName) =>
-    `${getTabs(2)}self.${namespaceName} = Memorix${nameCamel}${camelCase(
-      namespaceName
-    )}(redis_url=redis_url, ref=self)`
-)}${
+${Array.from(namespace.subNamespacesByName.keys())
+  .map(
+    (namespaceName) =>
+      `${getTabs(2)}self.${namespaceName} = Memorix${nameCamel}${camelCase(
+        namespaceName
+      )}(redis_url=redis_url, ref=self)`
+  )
+  .join("\n")}${
             Array.from(namespace.subNamespacesByName.keys()).length !== 0
               ? "\n\n"
               : ""

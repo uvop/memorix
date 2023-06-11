@@ -532,6 +532,37 @@ class MemorixUser(MemorixBase):
         self.cache = MemorixCacheUser(self)
 
 
+class MemorixCacheSpaceship(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
+        super().__init__(api=api)
+
+        self.bio = MemorixCacheItemNoKey[str](
+            api=api,
+            id=\\"bio\\",
+            payload_class=str,
+        )
+
+
+class MemorixSpaceship(MemorixBase):
+    def __init__(
+        self,
+        redis_url: str,
+        ref: typing.Optional[MemorixBase] = None,
+    ) -> None:
+        super().__init__(redis_url=redis_url, ref=ref)
+
+        self._namespace_name_tree = [\\"spaceship\\"]
+        self._default_options = MemorixBase.DefaultOptions(
+            cache=MemorixCacheItem.Options(
+                expire=MemorixCacheItem.Options.Expire(
+                    value=5,
+                ),
+            ),
+        )
+
+        self.cache = MemorixCacheSpaceship(self)
+
+
 class MemorixCache(MemorixCacheBase):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
@@ -561,6 +592,7 @@ class Memorix(MemorixBase):
         )
 
         self.user = MemorixUser(redis_url=redis_url, ref=self)
+        self.spaceship = MemorixSpaceship(redis_url=redis_url, ref=self)
 
         self.cache = MemorixCache(self)"
 `;
