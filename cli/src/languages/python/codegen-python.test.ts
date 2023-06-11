@@ -380,18 +380,6 @@ describe("python codegen", () => {
                 }
               }
             }
-            DefaultOptions {
-              cache: {
-                expire: {
-                  value: 6
-                }
-              }
-            }
-            Cache {
-              favoriteUser {
-                payload: string
-              }
-            }
           `
         )
       ).toMatchSnapshot();

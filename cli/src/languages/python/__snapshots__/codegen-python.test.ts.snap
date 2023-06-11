@@ -563,17 +563,6 @@ class MemorixSpaceship(MemorixBase):
         self.cache = MemorixCacheSpaceship(self)
 
 
-class MemorixCache(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
-
-        self.favoriteUser = MemorixCacheItemNoKey[str](
-            api=api,
-            id=\\"favoriteUser\\",
-            payload_class=str,
-        )
-
-
 class Memorix(MemorixBase):
     def __init__(
         self,
@@ -583,18 +572,11 @@ class Memorix(MemorixBase):
         super().__init__(redis_url=redis_url, ref=ref)
 
         self._namespace_name_tree = []
-        self._default_options = MemorixBase.DefaultOptions(
-            cache=MemorixCacheItem.Options(
-                expire=MemorixCacheItem.Options.Expire(
-                    value=6,
-                ),
-            ),
-        )
 
         self.user = MemorixUser(redis_url=redis_url, ref=self)
         self.spaceship = MemorixSpaceship(redis_url=redis_url, ref=self)
 
-        self.cache = MemorixCache(self)"
+"
 `;
 
 exports[`python codegen pubsub can generate with inline types 1`] = `

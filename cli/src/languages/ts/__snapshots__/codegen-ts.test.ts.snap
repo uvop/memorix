@@ -231,17 +231,22 @@ class MemorixUser extends MemorixBase {
   };
 }
 
+class MemorixSpaceship extends MemorixBase {
+  protected namespaceNameTree = [\\"spaceship\\"];
+
+  // prettier-ignore
+  protected defaultOptions = {cache:{expire:{value:5}}};
+
+  cache = {
+    bio: this.getCacheItemNoKey<string>(\\"bio\\"),
+  };
+}
+
 export class Memorix extends MemorixBase {
   protected namespaceNameTree = [];
 
-  // prettier-ignore
-  protected defaultOptions = {cache:{expire:{value:6}}};
-
   user = this.getNamespaceItem(MemorixUser);
-
-  cache = {
-    favoriteUser: this.getCacheItemNoKey<string>(\\"favoriteUser\\"),
-  };
+  spaceship = this.getNamespaceItem(MemorixSpaceship);
 }
 "
 `;

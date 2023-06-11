@@ -262,7 +262,7 @@ ${blockToCode(namespace.task!)}`
         : []
     )
     .concat(
-      hasApi
+      hasApi || namespace.subNamespacesByName.size !== 0
         ? `class Memorix${nameCamel}(MemorixBase):
 ${getTabs(1)}def __init__(
 ${getTabs(2)}self,

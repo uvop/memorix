@@ -351,16 +351,18 @@ describe("ts codegen", () => {
                 }
               }
             }
-            DefaultOptions {
-              cache: {
-                expire: {
-                  value: 6
+            Namespace spaceship {
+              DefaultOptions {
+                cache: {
+                  expire: {
+                    value: 5
+                  }
                 }
               }
-            }
-            Cache {
-              favoriteUser {
-                payload: string
+              Cache {
+                bio {
+                  payload: string
+                }
               }
             }
           `
