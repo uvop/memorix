@@ -105,7 +105,13 @@ ${b.values.map((v) => `${getTabs(1)}${v} = "${v}",`).join(`\n`)}
                 }`
               : ""
           }>("${name}"${
-            hasReturns ? `, ${"returns" in v ? "true" : "false"}` : ""
+            hasReturns
+              ? `, ${
+                  (v as MapValue<BlockTask["values"]>).returns
+                    ? "true"
+                    : "false"
+                }`
+              : ""
           }${
             (
               v as

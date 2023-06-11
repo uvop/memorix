@@ -279,6 +279,20 @@ export class Memorix extends MemorixBase {
 "
 `;
 
+exports[`ts codegen task can generate with no returns 1`] = `
+"/* eslint-disable */
+import { MemorixBase } from \\"@memorix/client-redis\\";
+
+export class Memorix extends MemorixBase {
+  protected namespaceNameTree = [];
+
+  task = {
+    doIt: this.getTaskItem<number, string, undefined>(\\"doIt\\", false),
+  };
+}
+"
+`;
+
 exports[`ts codegen task can have options 1`] = `
 "/* eslint-disable */
 import { MemorixBase } from \\"@memorix/client-redis\\";
