@@ -1,3 +1,10 @@
+## [1.4.5](https://github.com/uvop/memorix/compare/v1.4.4...v1.4.5) (2023-06-11)
+
+
+### Bug Fixes
+
+* cli minor bug fixes ([#50](https://github.com/uvop/memorix/issues/50)) ([ac5c96c](https://github.com/uvop/memorix/commit/ac5c96c3a91480384cb28e72b0cecc233b5ecc20))
+
 ## [1.4.4](https://github.com/uvop/memorix/compare/v1.4.3...v1.4.4) (2023-06-08)
 
 
