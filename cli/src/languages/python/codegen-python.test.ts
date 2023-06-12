@@ -362,7 +362,9 @@ describe("python codegen", () => {
               }
               Cache {
                 bio {
-                  payload: string
+                  payload: {
+                    description: string
+                  }
                 }
               }
             }

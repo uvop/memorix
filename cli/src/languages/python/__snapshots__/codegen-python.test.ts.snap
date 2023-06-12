@@ -501,14 +501,19 @@ from memorix_client_redis import (
 )
 
 
+@dataclass
+class CacheBioPayload(object):
+    description: str
+
+
 class MemorixCacheUser(MemorixCacheBase):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.bio = MemorixCacheItemNoKey[str](
+        self.bio = MemorixCacheItemNoKey[\\"CacheBioPayload\\"](
             api=api,
             id=\\"bio\\",
-            payload_class=str,
+            payload_class=CacheBioPayload,
         )
 
 
