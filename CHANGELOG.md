@@ -1,3 +1,10 @@
+## [1.4.6](https://github.com/uvop/memorix/compare/v1.4.5...v1.4.6) (2023-06-12)
+
+
+### Bug Fixes
+
+* Some python codegen and import bugs  ([#51](https://github.com/uvop/memorix/issues/51)) ([089d2b2](https://github.com/uvop/memorix/commit/089d2b2c9ea0fd80b61be8e85963ad074f8be72b))
+
 ## [1.4.5](https://github.com/uvop/memorix/compare/v1.4.4...v1.4.5) (2023-06-11)
 
 
