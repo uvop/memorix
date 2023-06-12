@@ -247,7 +247,7 @@ const getBlockModelsFromValue = (
   }
 };
 
-export const flatBlocks = (blocks: Block[]): Block[] => {
+export const flatBlocks = (blocks: Block[], parentName: string): Block[] => {
   let newBlocks: Block[] = [];
 
   blocks
@@ -276,7 +276,7 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
               .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.key!,
-                  `${b.type}${camelCase(name)}Key`
+                  `${parentName}${b.type}${camelCase(name)}Key`
                 )
               )
               .flat()
@@ -286,7 +286,7 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
               .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.payload,
-                  `${b.type}${camelCase(name)}Payload`
+                  `${parentName}${b.type}${camelCase(name)}Payload`
                 )
               )
               .flat()
@@ -297,7 +297,7 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
               .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.returns!,
-                  `${b.type}${camelCase(name)}Returns`
+                  `${parentName}${b.type}${camelCase(name)}Returns`
                 )
               )
               .flat()
@@ -313,17 +313,17 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
                     key: v.key
                       ? getNonObjectValueFromValue(
                           v.key,
-                          `${b.type}${camelCase(name)}Key`
+                          `${parentName}${b.type}${camelCase(name)}Key`
                         )
                       : undefined,
                     payload: getNonObjectValueFromValue(
                       v.payload,
-                      `${b.type}${camelCase(name)}Payload`
+                      `${parentName}${b.type}${camelCase(name)}Payload`
                     ),
                     returns: v.returns
                       ? getNonObjectValueFromValue(
                           v.returns,
-                          `${b.type}${camelCase(name)}Returns`
+                          `${parentName}${b.type}${camelCase(name)}Returns`
                         )
                       : undefined,
                   },
@@ -341,7 +341,7 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
               .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.key!,
-                  `${b.type}${camelCase(name)}Key`
+                  `${parentName}${b.type}${camelCase(name)}Key`
                 )
               )
               .flat()
@@ -351,7 +351,7 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
               .map(([name, v]) =>
                 getBlockModelsFromValue(
                   v.payload,
-                  `${b.type}${camelCase(name)}Payload`
+                  `${parentName}${b.type}${camelCase(name)}Payload`
                 )
               )
               .flat()
@@ -367,12 +367,12 @@ export const flatBlocks = (blocks: Block[]): Block[] => {
                     key: v.key
                       ? getNonObjectValueFromValue(
                           v.key,
-                          `${b.type}${camelCase(name)}Key`
+                          `${parentName}${b.type}${camelCase(name)}Key`
                         )
                       : undefined,
                     payload: getNonObjectValueFromValue(
                       v.payload,
-                      `${b.type}${camelCase(name)}Payload`
+                      `${parentName}${b.type}${camelCase(name)}Payload`
                     ),
                   },
                 ])

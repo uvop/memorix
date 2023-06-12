@@ -1,4 +1,4 @@
-from .memorix_base import MemorixBase
+from .memorix_base import MemorixBase as MemorixBase
 from .cache.cache_base import CacheBase as MemorixCacheBase
 from .cache.cache_item import (
     CacheItem as MemorixCacheItem,
@@ -16,4 +16,4 @@ from .task.task_item import (
     TaskItemNoReturns as MemorixTaskItemNoReturns,
     TaskItemNoKeyNoReturns as MemorixTaskItemNoKeyNoReturns,
 )
-from dataclasses import dataclass
+from dataclasses import dataclass as dataclass

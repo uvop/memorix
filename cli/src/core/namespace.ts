@@ -14,6 +14,7 @@ import { Schema } from "./schema";
 import { getScopes } from "./scope";
 import {
   assertUnreachable,
+  camelCase,
   mergeMaps,
   removeBracketsOfScope,
 } from "./utilities";
@@ -252,9 +253,10 @@ Now: "${current.value.schemaPath}".`,
   };
 };
 
-export const flatNamespace: (namespace: Namespace) => Namespace = (
-  namespace
-) => {
+export const flatNamespace: (
+  namespace: Namespace,
+  parentName?: string
+) => Namespace = (namespace, parentName = "") => {
   const blocks = [
     namespace.cache!,
     namespace.pubsub!,
@@ -262,7 +264,7 @@ export const flatNamespace: (namespace: Namespace) => Namespace = (
     ...namespace.enums.values(),
     ...namespace.models.values(),
   ].filter((x) => x);
-  const flattenBlocks = flatBlocks(blocks);
+  const flattenBlocks = flatBlocks(blocks, parentName);
   const cache = flattenBlocks.find((x) => x.type === BlockTypes.cache) as
     | BlockCache
     | undefined;
@@ -319,7 +321,7 @@ export const flatNamespace: (namespace: Namespace) => Namespace = (
     subNamespacesByName: new Map(
       Array.from(namespace.subNamespacesByName.entries()).map(([name, x]) => [
         name,
-        flatNamespace(x),
+        flatNamespace(x, `${parentName}${camelCase(name)}`),
       ])
     ),
   };

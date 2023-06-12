@@ -271,7 +271,7 @@ ${getTabs(2)}ref: typing.Optional[MemorixBase] = None,
 ${getTabs(1)}) -> None:
 ${getTabs(2)}super().__init__(redis_url=redis_url, ref=ref)
 
-${getTabs(2)}self._namespace_name_tree = [${nameTree
+${getTabs(2)}self._namespace_name_tree: typing.List[str] = [${nameTree
             .map((x) => `"${x}"`)
             .join(", ")}]${
             namespace.defaultOptions

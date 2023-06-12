@@ -47,7 +47,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.cache = MemorixCache(self)"
 `;
@@ -94,7 +94,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.cache = MemorixCache(self)"
 `;
@@ -135,7 +135,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.cache = MemorixCache(self)"
 `;
@@ -182,7 +182,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.cache = MemorixCache(self)"
 `;
@@ -229,7 +229,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.cache = MemorixCache(self)"
 `;
@@ -276,7 +276,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.cache = MemorixCache(self)"
 `;
@@ -303,7 +303,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
         self._default_options = MemorixBase.DefaultOptions(
             cache=MemorixCacheItem.Options(
                 expire=None,
@@ -335,7 +335,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
         self._default_options = MemorixBase.DefaultOptions(
             cache=MemorixCacheItem.Options(
                 expire=MemorixCacheItem.Options.Expire(
@@ -501,14 +501,19 @@ from memorix_client_redis import (
 )
 
 
+@dataclass
+class UserCacheBioPayload(object):
+    description: str
+
+
 class MemorixCacheUser(MemorixCacheBase):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.bio = MemorixCacheItemNoKey[str](
+        self.bio = MemorixCacheItemNoKey[\\"UserCacheBioPayload\\"](
             api=api,
             id=\\"bio\\",
-            payload_class=str,
+            payload_class=UserCacheBioPayload,
         )
 
 
@@ -520,7 +525,7 @@ class MemorixUser(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = [\\"user\\"]
+        self._namespace_name_tree: typing.List[str] = [\\"user\\"]
         self._default_options = MemorixBase.DefaultOptions(
             cache=MemorixCacheItem.Options(
                 expire=MemorixCacheItem.Options.Expire(
@@ -551,7 +556,7 @@ class MemorixSpaceship(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = [\\"spaceship\\"]
+        self._namespace_name_tree: typing.List[str] = [\\"spaceship\\"]
         self._default_options = MemorixBase.DefaultOptions(
             cache=MemorixCacheItem.Options(
                 expire=MemorixCacheItem.Options.Expire(
@@ -571,7 +576,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.user = MemorixUser(redis_url=redis_url, ref=self)
         self.spaceship = MemorixSpaceship(redis_url=redis_url, ref=self)
@@ -615,7 +620,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.pubsub = MemorixPubSub(self)"
 `;
@@ -659,7 +664,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.task = MemorixTask(self)"
 `;
@@ -706,7 +711,7 @@ class Memorix(MemorixBase):
     ) -> None:
         super().__init__(redis_url=redis_url, ref=ref)
 
-        self._namespace_name_tree = []
+        self._namespace_name_tree: typing.List[str] = []
 
         self.task = MemorixTask(self)"
 `;
