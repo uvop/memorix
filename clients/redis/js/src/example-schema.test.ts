@@ -237,15 +237,9 @@ describe("example schema has", () => {
         })
         .catch(done);
     });
-    type FnType<T> = (value: string) => T | Promise<T>;
-    const fn: FnType<Animal> = async (value) =>
-      value === "0" ? Animal.dog : Animal.cat;
-    fn("1");
-
     it("queue receives a returns", async () => {
-      const { stop } = await memorix.task.runAlgo.dequeue(
-        async (payload) =>
-          (payload === "uv5" ? Animal.person : Animal.dog) as any
+      const { stop } = await memorix.task.runAlgo.dequeue((payload) =>
+        payload === "uv5" ? Animal.person : Animal.dog
       );
       const { getReturns } = await memorix.task.runAlgo.queue("uv5");
       const returns = await getReturns();
