@@ -146,7 +146,7 @@ describe("example schema has", () => {
             const payloads: string[] = [];
             let stop: any;
             memorix.task.runAlgo
-              .dequeue(({ payload }) => {
+              .dequeue((payload) => {
                 payloads.push(payload);
                 if (payloads.length === 2) {
                   res({
@@ -180,7 +180,7 @@ describe("example schema has", () => {
             let stop: any;
             memorix.task.runAlgo
               .dequeue(
-                ({ payload }) => {
+                (payload) => {
                   payloads.push(payload);
                   if (payloads.length === 2) {
                     res({
@@ -215,7 +215,7 @@ describe("example schema has", () => {
             const payloads: string[] = [];
             let stop: any;
             memorix.task.runAlgoNewest
-              .dequeue(({ payload }) => {
+              .dequeue((payload) => {
                 payloads.push(payload);
                 if (payloads.length === 2) {
                   res({
@@ -238,13 +238,31 @@ describe("example schema has", () => {
         .catch(done);
     });
     it("queue receives a returns", async () => {
-      const { stop } = await memorix.task.runAlgo.dequeue(({ payload }) =>
+      const { stop } = await memorix.task.runAlgo.dequeue((payload) =>
         payload === "uv5" ? Animal.person : Animal.dog
       );
       const { getReturns } = await memorix.task.runAlgo.queue("uv5");
       const returns = await getReturns();
       expect(returns).toBe(Animal.person);
       await stop();
+    });
+    it("queue receives a returns", async () => {
+      const { stop, asyncIterator } = await memorix.task.runAlgo.dequeue();
+      await Promise.all([
+        (async () => {
+          for await (const { payload, returnValue } of asyncIterator) {
+            await returnValue(
+              (payload === "uv5" ? Animal.person : Animal.dog) as never
+            );
+          }
+        })(),
+        (async () => {
+          const { getReturns } = await memorix.task.runAlgo.queue("uv5");
+          const returns = await getReturns();
+          expect(returns).toBe(Animal.person);
+          await stop();
+        })(),
+      ]);
     });
   });
   describe("namespace", () => {

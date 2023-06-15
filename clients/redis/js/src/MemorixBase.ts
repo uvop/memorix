@@ -2,21 +2,12 @@
 import Redis from "ioredis";
 import { v4 as uuidv4 } from "uuid";
 import callbackToAsyncIterator from "callback-to-async-iterator";
-import {
-  CacheItem,
-  CacheOptions,
-  TaskOptions,
-  PubsubItem,
-  TaskItem,
-  CacheItemNoKey,
-  PubsubItemNoKey,
-  TaskItemNoKey,
-} from "./types";
+import * as types from "./types";
 import { hashKey } from "./utils/hashKey";
 
 export type DefaultOptions = {
-  cache?: CacheOptions;
-  task?: TaskOptions;
+  cache?: types.CacheOptions;
+  task?: types.TaskOptions;
 };
 
 export class MemorixBase {
@@ -78,8 +69,8 @@ export class MemorixBase {
 
   protected getCacheItem<Key, Payload>(
     identifier: string,
-    iOptions?: CacheOptions
-  ): CacheItem<Key, Payload> {
+    iOptions?: types.CacheOptions
+  ): types.CacheItem<Key, Payload> {
     const hashCacheKey = (key: Key | undefined) => {
       return hashKey(
         key
@@ -88,7 +79,7 @@ export class MemorixBase {
       );
     };
 
-    const cacheItem: CacheItem<Key, Payload> = {
+    const cacheItem: types.CacheItem<Key, Payload> = {
       set: async (key, payload, options) => {
         const { expire = undefined } = {
           ...this.defaultOptions?.cache,
@@ -144,7 +135,7 @@ export class MemorixBase {
 
   protected getCacheItemNoKey<Payload>(
     ...itemArgs: any[]
-  ): CacheItemNoKey<Payload> {
+  ): types.CacheItemNoKey<Payload> {
     const item = (this.getCacheItem as any)(...itemArgs);
 
     return {
@@ -156,7 +147,7 @@ export class MemorixBase {
 
   protected getPubsubItem<Key, Payload>(
     identifier: string
-  ): PubsubItem<Key, Payload> {
+  ): types.PubsubItem<Key, Payload> {
     const hashPubsubKey = (key: Key | undefined) => {
       return hashKey(
         key
@@ -248,7 +239,7 @@ export class MemorixBase {
 
   protected getPubsubItemNoKey<Payload>(
     ...itemArgs: any[]
-  ): PubsubItemNoKey<Payload> {
+  ): types.PubsubItemNoKey<Payload> {
     const item = (this.getPubsubItem as any)(...itemArgs);
 
     return {
@@ -260,8 +251,8 @@ export class MemorixBase {
   protected getTaskItem<Key, Payload, Returns>(
     identifier: string,
     hasReturns: Returns extends undefined ? false : true,
-    iOptions?: TaskOptions
-  ): TaskItem<Key, Payload, Returns> {
+    iOptions?: types.TaskOptions
+  ): types.TaskItem<Key, Payload, Returns> {
     const hashPubsubKey = (key: Key | undefined) => {
       return hashKey(
         key
@@ -291,7 +282,7 @@ export class MemorixBase {
           ? new Promise((res, rej) => {
               let stop: () => Promise<void> | undefined;
               returnTask!
-                .dequeue(returnsId!, ({ payload: returns }) => {
+                .dequeue(returnsId!, (returns) => {
                   stop();
                   res(returns);
                 })
@@ -312,7 +303,17 @@ export class MemorixBase {
           queueSize,
         } as any;
       },
-      dequeue: async (key, callback, options) => {
+      dequeue: async (...args) => {
+        let key: Key;
+        let callback: types.TaskDequeueCallback<Payload, Returns> | undefined;
+        let options: types.TaskOptions | undefined;
+        if (args.length === 1) {
+          [key] = args;
+        } else if (typeof args[1] === "function") {
+          [key, callback, options] = args;
+        } else {
+          [key, options] = args;
+        }
         const hashedKey = hashPubsubKey(key);
         const { takeNewest = false } = {
           ...this.defaultOptions?.task,
@@ -323,7 +324,99 @@ export class MemorixBase {
         const redisClient = this.redis.duplicate();
         await redisClient.connect();
         this.redisTasks.push(redisClient);
+        let isStopped = false;
 
+        const pop = () =>
+          new Promise<{ value?: { payload: Payload; returnsId?: string } }>(
+            (res, rej) => {
+              redisClient[takeNewest ? "brpop" : "blpop"](
+                hashedKey,
+                0,
+                (err, popValue) => {
+                  if (err) {
+                    if (isStopped) {
+                      res({ value: undefined });
+                    } else {
+                      rej(err);
+                    }
+                    return;
+                  }
+                  if (!popValue) {
+                    return;
+                  }
+                  const [, wrapedPayloadStr] = popValue;
+                  const wrapedPayload = JSON.parse(wrapedPayloadStr);
+                  const payload: Payload = hasReturns
+                    ? wrapedPayload[1]
+                    : wrapedPayload[0];
+
+                  if (hasReturns) {
+                    const returnsId: string = wrapedPayload[0];
+                    res({ value: { payload, returnsId } });
+                  } else {
+                    res({ value: { payload } });
+                  }
+                }
+              );
+            }
+          );
+        let currentPop: undefined | ReturnType<typeof pop>;
+
+        if (callback === undefined) {
+          const asyncIterator: AsyncIterableIterator<{
+            payload: Payload;
+            returnValue: Returns extends undefined
+              ? undefined
+              : (value: Returns) => Promise<void>;
+          }> = {
+            [Symbol.asyncIterator]() {
+              return this;
+            },
+            next: async () => {
+              currentPop = pop();
+              const { value } = await currentPop;
+              if (!value) {
+                return {
+                  done: true,
+                };
+              }
+              const { payload, returnsId } = value;
+              if (hasReturns && returnsId !== undefined) {
+                return {
+                  value: {
+                    payload,
+                    returnValue: async (returns) => {
+                      await returnTask!.queue(returnsId, returns);
+                    },
+                  },
+                  done: false,
+                };
+              }
+              return {
+                value: {
+                  payload,
+                  returnValue: undefined,
+                },
+                done: false,
+              } as any;
+            },
+            throw() {
+              return Promise.reject(new Error("Thrown"));
+            },
+          };
+          return {
+            stop: async () => {
+              isStopped = true;
+              redisClient.disconnect();
+              const indexToRemove = this.redisTasks.indexOf(redisClient);
+              if (indexToRemove !== -1) {
+                this.redisTasks.splice(indexToRemove, 1);
+              }
+              await currentPop;
+            },
+            asyncIterator,
+          };
+        }
         const stoppedPromise = new Promise((res) => {
           const cb = async (err: any, blpop: any) => {
             if (err) {
@@ -338,7 +431,7 @@ export class MemorixBase {
                 ? wrapedPayload[1]
                 : wrapedPayload[0];
 
-              const result = callback({ payload });
+              const result = callback!(payload);
               if (hasReturns) {
                 const returnsId: string = wrapedPayload[0];
                 const returns = (
@@ -361,7 +454,7 @@ export class MemorixBase {
             }
             await stoppedPromise;
           },
-        };
+        } as any;
       },
       clear: async (key) => {
         const hashedKey = hashPubsubKey(key);
@@ -372,7 +465,7 @@ export class MemorixBase {
 
   protected getTaskItemNoKey<Payload, Returns>(
     ...itemArgs: any[]
-  ): TaskItemNoKey<Payload, Returns> {
+  ): types.TaskItemNoKey<Payload, Returns> {
     const item = (this.getTaskItem as any)(...itemArgs);
 
     return {
