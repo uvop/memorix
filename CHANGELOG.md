@@ -1,3 +1,10 @@
+## [1.4.7](https://github.com/uvop/memorix/compare/v1.4.6...v1.4.7) (2023-06-15)
+
+
+### Bug Fixes
+
+* Added support for asyncIterator in task dequeue ([#52](https://github.com/uvop/memorix/issues/52)) ([f0007e8](https://github.com/uvop/memorix/commit/f0007e8297c962c753205b7a6b7fc108baaf4f69))
+
 ## [1.4.6](https://github.com/uvop/memorix/compare/v1.4.5...v1.4.6) (2023-06-12)
 
 
