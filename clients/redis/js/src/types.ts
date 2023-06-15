@@ -54,30 +54,40 @@ type TaskQueue<Returns> = Promise<
 >;
 
 type TaskDequeue = Promise<{ stop: () => Promise<void> }>;
-type TaskDequeueCallback<Payload, Returns> = (arg: {
-  payload: Payload;
-}) => Returns extends undefined
+type TaskDequeueAsyncIterator<Payload, Returns> = Promise<{
+  stop: () => Promise<void>;
+  asyncIterator: AsyncIterableIterator<{
+    payload: Payload;
+    returnValue: Returns extends undefined
+      ? undefined
+      : (value: Returns) => Promise<void>;
+  }>;
+}>;
+export type TaskDequeueCallback<Payload, Returns> = (
+  payload: Payload
+) => Returns extends undefined
   ? void | Promise<void>
   : Returns | Promise<Returns>;
 
 export type TaskItem<Key, Payload, Returns> = {
-  queue(...args: [key: Key, payload: Payload]): TaskQueue<Returns>;
+  queue(key: Key, payload: Payload): TaskQueue<Returns>;
   dequeue(
-    ...args: [
-      key: Key,
-      callback: TaskDequeueCallback<Payload, Returns>,
-      options?: TaskOptions
-    ]
+    key: Key,
+    callback: TaskDequeueCallback<Payload, Returns>,
+    options?: TaskOptions
   ): TaskDequeue;
-  clear(...args: [key: Key]): void;
+  dequeue(
+    key: Key,
+    options?: TaskOptions
+  ): TaskDequeueAsyncIterator<Payload, Returns>;
+  clear(key: Key): void;
 };
 export type TaskItemNoKey<Payload, Returns> = {
-  queue(...args: [payload: Payload]): TaskQueue<Returns>;
+  queue(payload: Payload): TaskQueue<Returns>;
   dequeue(
-    ...args: [
-      callback: TaskDequeueCallback<Payload, Returns>,
-      options?: TaskOptions
-    ]
+    callback: TaskDequeueCallback<Payload, Returns>,
+    options?: TaskOptions
   ): TaskDequeue;
-  clear(...args: []): void;
+  dequeue(options?: TaskOptions): TaskDequeueAsyncIterator<Payload, Returns>;
+  clear(): void;
 };
