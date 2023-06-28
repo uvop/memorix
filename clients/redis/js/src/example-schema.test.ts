@@ -63,6 +63,15 @@ describe("example schema has", () => {
     const user = await memorix.cache.userExpire3.get("uv");
     expect(user).not.toBe(null);
   });
+  it("cache expire extending manually", async () => {
+    await memorix.cache.userNoKey.set({ name: "uv", age: 29 });
+    await new Promise((res) => setTimeout(res, 1500));
+    await memorix.cache.userNoKey.get();
+    await memorix.cache.userNoKey.extend();
+    await new Promise((res) => setTimeout(res, 1500));
+    const user = await memorix.cache.userNoKey.get();
+    expect(user).not.toBe(null);
+  });
   describe("pubsub", () => {
     it("publish says how many subscribers", (done) => {
       memorix.pubsub.message.subscribe().then(() => {

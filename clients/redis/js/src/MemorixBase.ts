@@ -141,7 +141,7 @@ export class MemorixBase {
     return {
       get: (...args) => item.get(undefined, ...args),
       set: (...args) => item.set(undefined, ...args),
-      extend: (...args) => item.set(undefined, ...args),
+      extend: (...args) => item.extend(undefined, ...args),
     };
   }
 
