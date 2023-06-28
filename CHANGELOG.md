@@ -1,3 +1,10 @@
+## [1.4.8](https://github.com/uvop/memorix/compare/v1.4.7...v1.4.8) (2023-06-28)
+
+
+### Bug Fixes
+
+* bug extend no key is setting empty string ([#53](https://github.com/uvop/memorix/issues/53)) ([8ca0a64](https://github.com/uvop/memorix/commit/8ca0a641dabe7972f7228162bfc0b89908429c20))
+
 ## [1.4.7](https://github.com/uvop/memorix/compare/v1.4.6...v1.4.7) (2023-06-15)
 
 
