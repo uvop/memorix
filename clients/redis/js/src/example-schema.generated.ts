@@ -43,6 +43,7 @@ export class Memorix extends MemorixBase {
   cache = {
     favoriteAnimal: this.getCacheItem<string, Animal>("favoriteAnimal"),
     user: this.getCacheItem<string, User>("user"),
+    userNoKey: this.getCacheItemNoKey<User>("userNoKey"),
     // prettier-ignore
     userExpire: this.getCacheItem<string, User>("userExpire", {expire:{value:1000,isInMs:true}}),
     // prettier-ignore

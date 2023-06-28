@@ -52,6 +52,9 @@ Cache {
         key: string
         payload: User
     }
+    userNoKey {
+        payload: User
+    }
     userExpire {
         key: string
         payload: User
