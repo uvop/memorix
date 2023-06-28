@@ -263,9 +263,9 @@ export class MemorixBase {
 
     const returnTask = hasReturns
       ? this.getTaskItem<string, Returns, undefined>(
-        `${identifier}_returns`,
-        false
-      )
+          `${identifier}_returns`,
+          false
+        )
       : undefined;
 
     return {
@@ -280,17 +280,17 @@ export class MemorixBase {
 
         const returnsPromise = hasReturns
           ? new Promise((res, rej) => {
-            let stop: () => Promise<void> | undefined;
-            returnTask!
-              .dequeue(returnsId!, (returns) => {
-                stop();
-                res(returns);
-              })
-              .then((dequeueObj) => {
-                stop = dequeueObj.stop;
-              })
-              .catch(rej);
-          })
+              let stop: () => Promise<void> | undefined;
+              returnTask!
+                .dequeue(returnsId!, (returns) => {
+                  stop();
+                  res(returns);
+                })
+                .then((dequeueObj) => {
+                  stop = dequeueObj.stop;
+                })
+                .catch(rej);
+            })
           : undefined;
 
         if (hasReturns) {
@@ -366,8 +366,8 @@ export class MemorixBase {
           const asyncIterator: AsyncIterableIterator<{
             payload: Payload;
             returnValue: Returns extends undefined
-            ? undefined
-            : (value: Returns) => Promise<void>;
+              ? undefined
+              : (value: Returns) => Promise<void>;
           }> = {
             [Symbol.asyncIterator]() {
               return this;
