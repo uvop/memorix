@@ -33,7 +33,12 @@ def to_json(value: TT, sort_dict: bool = False) -> str:
         value: TT
 
     json_obj = JSON(value=value)
-    dict = asdict(json_obj)
+    dict = asdict(
+        json_obj,
+        dict_factory=lambda dict: {
+            d_key: d_value for (d_key, d_value) in dict if d_value is not None
+        },
+    )
     if sort_dict:
         dict = _order_dict(dict)
     return json.dumps(dict["value"], separators=(",", ":"))
