@@ -1,3 +1,10 @@
+## [1.4.9](https://github.com/uvop/memorix/compare/v1.4.8...v1.4.9) (2023-08-15)
+
+
+### Bug Fixes
+
+* Python to exclude none from jsons ([#54](https://github.com/uvop/memorix/issues/54)) ([670cac0](https://github.com/uvop/memorix/commit/670cac0a6bbed8b035a5f097d2edbff63bce6c74))
+
 ## [1.4.8](https://github.com/uvop/memorix/compare/v1.4.7...v1.4.8) (2023-06-28)
 
 
