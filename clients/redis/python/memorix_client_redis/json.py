@@ -34,7 +34,10 @@ def to_json(value: TT, sort_dict: bool = False) -> str:
 
     json_obj = JSON(value=value)
     dict = asdict(
-        json_obj, dict_factory=lambda x: {k: v for (k, v) in x if v is not None}
+        json_obj,
+        dict_factory=lambda dict: {
+            d_key: d_value for (d_key, d_value) in dict if d_value is not None
+        },
     )
     if sort_dict:
         dict = _order_dict(dict)
