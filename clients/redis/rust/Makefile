@@ -1,5 +1,9 @@
 install:
 	cargo build
+codegen:
+	(cd ../../../cli && yarn cli codegen ../clients/redis/rust/src/example-schema.memorix) &&\
+	 \
+	make format
 format:
 	cargo fmt
 format-check:
