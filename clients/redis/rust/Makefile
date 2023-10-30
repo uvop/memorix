@@ -1,7 +1,7 @@
 install:
 	cargo build
 codegen:
-	(cd ../../../cli && yarn cli codegen ../clients/redis/rust/src/example-schema.memorix) &&\
+	(cd ../../../cli && yarn cli codegen ../clients/redis/rust/examples/example-schema.memorix) &&\
 	 \
 	make format
 format:
@@ -17,6 +17,6 @@ typecheck:
 test: FORCE
 	cargo test
 start: FORCE
-	cargo run
+	cargo run --example example
 
 FORCE: ;

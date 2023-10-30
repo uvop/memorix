@@ -17,29 +17,35 @@ pub struct User {
     pub age: Option<i32>,
 }
 
-// #[derive(memorix_redis::)]
-// struct FavoriteAnimalCacheItem {
-//     payload: Animal
-// }
-
-// impl MemorixCacheItemNoKeyBase for FavoriteAnimalCacheItem {
-//     fn getId() {
-//         "favoriteAnimal"
-//     }
-// }
-
-// #[derive(MemorixCacheBase)]
-struct MemorixCache {
-    favorite_animal: memorix_redis::MemorixCacheItemNoKey<Animal>,
+pub struct MemorixCache<'a> {
+    pub favorite_animal: memorix_redis::MemorixCacheItemNoKey<'a, Animal>,
 }
 
-impl MemorixCache {
-    fn new() -> MemorixCache {
+impl<'a> MemorixCache<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         MemorixCache {
-            favorite_animal: memorix_redis::MemorixCacheItemNoKey<Animal>::new
+            favorite_animal: memorix_redis::MemorixCacheItemNoKey::new(
+                memorix_base,
+                "favoriteAnimal",
+            ),
         }
     }
 }
+
+pub struct Memorix<'a> {
+    pub cache: MemorixCache<'a>,
+}
+
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Memorix<'a> {
+        let memorix_base = memorix_redis::MemorixBase::new(redis_url).await;
+        Self {
+            cache: MemorixCache::new(memorix_base),
+        }
+    }
+}
+
+fn main() {}
 
 // class MemorixCache(MemorixCacheBase):
 //     def __init__(self, api: MemorixBase) -> None:

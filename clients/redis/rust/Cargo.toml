@@ -7,17 +7,19 @@ description = "Rust bindings for bladeRF"
 readme = "../../README.md"
 edition = "2021"
 license = "MIT"
-default-run = "main"
 
 [lib]
 name = "memorix_redis"
 path = "src/lib.rs"
 
-[[bin]]
-name = "main"
-path = "src/main.rs"
+[[example]]
+name = "example"
+path = "examples/main.rs"
 
 [dependencies]
 redis = { version = "^0.22.3", features = ["tokio-comp"] }
 serde_json = "^1.0.94"
 serde = { version = "^1.0.156", features = ["derive"] }
+
+[dev-dependencies]
+tokio = { version = "^1.33.0", features = ["full"] }
