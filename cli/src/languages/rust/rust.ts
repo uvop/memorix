@@ -139,7 +139,7 @@ ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
         ][]
       )
         .map(([name, v]) => {
-          return `${getTabs(1)}${name}: memorix_redis::${itemClass}${
+          return `pub ${getTabs(1)}${name}: memorix_redis::${itemClass}${
             v.key ? "" : "NoKey"
           }${
             hasReturns && !(v as MapValue<BlockTask["values"]>).returns
@@ -184,7 +184,7 @@ ${b.properties
 }`;
     case BlockTypes.enum:
       return `#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, strum_macros::Display)]
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, std::fmt::Debug)]
 pub enum ${b.name} {
 ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
 }`;
@@ -212,7 +212,7 @@ ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
               ? "NoReturns"
               : ""
           }::new(
-${getTabs(4)}memorix_base,
+${getTabs(4)}memorix_base.clone(),
 ${getTabs(4)}"${name}",
 ${getTabs(3)}),`;
         })
@@ -285,7 +285,8 @@ const namespaceToCode: (
     .concat(subSamespaces.map((x) => x.code))
     .concat(
       hasCache
-        ? `struct MemorixCache${nameCamel}<'a> {
+        ? `#[allow(non_snake_case)]
+pub struct MemorixCache${nameCamel}<'a> {
 ${blockToStruct(namespace.cache!)}
 }
 
@@ -300,7 +301,8 @@ ${getTabs(1)}}
     )
     .concat(
       hasPubsub
-        ? `struct MemorixPubSub${nameCamel}<'a> {
+        ? `#[allow(non_snake_case)]
+pub struct MemorixPubSub${nameCamel}<'a> {
 ${blockToStruct(namespace.pubsub!)}
 }
 
@@ -315,7 +317,8 @@ ${getTabs(1)}}
     )
     .concat(
       hasTask
-        ? `struct MemorixTask${nameCamel}<'a> {
+        ? `#[allow(non_snake_case)]
+pub struct MemorixTask${nameCamel}<'a> {
 ${blockToStruct(namespace.task!)}
 }
 
@@ -342,32 +345,38 @@ ${([] as string[])
   .join("\n")}
 }
 
-const MEMORIX_${namePascal}_NAMESPACE_NAME_TREE: &'static [&'static str] = &[${nameTree
+const MEMORIX_${
+            namePascal ? `${namePascal}_` : ""
+          }NAMESPACE_NAME_TREE: &'static [&'static str] = &[${nameTree
             .map((x) => `"${x}"`)
             .join(", ")}];
 
-impl<'a> Memorix${nameCamel}<'a> {
+impl<'a> Memorix${namePascal ? `${namePascal}_` : ""}<'a> {
 ${getTabs(1)}pub async fn new(redis_url: &str) -> Memorix<'a> {
 ${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::new(
 ${getTabs(3)}redis_url,
-${getTabs(3)}MEMORIX_${namePascal}_NAMESPACE_NAME_TREE,
+${getTabs(3)}MEMORIX_${namePascal}NAMESPACE_NAME_TREE,
 ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
 ${getTabs(2)}).await;
 ${getTabs(2)}Self {
 ${([] as string[])
   .concat(
     hasCache
-      ? `${getTabs(3)}cache: MemorixCache${nameCamel}::new(memorix_base),`
+      ? `${getTabs(
+          3
+        )}cache: MemorixCache${nameCamel}::new(memorix_base.clone()),`
       : []
   )
   .concat(
     hasPubsub
-      ? `${getTabs(3)}pubsub: MemorixPubSub${nameCamel}::new(memorix_base),`
+      ? `${getTabs(
+          3
+        )}pubsub: MemorixPubSub${nameCamel}::new(memorix_base.clone()),`
       : []
   )
   .concat(
     hasTask
-      ? `${getTabs(3)}task: MemorixTask${nameCamel}::new(memorix_base),`
+      ? `${getTabs(3)}task: MemorixTask${nameCamel}::new(memorix_base.clone()),`
       : []
   )
   .join("\n")}

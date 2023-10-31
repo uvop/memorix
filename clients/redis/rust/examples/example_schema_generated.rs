@@ -20,7 +20,7 @@ pub struct User {
 #[allow(non_snake_case)]
 pub struct MemorixCache<'a> {
     pub favoriteAnimal: memorix_redis::MemorixCacheItem<'a, String, Animal>,
-    user: memorix_redis::MemorixCacheItem<'a, String, User>,
+    pub user: memorix_redis::MemorixCacheItem<'a, String, User>,
 }
 
 impl<'a> MemorixCache<'a> {
@@ -35,27 +35,28 @@ impl<'a> MemorixCache<'a> {
     }
 }
 
+#[allow(non_snake_case)]
 pub struct MemorixPubSub<'a> {
-    message: memorix_redis::MemorixPubSubItemNoKey<'a, String>,
+    pub message: memorix_redis::MemorixPubSubItemNoKey<'a, String>,
 }
 
 impl<'a> MemorixPubSub<'a> {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
-            message: memorix_redis::MemorixPubSubItemNoKey::new(memorix_base, "message"),
+            message: memorix_redis::MemorixPubSubItemNoKey::new(memorix_base.clone(), "message"),
         }
     }
 }
 
 #[allow(non_snake_case)]
 pub struct MemorixTask<'a> {
-    runAlgo: memorix_redis::MemorixTaskItemNoKey<'a, String, Animal>,
+    pub runAlgo: memorix_redis::MemorixTaskItemNoKey<'a, String, Animal>,
 }
 
 impl<'a> MemorixTask<'a> {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
-            runAlgo: memorix_redis::MemorixTaskItemNoKey::new(memorix_base, "runAlgo"),
+            runAlgo: memorix_redis::MemorixTaskItemNoKey::new(memorix_base.clone(), "runAlgo"),
         }
     }
 }
@@ -67,6 +68,7 @@ pub struct Memorix<'a> {
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+
 impl<'a> Memorix<'a> {
     pub async fn new(redis_url: &str) -> Memorix<'a> {
         let memorix_base =

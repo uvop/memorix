@@ -3,7 +3,8 @@ install:
 codegen:
 	(cd ../../../cli && yarn cli codegen ../clients/redis/rust/examples/example-schema.memorix) &&\
 	 \
-	make format
+	make format && \
+	echo "\nfn main() {}" >> ./examples/example_schema_generated.rs
 format:
 	cargo fmt
 format-check:
