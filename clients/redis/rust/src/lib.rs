@@ -38,8 +38,8 @@ where
     memorix_base: MemorixBase,
     id: &'a str,
     has_key: bool,
-    key: Option<K>,
-    payload: Option<P>,
+    _key: Option<K>,
+    _payload: Option<P>,
 }
 
 impl<'a, K, P> MemorixCacheItem<'a, K, P>
@@ -53,8 +53,8 @@ where
             memorix_base,
             id,
             has_key: true,
-            key: None,
-            payload: None,
+            _key: None,
+            _payload: None,
         }
     }
     fn new_no_key(memorix_base: MemorixBase, id: &'a str) -> Self {
@@ -62,14 +62,18 @@ where
             memorix_base,
             id,
             has_key: false,
-            key: None,
-            payload: None,
+            _key: None,
+            _payload: None,
         }
     }
     fn hash_key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+        let prefix = match self.memorix_base.namespace_name_tree.len() {
+            0 => "".to_string(),
+            _ => format!("{},", self.memorix_base.namespace_name_tree.join(",")),
+        };
         Ok(match self.has_key {
-            false => format!("[{}]", self.id),
-            true => format!("[{},{}]", self.id, utils::hash_key(&key)?),
+            false => format!("[{}{}]", prefix, self.id),
+            true => format!("[{}{},{}]", prefix, self.id, utils::hash_key(&key)?),
         })
     }
     pub async fn get(&mut self, key: K) -> Result<Option<P>, Box<dyn std::error::Error>> {
@@ -127,8 +131,8 @@ where
     memorix_base: MemorixBase,
     id: &'a str,
     has_key: bool,
-    key: Option<K>,
-    payload: Option<P>,
+    _key: Option<K>,
+    _payload: Option<P>,
 }
 
 impl<'a, K, P> MemorixPubSubItem<'a, K, P>
@@ -142,8 +146,8 @@ where
             memorix_base,
             id,
             has_key: true,
-            key: None,
-            payload: None,
+            _key: None,
+            _payload: None,
         }
     }
     fn new_no_key(memorix_base: MemorixBase, id: &'a str) -> Self {
@@ -151,14 +155,18 @@ where
             memorix_base,
             id,
             has_key: false,
-            key: None,
-            payload: None,
+            _key: None,
+            _payload: None,
         }
     }
     fn hash_key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+        let prefix = match self.memorix_base.namespace_name_tree.len() {
+            0 => "".to_string(),
+            _ => format!("{},", self.memorix_base.namespace_name_tree.join(",")),
+        };
         Ok(match self.has_key {
-            false => format!("[{}]", self.id),
-            true => format!("[{},{}]", self.id, utils::hash_key(&key)?),
+            false => format!("[{}{}]", prefix, self.id),
+            true => format!("[{}{},{}]", prefix, self.id, utils::hash_key(&key)?),
         })
     }
     pub async fn subscribe(&mut self, key: K) -> Result<Option<P>, Box<dyn std::error::Error>> {
@@ -216,9 +224,9 @@ where
     memorix_base: MemorixBase,
     id: &'a str,
     has_key: bool,
-    key: Option<K>,
-    payload: Option<P>,
-    returns: Option<R>,
+    _key: Option<K>,
+    _payload: Option<P>,
+    _returns: Option<R>,
 }
 
 impl<'a, K, P, R> MemorixTaskItem<'a, K, P, R>
@@ -232,9 +240,9 @@ where
             memorix_base,
             id,
             has_key: true,
-            key: None,
-            payload: None,
-            returns: None,
+            _key: None,
+            _payload: None,
+            _returns: None,
         }
     }
     fn new_no_key(memorix_base: MemorixBase, id: &'a str) -> Self {
@@ -242,15 +250,19 @@ where
             memorix_base,
             id,
             has_key: false,
-            key: None,
-            payload: None,
-            returns: None,
+            _key: None,
+            _payload: None,
+            _returns: None,
         }
     }
     fn hash_key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+        let prefix = match self.memorix_base.namespace_name_tree.len() {
+            0 => "".to_string(),
+            _ => format!("{},", self.memorix_base.namespace_name_tree.join(",")),
+        };
         Ok(match self.has_key {
-            false => format!("[{}]", self.id),
-            true => format!("[{},{}]", self.id, utils::hash_key(&key)?),
+            false => format!("[{}{}]", prefix, self.id),
+            true => format!("[{}{},{}]", prefix, self.id, utils::hash_key(&key)?),
         })
     }
     pub async fn dequeue(&mut self, key: K) -> Result<Option<P>, Box<dyn std::error::Error>> {

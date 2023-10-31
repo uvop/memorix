@@ -4,7 +4,7 @@ codegen:
 	(cd ../../../cli && yarn cli codegen ../clients/redis/rust/examples/example-schema.memorix) &&\
 	 \
 	make format && \
-	echo "\nfn main() {}" >> ./examples/example_schema_generated.rs
+	echo "\n#[allow(dead_code)]\nfn main() {}" >> ./examples/example_schema_generated.rs
 format:
 	cargo fmt
 format-check:

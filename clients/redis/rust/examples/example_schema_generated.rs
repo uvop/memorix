@@ -81,4 +81,5 @@ impl<'a> Memorix<'a> {
     }
 }
 
+#[allow(dead_code)]
 fn main() {}
