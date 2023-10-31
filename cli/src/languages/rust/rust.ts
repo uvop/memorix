@@ -351,11 +351,11 @@ const MEMORIX_${
             .map((x) => `"${x}"`)
             .join(", ")}];
 
-impl<'a> Memorix${namePascal ? `${namePascal}_` : ""}<'a> {
+impl<'a> Memorix${nameCamel}<'a> {
 ${getTabs(1)}pub async fn new(redis_url: &str) -> Memorix<'a> {
 ${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::new(
 ${getTabs(3)}redis_url,
-${getTabs(3)}MEMORIX_${namePascal}NAMESPACE_NAME_TREE,
+${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
 ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
 ${getTabs(2)}).await;
 ${getTabs(2)}Self {
