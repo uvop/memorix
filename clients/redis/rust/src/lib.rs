@@ -39,7 +39,7 @@ where
             payload: None,
         }
     }
-    pub async fn get(&'a mut self) -> Result<Option<P>, Box<dyn std::error::Error>> {
+    pub async fn get(&mut self) -> Result<Option<P>, Box<dyn std::error::Error>> {
         let payload_str: Option<String> = self.memorix_base.redis.get(self.id).await?;
 
         let payload_str = match payload_str {
@@ -53,14 +53,9 @@ where
 
         Ok(Some(payload))
     }
-    pub async fn set(&'a mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn set(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         let payload_str = serde_json::to_string(payload)?;
         self.memorix_base.redis.set(self.id, payload_str).await?;
         Ok(())
     }
-}
-pub struct MemorixCacheItem<K, P> {
-    id: &'static str,
-    key: K,
-    payload: P,
 }

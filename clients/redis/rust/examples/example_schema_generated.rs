@@ -3,7 +3,7 @@ extern crate serde;
 extern crate serde_json;
 
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(serde::Serialize, serde::Deserialize, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, Debug)]
 pub enum Animal {
     dog,
     cat,
