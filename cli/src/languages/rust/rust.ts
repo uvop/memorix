@@ -10,6 +10,7 @@ import {
   assertUnreachable,
   camelCase,
   getTabs as get2Tabs,
+  pascalCase,
 } from "src/core/utilities";
 import { Namespace, flatNamespace } from "src/core/namespace";
 import { MapValue } from "src/core/generics";
@@ -117,7 +118,7 @@ ${b.properties
 }`;
     case BlockTypes.enum:
       return `#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, strum_macros::Display)]
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, std::fmt::Debug)]
 pub enum ${b.name} {
 ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
 }`;
@@ -276,6 +277,7 @@ const namespaceToCode: (
       ])
   );
   const nameCamel = nameTree.map((x) => camelCase(x)).join("");
+  const namePascal = nameTree.map((x) => pascalCase(x)).join("_");
 
   const code = ([] as string[])
     .concat(Array.from(namespace.enums.values()).map(blockToCode))
@@ -339,12 +341,16 @@ ${([] as string[])
   .concat(hasTask ? `${getTabs(1)}pub task: MemorixTask${nameCamel}<'a>,` : [])
   .join("\n")}
 }
-      
+
+const MEMORIX_${namePascal}_NAMESPACE_NAME_TREE: &'static [&'static str] = &[${nameTree
+            .map((x) => `"${x}"`)
+            .join(", ")}];
+
 impl<'a> Memorix${nameCamel}<'a> {
 ${getTabs(1)}pub async fn new(redis_url: &str) -> Memorix<'a> {
 ${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::new(
 ${getTabs(3)}redis_url,
-${getTabs(3)}[${nameTree.map((x) => `"${x}"`).join(", ")}],
+${getTabs(3)}MEMORIX_${namePascal}_NAMESPACE_NAME_TREE,
 ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
 ${getTabs(2)}).await;
 ${getTabs(2)}Self {

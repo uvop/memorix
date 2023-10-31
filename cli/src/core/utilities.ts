@@ -7,6 +7,15 @@ export const camelCase = (str: string) => {
     .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
 };
 
+export const pascalCase = (str: string) => {
+  return str
+    .replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match) => {
+      if (+match === 0) return "";
+      return `_${match.toLocaleLowerCase()}`;
+    })
+    .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+};
+
 export const removeBracketsOfScope = (scope: string) =>
   scope.substring(1, scope.length - 1);
 
