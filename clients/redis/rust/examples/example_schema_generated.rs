@@ -18,12 +18,12 @@ pub struct User {
 }
 
 #[allow(non_snake_case)]
-pub struct MemorixCache<'a> {
+pub struct MemorixCacheBlaBla<'a> {
     pub favoriteAnimal: memorix_redis::MemorixCacheItem<'a, String, Animal>,
     pub user: memorix_redis::MemorixCacheItem<'a, String, User>,
 }
 
-impl<'a> MemorixCache<'a> {
+impl<'a> MemorixCacheBlaBla<'a> {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             favoriteAnimal: memorix_redis::MemorixCacheItem::new(
@@ -31,6 +31,23 @@ impl<'a> MemorixCache<'a> {
                 "favoriteAnimal",
             ),
             user: memorix_redis::MemorixCacheItem::new(memorix_base.clone(), "user"),
+        }
+    }
+}
+
+#[allow(non_snake_case)]
+pub struct MemorixBlaBla<'a> {
+    pub cache: MemorixCacheBlaBla<'a>,
+}
+
+const MEMORIX_BLA_BLA_NAMESPACE_NAME_TREE: &'static [&'static str] = &["blaBla"];
+
+impl<'a> MemorixBlaBla<'a> {
+    pub fn new(other: memorix_redis::MemorixBase) -> MemorixBlaBla<'a> {
+        let memorix_base =
+            memorix_redis::MemorixBase::from(other, MEMORIX_BLA_BLA_NAMESPACE_NAME_TREE, None);
+        Self {
+            cache: MemorixCacheBlaBla::new(memorix_base.clone()),
         }
     }
 }
@@ -61,8 +78,10 @@ impl<'a> MemorixTask<'a> {
     }
 }
 
+#[allow(non_snake_case)]
 pub struct Memorix<'a> {
-    pub cache: MemorixCache<'a>,
+    pub blaBla: MemorixBlaBla<'a>,
+
     pub pubsub: MemorixPubSub<'a>,
     pub task: MemorixTask<'a>,
 }
@@ -74,7 +93,8 @@ impl<'a> Memorix<'a> {
         let memorix_base =
             memorix_redis::MemorixBase::new(redis_url, MEMORIX_NAMESPACE_NAME_TREE, None).await;
         Self {
-            cache: MemorixCache::new(memorix_base.clone()),
+            blaBla: MemorixBlaBla::new(memorix_base.clone()),
+
             pubsub: MemorixPubSub::new(memorix_base.clone()),
             task: MemorixTask::new(memorix_base.clone()),
         }

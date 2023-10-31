@@ -139,7 +139,7 @@ ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
         ][]
       )
         .map(([name, v]) => {
-          return `pub ${getTabs(1)}${name}: memorix_redis::${itemClass}${
+          return `${getTabs(1)}pub ${name}: memorix_redis::${itemClass}${
             v.key ? "" : "NoKey"
           }${
             hasReturns && !(v as MapValue<BlockTask["values"]>).returns
@@ -333,7 +333,20 @@ ${getTabs(1)}}
     )
     .concat(
       hasApi || namespace.subNamespacesByName.size !== 0
-        ? `pub struct Memorix${nameCamel}<'a> {
+        ? `#[allow(non_snake_case)]
+pub struct Memorix${nameCamel}<'a> {
+${Array.from(namespace.subNamespacesByName.keys())
+  .map(
+    (namespaceName) =>
+      `${getTabs(3)}pub ${namespaceName}: Memorix${nameCamel}${camelCase(
+        namespaceName
+      )}<'a>,`
+  )
+  .join("\n")}${
+            Array.from(namespace.subNamespacesByName.keys()).length !== 0
+              ? "\n"
+              : ""
+          }
 ${([] as string[])
   .concat(
     hasCache ? `${getTabs(1)}pub cache: MemorixCache${nameCamel}<'a>,` : []
@@ -352,13 +365,38 @@ const MEMORIX_${
             .join(", ")}];
 
 impl<'a> Memorix${nameCamel}<'a> {
-${getTabs(1)}pub async fn new(redis_url: &str) -> Memorix<'a> {
+${
+  nameTree.length === 0
+    ? `${getTabs(
+        1
+      )}pub async fn new(redis_url: &str) -> Memorix${nameCamel}<'a> {
 ${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::new(
 ${getTabs(3)}redis_url,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
 ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
-${getTabs(2)}).await;
+${getTabs(2)}).await;`
+    : `${getTabs(
+        1
+      )}pub fn new(other: memorix_redis::MemorixBase) -> Memorix${nameCamel}<'a> {
+${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::from(
+${getTabs(3)}other,
+${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
+${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
+${getTabs(2)});`
+}
 ${getTabs(2)}Self {
+${Array.from(namespace.subNamespacesByName.keys())
+  .map(
+    (namespaceName) =>
+      `${getTabs(3)}${namespaceName}: Memorix${nameCamel}${camelCase(
+        namespaceName
+      )}::new(memorix_base.clone()),`
+  )
+  .join("\n")}${
+            Array.from(namespace.subNamespacesByName.keys()).length !== 0
+              ? "\n"
+              : ""
+          }
 ${([] as string[])
   .concat(
     hasCache
@@ -382,20 +420,7 @@ ${([] as string[])
   .join("\n")}
 ${getTabs(2)}}
 ${getTabs(1)}}
-}
-
-${Array.from(namespace.subNamespacesByName.keys())
-  .map(
-    (namespaceName) =>
-      `${getTabs(2)}self.${namespaceName} = Memorix${nameCamel}${camelCase(
-        namespaceName
-      )}(redis_url=redis_url, ref=self)`
-  )
-  .join("\n")}${
-            Array.from(namespace.subNamespacesByName.keys()).length !== 0
-              ? "\n\n"
-              : ""
-          }`
+}`
         : []
     )
     .join("\n\n\n");

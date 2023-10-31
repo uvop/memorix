@@ -18,16 +18,19 @@ Model User {
     age: int?
 }
 
-Cache {
-    favoriteAnimal {
-        key: string
-        payload: Animal
-    }
-    user {
-        key: string
-        payload: User
+Namespace blaBla {
+    Cache {
+        favoriteAnimal {
+            key: string
+            payload: Animal
+        }
+        user {
+            key: string
+            payload: User
+        }
     }
 }
+
 
 PubSub {
     message {

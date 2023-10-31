@@ -29,6 +29,17 @@ impl MemorixBase {
             default_options,
         }
     }
+    pub fn from(
+        other: Self,
+        namespace_name_tree: &'static [&'static str],
+        default_options: Option<u8>,
+    ) -> Self {
+        Self {
+            redis: other.redis,
+            namespace_name_tree,
+            default_options,
+        }
+    }
 }
 
 pub struct MemorixCacheItem<'a, K, P>

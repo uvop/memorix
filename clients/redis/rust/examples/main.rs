@@ -8,11 +8,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
     let mut memorix = example_schema_generated::Memorix::new(&redis_url).await;
     memorix
+        .blaBla
         .cache
         .favoriteAnimal
         .set("123".to_string(), example_schema_generated::Animal::cat)
         .await?;
-    let fav = memorix.cache.favoriteAnimal.get("123".to_string()).await?;
+    let fav = memorix
+        .blaBla
+        .cache
+        .favoriteAnimal
+        .get("123".to_string())
+        .await?;
     println!("Your fav is {:?}", fav);
     Ok(())
 }
