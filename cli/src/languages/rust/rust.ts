@@ -97,10 +97,10 @@ const valueToCode: (value: ValueType, isType: boolean) => string = (
   }`;
 };
 
-const blockToCode: (block: Block) => string = (b) => {
+const blockToStruct: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `#[derive(Serialize, Deserialize)]
+      return `#[derive(serde::Serialize, serde::Deserialize)]
 pub struct ${b.name} {
 ${b.properties
   .map(
@@ -117,7 +117,7 @@ ${b.properties
 }`;
     case BlockTypes.enum:
       return `#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(Serialize, Deserialize, PartialEq, strum_macros::Display)]
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, strum_macros::Display)]
 pub enum ${b.name} {
 ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
 }`;
@@ -138,13 +138,13 @@ ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
         ][]
       )
         .map(([name, v]) => {
-          return `${getTabs(2)}self.${name} = ${itemClass}${
+          return `${getTabs(1)}${name}: memorix_redis::${itemClass}${
             v.key ? "" : "NoKey"
           }${
             hasReturns && !(v as MapValue<BlockTask["values"]>).returns
               ? "NoReturns"
               : ""
-          }[${v.key ? `${valueToCode(v.key, true)}, ` : ""}${valueToCode(
+          }<'a, ${v.key ? `${valueToCode(v.key, true)}, ` : ""}${valueToCode(
             v.payload,
             true
           )}${
@@ -154,35 +154,66 @@ ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
                   true
                 )}`
               : ""
-          }](
-${getTabs(3)}api=api,
-${getTabs(3)}id="${name}",
-${getTabs(3)}payload_class=${valueToCode(v.payload, false)},${
-            (v as MapValue<BlockTask["values"]>).returns
-              ? `\n${getTabs(3)}returns_class=${valueToCode(
-                  (v as MapValue<BlockTask["values"]>).returns!,
-                  false
-                )},`
-              : ""
+          }>,`;
+        })
+        .join("\n")}`;
+    }
+    default:
+      assertUnreachable(b);
+      return "";
+  }
+};
+const blockToCode: (block: Block) => string = (b) => {
+  switch (b.type) {
+    case BlockTypes.model:
+      return `#[derive(serde::Serialize, serde::Deserialize)]
+pub struct ${b.name} {
+${b.properties
+  .map(
+    (p) =>
+      `${
+        (p.value.type === ValueTypes.array ||
+          p.value.type === ValueTypes.simple) &&
+        p.value.isOptional
+          ? `${getTabs(1)}#[serde(skip_serializing_if = "Option::is_none")]\n`
+          : ""
+      }${getTabs(1)}pub ${p.name}: ${valueToCode(p.value, true)},`
+  )
+  .join(`\n`)}
+}`;
+    case BlockTypes.enum:
+      return `#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, strum_macros::Display)]
+pub enum ${b.name} {
+${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
+}`;
+    case BlockTypes.cache:
+    case BlockTypes.pubsub:
+    case BlockTypes.task: {
+      const itemClass = {
+        [BlockTypes.cache]: "MemorixCacheItem",
+        [BlockTypes.pubsub]: "MemorixPubSubItem",
+        [BlockTypes.task]: "MemorixTaskItem",
+      }[b.type];
+      const hasReturns = b.type === BlockTypes.task;
+
+      return `${(
+        Array.from(b.values.entries()) as [
+          string,
+          MapValue<typeof b["values"]>
+        ][]
+      )
+        .map(([name, v]) => {
+          return `${getTabs(3)}${name}: memorix_redis::${itemClass}${
+            v.key ? "" : "NoKey"
           }${
-            (
-              v as
-                | MapValue<BlockCache["values"]>
-                | MapValue<BlockTask["values"]>
-            ).options !== undefined
-              ? `
-${getTabs(3)}options=${blockOptionsToCode(
-                  b.type,
-                  (
-                    v as
-                      | MapValue<BlockCache["values"]>
-                      | MapValue<BlockTask["values"]>
-                  ).options!,
-                  3
-                )},`
+            hasReturns && !(v as MapValue<BlockTask["values"]>).returns
+              ? "NoReturns"
               : ""
-          }
-${getTabs(2)})`;
+          }::new(
+${getTabs(4)}memorix_base,
+${getTabs(4)}"${name}",
+${getTabs(3)}),`;
         })
         .join("\n")}`;
     }
@@ -192,9 +223,12 @@ ${getTabs(2)})`;
   }
 };
 
-const defaultOptionsToCode: (defaultOptions: DefaultOptions) => string = (
+const defaultOptionsToCode: (defaultOptions?: DefaultOptions) => string = (
   defaultOptions
 ) => {
+  if (!defaultOptions) {
+    return "None";
+  }
   return `MemorixBase.DefaultOptions(${
     defaultOptions.cache
       ? `
@@ -249,51 +283,91 @@ const namespaceToCode: (
     .concat(subSamespaces.map((x) => x.code))
     .concat(
       hasCache
-        ? `class MemorixCache${nameCamel}(MemorixCacheBase):
-${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
-${getTabs(2)}super().__init__(api=api)
+        ? `struct MemorixCache${nameCamel}<'a> {
+${blockToStruct(namespace.cache!)}
+}
 
-${blockToCode(namespace.cache!)}`
+impl<'a> MemorixCache${nameCamel}<'a> {
+${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+${getTabs(2)}Self {
+${blockToCode(namespace.cache!)}
+${getTabs(2)}}
+${getTabs(1)}}
+}`
         : []
     )
     .concat(
       hasPubsub
-        ? `class MemorixPubSub${nameCamel}(MemorixPubSubBase):
-${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
-${getTabs(2)}super().__init__(api=api)
+        ? `struct MemorixPubSub${nameCamel}<'a> {
+${blockToStruct(namespace.pubsub!)}
+}
 
-${blockToCode(namespace.pubsub!)}`
+impl<'a> MemorixPubSub${nameCamel}<'a> {
+${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+${getTabs(2)}Self {
+${blockToCode(namespace.pubsub!)}
+${getTabs(2)}}
+${getTabs(1)}}
+}`
         : []
     )
     .concat(
       hasTask
-        ? `class MemorixTask${nameCamel}(MemorixTaskBase):
-${getTabs(1)}def __init__(self, api: MemorixBase) -> None:
-${getTabs(2)}super().__init__(api=api)
+        ? `struct MemorixTask${nameCamel}<'a> {
+${blockToStruct(namespace.task!)}
+}
 
-${blockToCode(namespace.task!)}`
+impl<'a> MemorixTask${nameCamel}<'a> {
+${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+${getTabs(2)}Self {
+${blockToCode(namespace.task!)}
+${getTabs(2)}}
+${getTabs(1)}}
+}`
         : []
     )
     .concat(
       hasApi || namespace.subNamespacesByName.size !== 0
-        ? `class Memorix${nameCamel}(MemorixBase):
-${getTabs(1)}def __init__(
-${getTabs(2)}self,
-${getTabs(2)}redis_url: str,
-${getTabs(2)}ref: typing.Optional[MemorixBase] = None,
-${getTabs(1)}) -> None:
-${getTabs(2)}super().__init__(redis_url=redis_url, ref=ref)
-
-${getTabs(2)}self._namespace_name_tree: typing.List[str] = [${nameTree
-            .map((x) => `"${x}"`)
-            .join(", ")}]${
-            namespace.defaultOptions
-              ? `
-${getTabs(2)}self._default_options = ${defaultOptionsToCode(
-                  namespace.defaultOptions
-                )}`
-              : ""
-          }
+        ? `pub struct Memorix${nameCamel}<'a> {
+${([] as string[])
+  .concat(
+    hasCache ? `${getTabs(1)}pub cache: MemorixCache${nameCamel}<'a>,` : []
+  )
+  .concat(
+    hasPubsub ? `${getTabs(1)}pub pubsub: MemorixPubSub${nameCamel}<'a>,` : []
+  )
+  .concat(hasTask ? `${getTabs(1)}pub task: MemorixTask${nameCamel}<'a>,` : [])
+  .join("\n")}
+}
+      
+impl<'a> Memorix${nameCamel}<'a> {
+${getTabs(1)}pub async fn new(redis_url: &str) -> Memorix<'a> {
+${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::new(
+${getTabs(3)}redis_url,
+${getTabs(3)}[${nameTree.map((x) => `"${x}"`).join(", ")}],
+${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
+${getTabs(2)}).await;
+${getTabs(2)}Self {
+${([] as string[])
+  .concat(
+    hasCache
+      ? `${getTabs(3)}cache: MemorixCache${nameCamel}::new(memorix_base),`
+      : []
+  )
+  .concat(
+    hasPubsub
+      ? `${getTabs(3)}pubsub: MemorixPubSub${nameCamel}::new(memorix_base),`
+      : []
+  )
+  .concat(
+    hasTask
+      ? `${getTabs(3)}task: MemorixTask${nameCamel}::new(memorix_base),`
+      : []
+  )
+  .join("\n")}
+${getTabs(2)}}
+${getTabs(1)}}
+}
 
 ${Array.from(namespace.subNamespacesByName.keys())
   .map(
@@ -306,23 +380,7 @@ ${Array.from(namespace.subNamespacesByName.keys())
             Array.from(namespace.subNamespacesByName.keys()).length !== 0
               ? "\n\n"
               : ""
-          }${([] as string[])
-            .concat(
-              hasCache
-                ? `${getTabs(2)}self.cache = MemorixCache${nameCamel}(self)`
-                : []
-            )
-            .concat(
-              hasPubsub
-                ? `${getTabs(2)}self.pubsub = MemorixPubSub${nameCamel}(self)`
-                : []
-            )
-            .concat(
-              hasTask
-                ? `${getTabs(2)}self.task = MemorixTask${nameCamel}(self)`
-                : []
-            )
-            .join("\n")}`
+          }`
         : []
     )
     .join("\n\n\n");
@@ -341,72 +399,16 @@ export const codegen: (namespaces: Namespace) => string = (
   unflattenNamespace
 ) => {
   const namespace = flatNamespace(unflattenNamespace);
-  const {
-    code,
-    importBase,
-    importEnum,
-    importCache,
-    importPubSub,
-    importTask,
-  } = namespaceToCode(namespace);
+  const { code } = namespaceToCode(namespace);
 
   const importCode = ([] as string[])
     .concat([
-      `# flake8: noqa
-import typing
-
-if typing.TYPE_CHECKING:
-${getTabs(1)}from dataclasses import dataclass
-else:
-${getTabs(1)}from memorix_client_redis import dataclass
-${
-  importEnum
-    ? `
-from enum import Enum`
-    : ""
-}${
-        importBase || importCache || importPubSub || importTask
-          ? `
-from memorix_client_redis import (
-${([] as string[])
-  .concat(importBase ? [`${getTabs(1)}MemorixBase`] : [])
-  .concat(
-    importCache
-      ? [
-          `${getTabs(1)}MemorixCacheBase`,
-          `${getTabs(1)}MemorixCacheItem`,
-          `${getTabs(1)}MemorixCacheItemNoKey`,
-        ]
-      : []
-  )
-  .concat(
-    importPubSub
-      ? [
-          `${getTabs(1)}MemorixPubSubBase`,
-          `${getTabs(1)}MemorixPubSubItem`,
-          `${getTabs(1)}MemorixPubSubItemNoKey`,
-        ]
-      : []
-  )
-  .concat(
-    importTask
-      ? [
-          `${getTabs(1)}MemorixTaskBase`,
-          `${getTabs(1)}MemorixTaskItem`,
-          `${getTabs(1)}MemorixTaskItemNoKey`,
-          `${getTabs(1)}MemorixTaskItemNoReturns`,
-          `${getTabs(1)}MemorixTaskItemNoKeyNoReturns`,
-        ]
-      : []
-  )
-  .join(",\n")},
-)`
-          : ""
-      }`,
+      `extern crate memorix_redis;
+extern crate serde;
+extern crate serde_json;`,
     ])
     .join("\n");
   return `${importCode}
-
 
 ${code}`;
 };

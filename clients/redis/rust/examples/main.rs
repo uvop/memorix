@@ -9,10 +9,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut memorix = example_schema_generated::Memorix::new(&redis_url).await;
     memorix
         .cache
-        .favorite_animal
-        .set(example_schema_generated::Animal::cat)
+        .favoriteAnimal
+        .set("123".to_string(), example_schema_generated::Animal::cat)
         .await?;
-    let fav = memorix.cache.favorite_animal.get().await?;
+    let fav = memorix.cache.favoriteAnimal.get("123".to_string()).await?;
     println!("Your fav is {:?}", fav);
     Ok(())
 }
