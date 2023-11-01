@@ -1,6 +1,6 @@
 [package]
 name = "memorix-redis"
-version = "1.4.9"
+version = "1.4.10"
 repository = "https://github.com/uvop/memorix"
 authors = ["Yuval Saraf <unimonkiez@gmail.com>"]
 description = "Memorix is an open source next-generation in-memory ORM"
