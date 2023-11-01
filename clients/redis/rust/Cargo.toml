@@ -20,6 +20,9 @@ path = "examples/main.rs"
 redis = { version = "^0.22.3", features = ["tokio-comp"] }
 serde_json = "^1.0.94"
 serde = { version = "^1.0.156", features = ["derive"] }
+futures-core = "0.3.29"
+futures-util = "0.3.29"
+async-stream = "0.3.5"
 
 [dev-dependencies]
 tokio = { version = "^1.33.0", features = ["full"] }
