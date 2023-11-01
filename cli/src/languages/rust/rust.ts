@@ -162,7 +162,10 @@ ${b.properties
         p.value.isOptional
           ? `${getTabs(1)}#[serde(skip_serializing_if = "Option::is_none")]\n`
           : ""
-      }${getTabs(1)}pub ${p.name}: ${valueToCode(p.value, true)},`
+      }${getTabs(1)}pub ${p.name === "type" ? "r#type" : p.name}: ${valueToCode(
+        p.value,
+        true
+      )},`
   )
   .join(`\n`)}
 }`;

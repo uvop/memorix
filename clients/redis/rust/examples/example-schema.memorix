@@ -16,6 +16,7 @@ Enum Animal {
 Model User {
     name: string
     age: int?
+    type: boolean?
 }
 
 Namespace blaBla {
