@@ -45,12 +45,14 @@ pub struct MemorixBlaBla<'a> {
 const MEMORIX_BLA_BLA_NAMESPACE_NAME_TREE: &'static [&'static str] = &["blaBla"];
 
 impl<'a> MemorixBlaBla<'a> {
-    pub fn new(other: memorix_redis::MemorixBase) -> MemorixBlaBla<'a> {
+    pub fn new(
+        other: memorix_redis::MemorixBase,
+    ) -> Result<MemorixBlaBla<'a>, Box<dyn std::error::Error>> {
         let memorix_base =
             memorix_redis::MemorixBase::from(other, MEMORIX_BLA_BLA_NAMESPACE_NAME_TREE, None);
-        Self {
+        Ok(Self {
             cache: MemorixCacheBlaBla::new(memorix_base.clone()),
-        }
+        })
     }
 }
 
@@ -98,7 +100,7 @@ impl<'a> Memorix<'a> {
         let memorix_base =
             memorix_redis::MemorixBase::new(redis_url, MEMORIX_NAMESPACE_NAME_TREE, None).await?;
         Ok(Self {
-            blaBla: MemorixBlaBla::new(memorix_base.clone()),
+            blaBla: MemorixBlaBla::new(memorix_base.clone())?,
 
             pubsub: MemorixPubSub::new(memorix_base.clone()),
             task: MemorixTask::new(memorix_base.clone()),

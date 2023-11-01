@@ -101,27 +101,11 @@ const valueToCode: (value: ValueType, isType: boolean) => string = (
 const blockToStruct: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `#[derive(serde::Serialize, serde::Deserialize)]
-pub struct ${b.name} {
-${b.properties
-  .map(
-    (p) =>
-      `${
-        (p.value.type === ValueTypes.array ||
-          p.value.type === ValueTypes.simple) &&
-        p.value.isOptional
-          ? `${getTabs(1)}#[serde(skip_serializing_if = "Option::is_none")]\n`
-          : ""
-      }${getTabs(1)}pub ${p.name}: ${valueToCode(p.value, true)},`
-  )
-  .join(`\n`)}
-}`;
-    case BlockTypes.enum:
-      return `#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, std::fmt::Debug)]
-pub enum ${b.name} {
-${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
-}`;
+    case BlockTypes.enum: {
+      throw new Error(
+        "Shouldn't get here, all inline objects became models, maybe forgot 'flatBlocks()?'"
+      );
+    }
     case BlockTypes.cache:
     case BlockTypes.pubsub:
     case BlockTypes.task: {
@@ -167,7 +151,7 @@ ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
 const blockToCode: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `#[derive(serde::Serialize, serde::Deserialize)]
+      return `#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct ${b.name} {
 ${b.properties
   .map(
@@ -184,7 +168,7 @@ ${b.properties
 }`;
     case BlockTypes.enum:
       return `#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, std::fmt::Debug)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, PartialEq, std::fmt::Debug)]
 pub enum ${b.name} {
 ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
 }`;
@@ -285,7 +269,8 @@ const namespaceToCode: (
     .concat(subSamespaces.map((x) => x.code))
     .concat(
       hasCache
-        ? `#[allow(non_snake_case)]
+        ? `#[derive(Clone)]
+#[allow(non_snake_case)]
 pub struct MemorixCache${nameCamel}<'a> {
 ${blockToStruct(namespace.cache!)}
 }
@@ -301,7 +286,8 @@ ${getTabs(1)}}
     )
     .concat(
       hasPubsub
-        ? `#[allow(non_snake_case)]
+        ? `#[derive(Clone)]
+#[allow(non_snake_case)]
 pub struct MemorixPubSub${nameCamel}<'a> {
 ${blockToStruct(namespace.pubsub!)}
 }
@@ -317,7 +303,8 @@ ${getTabs(1)}}
     )
     .concat(
       hasTask
-        ? `#[allow(non_snake_case)]
+        ? `#[derive(Clone)]
+#[allow(non_snake_case)]
 pub struct MemorixTask${nameCamel}<'a> {
 ${blockToStruct(namespace.task!)}
 }
@@ -333,7 +320,8 @@ ${getTabs(1)}}
     )
     .concat(
       hasApi || namespace.subNamespacesByName.size !== 0
-        ? `#[allow(non_snake_case)]
+        ? `#[derive(Clone)]
+#[allow(non_snake_case)]
 pub struct Memorix${nameCamel}<'a> {
 ${Array.from(namespace.subNamespacesByName.keys())
   .map(
@@ -369,28 +357,28 @@ ${
   nameTree.length === 0
     ? `${getTabs(
         1
-      )}pub async fn new(redis_url: &str) -> Memorix${nameCamel}<'a> {
+      )}pub async fn new(redis_url: &str) -> Result<Memorix${nameCamel}<'a>, Box<dyn std::error::Error>> {
 ${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::new(
 ${getTabs(3)}redis_url,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
 ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
-${getTabs(2)}).await;`
+${getTabs(2)}).await?;`
     : `${getTabs(
         1
-      )}pub fn new(other: memorix_redis::MemorixBase) -> Memorix${nameCamel}<'a> {
+      )}pub fn new(other: memorix_redis::MemorixBase) -> Result<Memorix${nameCamel}<'a>, Box<dyn std::error::Error>> {
 ${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::from(
 ${getTabs(3)}other,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
 ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
 ${getTabs(2)});`
 }
-${getTabs(2)}Self {
+${getTabs(2)}Ok(Self {
 ${Array.from(namespace.subNamespacesByName.keys())
   .map(
     (namespaceName) =>
       `${getTabs(3)}${namespaceName}: Memorix${nameCamel}${camelCase(
         namespaceName
-      )}::new(memorix_base.clone()),`
+      )}::new(memorix_base.clone())?,`
   )
   .join("\n")}${
             Array.from(namespace.subNamespacesByName.keys()).length !== 0
@@ -418,7 +406,7 @@ ${([] as string[])
       : []
   )
   .join("\n")}
-${getTabs(2)}}
+${getTabs(2)}})
 ${getTabs(1)}}
 }`
         : []
