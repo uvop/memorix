@@ -143,6 +143,8 @@ where
         Ok(())
     }
 }
+
+#[derive(Clone)]
 pub struct MemorixCacheItemNoKey<'a, P>
 where
     P: serde::de::DeserializeOwned,
@@ -487,6 +489,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct MemorixTaskItemNoReturns<'a, K, P>
 where
     K: serde::Serialize,
@@ -520,6 +523,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct MemorixTaskItemNoKeyNoReturns<'a, P>
 where
     P: serde::de::DeserializeOwned,
