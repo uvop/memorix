@@ -9,45 +9,64 @@ use crate::futures_util::StreamExt;
 use redis::AsyncCommands;
 
 #[derive(Clone)]
+pub struct MemorixOptionsCacheExpire {
+    pub value: u32,
+    pub is_in_ms: Option<bool>,
+    pub extend_on_get: Option<bool>,
+}
+#[derive(Clone)]
+pub struct MemorixOptionsCache {
+    pub expire: Option<MemorixOptionsCacheExpire>,
+}
+#[derive(Clone)]
+pub struct MemorixOptionsTask {
+    pub take_newest: Option<bool>,
+}
+
+#[derive(Clone)]
+pub struct MemorixOptions {
+    pub cache: Option<MemorixOptionsCache>,
+    pub task: Option<MemorixOptionsTask>,
+}
+
+#[derive(Clone)]
 pub struct MemorixBase {
     client: redis::Client,
     redis: redis::aio::MultiplexedConnection,
     namespace_name_tree: &'static [&'static str],
-    _default_options: Option<u8>,
+    default_options: Option<MemorixOptions>,
 }
 
 impl MemorixBase {
     pub async fn new(
         redis_url: &str,
         namespace_name_tree: &'static [&'static str],
-        default_options: Option<u8>,
-    ) -> Self {
-        let client = redis::Client::open(redis_url).expect("Invalid connection URL");
-        let redis = client
-            .get_multiplexed_async_connection()
-            .await
-            .expect("failed to connect to Redis");
-        Self {
+        default_options: Option<MemorixOptions>,
+    ) -> Result<MemorixBase, Box<dyn std::error::Error>> {
+        let client = redis::Client::open(redis_url)?;
+        let redis = client.get_multiplexed_async_connection().await?;
+        Ok(Self {
             client,
             redis,
             namespace_name_tree,
-            _default_options: default_options,
-        }
+            default_options,
+        })
     }
     pub fn from(
         other: Self,
         namespace_name_tree: &'static [&'static str],
-        default_options: Option<u8>,
+        default_options: Option<MemorixOptions>,
     ) -> Self {
         Self {
             client: other.client,
             redis: other.redis,
             namespace_name_tree,
-            _default_options: default_options,
+            default_options,
         }
     }
 }
 
+#[derive(Clone)]
 pub struct MemorixCacheItem<'a, K, P>
 where
     P: serde::de::DeserializeOwned,
@@ -83,18 +102,26 @@ where
             _phantom2: std::marker::PhantomData,
         }
     }
-    fn hash_key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
         let prefix = match self.memorix_base.namespace_name_tree.len() {
             0 => "".to_string(),
-            _ => format!("{},", self.memorix_base.namespace_name_tree.join(",")),
+            _ => format!(
+                "{},",
+                self.memorix_base
+                    .namespace_name_tree
+                    .iter()
+                    .map(|x| format!("\"{}\"", x))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         };
         Ok(match self.has_key {
-            false => format!("[{}{}]", prefix, self.id),
-            true => format!("[{}{},{}]", prefix, self.id, utils::hash_key(&key)?),
+            false => format!("[{}\"{}\"]", prefix, self.id),
+            true => format!("[{}\"{}\",{}]", prefix, self.id, utils::hash_key(&key)?),
         })
     }
     pub async fn get(&mut self, key: K) -> Result<Option<P>, Box<dyn std::error::Error>> {
-        let payload_str: Option<String> = self.memorix_base.redis.get(self.hash_key(key)?).await?;
+        let payload_str: Option<String> = self.memorix_base.redis.get(self.key(key)?).await?;
 
         let payload_str = match payload_str {
             Some(x) => x,
@@ -111,7 +138,7 @@ where
         let payload_str = serde_json::to_string(&payload)?;
         self.memorix_base
             .redis
-            .set(self.hash_key(key)?, payload_str)
+            .set(self.key(key)?, payload_str)
             .await?;
         Ok(())
     }
@@ -120,7 +147,7 @@ pub struct MemorixCacheItemNoKey<'a, P>
 where
     P: serde::de::DeserializeOwned,
 {
-    base_item: MemorixCacheItem<'a, std::marker::PhantomData<u8>, P>,
+    base_item: MemorixCacheItem<'a, std::marker::PhantomData<std::marker::PhantomData<u8>>, P>,
 }
 
 impl<'a, P> MemorixCacheItemNoKey<'a, P>
@@ -163,6 +190,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct MemorixPubSubItem<'a, K, P>
 where
     P: serde::de::DeserializeOwned,
@@ -198,18 +226,26 @@ where
             _payload: std::marker::PhantomData,
         }
     }
-    fn hash_key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
         let prefix = match self.memorix_base.namespace_name_tree.len() {
             0 => "".to_string(),
-            _ => format!("{},", self.memorix_base.namespace_name_tree.join(",")),
+            _ => format!(
+                "{},",
+                self.memorix_base
+                    .namespace_name_tree
+                    .iter()
+                    .map(|x| format!("\"{}\"", x))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         };
         Ok(match self.has_key {
-            false => format!("[{}{}]", prefix, self.id),
-            true => format!("[{}{},{}]", prefix, self.id, utils::hash_key(&key)?),
+            false => format!("[{}\"{}\"]", prefix, self.id),
+            true => format!("[{}\"{}\",{}]", prefix, self.id, utils::hash_key(&key)?),
         })
     }
     pub async fn subscribe(
-        &mut self,
+        &self,
         key: K,
     ) -> Result<
         core::pin::Pin<
@@ -227,7 +263,7 @@ where
             .get_async_connection()
             .await?
             .into_pubsub();
-        pubsub.subscribe(self.hash_key(key)?).await?;
+        pubsub.subscribe(self.key(key)?).await?;
         let stream = pubsub
             .into_on_message()
             .map(|m| m.get_payload::<MemorixPayload<P>>().map_err(|e| e.into()))
@@ -238,11 +274,13 @@ where
         let payload_str = serde_json::to_string(&payload)?;
         self.memorix_base
             .redis
-            .publish(self.hash_key(key)?, payload_str)
+            .publish(self.key(key)?, payload_str)
             .await?;
         Ok(())
     }
 }
+
+#[derive(Clone)]
 pub struct MemorixPubSubItemNoKey<'a, P>
 where
     P: serde::de::DeserializeOwned,
@@ -282,6 +320,7 @@ where
     }
 }
 
+#[derive(Clone)]
 pub struct MemorixTaskItem<'a, K, P, R>
 where
     P: serde::de::DeserializeOwned,
@@ -345,14 +384,22 @@ where
             _returns: std::marker::PhantomData,
         }
     }
-    fn hash_key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
         let prefix = match self.memorix_base.namespace_name_tree.len() {
             0 => "".to_string(),
-            _ => format!("{},", self.memorix_base.namespace_name_tree.join(",")),
+            _ => format!(
+                "{},",
+                self.memorix_base
+                    .namespace_name_tree
+                    .iter()
+                    .map(|x| format!("\"{}\"", x))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
         };
         Ok(match self.has_key {
-            false => format!("[{}{}]", prefix, self.id),
-            true => format!("[{}{},{}]", prefix, self.id, utils::hash_key(&key)?),
+            false => format!("[{}\"{}\"]", prefix, self.id),
+            true => format!("[{}\"{}\",{}]", prefix, self.id, utils::hash_key(&key)?),
         })
     }
     pub async fn dequeue<'b: 'a>(
@@ -362,13 +409,32 @@ where
         impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
         Box<dyn std::error::Error>,
     > {
-        let key_str = self.hash_key(key)?;
+        let key_str = self.key(key)?;
+        let take_newest = match self.memorix_base.default_options.to_owned() {
+            Some(MemorixOptions {
+                cache: _cache,
+                task:
+                    Some(MemorixOptionsTask {
+                        take_newest: Some(task_newest),
+                    }),
+            }) => task_newest,
+            _ => false,
+        };
         Ok(Box::pin(async_stream::stream! {
             loop {
-                let (_, pop_str): (String, String) = self
-                    .memorix_base
-                    .redis
-                    .blpop(key_str.to_string(), 0)
+                let (_, pop_str): (String, String) =
+                (
+                match take_newest {
+                        true => self
+                        .memorix_base
+                        .redis
+                        .brpop(key_str.to_string(), 0),
+                        _ => self
+                        .memorix_base
+                        .redis
+                        .blpop(key_str.to_string(), 0)
+                    }
+                    )
                     .await.unwrap();
                 let mut payload_str = pop_str;
                 payload_str.pop();
@@ -381,11 +447,13 @@ where
         let payload_str = format!("[{}]", serde_json::to_string(&payload)?);
         self.memorix_base
             .redis
-            .rpush(self.hash_key(key)?, payload_str)
+            .rpush(self.key(key)?, payload_str)
             .await?;
         Ok(())
     }
 }
+
+#[derive(Clone)]
 pub struct MemorixTaskItemNoKey<'a, P, R>
 where
     P: serde::de::DeserializeOwned,
@@ -447,7 +515,7 @@ where
     > {
         Ok(self.base_item.dequeue(key).await?)
     }
-    pub async fn queue(&mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn queue(mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self.base_item.queue(key, payload).await?)
     }
 }
@@ -477,10 +545,18 @@ where
     > {
         Ok(self.base_item.dequeue(std::marker::PhantomData).await?)
     }
-    pub async fn queue(&mut self, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn queue(mut self, payload: P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self
             .base_item
             .queue(std::marker::PhantomData, payload)
             .await?)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn exploration() {
+        assert_eq!(2 + 2, 4);
     }
 }

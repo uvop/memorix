@@ -3,20 +3,21 @@ extern crate serde;
 extern crate serde_json;
 
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, std::fmt::Debug)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, PartialEq, std::fmt::Debug)]
 pub enum Animal {
     dog,
     cat,
     person,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct User {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub age: Option<i32>,
 }
 
+#[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCacheBlaBla<'a> {
     pub favoriteAnimal: memorix_redis::MemorixCacheItem<'a, String, Animal>,
@@ -35,6 +36,7 @@ impl<'a> MemorixCacheBlaBla<'a> {
     }
 }
 
+#[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixBlaBla<'a> {
     pub cache: MemorixCacheBlaBla<'a>,
@@ -52,6 +54,7 @@ impl<'a> MemorixBlaBla<'a> {
     }
 }
 
+#[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixPubSub<'a> {
     pub message: memorix_redis::MemorixPubSubItemNoKey<'a, String>,
@@ -65,6 +68,7 @@ impl<'a> MemorixPubSub<'a> {
     }
 }
 
+#[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixTask<'a> {
     pub runAlgo: memorix_redis::MemorixTaskItemNoKey<'a, String, Animal>,
@@ -78,6 +82,7 @@ impl<'a> MemorixTask<'a> {
     }
 }
 
+#[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct Memorix<'a> {
     pub blaBla: MemorixBlaBla<'a>,
@@ -89,15 +94,15 @@ pub struct Memorix<'a> {
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
         let memorix_base =
-            memorix_redis::MemorixBase::new(redis_url, MEMORIX_NAMESPACE_NAME_TREE, None).await;
-        Self {
+            memorix_redis::MemorixBase::new(redis_url, MEMORIX_NAMESPACE_NAME_TREE, None).await?;
+        Ok(Self {
             blaBla: MemorixBlaBla::new(memorix_base.clone()),
 
             pubsub: MemorixPubSub::new(memorix_base.clone()),
             task: MemorixTask::new(memorix_base.clone()),
-        }
+        })
     }
 }
 
