@@ -4,7 +4,7 @@ version = "1.4.9"
 repository = "https://github.com/uvop/memorix"
 authors = ["Yuval Saraf <unimonkiez@gmail.com>"]
 description = "Rust bindings for bladeRF"
-readme = "../../README.md"
+readme = "../../../README.md"
 edition = "2021"
 license = "MIT"
 
