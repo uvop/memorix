@@ -262,7 +262,7 @@ checksum = "f665ee40bc4a3c5590afb1e9677db74a508659dfd71e126420da8274909a0167"
 
 [[package]]
 name = "memorix-redis"
-version = "1.4.11"
+version = "1.4.12"
 dependencies = [
  "async-stream",
  "futures",
