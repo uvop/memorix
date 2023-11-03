@@ -518,7 +518,7 @@ where
     > {
         Ok(self.base_item.dequeue(key).await?)
     }
-    pub async fn queue(mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn queue(&mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self.base_item.queue(key, payload).await?)
     }
 }
@@ -549,7 +549,7 @@ where
     > {
         Ok(self.base_item.dequeue(std::marker::PhantomData).await?)
     }
-    pub async fn queue(mut self, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn queue(&mut self, payload: P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self
             .base_item
             .queue(std::marker::PhantomData, payload)
