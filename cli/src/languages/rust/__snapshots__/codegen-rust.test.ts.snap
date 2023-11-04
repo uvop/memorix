@@ -1,717 +1,755 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`python codegen cache can generate also with model 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
-)
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct User {
+    pub name: String,
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub age: Option<i32>,
+}
 
 
-@dataclass
-class User(object):
-    name: str
-    age: typing.Optional[int]
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixCache<'a> {
+    pub adminId: memorix_redis::MemorixCacheItemNoKey<'a, Option<String>>,
+    pub user: memorix_redis::MemorixCacheItem<'a, String, User>,
+}
+
+impl<'a> MemorixCache<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            adminId: memorix_redis::MemorixCacheItemNoKey::new(
+                memorix_base.clone(),
+                \\"adminId\\",
+            ),
+            user: memorix_redis::MemorixCacheItem::new(
+                memorix_base.clone(),
+                \\"user\\",
+            ),
+        }
+    }
+}
 
 
-class MemorixCache(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self.adminId = MemorixCacheItemNoKey[typing.Optional[str]](
-            api=api,
-            id=\\"adminId\\",
-            payload_class=typing.Optional[str],
-        )
-        self.user = MemorixCacheItem[str, \\"User\\"](
-            api=api,
-            id=\\"user\\",
-            payload_class=User,
-        )
+    pub cache: MemorixCache<'a>,
+}
 
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
 
-        self._namespace_name_tree: typing.List[str] = []
-
-        self.cache = MemorixCache(self)"
+            cache: MemorixCache::new(memorix_base.clone()),
+        })
+    }
+}"
 `;
 
 exports[`python codegen cache can generate with inline object type 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
-)
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct CacheUserPayload {
+    pub name: String,
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub age: Option<i32>,
+}
 
 
-@dataclass
-class CacheUserPayload(object):
-    name: str
-    age: typing.Optional[int]
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixCache<'a> {
+    pub user: memorix_redis::MemorixCacheItem<'a, i32, Option<CacheUserPayload>>,
+}
+
+impl<'a> MemorixCache<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            user: memorix_redis::MemorixCacheItem::new(
+                memorix_base.clone(),
+                \\"user\\",
+            ),
+        }
+    }
+}
 
 
-class MemorixCache(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self.user = MemorixCacheItem[int, typing.Optional[\\"CacheUserPayload\\"]](
-            api=api,
-            id=\\"user\\",
-            payload_class=typing.Optional[CacheUserPayload],
-        )
+    pub cache: MemorixCache<'a>,
+}
 
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
 
-        self._namespace_name_tree: typing.List[str] = []
-
-        self.cache = MemorixCache(self)"
+            cache: MemorixCache::new(memorix_base.clone()),
+        })
+    }
+}"
 `;
 
 exports[`python codegen cache can generate with inline types 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixCache<'a> {
+    pub user: memorix_redis::MemorixCacheItem<'a, i32, String>,
+}
 
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
-)
-
-
-class MemorixCache(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
-
-        self.user = MemorixCacheItem[int, str](
-            api=api,
-            id=\\"user\\",
-            payload_class=str,
-        )
+impl<'a> MemorixCache<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            user: memorix_redis::MemorixCacheItem::new(
+                memorix_base.clone(),
+                \\"user\\",
+            ),
+        }
+    }
+}
 
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self._namespace_name_tree: typing.List[str] = []
+    pub cache: MemorixCache<'a>,
+}
 
-        self.cache = MemorixCache(self)"
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
+
+            cache: MemorixCache::new(memorix_base.clone()),
+        })
+    }
+}"
 `;
 
 exports[`python codegen cache can generate with inline types and convert to CamelCase 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
-)
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct CacheUserByNumberPayload {
+    pub name: String,
+    pub age: i32,
+}
 
 
-@dataclass
-class CacheUserByNumberPayload(object):
-    name: str
-    age: int
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixCache<'a> {
+    pub user_by_number: memorix_redis::MemorixCacheItem<'a, i32, CacheUserByNumberPayload>,
+}
+
+impl<'a> MemorixCache<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            user_by_number: memorix_redis::MemorixCacheItem::new(
+                memorix_base.clone(),
+                \\"user_by_number\\",
+            ),
+        }
+    }
+}
 
 
-class MemorixCache(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self.user_by_number = MemorixCacheItem[int, \\"CacheUserByNumberPayload\\"](
-            api=api,
-            id=\\"user_by_number\\",
-            payload_class=CacheUserByNumberPayload,
-        )
+    pub cache: MemorixCache<'a>,
+}
 
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
 
-        self._namespace_name_tree: typing.List[str] = []
-
-        self.cache = MemorixCache(self)"
+            cache: MemorixCache::new(memorix_base.clone()),
+        })
+    }
+}"
 `;
 
 exports[`python codegen cache can generate with no key 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
-)
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct CacheUserPayload {
+    pub name: String,
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub age: Option<i32>,
+}
 
 
-@dataclass
-class CacheUserPayload(object):
-    name: str
-    age: typing.Optional[int]
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixCache<'a> {
+    pub user: memorix_redis::MemorixCacheItemNoKey<'a, Option<CacheUserPayload>>,
+}
+
+impl<'a> MemorixCache<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            user: memorix_redis::MemorixCacheItemNoKey::new(
+                memorix_base.clone(),
+                \\"user\\",
+            ),
+        }
+    }
+}
 
 
-class MemorixCache(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self.user = MemorixCacheItemNoKey[typing.Optional[\\"CacheUserPayload\\"]](
-            api=api,
-            id=\\"user\\",
-            payload_class=typing.Optional[CacheUserPayload],
-        )
+    pub cache: MemorixCache<'a>,
+}
 
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
 
-        self._namespace_name_tree: typing.List[str] = []
-
-        self.cache = MemorixCache(self)"
+            cache: MemorixCache::new(memorix_base.clone()),
+        })
+    }
+}"
 `;
 
 exports[`python codegen cache can have options 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixCache<'a> {
+    pub user: memorix_redis::MemorixCacheItem<'a, i32, String>,
+}
 
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
-)
-
-
-class MemorixCache(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
-
-        self.user = MemorixCacheItem[int, str](
-            api=api,
-            id=\\"user\\",
-            payload_class=str,
-            options=MemorixCacheItem.Options(
-                expire=MemorixCacheItem.Options.Expire(
-                    value=5,
-                    extend_on_get=True,
-                ),
+impl<'a> MemorixCache<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            user: memorix_redis::MemorixCacheItem::new(
+                memorix_base.clone(),
+                \\"user\\",
             ),
-        )
+        }
+    }
+}
 
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self._namespace_name_tree: typing.List[str] = []
+    pub cache: MemorixCache<'a>,
+}
 
-        self.cache = MemorixCache(self)"
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
+
+            cache: MemorixCache::new(memorix_base.clone()),
+        })
+    }
+}"
 `;
 
 exports[`python codegen config can be null 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-from memorix_client_redis import (
-    MemorixBase,
-)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+}
 
-        self._namespace_name_tree: typing.List[str] = []
-        self._default_options = MemorixBase.DefaultOptions(
-            cache=MemorixCacheItem.Options(
-                expire=None,
-            ),
-        )
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-"
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            Some(memorix_redis::MemorixOptions {
+                cache: Some(memorix_redis::MemorixOptionsCache {
+                    expire: None,
+                }),
+                task: None,
+            })
+        ).await?;
+        Ok(Self {
+
+
+        })
+    }
+}"
 `;
 
 exports[`python codegen config can generate 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-from memorix_client_redis import (
-    MemorixBase,
-)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+}
 
-        self._namespace_name_tree: typing.List[str] = []
-        self._default_options = MemorixBase.DefaultOptions(
-            cache=MemorixCacheItem.Options(
-                expire=MemorixCacheItem.Options.Expire(
-                    value=5,
-                    extend_on_get=True,
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            Some(memorix_redis::MemorixOptions {
+                cache: Some(memorix_redis::MemorixOptionsCache {
+                    expire: Some(memorix_redis::MemorixOptionsCacheExpire {
+                        value: 5,
+                        is_in_ms: None,
+                        extend_on_get: Some(true),
+                    }),
+                }),
+                task: MemorixTaskItem.Options(
+                    take_newest=True,
                 ),
-            ),
-            task=MemorixTaskItem.Options(
-                take_newest=True,
-            ),
-        )
+            })
+        ).await?;
+        Ok(Self {
 
-"
+
+        })
+    }
+}"
 `;
 
 exports[`python codegen enum can generate 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-from enum import Enum
-
-
-class Animals(str, Enum):
-    dog = \\"dog\\"
-    cat = \\"cat\\"
-    person = \\"person\\""
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize, PartialEq, std::fmt::Debug)]
+pub enum Animals {
+    dog,
+    cat,
+    person,
+}"
 `;
 
 exports[`python codegen model can generate from 2 models 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct User1 {
+    pub id: i32,
+}
 
 
-@dataclass
-class User1(object):
-    id: int
-
-
-@dataclass
-class User2(object):
-    name: str
-    age: typing.Optional[int]"
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct User2 {
+    pub name: String,
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub age: Option<i32>,
+}"
 `;
 
 exports[`python codegen model can generate from model 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-
-
-@dataclass
-class User(object):
-    id: int
-    name: str
-    age: typing.Optional[float]"
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct User {
+    pub id: i32,
+    pub name: String,
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub age: Option<f32>,
+}"
 `;
 
 exports[`python codegen model can generate from model with array 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-
-
-@dataclass
-class UserChildren(object):
-    id: int
-    name: typing.Optional[str]
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct UserChildren {
+    pub id: i32,
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub name: Option<String>,
+}
 
 
-@dataclass
-class User(object):
-    id: int
-    names: typing.List[str]
-    children: typing.Optional[typing.List[typing.Optional[\\"UserChildren\\"]]]"
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct User {
+    pub id: i32,
+    pub names: Vec<String>,
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub children: Option<Vec<Option<UserChildren>>>,
+}"
 `;
 
 exports[`python codegen model can generate from model within model 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-
-
-@dataclass
-class UserPapa(object):
-    name: typing.Optional[str]
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct UserPapa {
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub name: Option<String>,
+}
 
 
-@dataclass
-class User(object):
-    id: int
-    papa: \\"UserPapa\\""
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct User {
+    pub id: i32,
+    pub papa: UserPapa,
+}"
 `;
 
 exports[`python codegen model can generate from model within model within a model 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct UserPapaMama {
+    pub sick: bool,
+}
 
 
-@dataclass
-class UserPapaMama(object):
-    sick: bool
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct UserPapa {
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = \\"Option::is_none\\")]
+    pub mama: Option<UserPapaMama>,
+    pub age: i32,
+}
 
 
-@dataclass
-class UserPapa(object):
-    name: typing.Optional[str]
-    mama: typing.Optional[\\"UserPapaMama\\"]
-    age: int
-
-
-@dataclass
-class User(object):
-    id: int
-    papa: \\"UserPapa\\""
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct User {
+    pub id: i32,
+    pub papa: UserPapa,
+}"
 `;
 
 exports[`python codegen namespace can generate 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
-
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
-)
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+pub struct UserCacheBioPayload {
+    pub description: String,
+}
 
 
-@dataclass
-class UserCacheBioPayload(object):
-    description: str
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixCacheUser<'a> {
+    pub bio: memorix_redis::MemorixCacheItemNoKey<'a, UserCacheBioPayload>,
+}
 
-
-class MemorixCacheUser(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
-
-        self.bio = MemorixCacheItemNoKey[\\"UserCacheBioPayload\\"](
-            api=api,
-            id=\\"bio\\",
-            payload_class=UserCacheBioPayload,
-        )
-
-
-class MemorixUser(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
-
-        self._namespace_name_tree: typing.List[str] = [\\"user\\"]
-        self._default_options = MemorixBase.DefaultOptions(
-            cache=MemorixCacheItem.Options(
-                expire=MemorixCacheItem.Options.Expire(
-                    value=5,
-                ),
+impl<'a> MemorixCacheUser<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            bio: memorix_redis::MemorixCacheItemNoKey::new(
+                memorix_base.clone(),
+                \\"bio\\",
             ),
-        )
-
-        self.cache = MemorixCacheUser(self)
-
-
-class MemorixCacheSpaceship(MemorixCacheBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
-
-        self.bio = MemorixCacheItemNoKey[str](
-            api=api,
-            id=\\"bio\\",
-            payload_class=str,
-        )
+        }
+    }
+}
 
 
-class MemorixSpaceship(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixUser<'a> {
 
-        self._namespace_name_tree: typing.List[str] = [\\"spaceship\\"]
-        self._default_options = MemorixBase.DefaultOptions(
-            cache=MemorixCacheItem.Options(
-                expire=MemorixCacheItem.Options.Expire(
-                    value=5,
-                ),
+    pub cache: MemorixCacheUser<'a>,
+}
+
+const MEMORIX_USER_NAMESPACE_NAME_TREE: &'static [&'static str] = &[\\"user\\"];
+
+impl<'a> MemorixUser<'a> {
+    pub fn new(other: memorix_redis::MemorixBase) -> Result<MemorixUser<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::from(
+            other,
+            MEMORIX_USER_NAMESPACE_NAME_TREE,
+            Some(memorix_redis::MemorixOptions {
+                cache: Some(memorix_redis::MemorixOptionsCache {
+                    expire: Some(memorix_redis::MemorixOptionsCacheExpire {
+                        value: 5,
+                        is_in_ms: None,
+                        extend_on_get: None,
+                    }),
+                }),
+                task: None,
+            })
+        );
+        Ok(Self {
+
+            cache: MemorixCacheUser::new(memorix_base.clone()),
+        })
+    }
+}
+
+
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixCacheSpaceship<'a> {
+    pub bio: memorix_redis::MemorixCacheItemNoKey<'a, String>,
+}
+
+impl<'a> MemorixCacheSpaceship<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            bio: memorix_redis::MemorixCacheItemNoKey::new(
+                memorix_base.clone(),
+                \\"bio\\",
             ),
-        )
+        }
+    }
+}
 
-        self.cache = MemorixCacheSpaceship(self)
+
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixSpaceship<'a> {
+
+    pub cache: MemorixCacheSpaceship<'a>,
+}
+
+const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &'static [&'static str] = &[\\"spaceship\\"];
+
+impl<'a> MemorixSpaceship<'a> {
+    pub fn new(other: memorix_redis::MemorixBase) -> Result<MemorixSpaceship<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::from(
+            other,
+            MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE,
+            Some(memorix_redis::MemorixOptions {
+                cache: Some(memorix_redis::MemorixOptionsCache {
+                    expire: Some(memorix_redis::MemorixOptionsCacheExpire {
+                        value: 5,
+                        is_in_ms: None,
+                        extend_on_get: None,
+                    }),
+                }),
+                task: None,
+            })
+        );
+        Ok(Self {
+
+            cache: MemorixCacheSpaceship::new(memorix_base.clone()),
+        })
+    }
+}
 
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
+            pub user: MemorixUser<'a>,
+            pub spaceship: MemorixSpaceship<'a>,
 
-        self._namespace_name_tree: typing.List[str] = []
 
-        self.user = MemorixUser(redis_url=redis_url, ref=self)
-        self.spaceship = MemorixSpaceship(redis_url=redis_url, ref=self)
+}
 
-"
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
+            user: MemorixUser::new(memorix_base.clone())?,
+            spaceship: MemorixSpaceship::new(memorix_base.clone())?,
+
+
+        })
+    }
+}"
 `;
 
 exports[`python codegen pubsub can generate with inline types 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixPubSub<'a> {
+    pub message: memorix_redis::MemorixPubSubItem<'a, i32, String>,
+}
 
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixPubSubBase,
-    MemorixPubSubItem,
-    MemorixPubSubItemNoKey,
-)
-
-
-class MemorixPubSub(MemorixPubSubBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
-
-        self.message = MemorixPubSubItem[int, str](
-            api=api,
-            id=\\"message\\",
-            payload_class=str,
-        )
+impl<'a> MemorixPubSub<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            message: memorix_redis::MemorixPubSubItem::new(
+                memorix_base.clone(),
+                \\"message\\",
+            ),
+        }
+    }
+}
 
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self._namespace_name_tree: typing.List[str] = []
+    pub pubsub: MemorixPubSub<'a>,
+}
 
-        self.pubsub = MemorixPubSub(self)"
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
+
+            pubsub: MemorixPubSub::new(memorix_base.clone()),
+        })
+    }
+}"
 `;
 
 exports[`python codegen task can generate with inline types 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixTask<'a> {
+    pub doIt: memorix_redis::MemorixTaskItem<'a, i32, String, bool>,
+}
 
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixTaskBase,
-    MemorixTaskItem,
-    MemorixTaskItemNoKey,
-    MemorixTaskItemNoReturns,
-    MemorixTaskItemNoKeyNoReturns,
-)
-
-
-class MemorixTask(MemorixTaskBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
-
-        self.doIt = MemorixTaskItem[int, str, bool](
-            api=api,
-            id=\\"doIt\\",
-            payload_class=str,
-            returns_class=bool,
-        )
+impl<'a> MemorixTask<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            doIt: memorix_redis::MemorixTaskItem::new(
+                memorix_base.clone(),
+                \\"doIt\\",
+            ),
+        }
+    }
+}
 
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self._namespace_name_tree: typing.List[str] = []
+    pub task: MemorixTask<'a>,
+}
 
-        self.task = MemorixTask(self)"
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
+
+            task: MemorixTask::new(memorix_base.clone()),
+        })
+    }
+}"
 `;
 
 exports[`python codegen task can have options 1`] = `
-"# flake8: noqa
-import typing
+"extern crate memorix_redis;
 
-if typing.TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from memorix_client_redis import dataclass
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixTask<'a> {
+    pub doIt: memorix_redis::MemorixTaskItem<'a, i32, String, bool>,
+}
 
-from memorix_client_redis import (
-    MemorixBase,
-    MemorixTaskBase,
-    MemorixTaskItem,
-    MemorixTaskItemNoKey,
-    MemorixTaskItemNoReturns,
-    MemorixTaskItemNoKeyNoReturns,
-)
-
-
-class MemorixTask(MemorixTaskBase):
-    def __init__(self, api: MemorixBase) -> None:
-        super().__init__(api=api)
-
-        self.doIt = MemorixTaskItem[int, str, bool](
-            api=api,
-            id=\\"doIt\\",
-            payload_class=str,
-            returns_class=bool,
-            options=MemorixTaskItem.Options(
-                take_newest=True,
+impl<'a> MemorixTask<'a> {
+    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+        Self {
+            doIt: memorix_redis::MemorixTaskItem::new(
+                memorix_base.clone(),
+                \\"doIt\\",
             ),
-        )
+        }
+    }
+}
 
 
-class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix<'a> {
 
-        self._namespace_name_tree: typing.List[str] = []
+    pub task: MemorixTask<'a>,
+}
 
-        self.task = MemorixTask(self)"
+const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+
+impl<'a> Memorix<'a> {
+    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_redis::MemorixBase::new(
+            redis_url,
+            MEMORIX_NAMESPACE_NAME_TREE,
+            None
+        ).await?;
+        Ok(Self {
+
+            task: MemorixTask::new(memorix_base.clone()),
+        })
+    }
+}"
 `;

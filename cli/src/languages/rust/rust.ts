@@ -160,9 +160,7 @@ ${b.properties
         (p.value.type === ValueTypes.array ||
           p.value.type === ValueTypes.simple) &&
         p.value.isOptional
-          ? `${getTabs(
-              1
-            )}#[memorix_redis(skip_serializing_if = "Option::is_none")]\n`
+          ? `${getTabs(1)}#[serde(skip_serializing_if = "Option::is_none")]\n`
           : ""
       }${getTabs(1)}pub ${p.name === "type" ? "r#type" : p.name}: ${valueToCode(
         p.value,
