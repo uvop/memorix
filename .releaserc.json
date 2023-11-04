@@ -57,6 +57,12 @@
       }
     ],
     [
+      "@semantic-release-cargo/semantic-release-cargo",
+      {
+        "manifest_path": "./clients/redis/rust/Cargo.toml"
+      }
+    ],
+    [
       "@semantic-release/exec",
       {
         "prepareCmd": "(cd ./docs && npm install && npm run build)"
