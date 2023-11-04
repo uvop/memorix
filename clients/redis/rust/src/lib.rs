@@ -1,12 +1,17 @@
 extern crate futures_core;
 extern crate futures_util;
+extern crate proc_macro;
 extern crate redis;
+extern crate serde;
 extern crate serde_json;
 
 mod utils;
 
 use crate::futures_util::StreamExt;
 use redis::AsyncCommands;
+
+pub use serde::Deserialize;
+pub use serde::Serialize;
 
 #[derive(Clone)]
 pub struct MemorixOptionsCacheExpire {
@@ -132,6 +137,26 @@ where
 
         let payload: P = serde_json::from_str(&payload_str)?;
 
+        let extend_on_get = match self.memorix_base.default_options.to_owned() {
+            Some(MemorixOptions {
+                cache:
+                    Some(MemorixOptionsCache {
+                        expire:
+                            Some(MemorixOptionsCacheExpire {
+                                value: _,
+                                is_in_ms: _,
+                                extend_on_get: Some(x),
+                            }),
+                    }),
+                task: _task,
+            }) => x,
+            _ => false,
+        };
+
+        if extend_on_get {
+            self.extend(key).await?;
+        }
+
         Ok(Some(payload))
     }
     pub async fn set(&mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
@@ -140,6 +165,33 @@ where
             .redis
             .set(self.key(key)?, payload_str)
             .await?;
+        Ok(())
+    }
+    pub async fn extend(&mut self, key: K) -> Result<(), Box<dyn std::error::Error>> {
+        let expire = match self.memorix_base.default_options.to_owned() {
+            Some(MemorixOptions {
+                cache: Some(MemorixOptionsCache { expire: Some(x) }),
+                task: _task,
+            }) => x,
+            _ => return Ok(()),
+        };
+
+        let hashed_key = self.key(key)?;
+        let expire_value: usize = expire.value as usize;
+        match expire.is_in_ms {
+            Some(true) => {
+                self.memorix_base
+                    .redis
+                    .pexpire(hashed_key, expire_value)
+                    .await?
+            }
+            _ => {
+                self.memorix_base
+                    .redis
+                    .expire(hashed_key, expire_value)
+                    .await?
+            }
+        };
         Ok(())
     }
 }
@@ -554,13 +606,5 @@ where
             .base_item
             .queue(std::marker::PhantomData, payload)
             .await?)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn exploration() {
-        assert_eq!(2 + 2, 4);
     }
 }

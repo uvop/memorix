@@ -26,25 +26,25 @@ const blockOptionsToCode: (
     case BlockTypes.cache: {
       const o = options as MapValue<BlockCache["values"]>["options"];
       return o
-        ? `MemorixCacheItem.Options(
-${getTabs(level + 1)}expire=${
+        ? `Some(memorix_redis::MemorixOptionsCache {
+${getTabs(level + 1)}expire: ${
             o.expire
-              ? `MemorixCacheItem.Options.Expire(
-${getTabs(level + 2)}value=${o.expire.value},${
+              ? `Some(memorix_redis::MemorixOptionsCacheExpire {
+${getTabs(level + 2)}value: ${o.expire.value},
+${getTabs(level + 2)}is_in_ms: ${
                   o.expire.isInMs !== undefined
-                    ? `
-${getTabs(level + 2)}is_in_ms=${o.expire.isInMs ? "True" : "False"},`
-                    : ""
-                }${
+                    ? `Some(${o.expire.isInMs})`
+                    : "None"
+                },
+${getTabs(level + 2)}extend_on_get: ${
                   o.expire.extendOnGet !== undefined
-                    ? `
-${getTabs(level + 2)}extend_on_get=${o.expire.extendOnGet ? "True" : "False"},`
-                    : ""
-                }
-${getTabs(level + 1)})`
+                    ? `Some(${o.expire.extendOnGet})`
+                    : "None"
+                },
+${getTabs(level + 1)}})`
               : "None"
           },
-${getTabs(level)})`
+${getTabs(level)}})`
         : "None";
     }
     case BlockTypes.task: {
@@ -217,26 +217,18 @@ const defaultOptionsToCode: (defaultOptions?: DefaultOptions) => string = (
   if (!defaultOptions) {
     return "None";
   }
-  return `MemorixBase.DefaultOptions(${
-    defaultOptions.cache
-      ? `
-${getTabs(3)}cache=${blockOptionsToCode(
-          BlockTypes.cache,
-          defaultOptions.cache,
-          3
-        )},`
-      : ""
-  }${
-    defaultOptions.task
-      ? `
-${getTabs(3)}task=${blockOptionsToCode(
-          BlockTypes.task,
-          defaultOptions.task,
-          3
-        )},`
-      : ""
-  }
-${getTabs(2)})`;
+  return `Some(memorix_redis::MemorixOptions {
+${getTabs(4)}cache: ${blockOptionsToCode(
+    BlockTypes.cache,
+    defaultOptions.cache,
+    4
+  )},
+${getTabs(4)}task: ${blockOptionsToCode(
+    BlockTypes.task,
+    defaultOptions.task,
+    4
+  )},
+${getTabs(3)}})`;
 };
 
 const namespaceToCode: (
