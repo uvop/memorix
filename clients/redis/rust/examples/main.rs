@@ -74,7 +74,7 @@ async fn loop_1(
             .blaBla
             .cache
             .favoriteAnimal
-            .get("the key".to_string())
+            .get(&"the key".to_string())
             .await?;
         match value {
             Some(x) => println!("Animal is \"{:?}\".", x),
@@ -93,7 +93,10 @@ async fn loop_2(
             .blaBla
             .cache
             .favoriteAnimal
-            .set("the key".to_string(), example_schema_generated::Animal::dog)
+            .set(
+                &"the key".to_string(),
+                &example_schema_generated::Animal::dog,
+            )
             .await?;
     }
     Ok(())

@@ -17,12 +17,12 @@ mod tests {
             .cache
             .favoriteAnimal
             .set(
-                "123".to_string(),
-                crate::example_schema_generated::Animal::dog,
+                &"123".to_string(),
+                &crate::example_schema_generated::Animal::dog,
             )
             .await?;
         tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
-        let favorite_animal = memorix.cache.favoriteAnimal.get("123".to_string()).await?;
+        let favorite_animal = memorix.cache.favoriteAnimal.get(&"123".to_string()).await?;
         assert_eq!(
             favorite_animal,
             Some(crate::example_schema_generated::Animal::dog)
@@ -36,12 +36,12 @@ mod tests {
             .cache
             .favoriteAnimal
             .set(
-                "123".to_string(),
-                crate::example_schema_generated::Animal::dog,
+                &"123".to_string(),
+                &crate::example_schema_generated::Animal::dog,
             )
             .await?;
         tokio::time::sleep(tokio::time::Duration::from_millis(2500)).await;
-        let favorite_animal = memorix.cache.favoriteAnimal.get("123".to_string()).await?;
+        let favorite_animal = memorix.cache.favoriteAnimal.get(&"123".to_string()).await?;
         assert_eq!(favorite_animal, None);
         Ok(())
     }

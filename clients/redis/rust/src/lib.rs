@@ -107,7 +107,7 @@ where
             _phantom2: std::marker::PhantomData,
         }
     }
-    pub fn key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn key(&self, key: &K) -> Result<String, Box<dyn std::error::Error>> {
         let prefix = match self.memorix_base.namespace_name_tree.len() {
             0 => "".to_string(),
             _ => format!(
@@ -125,7 +125,7 @@ where
             true => format!("[{}\"{}\",{}]", prefix, self.id, utils::hash_key(&key)?),
         })
     }
-    pub async fn get(&mut self, key: K) -> Result<Option<P>, Box<dyn std::error::Error>> {
+    pub async fn get(&mut self, key: &K) -> Result<Option<P>, Box<dyn std::error::Error>> {
         let payload_str: Option<String> = self.memorix_base.redis.get(self.key(key)?).await?;
 
         let payload_str = match payload_str {
@@ -159,15 +159,47 @@ where
 
         Ok(Some(payload))
     }
-    pub async fn set(&mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn set(&mut self, key: &K, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         let payload_str = serde_json::to_string(&payload)?;
-        self.memorix_base
-            .redis
-            .set(self.key(key)?, payload_str)
-            .await?;
+        let expire = match self.memorix_base.default_options.to_owned() {
+            Some(MemorixOptions {
+                cache: Some(MemorixOptionsCache { expire: Some(x) }),
+                task: _,
+            }) => Some(x),
+            _ => None,
+        };
+        match expire {
+            Some(MemorixOptionsCacheExpire {
+                value,
+                is_in_ms: Some(true),
+                extend_on_get: _,
+            }) => {
+                self.memorix_base
+                    .redis
+                    .pset_ex(self.key(key)?, payload_str, value as usize)
+                    .await?;
+            }
+            Some(MemorixOptionsCacheExpire {
+                value,
+                is_in_ms: _,
+                extend_on_get: _,
+            }) => {
+                self.memorix_base
+                    .redis
+                    .set_ex(self.key(key)?, payload_str, value as usize)
+                    .await?;
+            }
+            _ => {
+                self.memorix_base
+                    .redis
+                    .set(self.key(key)?, payload_str)
+                    .await?;
+            }
+        }
+
         Ok(())
     }
-    pub async fn extend(&mut self, key: K) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn extend(&mut self, key: &K) -> Result<(), Box<dyn std::error::Error>> {
         let expire = match self.memorix_base.default_options.to_owned() {
             Some(MemorixOptions {
                 cache: Some(MemorixOptionsCache { expire: Some(x) }),
@@ -215,12 +247,12 @@ where
         }
     }
     pub async fn get(&mut self) -> Result<Option<P>, Box<dyn std::error::Error>> {
-        Ok(self.base_item.get(std::marker::PhantomData).await?)
+        Ok(self.base_item.get(&std::marker::PhantomData).await?)
     }
-    pub async fn set(&mut self, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn set(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self
             .base_item
-            .set(std::marker::PhantomData, payload)
+            .set(&std::marker::PhantomData, payload)
             .await?)
     }
 }
@@ -280,7 +312,7 @@ where
             _payload: std::marker::PhantomData,
         }
     }
-    pub fn key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn key(&self, key: &K) -> Result<String, Box<dyn std::error::Error>> {
         let prefix = match self.memorix_base.namespace_name_tree.len() {
             0 => "".to_string(),
             _ => format!(
@@ -300,7 +332,7 @@ where
     }
     pub async fn subscribe(
         &self,
-        key: K,
+        key: &K,
     ) -> Result<
         core::pin::Pin<
             Box<
@@ -324,7 +356,11 @@ where
             .boxed();
         Ok(stream)
     }
-    pub async fn publish(&mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn publish(
+        &mut self,
+        key: &K,
+        payload: &P,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let payload_str = serde_json::to_string(&payload)?;
         self.memorix_base
             .redis
@@ -364,12 +400,12 @@ where
         >,
         Box<dyn std::error::Error>,
     > {
-        Ok(self.base_item.subscribe(std::marker::PhantomData).await?)
+        Ok(self.base_item.subscribe(&std::marker::PhantomData).await?)
     }
-    pub async fn publish(&mut self, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn publish(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self
             .base_item
-            .publish(std::marker::PhantomData, payload)
+            .publish(&std::marker::PhantomData, payload)
             .await?)
     }
 }
@@ -438,7 +474,7 @@ where
             _returns: std::marker::PhantomData,
         }
     }
-    pub fn key(&self, key: K) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn key(&self, key: &K) -> Result<String, Box<dyn std::error::Error>> {
         let prefix = match self.memorix_base.namespace_name_tree.len() {
             0 => "".to_string(),
             _ => format!(
@@ -458,7 +494,7 @@ where
     }
     pub async fn dequeue<'b: 'a>(
         &'b mut self,
-        key: K,
+        key: &K,
     ) -> Result<
         impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
         Box<dyn std::error::Error>,
@@ -497,7 +533,7 @@ where
             }
         }))
     }
-    pub async fn queue(&mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn queue(&mut self, key: &K, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         let payload_str = format!("[{}]", serde_json::to_string(&payload)?);
         self.memorix_base
             .redis
@@ -531,12 +567,12 @@ where
         impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
         Box<dyn std::error::Error>,
     > {
-        Ok(self.base_item.dequeue(std::marker::PhantomData).await?)
+        Ok(self.base_item.dequeue(&std::marker::PhantomData).await?)
     }
-    pub async fn queue(&mut self, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn queue(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self
             .base_item
-            .queue(std::marker::PhantomData, payload)
+            .queue(&std::marker::PhantomData, payload)
             .await?)
     }
 }
@@ -563,14 +599,14 @@ where
     }
     pub async fn dequeue<'b: 'a>(
         &'b mut self,
-        key: K,
+        key: &K,
     ) -> Result<
         impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
         Box<dyn std::error::Error>,
     > {
         Ok(self.base_item.dequeue(key).await?)
     }
-    pub async fn queue(&mut self, key: K, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn queue(&mut self, key: &K, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self.base_item.queue(key, payload).await?)
     }
 }
@@ -599,12 +635,12 @@ where
         impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
         Box<dyn std::error::Error>,
     > {
-        Ok(self.base_item.dequeue(std::marker::PhantomData).await?)
+        Ok(self.base_item.dequeue(&std::marker::PhantomData).await?)
     }
-    pub async fn queue(&mut self, payload: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn queue(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         Ok(self
             .base_item
-            .queue(std::marker::PhantomData, payload)
+            .queue(&std::marker::PhantomData, payload)
             .await?)
     }
 }
