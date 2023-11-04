@@ -151,7 +151,7 @@ const blockToStruct: (block: Block) => string = (b) => {
 const blockToCode: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `#[derive(Clone, serde::Serialize, serde::Deserialize)]
+      return `#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
 pub struct ${b.name} {
 ${b.properties
   .map(
@@ -160,7 +160,9 @@ ${b.properties
         (p.value.type === ValueTypes.array ||
           p.value.type === ValueTypes.simple) &&
         p.value.isOptional
-          ? `${getTabs(1)}#[serde(skip_serializing_if = "Option::is_none")]\n`
+          ? `${getTabs(
+              1
+            )}#[memorix_redis(skip_serializing_if = "Option::is_none")]\n`
           : ""
       }${getTabs(1)}pub ${p.name === "type" ? "r#type" : p.name}: ${valueToCode(
         p.value,
@@ -171,7 +173,7 @@ ${b.properties
 }`;
     case BlockTypes.enum:
       return `#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(Clone, serde::Serialize, serde::Deserialize, PartialEq, std::fmt::Debug)]
+#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub enum ${b.name} {
 ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
 }`;
@@ -425,11 +427,7 @@ export const codegen: (namespaces: Namespace) => string = (
   const { code } = namespaceToCode(namespace);
 
   const importCode = ([] as string[])
-    .concat([
-      `extern crate memorix_redis;
-extern crate serde;
-extern crate serde_json;`,
-    ])
+    .concat([`extern crate memorix_redis;`])
     .join("\n");
   return `${importCode}
 
