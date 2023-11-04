@@ -3,8 +3,7 @@ mod example_schema_generated;
 
 #[cfg(test)]
 
-async fn get_memorix<'a>(
-) -> Result<example_schema_generated::Memorix<'a>, Box<dyn std::error::Error>> {
+async fn get_memorix() -> Result<example_schema_generated::Memorix, Box<dyn std::error::Error>> {
     let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
     let memorix = example_schema_generated::Memorix::new(&redis_url).await?;
     Ok(memorix)

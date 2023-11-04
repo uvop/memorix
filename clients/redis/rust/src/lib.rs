@@ -4,6 +4,7 @@ extern crate proc_macro;
 extern crate redis;
 extern crate serde;
 extern crate serde_json;
+extern crate uuid;
 
 mod utils;
 
@@ -12,6 +13,17 @@ use redis::AsyncCommands;
 
 pub use serde::Deserialize;
 pub use serde::Serialize;
+
+#[derive(Debug)]
+struct MemorixError;
+
+impl std::error::Error for MemorixError {}
+
+impl std::fmt::Display for MemorixError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Oh no, something bad went down")
+    }
+}
 
 #[derive(Clone)]
 pub struct MemorixOptionsCacheExpire {
@@ -247,13 +259,10 @@ where
         }
     }
     pub async fn get(&mut self) -> Result<Option<P>, Box<dyn std::error::Error>> {
-        Ok(self.base_item.get(&std::marker::PhantomData).await?)
+        self.base_item.get(&std::marker::PhantomData).await
     }
     pub async fn set(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(self
-            .base_item
-            .set(&std::marker::PhantomData, payload)
-            .await?)
+        self.base_item.set(&std::marker::PhantomData, payload).await
     }
 }
 
@@ -400,75 +409,85 @@ where
         >,
         Box<dyn std::error::Error>,
     > {
-        Ok(self.base_item.subscribe(&std::marker::PhantomData).await?)
+        self.base_item.subscribe(&std::marker::PhantomData).await
     }
     pub async fn publish(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(self
-            .base_item
+        self.base_item
             .publish(&std::marker::PhantomData, payload)
-            .await?)
+            .await
     }
 }
 
 #[derive(Clone)]
-pub struct MemorixTaskItem<'a, K, P, R>
+pub struct MemorixTaskItem<K, P, R>
 where
+    K: serde::Serialize,
+    P: serde::Serialize,
     P: serde::de::DeserializeOwned,
+    R: serde::Serialize,
+    R: serde::de::DeserializeOwned,
 {
     memorix_base: MemorixBase,
-    id: &'a str,
+    id: String,
     has_key: bool,
     has_returns: bool,
+    return_task: Option<Box<MemorixTaskItemNoReturns<String, R>>>,
     _key: std::marker::PhantomData<K>,
     _payload: std::marker::PhantomData<P>,
     _returns: std::marker::PhantomData<R>,
 }
 
-impl<'a, K, P, R> MemorixTaskItem<'a, K, P, R>
+impl<K, P, R> MemorixTaskItem<K, P, R>
 where
     K: serde::Serialize,
-    P: serde::de::DeserializeOwned,
     P: serde::Serialize,
+    P: serde::de::DeserializeOwned,
+    R: serde::Serialize,
+    R: serde::de::DeserializeOwned,
 {
-    pub fn new(memorix_base: MemorixBase, id: &'a str) -> Self {
+    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
         Self {
             memorix_base,
             id,
             has_key: true,
             has_returns: true,
+            return_task: Some(Box::new(MemorixTaskItemNoReturns::new(memorix_base, id))),
             _key: std::marker::PhantomData,
             _payload: std::marker::PhantomData,
             _returns: std::marker::PhantomData,
         }
     }
-    fn new_no_key(memorix_base: MemorixBase, id: &'a str) -> Self {
+    fn new_no_key(memorix_base: MemorixBase, id: String) -> Self {
         Self {
             memorix_base,
             id,
             has_key: false,
             has_returns: true,
+            return_task: Some(Box::new(MemorixTaskItemNoReturns::new(memorix_base, id))),
             _key: std::marker::PhantomData,
             _payload: std::marker::PhantomData,
             _returns: std::marker::PhantomData,
         }
     }
-    fn new_no_returns(memorix_base: MemorixBase, id: &'a str) -> Self {
+    fn new_no_returns(memorix_base: MemorixBase, id: String) -> Self {
         Self {
             memorix_base,
             id,
             has_key: true,
             has_returns: false,
+            return_task: None,
             _key: std::marker::PhantomData,
             _payload: std::marker::PhantomData,
             _returns: std::marker::PhantomData,
         }
     }
-    fn new_no_key_no_returns(memorix_base: MemorixBase, id: &'a str) -> Self {
+    fn new_no_key_no_returns(memorix_base: MemorixBase, id: String) -> Self {
         Self {
             memorix_base,
             id,
             has_key: false,
             has_returns: false,
+            return_task: None,
             _key: std::marker::PhantomData,
             _payload: std::marker::PhantomData,
             _returns: std::marker::PhantomData,
@@ -492,11 +511,11 @@ where
             true => format!("[{}\"{}\",{}]", prefix, self.id, utils::hash_key(&key)?),
         })
     }
-    pub async fn dequeue<'b: 'a>(
-        &'b mut self,
+    pub async fn dequeue(
+        &mut self,
         key: &K,
     ) -> Result<
-        impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
+        impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + '_,
         Box<dyn std::error::Error>,
     > {
         let key_str = self.key(key)?;
@@ -533,114 +552,212 @@ where
             }
         }))
     }
-    pub async fn queue(&mut self, key: &K, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
-        let payload_str = format!("[{}]", serde_json::to_string(&payload)?);
-        self.memorix_base
+    async fn queue_internal(
+        &mut self,
+        key: &K,
+        payload: &P,
+    ) -> Result<
+        (u32, Option<(String, MemorixTaskItemNoReturns<String, R>)>),
+        Box<dyn std::error::Error>,
+    > {
+        let (payload_str, returns) = match self.return_task {
+            Some(x) => {
+                let returns_id = uuid::Uuid::new_v4().to_string();
+
+                (
+                    format!("[\"{}\",{}]", returns_id, serde_json::to_string(&payload)?),
+                    Some((returns_id, x)),
+                )
+            }
+            _ => (format!("[{}]", serde_json::to_string(&payload)?), None),
+        };
+        let queue_size: u32 = self
+            .memorix_base
             .redis
             .rpush(self.key(key)?, payload_str)
             .await?;
-        Ok(())
+        Ok((queue_size, returns))
+    }
+    pub async fn queue(
+        &mut self,
+        key: &K,
+        payload: &P,
+    ) -> Result<MemorixTaskItemResult<R>, Box<dyn std::error::Error>> {
+        let (queue_size, (returns_id, return_task)) =
+            match self.queue_internal(key, payload).await? {
+                (x1, Some(x2)) => (x1, x2),
+                _ => return Err(Box::new(MemorixError {})),
+            };
+        Ok(MemorixTaskItemResult::new(
+            queue_size,
+            return_task,
+            returns_id,
+        ))
     }
 }
 
 #[derive(Clone)]
-pub struct MemorixTaskItemNoKey<'a, P, R>
+pub struct MemorixTaskItemNoKey<P, R>
 where
+    P: serde::Serialize,
     P: serde::de::DeserializeOwned,
+    R: serde::Serialize,
+    R: serde::de::DeserializeOwned,
 {
-    base_item: MemorixTaskItem<'a, std::marker::PhantomData<u8>, P, R>,
+    base_item: MemorixTaskItem<std::marker::PhantomData<u8>, P, R>,
 }
 
-impl<'a, P, R> MemorixTaskItemNoKey<'a, P, R>
+impl<P, R> MemorixTaskItemNoKey<P, R>
 where
-    P: serde::de::DeserializeOwned,
     P: serde::Serialize,
+    P: serde::de::DeserializeOwned,
+    R: serde::Serialize,
+    R: serde::de::DeserializeOwned,
 {
-    pub fn new(memorix_base: MemorixBase, id: &'a str) -> Self {
+    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
         Self {
             base_item: MemorixTaskItem::new_no_key(memorix_base, id),
         }
     }
-    pub async fn dequeue<'b: 'a>(
-        &'b mut self,
+    pub async fn dequeue(
+        &mut self,
     ) -> Result<
-        impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
+        impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + '_,
         Box<dyn std::error::Error>,
     > {
-        Ok(self.base_item.dequeue(&std::marker::PhantomData).await?)
+        self.base_item.dequeue(&std::marker::PhantomData).await
     }
-    pub async fn queue(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(self
-            .base_item
+    pub async fn queue(
+        &mut self,
+        payload: &P,
+    ) -> Result<MemorixTaskItemResult<R>, Box<dyn std::error::Error>> {
+        self.base_item
             .queue(&std::marker::PhantomData, payload)
-            .await?)
+            .await
     }
 }
 
 #[derive(Clone)]
-pub struct MemorixTaskItemNoReturns<'a, K, P>
+pub struct MemorixTaskItemNoReturns<K, P>
 where
     K: serde::Serialize,
+    P: serde::Serialize,
     P: serde::de::DeserializeOwned,
 {
-    base_item: MemorixTaskItem<'a, K, P, std::marker::PhantomData<u8>>,
+    base_item: MemorixTaskItem<K, P, std::marker::PhantomData<u8>>,
 }
 
-impl<'a, K, P> MemorixTaskItemNoReturns<'a, K, P>
+impl<K, P> MemorixTaskItemNoReturns<K, P>
 where
     K: serde::Serialize,
-    P: serde::de::DeserializeOwned,
     P: serde::Serialize,
+    P: serde::de::DeserializeOwned,
 {
-    pub fn new(memorix_base: MemorixBase, id: &'a str) -> Self {
+    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
         Self {
             base_item: MemorixTaskItem::new_no_returns(memorix_base, id),
         }
     }
-    pub async fn dequeue<'b: 'a>(
-        &'b mut self,
+    pub async fn dequeue<'a>(
+        &'a mut self,
         key: &K,
     ) -> Result<
-        impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
+        impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'a,
         Box<dyn std::error::Error>,
     > {
-        Ok(self.base_item.dequeue(key).await?)
+        self.base_item.dequeue(key).await
     }
-    pub async fn queue(&mut self, key: &K, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(self.base_item.queue(key, payload).await?)
+    pub async fn queue(
+        &mut self,
+        key: &K,
+        payload: &P,
+    ) -> Result<MemorixTaskItemResultNoReturns, Box<dyn std::error::Error>> {
+        let (queue_size, _) = self.base_item.queue_internal(key, payload).await?;
+        Ok(MemorixTaskItemResultNoReturns::new(queue_size))
     }
 }
 
 #[derive(Clone)]
-pub struct MemorixTaskItemNoKeyNoReturns<'a, P>
+pub struct MemorixTaskItemNoKeyNoReturns<P>
 where
+    P: serde::Serialize,
     P: serde::de::DeserializeOwned,
 {
-    base_item: MemorixTaskItem<'a, std::marker::PhantomData<u8>, P, std::marker::PhantomData<u8>>,
+    base_item: MemorixTaskItem<std::marker::PhantomData<u8>, P, std::marker::PhantomData<u8>>,
 }
 
-impl<'a, P> MemorixTaskItemNoKeyNoReturns<'a, P>
+impl<P> MemorixTaskItemNoKeyNoReturns<P>
 where
-    P: serde::de::DeserializeOwned,
     P: serde::Serialize,
+    P: serde::de::DeserializeOwned,
 {
-    pub fn new(memorix_base: MemorixBase, id: &'a str) -> Self {
+    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
         Self {
             base_item: MemorixTaskItem::new_no_key_no_returns(memorix_base, id),
         }
     }
-    pub async fn dequeue<'b: 'a>(
-        &'b mut self,
+    pub async fn dequeue(
+        &mut self,
     ) -> Result<
-        impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + 'b,
+        impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error>>> + '_,
         Box<dyn std::error::Error>,
     > {
-        Ok(self.base_item.dequeue(&std::marker::PhantomData).await?)
+        self.base_item.dequeue(&std::marker::PhantomData).await
     }
-    pub async fn queue(&mut self, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(self
+    pub async fn queue(
+        &mut self,
+        payload: &P,
+    ) -> Result<MemorixTaskItemResultNoReturns, Box<dyn std::error::Error>> {
+        let (queue_size, _) = self
             .base_item
-            .queue(&std::marker::PhantomData, payload)
-            .await?)
+            .queue_internal(&std::marker::PhantomData, payload)
+            .await?;
+        Ok(MemorixTaskItemResultNoReturns::new(queue_size))
+    }
+}
+
+pub struct MemorixTaskItemResultNoReturns {
+    pub queue_size: u32,
+}
+
+impl MemorixTaskItemResultNoReturns {
+    fn new(queue_size: u32) -> Self {
+        Self { queue_size }
+    }
+}
+pub struct MemorixTaskItemResult<R>
+where
+    R: serde::Serialize,
+    R: serde::de::DeserializeOwned,
+{
+    pub queue_size: u32,
+    task: MemorixTaskItemNoReturns<String, R>,
+    returns_id: String,
+}
+
+impl<R> MemorixTaskItemResult<R>
+where
+    R: serde::Serialize,
+    R: serde::de::DeserializeOwned,
+{
+    fn new(queue_size: u32, task: MemorixTaskItemNoReturns<String, R>, returns_id: String) -> Self {
+        Self {
+            queue_size,
+            task,
+            returns_id,
+        }
+    }
+
+    pub async fn get_returns(&mut self) -> Result<R, Box<dyn std::error::Error>> {
+        let mut stream = self.task.dequeue(&self.returns_id).await?;
+        let res = stream.next().await;
+
+        match res {
+            Some(x) => {
+                let payload = x?;
+                Ok(payload)
+            }
+            _ => Err(Box::new(MemorixError {})),
+        }
     }
 }

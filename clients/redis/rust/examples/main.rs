@@ -66,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn loop_1(
-    mut memorix: example_schema_generated::Memorix<'_>,
+    mut memorix: example_schema_generated::Memorix,
 ) -> Result<(), Box<dyn std::error::Error>> {
     loop {
         tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
@@ -85,7 +85,7 @@ async fn loop_1(
 }
 
 async fn loop_2(
-    mut memorix: example_schema_generated::Memorix<'_>,
+    mut memorix: example_schema_generated::Memorix,
 ) -> Result<(), Box<dyn std::error::Error>> {
     loop {
         tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
