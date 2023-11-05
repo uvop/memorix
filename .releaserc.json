@@ -1,6 +1,6 @@
 {
   "branches": [
-    "master",
+    "55-rust-support",
     {
       "name": "next",
       "prerelease": "rc"
