@@ -28,3 +28,4 @@ uuid = { version = "^1.5.0", features = ["v4"] }
 
 [dev-dependencies]
 tokio = { version = "^1.33.0", features = ["full"] }
+ntest = "0.7.2"
