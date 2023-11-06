@@ -28,5 +28,4 @@ jobs:
         run: make typecheck
       - name: Test
         run: |
-          export REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0
           make test
