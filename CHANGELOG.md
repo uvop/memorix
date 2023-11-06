@@ -1,3 +1,10 @@
+## [1.4.15](https://github.com/uvop/memorix/compare/v1.4.14...v1.4.15) (2023-11-06)
+
+
+### Bug Fixes
+
+* now it will work! ([c89c9be](https://github.com/uvop/memorix/commit/c89c9be0801b07bc97ee85deb7dee0a6ce847633))
+
 ## [1.4.14](https://github.com/uvop/memorix/compare/v1.4.13...v1.4.14) (2023-11-06)
 
 
