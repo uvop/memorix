@@ -10,13 +10,14 @@ jobs:
         working-directory: ./clients/redis/rust
     steps:
       - uses: actions/checkout@v2
+      - uses: hecrj/setup-rust-action@v2
+        with:
+          rust-version: 1.73.0
       - id: redis-step
         uses: shogo82148/actions-setup-redis@v1
         with:
           redis-version: "7.x"
           auto-start: "true"
-      - run: redis-cli ping
-      - run: export REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 && redis-cli -u $REDIS_URL ping
       - name: Install
         run: make install
       - name: Format
