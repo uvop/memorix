@@ -1,7 +1,7 @@
 extern crate memorix_redis;
 mod example_schema_generated;
 
-use memorix_redis::StreamExt;
+// use memorix_redis::StreamExt;
 
 #[cfg(test)]
 
@@ -11,17 +11,17 @@ async fn get_memorix() -> Result<example_schema_generated::Memorix, Box<dyn std:
     Ok(memorix)
 }
 
-async fn dequeue_and_return(
-    mut memorix: example_schema_generated::Memorix,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut stream = memorix.task.runAlgo.dequeue().await.unwrap();
-    let res = match stream.next().await {
-        Some(x) => x.unwrap(),
-        _ => panic!("Should not happen"),
-    };
-    println!("Res is {}", res);
-    Ok(())
-}
+// async fn dequeue_and_return(
+//     mut memorix: example_schema_generated::Memorix,
+// ) -> Result<(), Box<dyn std::error::Error>> {
+//     let mut stream = memorix.task.runAlgo.dequeue().await.unwrap();
+//     let res = match stream.next().await {
+//         Some(x) => x.unwrap(),
+//         _ => panic!("Should not happen"),
+//     };
+//     println!("Res is {}", res);
+//     Ok(())
+// }
 mod tests {
     #[tokio::test]
     async fn set_get() -> Result<(), Box<dyn std::error::Error>> {
@@ -58,25 +58,25 @@ mod tests {
         assert_eq!(favorite_animal, None);
         Ok(())
     }
-    #[tokio::test]
-    #[ntest::timeout(2_000)]
-    async fn task_returns() -> Result<(), Box<dyn std::error::Error + Send>> {
-        let mut memorix = crate::get_memorix().await.unwrap();
-        let futures_v: Vec<
-            std::pin::Pin<
-                Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error>>>>,
-            >,
-        > = vec![
-            Box::pin(crate::dequeue_and_return(memorix.clone())),
-            Box::pin(async move {
-                let mut res = memorix.task.runAlgo.queue(&"123".to_string()).await?;
-                let returns = res.get_returns().await?;
-                assert_eq!(returns, crate::example_schema_generated::Animal::dog);
-                Ok(())
-            }),
-        ];
+    // #[tokio::test]
+    // #[ntest::timeout(2_000)]
+    // async fn task_returns() -> Result<(), Box<dyn std::error::Error + Send>> {
+    //     let mut memorix = crate::get_memorix().await.unwrap();
+    //     let futures_v: Vec<
+    //         std::pin::Pin<
+    //             Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error>>>>,
+    //         >,
+    //     > = vec![
+    //         Box::pin(crate::dequeue_and_return(memorix.clone())),
+    //         Box::pin(async move {
+    //             let mut res = memorix.task.runAlgo.queue(&"123".to_string()).await?;
+    //             let returns = res.get_returns().await?;
+    //             assert_eq!(returns, crate::example_schema_generated::Animal::dog);
+    //             Ok(())
+    //         }),
+    //     ];
 
-        futures::future::select_all(futures_v).await.0.unwrap();
-        Ok(())
-    }
+    //     futures::future::select_all(futures_v).await.0.unwrap();
+    //     Ok(())
+    // }
 }

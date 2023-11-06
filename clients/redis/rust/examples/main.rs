@@ -65,6 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(unreachable_code)]
 async fn loop_1(
     mut memorix: example_schema_generated::Memorix,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -84,6 +85,7 @@ async fn loop_1(
     Ok(())
 }
 
+#[allow(unreachable_code)]
 async fn loop_2(
     mut memorix: example_schema_generated::Memorix,
 ) -> Result<(), Box<dyn std::error::Error>> {
