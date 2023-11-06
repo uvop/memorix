@@ -59,8 +59,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "(cd ./clients/redis/rust && export VERSION=\"1.4.13\" && sed -i -e \"s|^(version *= *).*$|\\1\\\"$VERSION\\\"|g\" ./bla.tx)",
-        "publishCmd": "(cd ./clients/redis/rust && cargo publish --token)"
+        "publishCmd": "(cd ./clients/redis/rust && export VERSION=\"1.4.13\" && sed -i -e \"${'s|^\\(version *= *\\).*$|\\1\"$VERSION\"|g'}\" ./Cargo.toml && cargo publish --token)"
       }
     ],
     [
