@@ -1,3 +1,10 @@
+## [1.4.13](https://github.com/uvop/memorix/compare/v1.4.12...v1.4.13) (2023-11-06)
+
+
+### Bug Fixes
+
+* publish ([fdb57c7](https://github.com/uvop/memorix/commit/fdb57c7967f9c05fe7e2a5796547f8505d2bd3de))
+
 ## [1.4.12](https://github.com/uvop/memorix/compare/v1.4.11...v1.4.12) (2023-11-06)
 
 
