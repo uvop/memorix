@@ -4,27 +4,29 @@ on: [push]
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./clients/redis/rust
+        working-directory: ./clients/redis/js
     steps:
       - uses: actions/checkout@v2
-      - uses: hecrj/setup-rust-action@v2
+      - uses: actions/setup-node@v3
         with:
-          rust-version: 1.73.0
+          node-version: "16"
+          cache: "yarn"
+          cache-dependency-path: "./clients/redis/js/yarn.lock"
       - id: redis-step
         uses: shogo82148/actions-setup-redis@v1
         with:
           redis-version: "7.x"
           auto-start: "true"
-      - name: Install
-        run: make install
+      - name: Install dependencies
+        run: yarn install
       - name: Format
-        run: make format-check
+        run: yarn format:check
       - name: Lint
-        run: make lint
+        run: yarn lint:err
       - name: Typecheck
-        run: make typecheck
+        run: yarn typecheck
       - name: Test
-        run: RUST_REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 make test
+        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 yarn test
