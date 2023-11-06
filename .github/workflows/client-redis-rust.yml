@@ -15,6 +15,8 @@ jobs:
         with:
           redis-version: "7.x"
           auto-start: "true"
+      - run: redis-cli ping
+      - run: export REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 && redis-cli -u $REDIS_URL ping
       - name: Install
         run: make install
       - name: Format
