@@ -4,7 +4,7 @@ mod example_schema_generated;
 // use memorix_redis::StreamExt;
 
 async fn get_memorix() -> Result<example_schema_generated::Memorix, Box<dyn std::error::Error>> {
-    let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
+    let redis_url = std::env::var("asdasdasd").expect("missing environment variable REDIS_URL");
     let memorix = example_schema_generated::Memorix::new(&redis_url).await?;
     Ok(memorix)
 }
@@ -21,10 +21,6 @@ async fn get_memorix() -> Result<example_schema_generated::Memorix, Box<dyn std:
 //     Ok(())
 // }
 mod tests {
-    #[test]
-    fn example() {
-        assert_eq!(2, 1 + 1);
-    }
     #[tokio::test]
     async fn set_get() -> Result<(), Box<dyn std::error::Error>> {
         let mut memorix = crate::get_memorix().await?;
