@@ -59,7 +59,7 @@
     [
       "@semantic-release/exec",
       {
-        "publishCmd": "(cd ./clients/redis/rust && export VERSION=\"${nextRelease.version}\" && sed -i'' -e \"${'s|^\\(version *= *\\).*$|\\\\1\"$VERSION\"|g'}\" ./Cargo.toml && cargo publish)"
+        "publishCmd": "(cd ./clients/redis/rust && export VERSION=\"${nextRelease.version}\" && sed -i -e \"s|^\\(version *= *\\).*$|\\1\\\"$VERSION\\\"|g\" ./Cargo.toml && cargo publish)"
       }
     ],
     [
