@@ -433,11 +433,6 @@
     "@qiwi/substrate-types" "1.55.0"
     tslib "^2.4.0"
 
-"@semantic-release-cargo/semantic-release-cargo@^2.2.30":
-  version "2.2.30"
-  resolved "https://registry.yarnpkg.com/@semantic-release-cargo/semantic-release-cargo/-/semantic-release-cargo-2.2.30.tgz#97442b3f8d667220e12582326e8693b561b1ca71"
-  integrity sha512-BstMTlJwl2OAUqXvy+fElLElavTmYhDQ+NbryGoRDfeklZlA2illSaMSiEE5ZYd6K9gn7Q3w11GreJdvrWuJLg==
-
 "@semantic-release/changelog@^6.0.1":
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/@semantic-release/changelog/-/changelog-6.0.1.tgz#8dd0334fd8c7d50cda747d2591e4f18f816b3c9c"

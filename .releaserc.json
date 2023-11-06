@@ -57,9 +57,10 @@
       }
     ],
     [
-      "@semantic-release-cargo/semantic-release-cargo",
+      "@semantic-release/exec",
       {
-        "manifest_path": "./clients/redis/rust/Cargo.toml"
+        "prepareCmd": "(cd ./clients/redis/rust && export VERSION=\"1.4.13\" && sed -i -e \"s|^(version *= *).*$|\\1\\\"$VERSION\\\"|g\" ./bla.tx)",
+        "publishCmd": "(cd ./clients/redis/rust && cargo publish --token)"
       }
     ],
     [

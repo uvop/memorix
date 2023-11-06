@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@qiwi/semrel-metabranch": "^3.1.2",
-    "@semantic-release-cargo/semantic-release-cargo": "^2.2.30",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/exec": "^6.0.3",
