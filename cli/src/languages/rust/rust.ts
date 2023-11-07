@@ -129,7 +129,7 @@ const blockToStruct: (block: Block) => string = (b) => {
             hasReturns && !(v as MapValue<BlockTask["values"]>).returns
               ? "NoReturns"
               : ""
-          }<'a, ${v.key ? `${valueToCode(v.key, true)}, ` : ""}${valueToCode(
+          }<${v.key ? `${valueToCode(v.key, true)}, ` : ""}${valueToCode(
             v.payload,
             true
           )}${
@@ -200,7 +200,7 @@ ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
               : ""
           }::new(
 ${getTabs(4)}memorix_base.clone(),
-${getTabs(4)}"${name}",
+${getTabs(4)}"${name}".to_string(),
 ${getTabs(3)}),`;
         })
         .join("\n")}`;
@@ -266,11 +266,11 @@ const namespaceToCode: (
       hasCache
         ? `#[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCache${nameCamel}<'a> {
+pub struct MemorixCache${nameCamel} {
 ${blockToStruct(namespace.cache!)}
 }
 
-impl<'a> MemorixCache${nameCamel}<'a> {
+impl MemorixCache${nameCamel} {
 ${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
 ${getTabs(2)}Self {
 ${blockToCode(namespace.cache!)}
@@ -283,11 +283,11 @@ ${getTabs(1)}}
       hasPubsub
         ? `#[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixPubSub${nameCamel}<'a> {
+pub struct MemorixPubSub${nameCamel} {
 ${blockToStruct(namespace.pubsub!)}
 }
 
-impl<'a> MemorixPubSub${nameCamel}<'a> {
+impl MemorixPubSub${nameCamel} {
 ${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
 ${getTabs(2)}Self {
 ${blockToCode(namespace.pubsub!)}
@@ -300,11 +300,11 @@ ${getTabs(1)}}
       hasTask
         ? `#[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixTask${nameCamel}<'a> {
+pub struct MemorixTask${nameCamel} {
 ${blockToStruct(namespace.task!)}
 }
 
-impl<'a> MemorixTask${nameCamel}<'a> {
+impl MemorixTask${nameCamel} {
 ${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
 ${getTabs(2)}Self {
 ${blockToCode(namespace.task!)}
@@ -317,13 +317,13 @@ ${getTabs(1)}}
       hasApi || namespace.subNamespacesByName.size !== 0
         ? `#[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix${nameCamel}<'a> {
+pub struct Memorix${nameCamel} {
 ${Array.from(namespace.subNamespacesByName.keys())
   .map(
     (namespaceName) =>
       `${getTabs(3)}pub ${namespaceName}: Memorix${nameCamel}${camelCase(
         namespaceName
-      )}<'a>,`
+      )},`
   )
   .join("\n")}${
             Array.from(namespace.subNamespacesByName.keys()).length !== 0
@@ -331,13 +331,11 @@ ${Array.from(namespace.subNamespacesByName.keys())
               : ""
           }
 ${([] as string[])
+  .concat(hasCache ? `${getTabs(1)}pub cache: MemorixCache${nameCamel},` : [])
   .concat(
-    hasCache ? `${getTabs(1)}pub cache: MemorixCache${nameCamel}<'a>,` : []
+    hasPubsub ? `${getTabs(1)}pub pubsub: MemorixPubSub${nameCamel},` : []
   )
-  .concat(
-    hasPubsub ? `${getTabs(1)}pub pubsub: MemorixPubSub${nameCamel}<'a>,` : []
-  )
-  .concat(hasTask ? `${getTabs(1)}pub task: MemorixTask${nameCamel}<'a>,` : [])
+  .concat(hasTask ? `${getTabs(1)}pub task: MemorixTask${nameCamel},` : [])
   .join("\n")}
 }
 
@@ -347,12 +345,12 @@ const MEMORIX_${
             .map((x) => `"${x}"`)
             .join(", ")}];
 
-impl<'a> Memorix${nameCamel}<'a> {
+impl Memorix${nameCamel} {
 ${
   nameTree.length === 0
     ? `${getTabs(
         1
-      )}pub async fn new(redis_url: &str) -> Result<Memorix${nameCamel}<'a>, Box<dyn std::error::Error>> {
+      )}pub async fn new(redis_url: &str) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error>> {
 ${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::new(
 ${getTabs(3)}redis_url,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
@@ -360,7 +358,7 @@ ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
 ${getTabs(2)}).await?;`
     : `${getTabs(
         1
-      )}pub fn new(other: memorix_redis::MemorixBase) -> Result<Memorix${nameCamel}<'a>, Box<dyn std::error::Error>> {
+      )}pub fn new(other: memorix_redis::MemorixBase) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error>> {
 ${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::from(
 ${getTabs(3)}other,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
