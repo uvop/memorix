@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - 55-rust-support
+      - master
       - next
 
 jobs:
