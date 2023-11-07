@@ -1,3 +1,10 @@
+## [1.4.17](https://github.com/uvop/memorix/compare/v1.4.16...v1.4.17) (2023-11-07)
+
+
+### Bug Fixes
+
+* Changed crate name ([15f77a6](https://github.com/uvop/memorix/commit/15f77a6915a37ba36c52cca22d4efd7ff71c7188))
+
 ## [1.4.16](https://github.com/uvop/memorix/compare/v1.4.15...v1.4.16) (2023-11-07)
 
 
