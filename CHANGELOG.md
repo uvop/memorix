@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/uvop/memorix/compare/v1.4.9...v1.5.0) (2023-11-07)
+
+
+### Features
+
+* Rust support ([#56](https://github.com/uvop/memorix/issues/56)) ([24ec1f1](https://github.com/uvop/memorix/commit/24ec1f10b6fe736ee95b58a2ce76816d1b64b5f4))
+
 ## [1.4.18](https://github.com/uvop/memorix/compare/v1.4.17...v1.4.18) (2023-11-07)
 
 
