@@ -13,21 +13,21 @@ pub struct User {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCache<'a> {
-    pub adminId: memorix_redis::MemorixCacheItemNoKey<'a, Option<String>>,
-    pub user: memorix_redis::MemorixCacheItem<'a, String, User>,
+pub struct MemorixCache {
+    pub adminId: memorix_redis::MemorixCacheItemNoKey<Option<String>>,
+    pub user: memorix_redis::MemorixCacheItem<String, User>,
 }
 
-impl<'a> MemorixCache<'a> {
+impl MemorixCache {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             adminId: memorix_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
-                \\"adminId\\",
+                \\"adminId\\".to_string(),
             ),
             user: memorix_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
-                \\"user\\",
+                \\"user\\".to_string(),
             ),
         }
     }
@@ -36,15 +36,15 @@ impl<'a> MemorixCache<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub cache: MemorixCache<'a>,
+    pub cache: MemorixCache,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -71,16 +71,16 @@ pub struct CacheUserPayload {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCache<'a> {
-    pub user: memorix_redis::MemorixCacheItem<'a, i32, Option<CacheUserPayload>>,
+pub struct MemorixCache {
+    pub user: memorix_redis::MemorixCacheItem<i32, Option<CacheUserPayload>>,
 }
 
-impl<'a> MemorixCache<'a> {
+impl MemorixCache {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             user: memorix_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
-                \\"user\\",
+                \\"user\\".to_string(),
             ),
         }
     }
@@ -89,15 +89,15 @@ impl<'a> MemorixCache<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub cache: MemorixCache<'a>,
+    pub cache: MemorixCache,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -116,16 +116,16 @@ exports[`python codegen cache can generate with inline types 1`] = `
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCache<'a> {
-    pub user: memorix_redis::MemorixCacheItem<'a, i32, String>,
+pub struct MemorixCache {
+    pub user: memorix_redis::MemorixCacheItem<i32, String>,
 }
 
-impl<'a> MemorixCache<'a> {
+impl MemorixCache {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             user: memorix_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
-                \\"user\\",
+                \\"user\\".to_string(),
             ),
         }
     }
@@ -134,15 +134,15 @@ impl<'a> MemorixCache<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub cache: MemorixCache<'a>,
+    pub cache: MemorixCache,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -168,16 +168,16 @@ pub struct CacheUserByNumberPayload {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCache<'a> {
-    pub user_by_number: memorix_redis::MemorixCacheItem<'a, i32, CacheUserByNumberPayload>,
+pub struct MemorixCache {
+    pub user_by_number: memorix_redis::MemorixCacheItem<i32, CacheUserByNumberPayload>,
 }
 
-impl<'a> MemorixCache<'a> {
+impl MemorixCache {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             user_by_number: memorix_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
-                \\"user_by_number\\",
+                \\"user_by_number\\".to_string(),
             ),
         }
     }
@@ -186,15 +186,15 @@ impl<'a> MemorixCache<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub cache: MemorixCache<'a>,
+    pub cache: MemorixCache,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -221,16 +221,16 @@ pub struct CacheUserPayload {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCache<'a> {
-    pub user: memorix_redis::MemorixCacheItemNoKey<'a, Option<CacheUserPayload>>,
+pub struct MemorixCache {
+    pub user: memorix_redis::MemorixCacheItemNoKey<Option<CacheUserPayload>>,
 }
 
-impl<'a> MemorixCache<'a> {
+impl MemorixCache {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             user: memorix_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
-                \\"user\\",
+                \\"user\\".to_string(),
             ),
         }
     }
@@ -239,15 +239,15 @@ impl<'a> MemorixCache<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub cache: MemorixCache<'a>,
+    pub cache: MemorixCache,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -266,16 +266,16 @@ exports[`python codegen cache can have options 1`] = `
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCache<'a> {
-    pub user: memorix_redis::MemorixCacheItem<'a, i32, String>,
+pub struct MemorixCache {
+    pub user: memorix_redis::MemorixCacheItem<i32, String>,
 }
 
-impl<'a> MemorixCache<'a> {
+impl MemorixCache {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             user: memorix_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
-                \\"user\\",
+                \\"user\\".to_string(),
             ),
         }
     }
@@ -284,15 +284,15 @@ impl<'a> MemorixCache<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub cache: MemorixCache<'a>,
+    pub cache: MemorixCache,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -311,15 +311,15 @@ exports[`python codegen config can be null 1`] = `
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
 
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -343,15 +343,15 @@ exports[`python codegen config can generate 1`] = `
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
 
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -491,16 +491,16 @@ pub struct UserCacheBioPayload {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCacheUser<'a> {
-    pub bio: memorix_redis::MemorixCacheItemNoKey<'a, UserCacheBioPayload>,
+pub struct MemorixCacheUser {
+    pub bio: memorix_redis::MemorixCacheItemNoKey<UserCacheBioPayload>,
 }
 
-impl<'a> MemorixCacheUser<'a> {
+impl MemorixCacheUser {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             bio: memorix_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
-                \\"bio\\",
+                \\"bio\\".to_string(),
             ),
         }
     }
@@ -509,15 +509,15 @@ impl<'a> MemorixCacheUser<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixUser<'a> {
+pub struct MemorixUser {
 
-    pub cache: MemorixCacheUser<'a>,
+    pub cache: MemorixCacheUser,
 }
 
 const MEMORIX_USER_NAMESPACE_NAME_TREE: &'static [&'static str] = &[\\"user\\"];
 
-impl<'a> MemorixUser<'a> {
-    pub fn new(other: memorix_redis::MemorixBase) -> Result<MemorixUser<'a>, Box<dyn std::error::Error>> {
+impl MemorixUser {
+    pub fn new(other: memorix_redis::MemorixBase) -> Result<MemorixUser, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::from(
             other,
             MEMORIX_USER_NAMESPACE_NAME_TREE,
@@ -542,16 +542,16 @@ impl<'a> MemorixUser<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixCacheSpaceship<'a> {
-    pub bio: memorix_redis::MemorixCacheItemNoKey<'a, String>,
+pub struct MemorixCacheSpaceship {
+    pub bio: memorix_redis::MemorixCacheItemNoKey<String>,
 }
 
-impl<'a> MemorixCacheSpaceship<'a> {
+impl MemorixCacheSpaceship {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             bio: memorix_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
-                \\"bio\\",
+                \\"bio\\".to_string(),
             ),
         }
     }
@@ -560,15 +560,15 @@ impl<'a> MemorixCacheSpaceship<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixSpaceship<'a> {
+pub struct MemorixSpaceship {
 
-    pub cache: MemorixCacheSpaceship<'a>,
+    pub cache: MemorixCacheSpaceship,
 }
 
 const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &'static [&'static str] = &[\\"spaceship\\"];
 
-impl<'a> MemorixSpaceship<'a> {
-    pub fn new(other: memorix_redis::MemorixBase) -> Result<MemorixSpaceship<'a>, Box<dyn std::error::Error>> {
+impl MemorixSpaceship {
+    pub fn new(other: memorix_redis::MemorixBase) -> Result<MemorixSpaceship, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::from(
             other,
             MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE,
@@ -593,17 +593,17 @@ impl<'a> MemorixSpaceship<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
-            pub user: MemorixUser<'a>,
-            pub spaceship: MemorixSpaceship<'a>,
+pub struct Memorix {
+            pub user: MemorixUser,
+            pub spaceship: MemorixSpaceship,
 
 
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -624,16 +624,16 @@ exports[`python codegen pubsub can generate with inline types 1`] = `
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixPubSub<'a> {
-    pub message: memorix_redis::MemorixPubSubItem<'a, i32, String>,
+pub struct MemorixPubSub {
+    pub message: memorix_redis::MemorixPubSubItem<i32, String>,
 }
 
-impl<'a> MemorixPubSub<'a> {
+impl MemorixPubSub {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             message: memorix_redis::MemorixPubSubItem::new(
                 memorix_base.clone(),
-                \\"message\\",
+                \\"message\\".to_string(),
             ),
         }
     }
@@ -642,15 +642,15 @@ impl<'a> MemorixPubSub<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub pubsub: MemorixPubSub<'a>,
+    pub pubsub: MemorixPubSub,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -669,16 +669,16 @@ exports[`python codegen task can generate with inline types 1`] = `
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixTask<'a> {
-    pub doIt: memorix_redis::MemorixTaskItem<'a, i32, String, bool>,
+pub struct MemorixTask {
+    pub doIt: memorix_redis::MemorixTaskItem<i32, String, bool>,
 }
 
-impl<'a> MemorixTask<'a> {
+impl MemorixTask {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             doIt: memorix_redis::MemorixTaskItem::new(
                 memorix_base.clone(),
-                \\"doIt\\",
+                \\"doIt\\".to_string(),
             ),
         }
     }
@@ -687,15 +687,15 @@ impl<'a> MemorixTask<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub task: MemorixTask<'a>,
+    pub task: MemorixTask,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
@@ -714,16 +714,16 @@ exports[`python codegen task can have options 1`] = `
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct MemorixTask<'a> {
-    pub doIt: memorix_redis::MemorixTaskItem<'a, i32, String, bool>,
+pub struct MemorixTask {
+    pub doIt: memorix_redis::MemorixTaskItem<i32, String, bool>,
 }
 
-impl<'a> MemorixTask<'a> {
+impl MemorixTask {
     fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
         Self {
             doIt: memorix_redis::MemorixTaskItem::new(
                 memorix_base.clone(),
-                \\"doIt\\",
+                \\"doIt\\".to_string(),
             ),
         }
     }
@@ -732,15 +732,15 @@ impl<'a> MemorixTask<'a> {
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
-pub struct Memorix<'a> {
+pub struct Memorix {
 
-    pub task: MemorixTask<'a>,
+    pub task: MemorixTask,
 }
 
 const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
-impl<'a> Memorix<'a> {
-    pub async fn new(redis_url: &str) -> Result<Memorix<'a>, Box<dyn std::error::Error>> {
+impl Memorix {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
         let memorix_base = memorix_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
