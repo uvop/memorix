@@ -1,3 +1,10 @@
+## [1.4.16](https://github.com/uvop/memorix/compare/v1.4.15...v1.4.16) (2023-11-07)
+
+
+### Bug Fixes
+
+* cli to match what wanted ([8d9a2a0](https://github.com/uvop/memorix/commit/8d9a2a0c3f7bc82f5900dff4582ed8fbdab30acf))
+
 ## [1.4.15](https://github.com/uvop/memorix/compare/v1.4.14...v1.4.15) (2023-11-06)
 
 
