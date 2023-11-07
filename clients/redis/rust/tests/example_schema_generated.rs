@@ -1,8 +1,12 @@
-extern crate memorix_redis;
+extern crate memorix_client_redis;
 
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(
-    Clone, memorix_redis::Serialize, memorix_redis::Deserialize, PartialEq, std::fmt::Debug,
+    Clone,
+    memorix_client_redis::Serialize,
+    memorix_client_redis::Deserialize,
+    PartialEq,
+    std::fmt::Debug,
 )]
 pub enum Animal {
     dog,
@@ -10,14 +14,14 @@ pub enum Animal {
     person,
 }
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub age: Option<i32>,
 }
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct SpaceshipCachePilotPayload {
     pub name: String,
 }
@@ -25,13 +29,13 @@ pub struct SpaceshipCachePilotPayload {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCacheSpaceshipCrew {
-    pub count: memorix_redis::MemorixCacheItemNoKey<i32>,
+    pub count: memorix_client_redis::MemorixCacheItemNoKey<i32>,
 }
 
 impl MemorixCacheSpaceshipCrew {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            count: memorix_redis::MemorixCacheItemNoKey::new(
+            count: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 "count".to_string(),
             ),
@@ -49,9 +53,9 @@ const MEMORIX_SPACESHIP_CREW_NAMESPACE_NAME_TREE: &'static [&'static str] = &["s
 
 impl MemorixSpaceshipCrew {
     pub fn new(
-        other: memorix_redis::MemorixBase,
+        other: memorix_client_redis::MemorixBase,
     ) -> Result<MemorixSpaceshipCrew, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::from(
+        let memorix_base = memorix_client_redis::MemorixBase::from(
             other,
             MEMORIX_SPACESHIP_CREW_NAMESPACE_NAME_TREE,
             None,
@@ -65,13 +69,13 @@ impl MemorixSpaceshipCrew {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCacheSpaceship {
-    pub pilot: memorix_redis::MemorixCacheItemNoKey<SpaceshipCachePilotPayload>,
+    pub pilot: memorix_client_redis::MemorixCacheItemNoKey<SpaceshipCachePilotPayload>,
 }
 
 impl MemorixCacheSpaceship {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            pilot: memorix_redis::MemorixCacheItemNoKey::new(
+            pilot: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 "pilot".to_string(),
             ),
@@ -91,10 +95,13 @@ const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &'static [&'static str] = &["spaces
 
 impl MemorixSpaceship {
     pub fn new(
-        other: memorix_redis::MemorixBase,
+        other: memorix_client_redis::MemorixBase,
     ) -> Result<MemorixSpaceship, Box<dyn std::error::Error>> {
-        let memorix_base =
-            memorix_redis::MemorixBase::from(other, MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE, None);
+        let memorix_base = memorix_client_redis::MemorixBase::from(
+            other,
+            MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE,
+            None,
+        );
         Ok(Self {
             crew: MemorixSpaceshipCrew::new(memorix_base.clone())?,
 
@@ -106,35 +113,38 @@ impl MemorixSpaceship {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub favoriteAnimal: memorix_redis::MemorixCacheItem<String, Animal>,
-    pub user: memorix_redis::MemorixCacheItem<String, User>,
-    pub userNoKey: memorix_redis::MemorixCacheItemNoKey<User>,
-    pub userExpire: memorix_redis::MemorixCacheItem<String, User>,
-    pub userExpire2: memorix_redis::MemorixCacheItem<String, User>,
-    pub userExpire3: memorix_redis::MemorixCacheItem<String, User>,
+    pub favoriteAnimal: memorix_client_redis::MemorixCacheItem<String, Animal>,
+    pub user: memorix_client_redis::MemorixCacheItem<String, User>,
+    pub userNoKey: memorix_client_redis::MemorixCacheItemNoKey<User>,
+    pub userExpire: memorix_client_redis::MemorixCacheItem<String, User>,
+    pub userExpire2: memorix_client_redis::MemorixCacheItem<String, User>,
+    pub userExpire3: memorix_client_redis::MemorixCacheItem<String, User>,
 }
 
 impl MemorixCache {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            favoriteAnimal: memorix_redis::MemorixCacheItem::new(
+            favoriteAnimal: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "favoriteAnimal".to_string(),
             ),
-            user: memorix_redis::MemorixCacheItem::new(memorix_base.clone(), "user".to_string()),
-            userNoKey: memorix_redis::MemorixCacheItemNoKey::new(
+            user: memorix_client_redis::MemorixCacheItem::new(
+                memorix_base.clone(),
+                "user".to_string(),
+            ),
+            userNoKey: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 "userNoKey".to_string(),
             ),
-            userExpire: memorix_redis::MemorixCacheItem::new(
+            userExpire: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "userExpire".to_string(),
             ),
-            userExpire2: memorix_redis::MemorixCacheItem::new(
+            userExpire2: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "userExpire2".to_string(),
             ),
-            userExpire3: memorix_redis::MemorixCacheItem::new(
+            userExpire3: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "userExpire3".to_string(),
             ),
@@ -145,13 +155,13 @@ impl MemorixCache {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixPubSub {
-    pub message: memorix_redis::MemorixPubSubItemNoKey<String>,
+    pub message: memorix_client_redis::MemorixPubSubItemNoKey<String>,
 }
 
 impl MemorixPubSub {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            message: memorix_redis::MemorixPubSubItemNoKey::new(
+            message: memorix_client_redis::MemorixPubSubItemNoKey::new(
                 memorix_base.clone(),
                 "message".to_string(),
             ),
@@ -162,18 +172,18 @@ impl MemorixPubSub {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixTask {
-    pub runAlgo: memorix_redis::MemorixTaskItemNoKey<String, Animal>,
-    pub runAlgoNewest: memorix_redis::MemorixTaskItemNoKey<String, Animal>,
+    pub runAlgo: memorix_client_redis::MemorixTaskItemNoKey<String, Animal>,
+    pub runAlgoNewest: memorix_client_redis::MemorixTaskItemNoKey<String, Animal>,
 }
 
 impl MemorixTask {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            runAlgo: memorix_redis::MemorixTaskItemNoKey::new(
+            runAlgo: memorix_client_redis::MemorixTaskItemNoKey::new(
                 memorix_base.clone(),
                 "runAlgo".to_string(),
             ),
-            runAlgoNewest: memorix_redis::MemorixTaskItemNoKey::new(
+            runAlgoNewest: memorix_client_redis::MemorixTaskItemNoKey::new(
                 memorix_base.clone(),
                 "runAlgoNewest".to_string(),
             ),
@@ -195,12 +205,12 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
-            Some(memorix_redis::MemorixOptions {
-                cache: Some(memorix_redis::MemorixOptionsCache {
-                    expire: Some(memorix_redis::MemorixOptionsCacheExpire {
+            Some(memorix_client_redis::MemorixOptions {
+                cache: Some(memorix_client_redis::MemorixOptionsCache {
+                    expire: Some(memorix_client_redis::MemorixOptionsCacheExpire {
                         value: 2,
                         is_in_ms: None,
                         extend_on_get: None,

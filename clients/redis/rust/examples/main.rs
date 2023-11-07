@@ -49,15 +49,29 @@ mod example_schema_generated;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
-    let memorix = example_schema_generated::Memorix::new(&redis_url).await?;
+    let mut memorix = example_schema_generated::Memorix::new(&redis_url).await?;
 
     let futures_v: Vec<
         std::pin::Pin<
             Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error>>>>,
         >,
     > = vec![
-        Box::pin(loop_1(memorix.clone())),
-        Box::pin(loop_2(memorix.clone())),
+        Box::pin(loop_print(memorix.clone())),
+        Box::pin(async move {
+            loop {
+                tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+                memorix
+                    .blaBla
+                    .cache
+                    .favoriteAnimal
+                    .set(
+                        &"the key".to_string(),
+                        &example_schema_generated::Animal::dog,
+                    )
+                    .await?;
+            }
+            Ok(())
+        }),
     ];
 
     futures::future::select_all(futures_v).await.0?;
@@ -66,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(unreachable_code)]
-async fn loop_1(
+async fn loop_print(
     mut memorix: example_schema_generated::Memorix,
 ) -> Result<(), Box<dyn std::error::Error>> {
     loop {
@@ -81,25 +95,6 @@ async fn loop_1(
             Some(x) => println!("Animal is \"{:?}\".", x),
             _ => println!("No value yet!"),
         }
-    }
-    Ok(())
-}
-
-#[allow(unreachable_code)]
-async fn loop_2(
-    mut memorix: example_schema_generated::Memorix,
-) -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
-        memorix
-            .blaBla
-            .cache
-            .favoriteAnimal
-            .set(
-                &"the key".to_string(),
-                &example_schema_generated::Animal::dog,
-            )
-            .await?;
     }
     Ok(())
 }

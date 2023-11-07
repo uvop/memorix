@@ -26,10 +26,10 @@ const blockOptionsToCode: (
     case BlockTypes.cache: {
       const o = options as MapValue<BlockCache["values"]>["options"];
       return o
-        ? `Some(memorix_redis::MemorixOptionsCache {
+        ? `Some(memorix_client_redis::MemorixOptionsCache {
 ${getTabs(level + 1)}expire: ${
             o.expire
-              ? `Some(memorix_redis::MemorixOptionsCacheExpire {
+              ? `Some(memorix_client_redis::MemorixOptionsCacheExpire {
 ${getTabs(level + 2)}value: ${o.expire.value},
 ${getTabs(level + 2)}is_in_ms: ${
                   o.expire.isInMs !== undefined
@@ -123,7 +123,7 @@ const blockToStruct: (block: Block) => string = (b) => {
         ][]
       )
         .map(([name, v]) => {
-          return `${getTabs(1)}pub ${name}: memorix_redis::${itemClass}${
+          return `${getTabs(1)}pub ${name}: memorix_client_redis::${itemClass}${
             v.key ? "" : "NoKey"
           }${
             hasReturns && !(v as MapValue<BlockTask["values"]>).returns
@@ -151,7 +151,7 @@ const blockToStruct: (block: Block) => string = (b) => {
 const blockToCode: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+      return `#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct ${b.name} {
 ${b.properties
   .map(
@@ -171,7 +171,7 @@ ${b.properties
 }`;
     case BlockTypes.enum:
       return `#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize, PartialEq, std::fmt::Debug)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub enum ${b.name} {
 ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
 }`;
@@ -192,7 +192,7 @@ ${b.values.map((v) => `${getTabs(1)}${v},`).join(`\n`)}
         ][]
       )
         .map(([name, v]) => {
-          return `${getTabs(3)}${name}: memorix_redis::${itemClass}${
+          return `${getTabs(3)}${name}: memorix_client_redis::${itemClass}${
             v.key ? "" : "NoKey"
           }${
             hasReturns && !(v as MapValue<BlockTask["values"]>).returns
@@ -217,7 +217,7 @@ const defaultOptionsToCode: (defaultOptions?: DefaultOptions) => string = (
   if (!defaultOptions) {
     return "None";
   }
-  return `Some(memorix_redis::MemorixOptions {
+  return `Some(memorix_client_redis::MemorixOptions {
 ${getTabs(4)}cache: ${blockOptionsToCode(
     BlockTypes.cache,
     defaultOptions.cache,
@@ -271,7 +271,7 @@ ${blockToStruct(namespace.cache!)}
 }
 
 impl MemorixCache${nameCamel} {
-${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+${getTabs(1)}fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
 ${getTabs(2)}Self {
 ${blockToCode(namespace.cache!)}
 ${getTabs(2)}}
@@ -288,7 +288,7 @@ ${blockToStruct(namespace.pubsub!)}
 }
 
 impl MemorixPubSub${nameCamel} {
-${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+${getTabs(1)}fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
 ${getTabs(2)}Self {
 ${blockToCode(namespace.pubsub!)}
 ${getTabs(2)}}
@@ -305,7 +305,7 @@ ${blockToStruct(namespace.task!)}
 }
 
 impl MemorixTask${nameCamel} {
-${getTabs(1)}fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+${getTabs(1)}fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
 ${getTabs(2)}Self {
 ${blockToCode(namespace.task!)}
 ${getTabs(2)}}
@@ -351,15 +351,15 @@ ${
     ? `${getTabs(
         1
       )}pub async fn new(redis_url: &str) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error>> {
-${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::new(
+${getTabs(2)}let memorix_base = memorix_client_redis::MemorixBase::new(
 ${getTabs(3)}redis_url,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
 ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
 ${getTabs(2)}).await?;`
     : `${getTabs(
         1
-      )}pub fn new(other: memorix_redis::MemorixBase) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error>> {
-${getTabs(2)}let memorix_base = memorix_redis::MemorixBase::from(
+      )}pub fn new(other: memorix_client_redis::MemorixBase) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error>> {
+${getTabs(2)}let memorix_base = memorix_client_redis::MemorixBase::from(
 ${getTabs(3)}other,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
 ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
@@ -423,7 +423,7 @@ export const codegen: (namespaces: Namespace) => string = (
   const { code } = namespaceToCode(namespace);
 
   const importCode = ([] as string[])
-    .concat([`extern crate memorix_redis;`])
+    .concat([`extern crate memorix_client_redis;`])
     .join("\n");
   return `${importCode}
 

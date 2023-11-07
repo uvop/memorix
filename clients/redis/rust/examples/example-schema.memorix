@@ -19,6 +19,12 @@ Model User {
     type: boolean?
 }
 
+Cache {
+    hello {
+        payload: int
+    }
+}
+
 Namespace blaBla {
     Cache {
         favoriteAnimal {

@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`python codegen cache can generate also with model 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User {
     pub name: String,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -14,18 +14,18 @@ pub struct User {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub adminId: memorix_redis::MemorixCacheItemNoKey<Option<String>>,
-    pub user: memorix_redis::MemorixCacheItem<String, User>,
+    pub adminId: memorix_client_redis::MemorixCacheItemNoKey<Option<String>>,
+    pub user: memorix_client_redis::MemorixCacheItem<String, User>,
 }
 
 impl MemorixCache {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            adminId: memorix_redis::MemorixCacheItemNoKey::new(
+            adminId: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 \\"adminId\\".to_string(),
             ),
-            user: memorix_redis::MemorixCacheItem::new(
+            user: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 \\"user\\".to_string(),
             ),
@@ -45,7 +45,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -59,9 +59,9 @@ impl Memorix {
 `;
 
 exports[`python codegen cache can generate with inline object type 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct CacheUserPayload {
     pub name: String,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -72,13 +72,13 @@ pub struct CacheUserPayload {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub user: memorix_redis::MemorixCacheItem<i32, Option<CacheUserPayload>>,
+    pub user: memorix_client_redis::MemorixCacheItem<i32, Option<CacheUserPayload>>,
 }
 
 impl MemorixCache {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            user: memorix_redis::MemorixCacheItem::new(
+            user: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 \\"user\\".to_string(),
             ),
@@ -98,7 +98,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -112,18 +112,18 @@ impl Memorix {
 `;
 
 exports[`python codegen cache can generate with inline types 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub user: memorix_redis::MemorixCacheItem<i32, String>,
+    pub user: memorix_client_redis::MemorixCacheItem<i32, String>,
 }
 
 impl MemorixCache {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            user: memorix_redis::MemorixCacheItem::new(
+            user: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 \\"user\\".to_string(),
             ),
@@ -143,7 +143,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -157,9 +157,9 @@ impl Memorix {
 `;
 
 exports[`python codegen cache can generate with inline types and convert to CamelCase 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct CacheUserByNumberPayload {
     pub name: String,
     pub age: i32,
@@ -169,13 +169,13 @@ pub struct CacheUserByNumberPayload {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub user_by_number: memorix_redis::MemorixCacheItem<i32, CacheUserByNumberPayload>,
+    pub user_by_number: memorix_client_redis::MemorixCacheItem<i32, CacheUserByNumberPayload>,
 }
 
 impl MemorixCache {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            user_by_number: memorix_redis::MemorixCacheItem::new(
+            user_by_number: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 \\"user_by_number\\".to_string(),
             ),
@@ -195,7 +195,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -209,9 +209,9 @@ impl Memorix {
 `;
 
 exports[`python codegen cache can generate with no key 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct CacheUserPayload {
     pub name: String,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -222,13 +222,13 @@ pub struct CacheUserPayload {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub user: memorix_redis::MemorixCacheItemNoKey<Option<CacheUserPayload>>,
+    pub user: memorix_client_redis::MemorixCacheItemNoKey<Option<CacheUserPayload>>,
 }
 
 impl MemorixCache {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            user: memorix_redis::MemorixCacheItemNoKey::new(
+            user: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 \\"user\\".to_string(),
             ),
@@ -248,7 +248,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -262,18 +262,18 @@ impl Memorix {
 `;
 
 exports[`python codegen cache can have options 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub user: memorix_redis::MemorixCacheItem<i32, String>,
+    pub user: memorix_client_redis::MemorixCacheItem<i32, String>,
 }
 
 impl MemorixCache {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            user: memorix_redis::MemorixCacheItem::new(
+            user: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 \\"user\\".to_string(),
             ),
@@ -293,7 +293,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -307,7 +307,7 @@ impl Memorix {
 `;
 
 exports[`python codegen config can be null 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
@@ -320,11 +320,11 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
-            Some(memorix_redis::MemorixOptions {
-                cache: Some(memorix_redis::MemorixOptionsCache {
+            Some(memorix_client_redis::MemorixOptions {
+                cache: Some(memorix_client_redis::MemorixOptionsCache {
                     expire: None,
                 }),
                 task: None,
@@ -339,7 +339,7 @@ impl Memorix {
 `;
 
 exports[`python codegen config can generate 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
@@ -352,12 +352,12 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
-            Some(memorix_redis::MemorixOptions {
-                cache: Some(memorix_redis::MemorixOptionsCache {
-                    expire: Some(memorix_redis::MemorixOptionsCacheExpire {
+            Some(memorix_client_redis::MemorixOptions {
+                cache: Some(memorix_client_redis::MemorixOptionsCache {
+                    expire: Some(memorix_client_redis::MemorixOptionsCacheExpire {
                         value: 5,
                         is_in_ms: None,
                         extend_on_get: Some(true),
@@ -377,10 +377,10 @@ impl Memorix {
 `;
 
 exports[`python codegen enum can generate 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize, PartialEq, std::fmt::Debug)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub enum Animals {
     dog,
     cat,
@@ -389,15 +389,15 @@ pub enum Animals {
 `;
 
 exports[`python codegen model can generate from 2 models 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User1 {
     pub id: i32,
 }
 
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User2 {
     pub name: String,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -406,9 +406,9 @@ pub struct User2 {
 `;
 
 exports[`python codegen model can generate from model 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -418,9 +418,9 @@ pub struct User {
 `;
 
 exports[`python codegen model can generate from model with array 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserChildren {
     pub id: i32,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -428,7 +428,7 @@ pub struct UserChildren {
 }
 
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User {
     pub id: i32,
     pub names: Vec<String>,
@@ -438,16 +438,16 @@ pub struct User {
 `;
 
 exports[`python codegen model can generate from model within model 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserPapa {
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
     pub name: Option<String>,
 }
 
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User {
     pub id: i32,
     pub papa: UserPapa,
@@ -455,15 +455,15 @@ pub struct User {
 `;
 
 exports[`python codegen model can generate from model within model within a model 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserPapaMama {
     pub sick: bool,
 }
 
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserPapa {
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
     pub name: Option<String>,
@@ -473,7 +473,7 @@ pub struct UserPapa {
 }
 
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User {
     pub id: i32,
     pub papa: UserPapa,
@@ -481,9 +481,9 @@ pub struct User {
 `;
 
 exports[`python codegen namespace can generate 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_redis::Serialize, memorix_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserCacheBioPayload {
     pub description: String,
 }
@@ -492,13 +492,13 @@ pub struct UserCacheBioPayload {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCacheUser {
-    pub bio: memorix_redis::MemorixCacheItemNoKey<UserCacheBioPayload>,
+    pub bio: memorix_client_redis::MemorixCacheItemNoKey<UserCacheBioPayload>,
 }
 
 impl MemorixCacheUser {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            bio: memorix_redis::MemorixCacheItemNoKey::new(
+            bio: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 \\"bio\\".to_string(),
             ),
@@ -517,13 +517,13 @@ pub struct MemorixUser {
 const MEMORIX_USER_NAMESPACE_NAME_TREE: &'static [&'static str] = &[\\"user\\"];
 
 impl MemorixUser {
-    pub fn new(other: memorix_redis::MemorixBase) -> Result<MemorixUser, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::from(
+    pub fn new(other: memorix_client_redis::MemorixBase) -> Result<MemorixUser, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_client_redis::MemorixBase::from(
             other,
             MEMORIX_USER_NAMESPACE_NAME_TREE,
-            Some(memorix_redis::MemorixOptions {
-                cache: Some(memorix_redis::MemorixOptionsCache {
-                    expire: Some(memorix_redis::MemorixOptionsCacheExpire {
+            Some(memorix_client_redis::MemorixOptions {
+                cache: Some(memorix_client_redis::MemorixOptionsCache {
+                    expire: Some(memorix_client_redis::MemorixOptionsCacheExpire {
                         value: 5,
                         is_in_ms: None,
                         extend_on_get: None,
@@ -543,13 +543,13 @@ impl MemorixUser {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCacheSpaceship {
-    pub bio: memorix_redis::MemorixCacheItemNoKey<String>,
+    pub bio: memorix_client_redis::MemorixCacheItemNoKey<String>,
 }
 
 impl MemorixCacheSpaceship {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            bio: memorix_redis::MemorixCacheItemNoKey::new(
+            bio: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 \\"bio\\".to_string(),
             ),
@@ -568,13 +568,13 @@ pub struct MemorixSpaceship {
 const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &'static [&'static str] = &[\\"spaceship\\"];
 
 impl MemorixSpaceship {
-    pub fn new(other: memorix_redis::MemorixBase) -> Result<MemorixSpaceship, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::from(
+    pub fn new(other: memorix_client_redis::MemorixBase) -> Result<MemorixSpaceship, Box<dyn std::error::Error>> {
+        let memorix_base = memorix_client_redis::MemorixBase::from(
             other,
             MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE,
-            Some(memorix_redis::MemorixOptions {
-                cache: Some(memorix_redis::MemorixOptionsCache {
-                    expire: Some(memorix_redis::MemorixOptionsCacheExpire {
+            Some(memorix_client_redis::MemorixOptions {
+                cache: Some(memorix_client_redis::MemorixOptionsCache {
+                    expire: Some(memorix_client_redis::MemorixOptionsCacheExpire {
                         value: 5,
                         is_in_ms: None,
                         extend_on_get: None,
@@ -604,7 +604,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -620,18 +620,18 @@ impl Memorix {
 `;
 
 exports[`python codegen pubsub can generate with inline types 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixPubSub {
-    pub message: memorix_redis::MemorixPubSubItem<i32, String>,
+    pub message: memorix_client_redis::MemorixPubSubItem<i32, String>,
 }
 
 impl MemorixPubSub {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            message: memorix_redis::MemorixPubSubItem::new(
+            message: memorix_client_redis::MemorixPubSubItem::new(
                 memorix_base.clone(),
                 \\"message\\".to_string(),
             ),
@@ -651,7 +651,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -665,18 +665,18 @@ impl Memorix {
 `;
 
 exports[`python codegen task can generate with inline types 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixTask {
-    pub doIt: memorix_redis::MemorixTaskItem<i32, String, bool>,
+    pub doIt: memorix_client_redis::MemorixTaskItem<i32, String, bool>,
 }
 
 impl MemorixTask {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            doIt: memorix_redis::MemorixTaskItem::new(
+            doIt: memorix_client_redis::MemorixTaskItem::new(
                 memorix_base.clone(),
                 \\"doIt\\".to_string(),
             ),
@@ -696,7 +696,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None
@@ -710,18 +710,18 @@ impl Memorix {
 `;
 
 exports[`python codegen task can have options 1`] = `
-"extern crate memorix_redis;
+"extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixTask {
-    pub doIt: memorix_redis::MemorixTaskItem<i32, String, bool>,
+    pub doIt: memorix_client_redis::MemorixTaskItem<i32, String, bool>,
 }
 
 impl MemorixTask {
-    fn new(memorix_base: memorix_redis::MemorixBase) -> Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
         Self {
-            doIt: memorix_redis::MemorixTaskItem::new(
+            doIt: memorix_client_redis::MemorixTaskItem::new(
                 memorix_base.clone(),
                 \\"doIt\\".to_string(),
             ),
@@ -741,7 +741,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
-        let memorix_base = memorix_redis::MemorixBase::new(
+        let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,
             None

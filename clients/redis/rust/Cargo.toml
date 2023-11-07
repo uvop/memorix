@@ -1,5 +1,5 @@
 [package]
-name = "memorix-redis"
+name = "memorix-client-redis"
 version = "1.0.0"
 repository = "https://github.com/uvop/memorix"
 authors = ["Yuval Saraf <unimonkiez@gmail.com>"]
@@ -9,7 +9,7 @@ edition = "2021"
 license = "MIT"
 
 [lib]
-name = "memorix_redis"
+name = "memorix_client_redis"
 path = "src/lib.rs"
 
 [[example]]
