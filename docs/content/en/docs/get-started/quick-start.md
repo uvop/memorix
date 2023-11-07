@@ -29,6 +29,10 @@ First, lets create a basic schema.
             language: "python"
             file: "memorix_generated.py"
         }
+        {
+            language: "rust"
+            file: "memorix_generated.rs"
+        }
     ]
   }
 
@@ -93,6 +97,26 @@ memorix.cache.rating.set(10)
 hello_value = memorix.cache.hello.get()
 
 print(hello_value) # Should print "world"
+```
+
+{{% /tab %}}
+{{% tab name="Rust" %}}
+
+```rust
+mod memorix_generated;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let memorix = memorix_generated::Memorix::new("redis://localhost:6379/0").await?;
+
+    memorix.cache.hello.set(&"world".to_string()).await?;
+    memorix.cache.rating.set(&10).await?;
+    let hello_value = memorix.cache.hello.get().await?;
+
+    println!("{:?}", hello_value); // Should print "world"
+
+    Ok(())
+}
 ```
 
 {{% /tab %}}

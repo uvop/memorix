@@ -50,8 +50,19 @@ from src.generated_schema import Memorix, CacheAdminUser
 
 memorix.cache.adminUser.set(CacheAdminUser(email="me@mail.com", password="Aa123456"))
 admin_user = memorix.cache.adminUser.get()
+```
 
-print(hello_value) # Should print "world"
+{{% /tab %}}
+{{% tab name="Rust" %}}
+
+```rust
+memorix.cache.adminUser.set(
+  memorix_generated::CacheAdminUser {
+    email: "me@mail.com".to_string(),
+    password: "Aa123456".to_string(),
+  }
+).await?;
+let admin_user = memorix.cache.adminUser.get().await?;
 ```
 
 {{% /tab %}}
@@ -106,8 +117,27 @@ memorix.cache.user.set(
   CacheAdminUser(email="you@mail.com", password="Aa123456"),
 )
 me = memorix.cache.adminUser.get(1)
+```
 
-print(hello_value) # Should print "world"
+{{% /tab %}}
+{{% tab name="Rust" %}}
+
+```rust
+memorix.cache.user.set(
+  &1,
+  memorix_generated::CacheAdminUser {
+    email: "me@mail.com".to_string(),
+    password: "Aa123456".to_string(),
+  },
+).await?;
+memorix.cache.user.set(
+  &2,
+  memorix_generated::CacheAdminUser {
+    email: "you@mail.com".to_string(),
+    password: "Aa123456",
+  },
+).await?;
+let me = memorix.cache.adminUser.get(&1).await?;
 ```
 
 {{% /tab %}}
@@ -213,6 +243,51 @@ memorix.pubsub.message.publish(payload="world")
 process1.kill()
 
 memorix.pubsub.message.publish(payload="Will be published but no one is listening")
+```
+
+{{% /tab %}}
+{{% tab name="Rust" %}}
+To use rust pubsub, you need to subscribe on a different async function, for example
+
+```rust
+extern crate tokio;
+extern crate futures_util;
+
+use futures_util::StreamExt;
+
+async fn listen_to_message(
+    mut memorix: example_schema_generated::Memorix,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let subscription = memorix.pubsub.message.subscribe().await?
+  while let Some(res) = stream.next().await {
+    let payload = res?.payload;
+    println!("Got payload: {}", payload);
+  }
+  Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+  let mut memorix = example_schema_generated::Memorix::new("redis://localhost:6379/0").await?;
+
+  let futures_v: Vec<
+      std::pin::Pin<
+          Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error>>>>,
+      >,
+  > = vec![
+    Box::pin(listen_to_message(memorix.clone())),
+    Box::pin(async move {
+      memorix.pubsub.message.publish(&"hello".to_string()).await?;
+      memorix.pubsub.message.publish(&"world".to_string()).await?;
+      Ok(())
+    }),
+  ];
+
+  futures::future::select_all(futures_v).await.0?; // Run until one is complete
+  memorix.pubsub.message.publish(&"Will be published but no one is listening".to_string()).await?;
+
+  Ok(())
+}
 ```
 
 {{% /tab %}}

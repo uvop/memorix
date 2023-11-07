@@ -89,6 +89,13 @@ poetry add memorix-client-redis
 ```
 
 {{% /tab %}}
+{{% tab name="Rust" %}}
+
+```bash
+cargo add memorix-client-redis
+```
+
+{{% /tab %}}
 {{< /tabs >}}
 
 Now we're ready to start using Memorix! Head on to [Quick start →]({{< relref "quick-start" >}})

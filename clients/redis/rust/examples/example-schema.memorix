@@ -1,0 +1,53 @@
+Config {
+    output: [
+        {
+            language: "rust"
+            file: "example_schema_generated.rs"
+        }
+    ]
+}
+
+Enum Animal {
+    dog
+    cat
+    person
+}
+
+Model User {
+    name: string
+    age: int?
+    type: boolean?
+}
+
+Cache {
+    hello {
+        payload: int
+    }
+}
+
+Namespace blaBla {
+    Cache {
+        favoriteAnimal {
+            key: string
+            payload: Animal
+        }
+        user {
+            key: string
+            payload: User
+        }
+    }
+}
+
+
+PubSub {
+    message {
+        payload: string
+    }
+}
+
+Task {
+    runAlgo {
+        payload: string
+        returns: Animal
+    }
+}

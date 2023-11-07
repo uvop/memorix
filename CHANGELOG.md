@@ -1,3 +1,66 @@
+## [1.4.18](https://github.com/uvop/memorix/compare/v1.4.17...v1.4.18) (2023-11-07)
+
+
+### Bug Fixes
+
+* try deploy again ([c0b7b24](https://github.com/uvop/memorix/commit/c0b7b240972cf803ea26dd4bed1cdd4e18b2dc66))
+
+## [1.4.17](https://github.com/uvop/memorix/compare/v1.4.16...v1.4.17) (2023-11-07)
+
+
+### Bug Fixes
+
+* Changed crate name ([15f77a6](https://github.com/uvop/memorix/commit/15f77a6915a37ba36c52cca22d4efd7ff71c7188))
+
+## [1.4.16](https://github.com/uvop/memorix/compare/v1.4.15...v1.4.16) (2023-11-07)
+
+
+### Bug Fixes
+
+* cli to match what wanted ([8d9a2a0](https://github.com/uvop/memorix/commit/8d9a2a0c3f7bc82f5900dff4582ed8fbdab30acf))
+
+## [1.4.15](https://github.com/uvop/memorix/compare/v1.4.14...v1.4.15) (2023-11-06)
+
+
+### Bug Fixes
+
+* now it will work! ([c89c9be](https://github.com/uvop/memorix/commit/c89c9be0801b07bc97ee85deb7dee0a6ce847633))
+
+## [1.4.14](https://github.com/uvop/memorix/compare/v1.4.13...v1.4.14) (2023-11-06)
+
+
+### Bug Fixes
+
+* again.. ([419b984](https://github.com/uvop/memorix/commit/419b984497e65de3bdffc6f8e6a163d5e7ab3adf))
+
+## [1.4.13](https://github.com/uvop/memorix/compare/v1.4.12...v1.4.13) (2023-11-06)
+
+
+### Bug Fixes
+
+* publish ([fdb57c7](https://github.com/uvop/memorix/commit/fdb57c7967f9c05fe7e2a5796547f8505d2bd3de))
+
+## [1.4.12](https://github.com/uvop/memorix/compare/v1.4.11...v1.4.12) (2023-11-06)
+
+
+### Bug Fixes
+
+* try another deploy ([81e075c](https://github.com/uvop/memorix/commit/81e075c00fe4e877ae561ab4ebb74865468e8afd))
+
+## [1.4.11](https://github.com/uvop/memorix/compare/v1.4.10...v1.4.11) (2023-11-06)
+
+
+### Bug Fixes
+
+* try another deploy ([1d0a87b](https://github.com/uvop/memorix/commit/1d0a87bc48f402d18398800ba2b176a298a4d310))
+
+## [1.4.10](https://github.com/uvop/memorix/compare/v1.4.9...v1.4.10) (2023-11-06)
+
+
+### Bug Fixes
+
+* publish from branch for now ([359352f](https://github.com/uvop/memorix/commit/359352f121faaa456d00b15c711a550799678764))
+
 ## [1.4.9](https://github.com/uvop/memorix/compare/v1.4.8...v1.4.9) (2023-08-15)
 
 

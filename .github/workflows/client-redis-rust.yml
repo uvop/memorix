@@ -1,0 +1,30 @@
+name: Client Redis Rust
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clients/redis/rust
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hecrj/setup-rust-action@v2
+        with:
+          rust-version: 1.73.0
+      # - id: redis-step
+      #   uses: shogo82148/actions-setup-redis@v1
+      #   with:
+      #     redis-version: "7.x"
+      #     auto-start: "true"
+      - name: Install
+        run: make install
+      - name: Format
+        run: make format-check
+      - name: Lint
+        run: make lint
+      - name: Typecheck
+        run: make typecheck
+      # - name: Test
+      #   run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 make test
