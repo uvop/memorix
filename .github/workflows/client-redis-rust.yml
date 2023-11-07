@@ -18,6 +18,8 @@ jobs:
         with:
           redis-version: "7.x"
           auto-start: "true"
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Install
         run: make install
       - name: Format
