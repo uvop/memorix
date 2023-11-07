@@ -1,3 +1,10 @@
+## [1.4.18](https://github.com/uvop/memorix/compare/v1.4.17...v1.4.18) (2023-11-07)
+
+
+### Bug Fixes
+
+* try deploy again ([c0b7b24](https://github.com/uvop/memorix/commit/c0b7b240972cf803ea26dd4bed1cdd4e18b2dc66))
+
 ## [1.4.17](https://github.com/uvop/memorix/compare/v1.4.16...v1.4.17) (2023-11-07)
 
 
