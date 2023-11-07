@@ -27,4 +27,4 @@ jobs:
       - name: Typecheck
         run: make typecheck
       - name: Test
-        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 cargo test
+        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 make start
