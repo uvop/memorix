@@ -51,7 +51,7 @@ pub struct MemorixBlaBla {
     pub cache: MemorixCacheBlaBla,
 }
 
-const MEMORIX_BLA_BLA_NAMESPACE_NAME_TREE: &'static [&'static str] = &["blaBla"];
+const MEMORIX_BLA_BLA_NAMESPACE_NAME_TREE: &[&str] = &["blaBla"];
 
 impl MemorixBlaBla {
     pub fn new(
@@ -129,7 +129,7 @@ pub struct Memorix {
     pub task: MemorixTask,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {

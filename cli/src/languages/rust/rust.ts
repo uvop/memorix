@@ -341,7 +341,7 @@ ${([] as string[])
 
 const MEMORIX_${
             namePascal ? `${namePascal}_` : ""
-          }NAMESPACE_NAME_TREE: &'static [&'static str] = &[${nameTree
+          }NAMESPACE_NAME_TREE: &[&str] = &[${nameTree
             .map((x) => `"${x}"`)
             .join(", ")}];
 

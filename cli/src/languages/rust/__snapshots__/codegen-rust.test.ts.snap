@@ -41,7 +41,7 @@ pub struct Memorix {
     pub cache: MemorixCache,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -94,7 +94,7 @@ pub struct Memorix {
     pub cache: MemorixCache,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -139,7 +139,7 @@ pub struct Memorix {
     pub cache: MemorixCache,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -191,7 +191,7 @@ pub struct Memorix {
     pub cache: MemorixCache,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -244,7 +244,7 @@ pub struct Memorix {
     pub cache: MemorixCache,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -289,7 +289,7 @@ pub struct Memorix {
     pub cache: MemorixCache,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -316,7 +316,7 @@ pub struct Memorix {
 
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -348,7 +348,7 @@ pub struct Memorix {
 
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -514,7 +514,7 @@ pub struct MemorixUser {
     pub cache: MemorixCacheUser,
 }
 
-const MEMORIX_USER_NAMESPACE_NAME_TREE: &'static [&'static str] = &[\\"user\\"];
+const MEMORIX_USER_NAMESPACE_NAME_TREE: &[&str] = &[\\"user\\"];
 
 impl MemorixUser {
     pub fn new(other: memorix_client_redis::MemorixBase) -> Result<MemorixUser, Box<dyn std::error::Error>> {
@@ -565,7 +565,7 @@ pub struct MemorixSpaceship {
     pub cache: MemorixCacheSpaceship,
 }
 
-const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &'static [&'static str] = &[\\"spaceship\\"];
+const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &[&str] = &[\\"spaceship\\"];
 
 impl MemorixSpaceship {
     pub fn new(other: memorix_client_redis::MemorixBase) -> Result<MemorixSpaceship, Box<dyn std::error::Error>> {
@@ -600,7 +600,7 @@ pub struct Memorix {
 
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -647,7 +647,7 @@ pub struct Memorix {
     pub pubsub: MemorixPubSub,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -692,7 +692,7 @@ pub struct Memorix {
     pub task: MemorixTask,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
@@ -737,7 +737,7 @@ pub struct Memorix {
     pub task: MemorixTask,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {

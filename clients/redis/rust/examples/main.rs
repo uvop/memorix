@@ -70,6 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     )
                     .await?;
             }
+            #[allow(unreachable_code)]
             Ok(())
         }),
     ];

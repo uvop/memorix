@@ -49,7 +49,7 @@ pub struct MemorixSpaceshipCrew {
     pub cache: MemorixCacheSpaceshipCrew,
 }
 
-const MEMORIX_SPACESHIP_CREW_NAMESPACE_NAME_TREE: &'static [&'static str] = &["spaceship", "crew"];
+const MEMORIX_SPACESHIP_CREW_NAMESPACE_NAME_TREE: &[&str] = &["spaceship", "crew"];
 
 impl MemorixSpaceshipCrew {
     pub fn new(
@@ -91,7 +91,7 @@ pub struct MemorixSpaceship {
     pub cache: MemorixCacheSpaceship,
 }
 
-const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &'static [&'static str] = &["spaceship"];
+const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &[&str] = &["spaceship"];
 
 impl MemorixSpaceship {
     pub fn new(
@@ -201,7 +201,7 @@ pub struct Memorix {
     pub task: MemorixTask,
 }
 
-const MEMORIX_NAMESPACE_NAME_TREE: &'static [&'static str] = &[];
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
