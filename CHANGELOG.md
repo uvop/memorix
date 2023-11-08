@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/uvop/memorix/compare/v1.5.0...v1.5.1) (2023-11-08)
+
+
+### Bug Fixes
+
+* Static makes clippy error ([a098f74](https://github.com/uvop/memorix/commit/a098f7416b46b21cb46a95016ada7247a486b2c2))
+
 # [1.5.0](https://github.com/uvop/memorix/compare/v1.4.9...v1.5.0) (2023-11-07)
 
 
