@@ -1,7 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`python codegen cache can generate also with model 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen cache can generate also with model 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User {
@@ -58,8 +59,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen cache can generate with inline object type 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen cache can generate with inline object type 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct CacheUserPayload {
@@ -111,8 +113,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen cache can generate with inline types 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen cache can generate with inline types 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
@@ -156,8 +159,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen cache can generate with inline types and convert to CamelCase 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen cache can generate with inline types and convert to CamelCase 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct CacheUserByNumberPayload {
@@ -208,8 +212,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen cache can generate with no key 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen cache can generate with no key 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct CacheUserPayload {
@@ -261,8 +266,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen cache can have options 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen cache can have options 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
@@ -306,8 +312,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen config can be null 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen config can be null 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
@@ -338,8 +345,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen config can generate 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen config can generate 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
@@ -376,8 +384,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen enum can generate 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen enum can generate 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
@@ -388,8 +397,9 @@ pub enum Animals {
 }"
 `;
 
-exports[`python codegen model can generate from 2 models 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen model can generate from 2 models 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User1 {
@@ -405,8 +415,9 @@ pub struct User2 {
 }"
 `;
 
-exports[`python codegen model can generate from model 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen model can generate from model 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct User {
@@ -417,8 +428,9 @@ pub struct User {
 }"
 `;
 
-exports[`python codegen model can generate from model with array 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen model can generate from model with array 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserChildren {
@@ -437,8 +449,9 @@ pub struct User {
 }"
 `;
 
-exports[`python codegen model can generate from model within model 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen model can generate from model within model 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserPapa {
@@ -454,8 +467,9 @@ pub struct User {
 }"
 `;
 
-exports[`python codegen model can generate from model within model within a model 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen model can generate from model within model within a model 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserPapaMama {
@@ -480,8 +494,9 @@ pub struct User {
 }"
 `;
 
-exports[`python codegen namespace can generate 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen namespace can generate 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
 pub struct UserCacheBioPayload {
@@ -619,8 +634,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen pubsub can generate with inline types 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen pubsub can generate with inline types 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
@@ -664,8 +680,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen task can generate with inline types 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen task can generate with inline types 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]
@@ -709,8 +726,9 @@ impl Memorix {
 }"
 `;
 
-exports[`python codegen task can have options 1`] = `
-"extern crate memorix_client_redis;
+exports[`rust codegen task can have options 1`] = `
+"#![allow(dead_code)]
+extern crate memorix_client_redis;
 
 #[derive(Clone)]
 #[allow(non_snake_case)]

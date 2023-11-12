@@ -70,30 +70,30 @@ const valueToCode: (value: ValueType, isType: boolean) => string = (
   value,
   isType
 ) => {
-  let valuePython;
+  let valueRust;
   if (value.type === ValueTypes.simple) {
     if (value.name === "string") {
-      valuePython = "String";
+      valueRust = "String";
     } else if (value.name === "boolean") {
-      valuePython = "bool";
+      valueRust = "bool";
     } else if (value.name === "float") {
-      valuePython = "f32";
+      valueRust = "f32";
     } else if (value.name === "int") {
-      valuePython = "i32";
+      valueRust = "i32";
     } else if (isType) {
-      valuePython = `${value.name}`;
+      valueRust = `${value.name}`;
     } else {
-      valuePython = `${value.name}`;
+      valueRust = `${value.name}`;
     }
   } else if (value.type === ValueTypes.array) {
-    valuePython = `Vec<${valueToCode(value.value, isType)}>`;
+    valueRust = `Vec<${valueToCode(value.value, isType)}>`;
   } else {
     throw new Error(
       "Shouldn't get here, all inline objects became models, maybe forgot 'flatBlocks()?'"
     );
   }
 
-  return `${value.isOptional ? "Option<" : ""}${valuePython}${
+  return `${value.isOptional ? "Option<" : ""}${valueRust}${
     value.isOptional ? ">" : ""
   }`;
 };
@@ -425,7 +425,8 @@ export const codegen: (namespaces: Namespace) => string = (
   const importCode = ([] as string[])
     .concat([`extern crate memorix_client_redis;`])
     .join("\n");
-  return `${importCode}
+  return `#![allow(dead_code)]
+${importCode}
 
 ${code}`;
 };

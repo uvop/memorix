@@ -42,7 +42,7 @@ const codegenRust: (schema: string, moreConfig?: string) => Promise<string> = (
     codegen({ schemaFilePath: "schema.memorix" }).catch(rej);
   });
 
-describe("python codegen", () => {
+describe("rust codegen", () => {
   describe("model", () => {
     it("can generate from model", async () => {
       expect(
