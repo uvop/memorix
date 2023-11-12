@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/uvop/memorix/compare/v1.5.1...v1.5.2) (2023-11-12)
+
+
+### Bug Fixes
+
+* make clippy not angry with rust codegen ([8ca1704](https://github.com/uvop/memorix/commit/8ca1704040815b9ba1011bf673b4fd11b9cac8a3))
+
 ## [1.5.1](https://github.com/uvop/memorix/compare/v1.5.0...v1.5.1) (2023-11-08)
 
 
