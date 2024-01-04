@@ -50,6 +50,7 @@ pub struct MemorixOptions {
 pub struct MemorixBase {
     client: redis::Client,
     redis: redis::aio::MultiplexedConnection,
+    task_redis: redis::aio::MultiplexedConnection,
     namespace_name_tree: &'static [&'static str],
     default_options: Option<MemorixOptions>,
 }
@@ -62,9 +63,11 @@ impl MemorixBase {
     ) -> Result<MemorixBase, Box<dyn std::error::Error>> {
         let client = redis::Client::open(redis_url)?;
         let redis = client.get_multiplexed_async_connection().await?;
+        let task_redis = client.get_multiplexed_async_connection().await?;
         Ok(Self {
             client,
             redis,
+            task_redis,
             namespace_name_tree,
             default_options,
         })
@@ -77,6 +80,7 @@ impl MemorixBase {
         Self {
             client: other.client,
             redis: other.redis,
+            task_redis: other.task_redis,
             namespace_name_tree,
             default_options,
         }
@@ -534,8 +538,8 @@ where
         Ok(Box::pin(async_stream::stream! {
             loop {
                 let (_, array_payload): (String, String) = (match take_newest {
-                    true => self.memorix_base.redis.brpop(key_str.to_string(), 0),
-                    _ => self.memorix_base.redis.blpop(key_str.to_string(), 0),
+                    true => self.memorix_base.task_redis.brpop(key_str.to_string(), 0),
+                    _ => self.memorix_base.task_redis.blpop(key_str.to_string(), 0),
                 })
                 .await
                 .unwrap();

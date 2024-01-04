@@ -21,6 +21,11 @@ async fn get_memorix() -> Result<example_schema_generated::Memorix, Box<dyn std:
 //     Ok(())
 // }
 mod tests {
+    use futures_util::{future::select_all, StreamExt};
+    type BoxPinFuture<'a, 'b, T> = std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<T, Box<dyn std::error::Error + 'b>>> + 'a>,
+    >;
+
     #[tokio::test]
     async fn set_get() -> Result<(), Box<dyn std::error::Error>> {
         let mut memorix = crate::get_memorix().await?;
@@ -54,6 +59,35 @@ mod tests {
         tokio::time::sleep(tokio::time::Duration::from_millis(2500)).await;
         let favorite_animal = memorix.cache.favoriteAnimal.get(&"123".to_string()).await?;
         assert_eq!(favorite_animal, None);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn publish_and_dequeue() -> Result<(), Box<dyn std::error::Error>> {
+        let mut memorix = crate::get_memorix().await?;
+
+        let v: Vec<BoxPinFuture<()>> = vec![
+            Box::pin(async {
+                memorix.task.runAlgo.dequeue().await?.next().await;
+                Ok(())
+            }),
+            Box::pin(async {
+                tokio::time::sleep(tokio::time::Duration::from_millis(1_000)).await;
+                memorix
+                    .pubsub
+                    .message
+                    .publish(&"payload".to_string())
+                    .await?;
+                Ok(())
+            }),
+            Box::pin(async {
+                tokio::time::sleep(tokio::time::Duration::from_millis(2_000)).await;
+                panic!("Timeout");
+            }),
+        ];
+
+        let (result, _, _) = select_all(v).await;
+        result?;
         Ok(())
     }
     // #[tokio::test]
