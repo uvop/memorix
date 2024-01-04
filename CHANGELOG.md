@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/uvop/memorix/compare/v1.5.2...v1.5.3) (2024-01-04)
+
+
+### Bug Fixes
+
+* seperate connection for task and other operations in the meantime ([93e12cf](https://github.com/uvop/memorix/commit/93e12cf8275f80bafbd8d1e447a61898aa4078df))
+
 ## [1.5.2](https://github.com/uvop/memorix/compare/v1.5.1...v1.5.2) (2023-11-12)
 
 
