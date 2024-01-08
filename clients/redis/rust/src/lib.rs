@@ -95,6 +95,7 @@ where
     memorix_base: MemorixBase,
     id: String,
     has_key: bool,
+    options: Option<MemorixOptionsCache>,
     _phantom1: std::marker::PhantomData<K>,
     _phantom2: std::marker::PhantomData<P>,
 }
@@ -105,20 +106,44 @@ where
     P: serde::de::DeserializeOwned,
     P: serde::Serialize,
 {
-    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
+    pub fn new(
+        memorix_base: MemorixBase,
+        id: String,
+        options: Option<MemorixOptionsCache>,
+    ) -> Self {
+        let options = match options {
+            Some(x) => Some(x),
+            _ => match memorix_base.default_options.clone() {
+                Some(y) => y.cache,
+                _ => None,
+            },
+        };
         Self {
             memorix_base,
             id,
             has_key: true,
+            options,
             _phantom1: std::marker::PhantomData,
             _phantom2: std::marker::PhantomData,
         }
     }
-    fn new_no_key(memorix_base: MemorixBase, id: String) -> Self {
+    fn new_no_key(
+        memorix_base: MemorixBase,
+        id: String,
+        options: Option<MemorixOptionsCache>,
+    ) -> Self {
+        let options = match options {
+            Some(x) => Some(x),
+            _ => match memorix_base.default_options.clone() {
+                Some(y) => y.cache,
+                _ => None,
+            },
+        };
         Self {
             memorix_base,
             id,
             has_key: false,
+            options,
             _phantom1: std::marker::PhantomData,
             _phantom2: std::marker::PhantomData,
         }
@@ -153,18 +178,14 @@ where
 
         let payload: P = serde_json::from_str(&payload_str)?;
 
-        let extend_on_get = match self.memorix_base.default_options.to_owned() {
-            Some(MemorixOptions {
-                cache:
-                    Some(MemorixOptionsCache {
-                        expire:
-                            Some(MemorixOptionsCacheExpire {
-                                value: _,
-                                is_in_ms: _,
-                                extend_on_get: Some(x),
-                            }),
+        let extend_on_get = match self.options.clone() {
+            Some(MemorixOptionsCache {
+                expire:
+                    Some(MemorixOptionsCacheExpire {
+                        value: _,
+                        is_in_ms: _,
+                        extend_on_get: Some(x),
                     }),
-                task: _task,
             }) => x,
             _ => false,
         };
@@ -177,11 +198,8 @@ where
     }
     pub async fn set(&mut self, key: &K, payload: &P) -> Result<(), Box<dyn std::error::Error>> {
         let payload_str = serde_json::to_string(&payload)?;
-        let expire = match self.memorix_base.default_options.to_owned() {
-            Some(MemorixOptions {
-                cache: Some(MemorixOptionsCache { expire: Some(x) }),
-                task: _,
-            }) => Some(x),
+        let expire = match self.options.clone() {
+            Some(MemorixOptionsCache { expire: Some(x) }) => Some(x),
             _ => None,
         };
         match expire {
@@ -216,11 +234,8 @@ where
         Ok(())
     }
     pub async fn extend(&mut self, key: &K) -> Result<(), Box<dyn std::error::Error>> {
-        let expire = match self.memorix_base.default_options.to_owned() {
-            Some(MemorixOptions {
-                cache: Some(MemorixOptionsCache { expire: Some(x) }),
-                task: _task,
-            }) => x,
+        let expire = match self.options.clone() {
+            Some(MemorixOptionsCache { expire: Some(x) }) => x,
             _ => return Ok(()),
         };
 
@@ -257,9 +272,13 @@ where
     P: serde::de::DeserializeOwned,
     P: serde::Serialize,
 {
-    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
+    pub fn new(
+        memorix_base: MemorixBase,
+        id: String,
+        options: Option<MemorixOptionsCache>,
+    ) -> Self {
         Self {
-            base_item: MemorixCacheItem::new_no_key(memorix_base, id),
+            base_item: MemorixCacheItem::new_no_key(memorix_base, id, options),
         }
     }
     pub async fn get(&mut self) -> Result<Option<P>, Box<dyn std::error::Error>> {
@@ -435,6 +454,7 @@ where
     id: String,
     has_key: bool,
     return_task: Option<Box<MemorixTaskItemNoReturns<String, R>>>,
+    options: Option<MemorixOptionsTask>,
     _key: std::marker::PhantomData<K>,
     _payload: std::marker::PhantomData<P>,
     _returns: std::marker::PhantomData<R>,
@@ -448,51 +468,97 @@ where
     R: serde::Serialize,
     R: serde::de::DeserializeOwned,
 {
-    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
+    pub fn new(memorix_base: MemorixBase, id: String, options: Option<MemorixOptionsTask>) -> Self {
+        let options = match options {
+            Some(x) => Some(x),
+            _ => match memorix_base.default_options.clone() {
+                Some(y) => y.task,
+                _ => None,
+            },
+        };
         Self {
             memorix_base: memorix_base.clone(),
             id: id.clone(),
             has_key: true,
+            options,
             return_task: Some(Box::new(MemorixTaskItemNoReturns::new(
                 memorix_base,
                 format!("{}_returns", id),
+                None,
             ))),
             _key: std::marker::PhantomData,
             _payload: std::marker::PhantomData,
             _returns: std::marker::PhantomData,
         }
     }
-    fn new_no_key(memorix_base: MemorixBase, id: String) -> Self {
+    fn new_no_key(
+        memorix_base: MemorixBase,
+        id: String,
+        options: Option<MemorixOptionsTask>,
+    ) -> Self {
+        let options = match options {
+            Some(x) => Some(x),
+            _ => match memorix_base.default_options.clone() {
+                Some(y) => y.task,
+                _ => None,
+            },
+        };
         Self {
             memorix_base: memorix_base.clone(),
             id: id.clone(),
             has_key: false,
+            options,
             return_task: Some(Box::new(MemorixTaskItemNoReturns::new(
                 memorix_base,
                 format!("{}_returns", id),
+                None,
             ))),
             _key: std::marker::PhantomData,
             _payload: std::marker::PhantomData,
             _returns: std::marker::PhantomData,
         }
     }
-    fn new_no_returns(memorix_base: MemorixBase, id: String) -> Self {
+    fn new_no_returns(
+        memorix_base: MemorixBase,
+        id: String,
+        options: Option<MemorixOptionsTask>,
+    ) -> Self {
+        let options = match options {
+            Some(x) => Some(x),
+            _ => match memorix_base.default_options.clone() {
+                Some(y) => y.task,
+                _ => None,
+            },
+        };
         Self {
             memorix_base,
             id,
             has_key: true,
             return_task: None,
+            options,
             _key: std::marker::PhantomData,
             _payload: std::marker::PhantomData,
             _returns: std::marker::PhantomData,
         }
     }
-    fn new_no_key_no_returns(memorix_base: MemorixBase, id: String) -> Self {
+    fn new_no_key_no_returns(
+        memorix_base: MemorixBase,
+        id: String,
+        options: Option<MemorixOptionsTask>,
+    ) -> Self {
+        let options = match options {
+            Some(x) => Some(x),
+            _ => match memorix_base.default_options.clone() {
+                Some(y) => y.task,
+                _ => None,
+            },
+        };
         Self {
             memorix_base,
             id,
             has_key: false,
             return_task: None,
+            options,
             _key: std::marker::PhantomData,
             _payload: std::marker::PhantomData,
             _returns: std::marker::PhantomData,
@@ -524,13 +590,9 @@ where
         Box<dyn std::error::Error>,
     > {
         let key_str = self.key(key)?;
-        let take_newest = match self.memorix_base.default_options.to_owned() {
-            Some(MemorixOptions {
-                cache: _cache,
-                task:
-                    Some(MemorixOptionsTask {
-                        take_newest: Some(task_newest),
-                    }),
+        let take_newest = match self.options.clone() {
+            Some(MemorixOptionsTask {
+                take_newest: Some(task_newest),
             }) => task_newest,
             _ => false,
         };
@@ -632,9 +694,9 @@ where
     R: serde::Serialize,
     R: serde::de::DeserializeOwned,
 {
-    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
+    pub fn new(memorix_base: MemorixBase, id: String, options: Option<MemorixOptionsTask>) -> Self {
         Self {
-            base_item: MemorixTaskItem::new_no_key(memorix_base, id),
+            base_item: MemorixTaskItem::new_no_key(memorix_base, id, options),
         }
     }
     pub async fn dequeue(
@@ -685,9 +747,9 @@ where
     P: serde::Serialize,
     P: serde::de::DeserializeOwned,
 {
-    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
+    pub fn new(memorix_base: MemorixBase, id: String, options: Option<MemorixOptionsTask>) -> Self {
         Self {
-            base_item: MemorixTaskItem::new_no_returns(memorix_base, id),
+            base_item: MemorixTaskItem::new_no_returns(memorix_base, id, options),
         }
     }
     pub async fn dequeue(
@@ -723,9 +785,9 @@ where
     P: serde::Serialize,
     P: serde::de::DeserializeOwned,
 {
-    pub fn new(memorix_base: MemorixBase, id: String) -> Self {
+    pub fn new(memorix_base: MemorixBase, id: String, options: Option<MemorixOptionsTask>) -> Self {
         Self {
-            base_item: MemorixTaskItem::new_no_key_no_returns(memorix_base, id),
+            base_item: MemorixTaskItem::new_no_key_no_returns(memorix_base, id, options),
         }
     }
     pub async fn dequeue(
