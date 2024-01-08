@@ -51,6 +51,7 @@ impl MemorixCacheSpaceshipCrew {
             count: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 "count".to_string(),
+                None,
             ),
         }
     }
@@ -91,6 +92,7 @@ impl MemorixCacheSpaceship {
             pilot: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 "pilot".to_string(),
+                None,
             ),
         }
     }
@@ -140,26 +142,44 @@ impl MemorixCache {
             favoriteAnimal: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "favoriteAnimal".to_string(),
+                None,
             ),
             user: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "user".to_string(),
+                None,
             ),
             userNoKey: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 "userNoKey".to_string(),
+                None,
             ),
             userExpire: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "userExpire".to_string(),
+                Some(memorix_client_redis::MemorixOptionsCache {
+                    expire: Some(memorix_client_redis::MemorixOptionsCacheExpire {
+                        value: 1000,
+                        is_in_ms: Some(true),
+                        extend_on_get: None,
+                    }),
+                }),
             ),
             userExpire2: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "userExpire2".to_string(),
+                Some(memorix_client_redis::MemorixOptionsCache { expire: None }),
             ),
             userExpire3: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "userExpire3".to_string(),
+                Some(memorix_client_redis::MemorixOptionsCache {
+                    expire: Some(memorix_client_redis::MemorixOptionsCacheExpire {
+                        value: 2,
+                        is_in_ms: None,
+                        extend_on_get: Some(true),
+                    }),
+                }),
             ),
         }
     }
@@ -195,10 +215,14 @@ impl MemorixTask {
             runAlgo: memorix_client_redis::MemorixTaskItemNoKey::new(
                 memorix_base.clone(),
                 "runAlgo".to_string(),
+                None,
             ),
             runAlgoNewest: memorix_client_redis::MemorixTaskItemNoKey::new(
                 memorix_base.clone(),
                 "runAlgoNewest".to_string(),
+                Some(memorix_client_redis::MemorixOptionsTask {
+                    take_newest: Some(true),
+                }),
             ),
         }
     }

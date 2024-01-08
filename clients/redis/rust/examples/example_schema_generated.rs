@@ -43,10 +43,12 @@ impl MemorixCacheBlaBla {
             favoriteAnimal: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "favoriteAnimal".to_string(),
+                None,
             ),
             user: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "user".to_string(),
+                None,
             ),
         }
     }
@@ -87,6 +89,7 @@ impl MemorixCache {
             hello: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 "hello".to_string(),
+                None,
             ),
         }
     }
@@ -121,6 +124,7 @@ impl MemorixTask {
             runAlgo: memorix_client_redis::MemorixTaskItemNoKey::new(
                 memorix_base.clone(),
                 "runAlgo".to_string(),
+                None,
             ),
         }
     }
