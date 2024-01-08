@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 extern crate memorix_client_redis;
 
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
@@ -14,14 +15,26 @@ pub enum Animal {
     person,
 }
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(
+    Clone,
+    memorix_client_redis::Serialize,
+    memorix_client_redis::Deserialize,
+    PartialEq,
+    std::fmt::Debug,
+)]
 pub struct User {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub age: Option<i32>,
 }
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(
+    Clone,
+    memorix_client_redis::Serialize,
+    memorix_client_redis::Deserialize,
+    PartialEq,
+    std::fmt::Debug,
+)]
 pub struct SpaceshipCachePilotPayload {
     pub name: String,
 }

@@ -151,7 +151,7 @@ const blockToStruct: (block: Block) => string = (b) => {
 const blockToCode: (block: Block) => string = (b) => {
   switch (b.type) {
     case BlockTypes.model:
-      return `#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+      return `#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct ${b.name} {
 ${b.properties
   .map(

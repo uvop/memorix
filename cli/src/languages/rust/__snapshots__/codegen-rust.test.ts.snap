@@ -4,7 +4,7 @@ exports[`rust codegen cache can generate also with model 1`] = `
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct User {
     pub name: String,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -63,7 +63,7 @@ exports[`rust codegen cache can generate with inline object type 1`] = `
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct CacheUserPayload {
     pub name: String,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -163,7 +163,7 @@ exports[`rust codegen cache can generate with inline types and convert to CamelC
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct CacheUserByNumberPayload {
     pub name: String,
     pub age: i32,
@@ -216,7 +216,7 @@ exports[`rust codegen cache can generate with no key 1`] = `
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct CacheUserPayload {
     pub name: String,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -401,13 +401,13 @@ exports[`rust codegen model can generate from 2 models 1`] = `
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct User1 {
     pub id: i32,
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct User2 {
     pub name: String,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -419,7 +419,7 @@ exports[`rust codegen model can generate from model 1`] = `
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -432,7 +432,7 @@ exports[`rust codegen model can generate from model with array 1`] = `
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct UserChildren {
     pub id: i32,
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
@@ -440,7 +440,7 @@ pub struct UserChildren {
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct User {
     pub id: i32,
     pub names: Vec<String>,
@@ -453,14 +453,14 @@ exports[`rust codegen model can generate from model within model 1`] = `
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct UserPapa {
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
     pub name: Option<String>,
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct User {
     pub id: i32,
     pub papa: UserPapa,
@@ -471,13 +471,13 @@ exports[`rust codegen model can generate from model within model within a model 
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct UserPapaMama {
     pub sick: bool,
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct UserPapa {
     #[serde(skip_serializing_if = \\"Option::is_none\\")]
     pub name: Option<String>,
@@ -487,7 +487,7 @@ pub struct UserPapa {
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct User {
     pub id: i32,
     pub papa: UserPapa,
@@ -498,7 +498,7 @@ exports[`rust codegen namespace can generate 1`] = `
 "#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize)]
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
 pub struct UserCacheBioPayload {
     pub description: String,
 }

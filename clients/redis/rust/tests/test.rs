@@ -1,16 +1,18 @@
 // extern crate memorix_client_redis;
 mod example_schema_generated;
 
+use example_schema_generated as mx;
+
 // use memorix_client_redis::StreamExt;
 
-async fn get_memorix() -> Result<example_schema_generated::Memorix, Box<dyn std::error::Error>> {
+async fn get_memorix() -> Result<mx::Memorix, Box<dyn std::error::Error>> {
     let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
-    let memorix = example_schema_generated::Memorix::new(&redis_url).await?;
+    let memorix = mx::Memorix::new(&redis_url).await?;
     Ok(memorix)
 }
 
 // async fn dequeue_and_return(
-//     mut memorix: example_schema_generated::Memorix,
+//     mut memorix: mx::Memorix,
 // ) -> Result<(), Box<dyn std::error::Error>> {
 //     let mut stream = memorix.task.runAlgo.dequeue().await.unwrap();
 //     let res = match stream.next().await {
@@ -21,6 +23,7 @@ async fn get_memorix() -> Result<example_schema_generated::Memorix, Box<dyn std:
 //     Ok(())
 // }
 mod tests {
+    use crate::example_schema_generated as mx;
     use futures_util::{future::select_all, StreamExt};
     type BoxPinFuture<'a, 'b, T> = std::pin::Pin<
         Box<dyn std::future::Future<Output = Result<T, Box<dyn std::error::Error + 'b>>> + 'a>,
@@ -88,6 +91,27 @@ mod tests {
 
         let (result, _, _) = select_all(v).await;
         result?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn inline_options() -> Result<(), Box<dyn std::error::Error>> {
+        let mut memorix = crate::get_memorix().await?;
+        memorix
+            .cache
+            .userExpire
+            .set(
+                &"uv".to_owned(),
+                &mx::User {
+                    age: Some(11),
+                    name: "uv".to_string(),
+                },
+            )
+            .await?;
+        tokio::time::sleep(tokio::time::Duration::from_millis(1_500)).await;
+        let user = memorix.cache.userExpire.get(&"uv".to_owned()).await?;
+
+        assert_eq!(user, None);
         Ok(())
     }
     // #[tokio::test]
