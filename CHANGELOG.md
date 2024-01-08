@@ -1,3 +1,10 @@
+## [1.5.4](https://github.com/uvop/memorix/compare/v1.5.3...v1.5.4) (2024-01-08)
+
+
+### Bug Fixes
+
+* 57 rust options not generated ([#58](https://github.com/uvop/memorix/issues/58)) ([1e9ba42](https://github.com/uvop/memorix/commit/1e9ba4277be2bacddda1e472681c084f95006cba))
+
 ## [1.5.3](https://github.com/uvop/memorix/compare/v1.5.2...v1.5.3) (2024-01-04)
 
 
