@@ -257,7 +257,7 @@ use futures_util::StreamExt;
 
 async fn listen_to_message(
     mut memorix: example_schema_generated::Memorix,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
   let subscription = memorix.pubsub.message.subscribe().await?
   while let Some(res) = stream.next().await {
     let payload = res?.payload;
@@ -267,12 +267,12 @@ async fn listen_to_message(
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
   let mut memorix = example_schema_generated::Memorix::new("redis://localhost:6379/0").await?;
 
   let futures_v: Vec<
       std::pin::Pin<
-          Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error>>>>,
+          Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error + Sync + Send>>>>,
       >,
   > = vec![
     Box::pin(listen_to_message(memorix.clone())),

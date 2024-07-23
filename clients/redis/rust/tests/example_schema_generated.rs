@@ -68,7 +68,7 @@ const MEMORIX_SPACESHIP_CREW_NAMESPACE_NAME_TREE: &[&str] = &["spaceship", "crew
 impl MemorixSpaceshipCrew {
     pub fn new(
         other: memorix_client_redis::MemorixBase,
-    ) -> Result<MemorixSpaceshipCrew, Box<dyn std::error::Error>> {
+    ) -> Result<MemorixSpaceshipCrew, Box<dyn std::error::Error + Sync + Send>> {
         let memorix_base = memorix_client_redis::MemorixBase::from(
             other,
             MEMORIX_SPACESHIP_CREW_NAMESPACE_NAME_TREE,
@@ -111,7 +111,7 @@ const MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE: &[&str] = &["spaceship"];
 impl MemorixSpaceship {
     pub fn new(
         other: memorix_client_redis::MemorixBase,
-    ) -> Result<MemorixSpaceship, Box<dyn std::error::Error>> {
+    ) -> Result<MemorixSpaceship, Box<dyn std::error::Error + Sync + Send>> {
         let memorix_base = memorix_client_redis::MemorixBase::from(
             other,
             MEMORIX_SPACESHIP_NAMESPACE_NAME_TREE,
@@ -241,7 +241,7 @@ pub struct Memorix {
 const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
-    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
         let memorix_base = memorix_client_redis::MemorixBase::new(
             redis_url,
             MEMORIX_NAMESPACE_NAME_TREE,

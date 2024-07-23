@@ -1,7 +1,7 @@
 extern crate serde_json;
 use serde_json::{Map, Value};
 
-pub fn hash_key<V>(value: &V) -> Result<String, Box<dyn std::error::Error>>
+pub fn hash_key<V>(value: &V) -> Result<String, Box<dyn std::error::Error + Sync + Send>>
 where
     V: serde::Serialize,
 {

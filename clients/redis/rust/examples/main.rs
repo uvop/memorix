@@ -4,7 +4,7 @@
 // use crate::futures_util::StreamExt;
 
 // #[tokio::main]
-// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+// async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 //     let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
 //     let mut memorix = example_schema_generated::Memorix::new(&redis_url).await?;
 
@@ -47,13 +47,17 @@ extern crate redis;
 mod example_schema_generated;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
     let mut memorix = example_schema_generated::Memorix::new(&redis_url).await?;
 
     let futures_v: Vec<
         std::pin::Pin<
-            Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error>>>>,
+            Box<
+                dyn std::future::Future<
+                    Output = Result<(), Box<dyn std::error::Error + Sync + Send>>,
+                >,
+            >,
         >,
     > = vec![
         Box::pin(loop_print(memorix.clone())),
@@ -83,7 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(unreachable_code)]
 async fn loop_print(
     mut memorix: example_schema_generated::Memorix,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     loop {
         tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
         let value = memorix

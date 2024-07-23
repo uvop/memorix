@@ -65,7 +65,7 @@ const MEMORIX_BLA_BLA_NAMESPACE_NAME_TREE: &[&str] = &["blaBla"];
 impl MemorixBlaBla {
     pub fn new(
         other: memorix_client_redis::MemorixBase,
-    ) -> Result<MemorixBlaBla, Box<dyn std::error::Error>> {
+    ) -> Result<MemorixBlaBla, Box<dyn std::error::Error + Sync + Send>> {
         let memorix_base = memorix_client_redis::MemorixBase::from(
             other,
             MEMORIX_BLA_BLA_NAMESPACE_NAME_TREE,
@@ -143,7 +143,7 @@ pub struct Memorix {
 const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
-    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error>> {
+    pub async fn new(redis_url: &str) -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
         let memorix_base =
             memorix_client_redis::MemorixBase::new(redis_url, MEMORIX_NAMESPACE_NAME_TREE, None)
                 .await?;

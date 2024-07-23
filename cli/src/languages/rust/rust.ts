@@ -367,7 +367,7 @@ ${
   nameTree.length === 0
     ? `${getTabs(
         1
-      )}pub async fn new(redis_url: &str) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error>> {
+      )}pub async fn new(redis_url: &str) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error + Sync + Send>> {
 ${getTabs(2)}let memorix_base = memorix_client_redis::MemorixBase::new(
 ${getTabs(3)}redis_url,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
@@ -375,7 +375,7 @@ ${getTabs(3)}${defaultOptionsToCode(namespace.defaultOptions)}
 ${getTabs(2)}).await?;`
     : `${getTabs(
         1
-      )}pub fn new(other: memorix_client_redis::MemorixBase) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error>> {
+      )}pub fn new(other: memorix_client_redis::MemorixBase) -> Result<Memorix${nameCamel}, Box<dyn std::error::Error + Sync + Send>> {
 ${getTabs(2)}let memorix_base = memorix_client_redis::MemorixBase::from(
 ${getTabs(3)}other,
 ${getTabs(3)}MEMORIX_${namePascal ? `${namePascal}_` : ""}NAMESPACE_NAME_TREE,
