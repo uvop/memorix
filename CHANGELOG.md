@@ -1,3 +1,10 @@
+## [1.5.5](https://github.com/uvop/memorix/compare/v1.5.4...v1.5.5) (2024-07-23)
+
+
+### Bug Fixes
+
+* Add sync send rust errors ([#61](https://github.com/uvop/memorix/issues/61)) ([a2cc0de](https://github.com/uvop/memorix/commit/a2cc0dee1b00ac939fdeee1216769085e3290589))
+
 ## [1.5.4](https://github.com/uvop/memorix/compare/v1.5.3...v1.5.4) (2024-01-08)
 
 
