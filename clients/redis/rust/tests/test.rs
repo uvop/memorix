@@ -5,7 +5,7 @@ use example_schema_generated as mx;
 
 // use memorix_client_redis::StreamExt;
 
-async fn get_memorix() -> Result<mx::Memorix, Box<dyn std::error::Error>> {
+async fn get_memorix() -> Result<mx::Memorix, Box<dyn std::error::Error + Sync + Send>> {
     let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
     let memorix = mx::Memorix::new(&redis_url).await?;
     Ok(memorix)
@@ -13,7 +13,7 @@ async fn get_memorix() -> Result<mx::Memorix, Box<dyn std::error::Error>> {
 
 // async fn dequeue_and_return(
 //     mut memorix: mx::Memorix,
-// ) -> Result<(), Box<dyn std::error::Error>> {
+// ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 //     let mut stream = memorix.task.runAlgo.dequeue().await.unwrap();
 //     let res = match stream.next().await {
 //         Some(x) => x.unwrap(),
@@ -30,7 +30,7 @@ mod tests {
     >;
 
     #[tokio::test]
-    async fn set_get() -> Result<(), Box<dyn std::error::Error>> {
+    async fn set_get() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let mut memorix = crate::get_memorix().await?;
         memorix
             .cache
@@ -49,7 +49,7 @@ mod tests {
         Ok(())
     }
     #[tokio::test]
-    async fn set_get_expire() -> Result<(), Box<dyn std::error::Error>> {
+    async fn set_get_expire() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let mut memorix = crate::get_memorix().await?;
         memorix
             .cache
@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn publish_and_dequeue() -> Result<(), Box<dyn std::error::Error>> {
+    async fn publish_and_dequeue() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let mut memorix = crate::get_memorix().await?;
 
         let v: Vec<BoxPinFuture<()>> = vec![
@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn inline_options() -> Result<(), Box<dyn std::error::Error>> {
+    async fn inline_options() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let mut memorix = crate::get_memorix().await?;
         memorix
             .cache
@@ -120,7 +120,7 @@ mod tests {
     //     let mut memorix = crate::get_memorix().await.unwrap();
     //     let futures_v: Vec<
     //         std::pin::Pin<
-    //             Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error>>>>,
+    //             Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error+Sync+Send>>>>,
     //         >,
     //     > = vec![
     //         Box::pin(crate::dequeue_and_return(memorix.clone())),

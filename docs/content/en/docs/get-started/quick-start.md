@@ -106,7 +106,7 @@ print(hello_value) # Should print "world"
 mod memorix_generated;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let memorix = memorix_generated::Memorix::new("redis://localhost:6379/0").await?;
 
     memorix.cache.hello.set(&"world".to_string()).await?;
