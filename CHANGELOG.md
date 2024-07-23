@@ -1,3 +1,10 @@
+## [1.5.8](https://github.com/uvop/memorix/compare/v1.5.7...v1.5.8) (2024-07-23)
+
+
+### Bug Fixes
+
+* release not working ([e55b79d](https://github.com/uvop/memorix/commit/e55b79dd6bd2a8c03a57614c3792e4a81cdf9258))
+
 ## [1.5.7](https://github.com/uvop/memorix/compare/v1.5.6...v1.5.7) (2024-07-23)
 
 
