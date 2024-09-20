@@ -2,7 +2,7 @@
   "folders": [
     {
       "name": "cli",
-      "path": "cli"
+      "path": "new-cli"
     },
     {
       "name": "client-redis-js",
