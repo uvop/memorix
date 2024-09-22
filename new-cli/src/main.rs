@@ -1,4 +1,6 @@
 use nom::bytes::complete::take_till;
+use nom::combinator::cut;
+use nom::error::{context, ContextError, ErrorKind};
 use nom::{
     branch::{alt, permutation},
     bytes::complete::{is_not, tag, take_until},
@@ -9,10 +11,8 @@ use nom::{
     sequence::{delimited, pair, preceded, separated_pair, terminated, tuple},
     Finish, IResult, Parser,
 };
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
-use std::rc::Rc;
 
 #[derive(Debug, PartialEq)]
 struct Schema {
@@ -89,7 +89,7 @@ struct TaskItem {
     queue_type: Option<Value>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 enum Value {
     String(String),
     Env(String),
@@ -131,25 +131,79 @@ enum TaskOperation {
     GetLen,
 }
 
-enum NamespaceFinder {
-    Found((String, String)),
-    NotFound(String),
-}
-
-fn extract_parser<
+fn hash<
     'a,
     O,
-    E: ParseError<&'a str>,
-    F: FnMut(&'a str) -> IResult<&'a str, O, E> + 'static,
+    E: ParseError<&'a str> + ContextError<&'a str>,
+    F: FnMut(&'a str) -> IResult<&'a str, O, E>,
 >(
-    parser: F,
+    mut item_parser: F,
+) -> impl FnMut(&'a str) -> IResult<&'a str, HashMap<String, O>, E> {
+    move |input: &'a str| {
+        context(
+            "map",
+            preceded(
+                char('{'),
+                cut(terminated(
+                    map(
+                        separated_list0(
+                            multispace1,
+                            separated_pair(
+                                preceded(multispace0, parse_identifier),
+                                cut(tuple((multispace0, char(':')))),
+                                preceded(multispace0, &mut item_parser),
+                            ),
+                        ),
+                        |tuple_vec| {
+                            tuple_vec
+                                .into_iter()
+                                .map(|(k, v)| (String::from(k), v))
+                                .collect()
+                        },
+                    ),
+                    preceded(multispace0, char('}')),
+                )),
+            ),
+        )
+        .parse(input)
+    }
+}
+
+fn array<
+    'a,
+    O,
+    E: ParseError<&'a str> + ContextError<&'a str>,
+    F: FnMut(&'a str) -> IResult<&'a str, O, E>,
+>(
+    mut item_parser: F,
+) -> impl FnMut(&'a str) -> IResult<&'a str, Vec<O>, E> {
+    move |input: &'a str| {
+        context(
+            "array",
+            preceded(
+                tuple((char('['), multispace0)),
+                cut(terminated(
+                    separated_list0(multispace1, &mut item_parser),
+                    preceded(multispace0, char(']')),
+                )),
+            ),
+        )(input)
+    }
+}
+
+fn extract<
+    'a,
+    O,
+    E: ParseError<&'a str> + ContextError<&'a str>,
+    F: FnMut(&'a str) -> IResult<&'a str, O, E>,
+>(
+    mut parser: F,
 ) -> impl FnMut(&'a str) -> IResult<String, O, E> {
-    let parser = Rc::new(RefCell::new(parser));
     move |input: &'a str| {
         let mut index = 0;
         while index < input.len() {
             let (remainder, _) = take_till(|_| true)(&input[index..])?;
-            if let Ok((after, result)) = parser.borrow_mut()(remainder) {
+            if let Ok((after, result)) = parser(remainder) {
                 let before = &input[0..index];
                 let new_input = format!("{}{}", before, after);
                 return Ok((new_input, result));
@@ -169,16 +223,15 @@ fn extract_multiple_parser<
     E: ParseError<&'a str>,
     F: FnMut(&'a str) -> IResult<&'a str, O, E> + 'static,
 >(
-    parser: F,
+    mut parser: F,
 ) -> impl FnMut(&'a str) -> IResult<String, Vec<O>, E> {
-    let parser = Rc::new(RefCell::new(parser));
     move |input: &str| {
         let mut results = Vec::new();
         let mut remaining = String::new();
         let mut current = input;
 
         while !current.is_empty() {
-            match parser.borrow_mut()(current) {
+            match parser(current) {
                 Ok((rest, result)) => {
                     results.push(result);
                     let consumed = current.len() - rest.len();
@@ -202,7 +255,9 @@ fn extract_multiple_parser<
     }
 }
 
-fn parse_cache_operation(input: &str) -> IResult<&str, CacheOperation, VerboseError<&str>> {
+fn parse_cache_operation<'a, E: ParseError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, CacheOperation, E> {
     alt((
         value(CacheOperation::Get, tag("get")),
         value(CacheOperation::Set, tag("set")),
@@ -210,14 +265,18 @@ fn parse_cache_operation(input: &str) -> IResult<&str, CacheOperation, VerboseEr
     ))(input)
 }
 
-fn parse_pubsub_operation(input: &str) -> IResult<&str, PubSubOperation, VerboseError<&str>> {
+fn parse_pubsub_operation<'a, E: ParseError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, PubSubOperation, E> {
     alt((
         value(PubSubOperation::Publish, tag("publish")),
         value(PubSubOperation::Subscribe, tag("subscribe")),
     ))(input)
 }
 
-fn parse_task_operation(input: &str) -> IResult<&str, TaskOperation, VerboseError<&str>> {
+fn parse_task_operation<'a, E: ParseError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, TaskOperation, E> {
     alt((
         value(TaskOperation::Enqueue, tag("enqueue")),
         value(TaskOperation::Dequeue, tag("dequeue")),
@@ -226,15 +285,16 @@ fn parse_task_operation(input: &str) -> IResult<&str, TaskOperation, VerboseErro
     ))(input)
 }
 
-// Parser combinators
-fn parse_identifier(input: &str) -> IResult<&str, &str, VerboseError<&str>> {
+fn parse_identifier<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &str, E> {
     recognize(pair(
         alt((alpha1, tag("_"))),
         many0(alt((alphanumeric1, tag("_")))),
     ))(input)
 }
 
-fn parse_primitive_type_config(input: &str) -> IResult<&str, TypeItem, VerboseError<&str>> {
+fn parse_primitive_type_config<'a, E: ParseError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, TypeItem, E> {
     alt((
         value(TypeItem::U32, tag("u32")),
         value(TypeItem::I32, tag("i32")),
@@ -247,7 +307,9 @@ fn parse_primitive_type_config(input: &str) -> IResult<&str, TypeItem, VerboseEr
     ))(input)
 }
 
-fn parse_language(input: &str) -> IResult<&str, Language, VerboseError<&str>> {
+fn parse_language<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, Language, E> {
     alt((
         value(Language::TypeScript, tag("TypeScript")),
         value(Language::Python, tag("Python")),
@@ -255,18 +317,21 @@ fn parse_language(input: &str) -> IResult<&str, Language, VerboseError<&str>> {
     ))(input)
 }
 
-fn parse_array_type_config(input: &str) -> IResult<&str, TypeItem, VerboseError<&str>> {
-    map(
-        delimited(
-            char('['),
-            preceded(multispace0, parse_type_config),
-            preceded(multispace0, char(']')),
+fn parse_array_type_config<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, TypeItem, E> {
+    context(
+        "single type config array",
+        map(
+            verify(array(parse_type_config), |v: &Vec<_>| v.len() == 1),
+            |v| TypeItem::Array(Box::new(v[0].clone())),
         ),
-        |inner_type| TypeItem::Array(Box::new(inner_type)),
     )(input)
 }
 
-fn parse_object_type_config(input: &str) -> IResult<&str, TypeItem, VerboseError<&str>> {
+fn parse_object_type_config<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, TypeItem, E> {
     map(
         delimited(
             char('{'),
@@ -284,29 +349,37 @@ fn parse_object_type_config(input: &str) -> IResult<&str, TypeItem, VerboseError
     )(input)
 }
 
-fn parse_reference_type_config(input: &str) -> IResult<&str, TypeItem, VerboseError<&str>> {
+fn parse_reference_type_config<'a, E: ParseError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, TypeItem, E> {
     map(parse_identifier, |s| TypeItem::Reference(s.to_string()))(input)
 }
 
-fn parse_type_config(input: &str) -> IResult<&str, TypeItem, VerboseError<&str>> {
+fn parse_type_config<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, TypeItem, E> {
     preceded(
         multispace0,
         alt((
-            parse_primitive_type_config,
             parse_array_type_config,
+            parse_primitive_type_config,
             parse_object_type_config,
             parse_reference_type_config,
         )),
     )(input)
 }
 
-fn parse_string(input: &str) -> IResult<&str, String, VerboseError<&str>> {
+fn parse_string<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, String, E> {
     map(delimited(char('"'), is_not("\""), char('"')), |s: &str| {
         s.to_string()
     })(input)
 }
 
-fn parse_value(input: &str) -> IResult<&str, Value, VerboseError<&str>> {
+fn parse_value<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, Value, E> {
     alt((
         map(delimited(tag("env("), is_not(")"), char(')')), |s: &str| {
             Value::Env(s.to_string())
@@ -315,7 +388,9 @@ fn parse_value(input: &str) -> IResult<&str, Value, VerboseError<&str>> {
     ))(input)
 }
 
-fn parse_file_config(input: &str) -> IResult<&str, FileConfig, VerboseError<&str>> {
+fn parse_file_config<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, FileConfig, E> {
     map(
         delimited(
             tuple((multispace0, char('{'))),
@@ -487,7 +562,9 @@ fn parse_pubsub_config(input: &str) -> IResult<&str, PubSubItem, VerboseError<&s
     )(input)
 }
 
-fn parse_task_config(input: &str) -> IResult<&str, TaskItem, VerboseError<&str>> {
+fn parse_task_config<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, TaskItem, E> {
     map(
         delimited(
             tuple((multispace0, char('{'), multispace0)),
@@ -508,11 +585,7 @@ fn parse_task_config(input: &str) -> IResult<&str, TaskItem, VerboseError<&str>>
                         char(':'),
                         multispace0,
                     )),
-                    delimited(
-                        tuple((char('['), multispace0)),
-                        separated_list1(multispace1, parse_task_operation),
-                        tuple((multispace0, char(']'))),
-                    ),
+                    array(parse_task_operation),
                 )),
                 opt(preceded(
                     tuple((
@@ -539,72 +612,30 @@ fn parse_task_config(input: &str) -> IResult<&str, TaskItem, VerboseError<&str>>
 fn parse_namespace(input: &str) -> IResult<&str, Namespace, VerboseError<&str>> {
     map(
         permutation((
-            opt(delimited(
-                tuple((
-                    multispace0,
-                    tag("NamespaceDefaults"),
-                    multispace0,
-                    char('{'),
-                )),
-                permutation((
-                    opt(preceded(
-                        tuple((
-                            multispace0,
-                            tag("cache_ttl"),
-                            multispace0,
-                            char(':'),
-                            multispace0,
-                        )),
-                        parse_value,
-                    )),
-                    opt(preceded(
-                        tuple((
-                            multispace0,
-                            tag("task_queue_type"),
-                            multispace0,
-                            char(':'),
-                            multispace0,
-                        )),
-                        parse_value,
-                    )),
-                )),
-                preceded(multispace0, char('}')),
+            opt(preceded(
+                tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
+                map(cut(hash(parse_value)), |hm| {
+                    (
+                        hm.get("cache_ttl").cloned(),
+                        hm.get("task_queue_type").cloned(),
+                    )
+                }),
             )),
-            opt(delimited(
-                tuple((multispace0, tag("Type"), multispace0, char('{'))),
-                many1(separated_pair(
-                    preceded(multispace0, parse_identifier),
-                    tuple((multispace0, char(':'))),
-                    parse_type_config,
-                )),
-                tuple((multispace0, char('}'))),
+            opt(preceded(
+                tuple((multispace0, tag("Type"), multispace0)),
+                cut(hash(parse_type_config)),
             )),
-            opt(delimited(
-                tuple((multispace0, tag("Cache"), multispace0, char('{'))),
-                many1(separated_pair(
-                    preceded(multispace0, parse_identifier),
-                    tuple((multispace0, char(':'))),
-                    parse_cache_config,
-                )),
-                tuple((multispace0, char('}'))),
+            opt(preceded(
+                tuple((multispace0, tag("Cache"), multispace0)),
+                cut(hash(parse_cache_config)),
             )),
-            opt(delimited(
-                tuple((multispace0, tag("PubSub"), multispace0, char('{'))),
-                many1(separated_pair(
-                    preceded(multispace0, parse_identifier),
-                    tuple((multispace0, char(':'))),
-                    parse_pubsub_config,
-                )),
-                tuple((multispace0, char('}'))),
+            opt(preceded(
+                tuple((multispace0, tag("PubSub"), multispace0)),
+                cut(hash(parse_pubsub_config)),
             )),
-            opt(delimited(
-                tuple((multispace0, tag("Task"), multispace0, char('{'))),
-                many1(separated_pair(
-                    preceded(multispace0, parse_identifier),
-                    tuple((multispace0, char(':'))),
-                    parse_task_config,
-                )),
-                tuple((multispace0, char('}'))),
+            opt(preceded(
+                tuple((multispace0, tag("Task"), multispace0)),
+                cut(hash(parse_task_config)),
             )),
         )),
         |(defaults, types, cache, pubsub, task)| Namespace {
@@ -618,49 +649,35 @@ fn parse_namespace(input: &str) -> IResult<&str, Namespace, VerboseError<&str>> 
                     task_queue_type,
                 },
             },
-            type_items: types
-                .unwrap_or(vec![])
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v))
-                .collect(),
-            cache_items: cache
-                .unwrap_or(vec![])
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v))
-                .collect(),
-            pubsub_items: pubsub
-                .unwrap_or(vec![])
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v))
-                .collect(),
-            task_items: task
-                .unwrap_or(vec![])
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v))
-                .collect(),
+            type_items: types.unwrap_or(HashMap::new()),
+            cache_items: cache.unwrap_or(HashMap::new()),
+            pubsub_items: pubsub.unwrap_or(HashMap::new()),
+            task_items: task.unwrap_or(HashMap::new()),
         },
     )(input)
 }
 
 fn parse_named_namespace(input: &str) -> IResult<&str, (String, Namespace), VerboseError<&str>> {
     map(
-        pair(
-            delimited(
-                tuple((tag("Namespace"), multispace1)),
-                parse_identifier,
-                tuple((multispace0, char('{'))),
-            ),
-            terminated(parse_namespace, tuple((multispace0, char('}')))),
+        preceded(
+            tuple((multispace0, tag("Namespace"), multispace1)),
+            cut(terminated(
+                pair(
+                    terminated(parse_identifier, tuple((multispace0, char('{')))),
+                    parse_namespace,
+                ),
+                tuple((multispace0, char('}'))),
+            )),
         ),
         |(name, namespace)| (name.to_string(), namespace),
     )(input)
 }
 
 fn parse_schema(input: &str) -> IResult<&str, Schema, VerboseError<&str>> {
-    let (remaining, config) = extract_parser(parse_config)(input)?;
+    let (remaining, config) = extract(parse_config)(input)?;
     let (remaining, namespaces) =
         extract_multiple_parser(parse_named_namespace)(&remaining).unwrap();
-    let (_, global_namespace) = extract_parser(parse_namespace)(&remaining).unwrap();
+    let (_, global_namespace) = extract(parse_namespace)(&remaining).unwrap();
     // verify(tuple((multispace0, eof)), |_| true)(remaining).unwrap();
     Ok((
         input,
@@ -674,10 +691,6 @@ fn parse_schema(input: &str) -> IResult<&str, Schema, VerboseError<&str>> {
 
 fn parse_sdl(content: &str) -> Result<Schema, Box<dyn std::error::Error>> {
     let (_, schema) = parse_schema(content).finish().map_err(|e| {
-        panic!(
-            "verbose errors - `json::<VerboseError<&str>>(data)`:\n{}",
-            convert_error(content, e)
-        );
         format!(
             "verbose errors - `json::<VerboseError<&str>>(data)`:\n{}",
             convert_error(content, e)
@@ -978,6 +991,33 @@ Namespace UserService {
                 .queue_type,
             Some(Value::String("Fifo".to_string()))
         );
+
+        Ok(())
+    }
+
+    // #[test]
+    fn test_fail_nicely() -> Result<(), Box<dyn std::error::Error>> {
+        let example_sdl = r#"
+Config {
+  import: [
+    "another-schema.memorix"
+  ]
+  export: {
+    engine: Redis(env(REDIS_URL))
+    files: [      {
+        language: TypeScript
+        file: "memorix.generated.ts"
+      }]
+  }
+}
+
+Type {
+  a: [u64 u32]
+}
+
+"#;
+
+        parse_sdl(example_sdl).expect_err("Should fail invalid schema");
 
         Ok(())
     }
