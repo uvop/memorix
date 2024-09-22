@@ -1,0 +1,18 @@
+---
+source: src/parser.rs
+assertion_line: 898
+expression: err.to_string()
+---
+parser feedback:
+0: at line 13:
+  a: [u64 u32]
+          ^
+expected ']', found u
+
+1: at line 13, in single type config array:
+  a: [u64 u32]
+     ^
+
+2: at line 12, in hash:
+Type {
+     ^
