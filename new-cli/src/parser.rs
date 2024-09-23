@@ -541,7 +541,7 @@ pub fn parse_schema<F: FileSystem>(fs: &F, path: &str) -> Result<Schema, String>
                             (
                                 import,
                                 array(map_res(
-                                    map_res(parse_string, |import| fs.resolve(path, &import)),
+                                    map_res(parse_string, |import| fs.resolve(&path, &import)),
                                     |import_path| parse_schema(fs, &import_path)
                                 )),
                                 false
