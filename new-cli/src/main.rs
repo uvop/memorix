@@ -25,10 +25,16 @@ fn main() -> Result<(), PrettyError<String>> {
     }
 
     let file_path = &args[1];
+    let path = PathBuf::from(file_path)
+        .canonicalize()
+        .map_err(|_| "Couldn't get abs path for schema".to_string())?;
+    let abs_file_path = path
+        .to_str()
+        .ok_or("Couldn't get abs path for schema".to_string())?;
 
     let fs = parser::RealFileSystem {};
 
-    let schema = parser::parse_schema(&fs, &PathBuf::from(file_path))?;
+    let schema = parser::parse_schema(&fs, abs_file_path)?;
 
     println!("{:#?}", schema);
 

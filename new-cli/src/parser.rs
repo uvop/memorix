@@ -13,20 +13,41 @@ use nom::{
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Read};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub trait FileSystem {
-    fn read_to_string(&self, path: &Path) -> io::Result<String>;
+    fn read_to_string(&self, path: &str) -> io::Result<String>;
+    fn resolve(
+        &self,
+        relative_file: &str,
+        target_file: &str,
+    ) -> Result<String, Box<dyn std::error::Error>>;
 }
 
 pub struct RealFileSystem;
 
 impl FileSystem for RealFileSystem {
-    fn read_to_string(&self, path: &Path) -> io::Result<String> {
+    fn read_to_string(&self, path: &str) -> io::Result<String> {
         let mut file = File::open(path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         Ok(contents)
+    }
+    fn resolve(
+        &self,
+        relative_file: &str,
+        target_file: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        let path = PathBuf::from(relative_file);
+        let new_path = path
+            .parent()
+            .ok_or("Couldn't get parent of schema".to_string())?
+            .join(target_file);
+        let abs = new_path.canonicalize()?;
+        Ok(abs
+            .to_str()
+            .ok_or("Couldn't convert path to string")?
+            .to_string())
     }
 }
 
@@ -502,11 +523,11 @@ fn parse_named_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&
     )(input)
 }
 
-pub fn parse_schema<F: FileSystem>(fs: &F, path: &Path) -> Result<Schema, String> {
+pub fn parse_schema<F: FileSystem>(fs: &F, path: &str) -> Result<Schema, String> {
     let input = fs
         .read_to_string(path)
-        .map_err(|_| format!("Couldn't read schema at path \"{:?}\"", path.canonicalize()))?;
-    println!("Read schema from \"{:?}\"", path.canonicalize());
+        .map_err(|_| format!("Couldn't read schema at path \"{}\"", path))?;
+    println!("Read schema from \"{}\"", path);
     let input = input.as_str();
 
     let mut parser = map(
@@ -519,10 +540,10 @@ pub fn parse_schema<F: FileSystem>(fs: &F, path: &Path) -> Result<Schema, String
                         cut(hash_known_keys!(
                             (
                                 import,
-                                array(map_res(parse_string, |import| parse_schema(
-                                    fs,
-                                    &PathBuf::from(import)
-                                ))),
+                                array(map_res(
+                                    map_res(parse_string, |import| fs.resolve(path, &import)),
+                                    |import_path| parse_schema(fs, &import_path)
+                                )),
                                 false
                             ),
                             (
@@ -580,18 +601,24 @@ pub fn parse_schema<F: FileSystem>(fs: &F, path: &Path) -> Result<Schema, String
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     struct MockFileSystem {
         files: HashMap<&'static str, String>,
     }
 
     impl FileSystem for MockFileSystem {
-        fn read_to_string(&self, path: &Path) -> io::Result<String> {
+        fn read_to_string(&self, path: &str) -> io::Result<String> {
             self.files
-                .get(path.to_str().unwrap())
+                .get(path)
                 .cloned()
                 .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "File not found"))
+        }
+        fn resolve(
+            &self,
+            _: &str,
+            target_file: &str,
+        ) -> Result<String, Box<dyn std::error::Error>> {
+            Ok(target_file.to_string())
         }
     }
 
@@ -751,7 +778,7 @@ Namespace UserService {
             ]),
         };
 
-        let parsed_schema = parse_schema(&mock_fs, &PathBuf::from("schema.memorix"))?;
+        let parsed_schema = parse_schema(&mock_fs, "schema.memorix")?;
 
         assert_eq!(
             parsed_schema.config.import[0]
@@ -894,7 +921,7 @@ Type {
             )]),
         };
 
-        let result = parse_schema(&mock_fs, &PathBuf::from("schema.memorix"));
+        let result = parse_schema(&mock_fs, "schema.memorix");
         let err = result.unwrap_err();
         insta::assert_snapshot!(err.to_string());
 
