@@ -10,6 +10,7 @@ use nom::{
     sequence::{delimited, pair, preceded, separated_pair, terminated, tuple},
     Finish, IResult, Parser,
 };
+use serde::{Deserialize, Serialize, Serializer};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Read};
@@ -51,60 +52,74 @@ impl FileSystem for RealFileSystem {
     }
 }
 
-#[derive(Debug, PartialEq)]
+pub fn sorted_map<S: Serializer, K: Serialize + Ord, V: Serialize>(
+    value: &HashMap<K, V>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    let mut items: Vec<(_, _)> = value.iter().collect();
+    items.sort_by(|a, b| a.0.cmp(&b.0));
+    std::collections::BTreeMap::from_iter(items).serialize(serializer)
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Schema {
     pub config: Config,
     pub global_namespace: Namespace,
+    #[serde(serialize_with = "sorted_map")]
     pub namespaces: HashMap<String, Namespace>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Config {
     pub import: Vec<Schema>,
     pub export: Option<Export>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Export {
     pub engine: Engine,
     pub files: Vec<FileConfig>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 
 pub enum Engine {
     Redis(Value),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct FileConfig {
     pub language: Language,
     pub path: String,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Language {
     TypeScript,
     Python,
     Rust,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Namespace {
     pub defaults: NamespaceDefaults,
+    #[serde(serialize_with = "sorted_map")]
     pub type_items: HashMap<String, TypeItem>,
+    #[serde(serialize_with = "sorted_map")]
     pub cache_items: HashMap<String, CacheItem>,
+    #[serde(serialize_with = "sorted_map")]
     pub pubsub_items: HashMap<String, PubSubItem>,
+    #[serde(serialize_with = "sorted_map")]
     pub task_items: HashMap<String, TaskItem>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct NamespaceDefaults {
     pub cache_ttl: Option<Value>,
     pub task_queue_type: Option<Value>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct CacheItem {
     pub key: Option<TypeItem>,
     pub payload: TypeItem,
@@ -112,14 +127,14 @@ pub struct CacheItem {
     pub ttl: Option<Value>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct PubSubItem {
     pub key: Option<TypeItem>,
     pub payload: TypeItem,
     pub public: Vec<PubSubOperation>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct TaskItem {
     pub key: Option<TypeItem>,
     pub payload: TypeItem,
@@ -127,13 +142,13 @@ pub struct TaskItem {
     pub queue_type: Option<Value>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Value {
     String(String),
     Env(String),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum TypeItem {
     U32,
     I32,
@@ -144,24 +159,25 @@ pub enum TypeItem {
     String,
     Boolean,
     Array(Box<TypeItem>),
+    #[serde(serialize_with = "sorted_map")]
     Object(HashMap<String, TypeItem>),
     Reference(String),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum CacheOperation {
     Get,
     Set,
     Delete,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum PubSubOperation {
     Publish,
     Subscribe,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum TaskOperation {
     Enqueue,
     Dequeue,
@@ -523,6 +539,25 @@ fn parse_named_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&
     )(input)
 }
 
+fn parse_export<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, Export, E> {
+    map(
+        hash_known_keys!(
+            (engine, parse_engine, true),
+            (
+                files,
+                array(map(
+                    hash_known_keys!((language, parse_language, true), (path, parse_string, true)),
+                    |(language, path)| FileConfig { language, path }
+                )),
+                true
+            )
+        ),
+        |(engine, files)| Export { engine, files },
+    )(input)
+}
+
 pub fn parse_schema<F: FileSystem>(fs: &F, path: &str) -> Result<Schema, String> {
     let input = fs
         .read_to_string(path)
@@ -546,27 +581,7 @@ pub fn parse_schema<F: FileSystem>(fs: &F, path: &str) -> Result<Schema, String>
                                 )),
                                 false
                             ),
-                            (
-                                export,
-                                map(
-                                    hash_known_keys!(
-                                        (engine, parse_engine, true),
-                                        (
-                                            files,
-                                            array(map(
-                                                hash_known_keys!(
-                                                    (language, parse_language, true),
-                                                    (path, parse_string, true)
-                                                ),
-                                                |(language, path)| FileConfig { language, path }
-                                            )),
-                                            true
-                                        )
-                                    ),
-                                    |(engine, files)| Export { engine, files }
-                                ),
-                                false
-                            )
+                            (export, parse_export, false)
                         )),
                     ),
                     |(import, export)| Config {
@@ -779,119 +794,7 @@ Namespace UserService {
         };
 
         let parsed_schema = parse_schema(&mock_fs, "schema.memorix")?;
-
-        assert_eq!(
-            parsed_schema.config.import[0]
-                .global_namespace
-                .type_items
-                .get("abc"),
-            Some(&TypeItem::U32)
-        );
-        let export = parsed_schema.config.export.unwrap();
-        assert_eq!(
-            export.engine,
-            Engine::Redis(Value::Env("REDIS_URL".to_string()))
-        );
-        assert_eq!(export.files.len(), 3);
-        assert_eq!(export.files[0].language, Language::TypeScript);
-        assert_eq!(export.files[0].path, "memorix.generated.ts");
-        assert_eq!(export.files[1].language, Language::Python);
-        assert_eq!(export.files[1].path, "memorix_generated.py");
-        assert_eq!(export.files[2].language, Language::Rust);
-        assert_eq!(export.files[2].path, "memorix_generated.rs");
-
-        // Check global namespace
-        assert_eq!(
-            parsed_schema.global_namespace.defaults.cache_ttl,
-            Some(Value::String("3600".to_string()))
-        );
-        assert_eq!(parsed_schema.global_namespace.cache_items.len(), 2);
-        assert!(parsed_schema.global_namespace.pubsub_items.is_empty());
-        assert!(parsed_schema.global_namespace.task_items.is_empty());
-
-        assert_eq!(parsed_schema.namespaces.len(), 2);
-
-        // Check UserService Namespace
-        let user_service = parsed_schema.namespaces.get("UserService").unwrap();
-        assert_eq!(
-            user_service.defaults.cache_ttl,
-            Some(Value::String("7200".to_string()))
-        );
-        assert_eq!(
-            user_service.defaults.task_queue_type,
-            Some(Value::Env("USER_SERVICE_TASK_QUEUE_TYPE".to_string()))
-        );
-        assert_eq!(user_service.type_items.get("UserId"), Some(&TypeItem::U64));
-
-        // Check Cache in UserService
-        assert!(user_service.cache_items.contains_key("user_profile"));
-        assert!(user_service.cache_items.contains_key("user_session"));
-        assert_eq!(
-            user_service.cache_items.get("user_profile").unwrap().public,
-            vec![CacheOperation::Get]
-        );
-        assert_eq!(
-            user_service.cache_items.get("user_session").unwrap().ttl,
-            Some(Value::Env("USER_SESSION_TTL".to_string()))
-        );
-
-        // Check PubSub in UserService
-        assert!(user_service.pubsub_items.contains_key("user_activity"));
-        assert_eq!(
-            user_service
-                .pubsub_items
-                .get("user_activity")
-                .unwrap()
-                .public,
-            vec![PubSubOperation::Subscribe]
-        );
-
-        // Check Task in UserService
-        assert!(user_service
-            .task_items
-            .contains_key("user_registration_tasks"));
-        assert_eq!(
-            user_service
-                .task_items
-                .get("user_registration_tasks")
-                .unwrap()
-                .public,
-            vec![TaskOperation::Enqueue, TaskOperation::GetLen]
-        );
-
-        // Check MessageService Namespace
-        let message_service = parsed_schema.namespaces.get("MessageService").unwrap();
-
-        // Check Cache in MessageService
-        assert!(message_service.cache_items.contains_key("message"));
-        assert_eq!(
-            message_service.cache_items.get("message").unwrap().public,
-            vec![CacheOperation::Get]
-        );
-
-        // Check PubSub in MessageService
-        assert!(message_service.pubsub_items.contains_key("new_message"));
-        assert_eq!(
-            message_service
-                .pubsub_items
-                .get("new_message")
-                .unwrap()
-                .public,
-            vec![PubSubOperation::Subscribe]
-        );
-
-        // Check Task in MessageService
-        assert!(message_service
-            .task_items
-            .contains_key("message_processing_tasks"));
-        assert_eq!(
-            message_service
-                .task_items
-                .get("message_processing_tasks")
-                .unwrap()
-                .queue_type,
-            Some(Value::String("Fifo".to_string()))
-        );
+        insta::assert_snapshot!(serde_json::to_string_pretty(&parsed_schema)?);
 
         Ok(())
     }
