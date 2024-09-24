@@ -26,7 +26,11 @@ mod tests {
     use crate::example_schema_generated as mx;
     use futures_util::{future::select_all, StreamExt};
     type BoxPinFuture<'a, 'b, T> = std::pin::Pin<
-        Box<dyn std::future::Future<Output = Result<T, Box<dyn std::error::Error + 'b>>> + 'a>,
+        Box<
+            dyn std::future::Future<
+                    Output = Result<T, Box<dyn std::error::Error + Send + Sync + 'b>>,
+                > + 'a,
+        >,
     >;
 
     #[tokio::test]
@@ -92,6 +96,34 @@ mod tests {
         let (result, _, _) = select_all(v).await;
         result?;
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn while_dequeue_try_something() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
+        tokio::time::timeout(std::time::Duration::from_millis(200), async {
+            let mut memorix = crate::get_memorix().await?;
+
+            memorix.task.runAlgo2.queue(&"123".to_string()).await?;
+            let v: Vec<BoxPinFuture<()>> = vec![
+                Box::pin(async {
+                    let mut stream = memorix.task.runAlgo.dequeue().await?;
+                    loop {
+                        stream.next().await;
+                    }
+                    #[allow(unreachable_code)]
+                    Ok(())
+                }),
+                Box::pin(async {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                    memorix.task.runAlgo2.dequeue().await?.next().await;
+                    Ok(())
+                }),
+            ];
+
+            select_all(v).await.0?;
+            Ok(())
+        })
+        .await?
     }
 
     #[tokio::test]

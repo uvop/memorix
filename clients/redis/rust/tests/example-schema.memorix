@@ -95,6 +95,9 @@ Task {
         payload: string
         returns: Animal
     }
+    runAlgo2 {
+        payload: string
+    }
     runAlgoNewest {
         payload: string
         returns: Animal

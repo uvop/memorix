@@ -11,6 +11,7 @@ mod utils;
 use redis::AsyncCommands;
 
 pub use futures_util::StreamExt;
+use redis::Value;
 pub use serde::Deserialize;
 pub use serde::Serialize;
 
@@ -50,6 +51,7 @@ pub struct MemorixOptions {
 pub struct MemorixBase {
     client: redis::Client,
     redis: redis::aio::MultiplexedConnection,
+    task_redis: redis::aio::MultiplexedConnection,
     namespace_name_tree: &'static [&'static str],
     default_options: Option<MemorixOptions>,
 }
@@ -62,9 +64,11 @@ impl MemorixBase {
     ) -> Result<MemorixBase, Box<dyn std::error::Error + Sync + Send>> {
         let client = redis::Client::open(redis_url)?;
         let redis = client.get_multiplexed_async_connection().await?;
+        let task_redis = client.get_multiplexed_async_connection().await?;
         Ok(Self {
             client,
             redis,
+            task_redis,
             namespace_name_tree,
             default_options,
         })
@@ -77,6 +81,7 @@ impl MemorixBase {
         Self {
             client: other.client,
             redis: other.redis,
+            task_redis: other.task_redis,
             namespace_name_tree,
             default_options,
         }
@@ -211,7 +216,7 @@ where
                 is_in_ms: Some(true),
                 extend_on_get: _,
             }) => {
-                let _: String = self
+                let _: Value = self
                     .memorix_base
                     .redis
                     .pset_ex(self.key(key)?, payload_str, value as usize)
@@ -222,14 +227,14 @@ where
                 is_in_ms: _,
                 extend_on_get: _,
             }) => {
-                let _: String = self
+                let _: Value = self
                     .memorix_base
                     .redis
                     .set_ex(self.key(key)?, payload_str, value as usize)
                     .await?;
             }
             _ => {
-                let _: String = self
+                let _: Value = self
                     .memorix_base
                     .redis
                     .set(self.key(key)?, payload_str)
@@ -252,14 +257,14 @@ where
         let expire_value: usize = expire.value as usize;
         match expire.is_in_ms {
             Some(true) => {
-                let _: String = self
+                let _: Value = self
                     .memorix_base
                     .redis
                     .pexpire(hashed_key, expire_value)
                     .await?;
             }
             _ => {
-                let _: String = self
+                let _: Value = self
                     .memorix_base
                     .redis
                     .expire(hashed_key, expire_value)
@@ -408,7 +413,7 @@ where
         payload: &P,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let payload_str = serde_json::to_string(&payload)?;
-        let _: String = self
+        let _: Value = self
             .memorix_base
             .redis
             .publish(self.key(key)?, payload_str)
@@ -635,24 +640,8 @@ where
                     p.pop();
                     p
                 };
-                yield match self.return_task.as_mut() {
-                    Some(_) => {
-                        let (returns_id_with_quotes, payload_str) = array_payload_without_braces.split_once(',').ok_or(Box::new(MemorixError {}))?;
-                        let _returns_id = {
-                            let mut p = returns_id_with_quotes.to_string();
-                            p.remove(0);
-                            p.pop();
-                            p
-                        };
-
-                        let payload = serde_json::from_str::<'_, P>(payload_str)?;
-                        Ok(payload)
-                    }
-                    None => {
-                        let payload = serde_json::from_str::<'_, P>(array_payload_without_braces.as_str())?;
-                        Ok(payload)
-                    }
-                }
+                let payload = serde_json::from_str::<'_, P>(array_payload_without_braces.as_str())?;
+                yield Ok(payload)
             }
         }))
     }

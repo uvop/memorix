@@ -206,6 +206,7 @@ impl MemorixPubSub {
 #[allow(non_snake_case)]
 pub struct MemorixTask {
     pub runAlgo: memorix_client_redis::MemorixTaskItemNoKey<String, Animal>,
+    pub runAlgo2: memorix_client_redis::MemorixTaskItemNoKeyNoReturns<String>,
     pub runAlgoNewest: memorix_client_redis::MemorixTaskItemNoKey<String, Animal>,
 }
 
@@ -215,6 +216,11 @@ impl MemorixTask {
             runAlgo: memorix_client_redis::MemorixTaskItemNoKey::new(
                 memorix_base.clone(),
                 "runAlgo".to_string(),
+                None,
+            ),
+            runAlgo2: memorix_client_redis::MemorixTaskItemNoKeyNoReturns::new(
+                memorix_base.clone(),
+                "runAlgo2".to_string(),
                 None,
             ),
             runAlgoNewest: memorix_client_redis::MemorixTaskItemNoKey::new(
