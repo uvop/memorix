@@ -211,7 +211,8 @@ where
                 is_in_ms: Some(true),
                 extend_on_get: _,
             }) => {
-                self.memorix_base
+                let _: String = self
+                    .memorix_base
                     .redis
                     .pset_ex(self.key(key)?, payload_str, value as usize)
                     .await?;
@@ -221,13 +222,15 @@ where
                 is_in_ms: _,
                 extend_on_get: _,
             }) => {
-                self.memorix_base
+                let _: String = self
+                    .memorix_base
                     .redis
                     .set_ex(self.key(key)?, payload_str, value as usize)
                     .await?;
             }
             _ => {
-                self.memorix_base
+                let _: String = self
+                    .memorix_base
                     .redis
                     .set(self.key(key)?, payload_str)
                     .await?;
@@ -249,16 +252,18 @@ where
         let expire_value: usize = expire.value as usize;
         match expire.is_in_ms {
             Some(true) => {
-                self.memorix_base
+                let _: String = self
+                    .memorix_base
                     .redis
                     .pexpire(hashed_key, expire_value)
-                    .await?
+                    .await?;
             }
             _ => {
-                self.memorix_base
+                let _: String = self
+                    .memorix_base
                     .redis
                     .expire(hashed_key, expire_value)
-                    .await?
+                    .await?;
             }
         };
         Ok(())
@@ -403,7 +408,8 @@ where
         payload: &P,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let payload_str = serde_json::to_string(&payload)?;
-        self.memorix_base
+        let _: String = self
+            .memorix_base
             .redis
             .publish(self.key(key)?, payload_str)
             .await?;
