@@ -1,3 +1,10 @@
+## [1.5.11](https://github.com/uvop/memorix/compare/v1.5.10...v1.5.11) (2024-09-24)
+
+
+### Bug Fixes
+
+* rust tasks dequeue multiple at the same time ([#63](https://github.com/uvop/memorix/issues/63)) ([c459b89](https://github.com/uvop/memorix/commit/c459b899ddabbd6cfe40bb29000b899357a82967))
+
 ## [1.5.10](https://github.com/uvop/memorix/compare/v1.5.9...v1.5.10) (2024-07-23)
 
 
