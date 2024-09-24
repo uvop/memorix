@@ -1,0 +1,382 @@
+---
+source: src/main.rs
+assertion_line: 271
+expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
+---
+[
+  {
+    "global_namespace": {
+      "type_object_items": [
+        [
+          "InlineCachePayloadUserProfile",
+          {
+            "properties": [
+              [
+                "id",
+                "U32"
+              ],
+              [
+                "name",
+                "String"
+              ],
+              [
+                "email",
+                "String"
+              ]
+            ]
+          }
+        ],
+        [
+          "InlineCachePayloadUserSession",
+          {
+            "properties": [
+              [
+                "user_id",
+                "U32"
+              ],
+              [
+                "session_token",
+                "String"
+              ],
+              [
+                "expiry",
+                "U64"
+              ]
+            ]
+          }
+        ]
+      ],
+      "defaults": {
+        "cache_ttl": {
+          "String": "3600"
+        },
+        "task_queue_type": null
+      },
+      "type_items": [],
+      "cache_items": [
+        [
+          "user_profile",
+          {
+            "key": "U32",
+            "payload": {
+              "Reference": "InlineCachePayloadUserProfile"
+            },
+            "public": [
+              "Get"
+            ],
+            "ttl": null
+          }
+        ],
+        [
+          "user_session",
+          {
+            "key": "String",
+            "payload": {
+              "Reference": "InlineCachePayloadUserSession"
+            },
+            "public": [],
+            "ttl": {
+              "Env": "USER_SESSION_TTL"
+            }
+          }
+        ]
+      ],
+      "pubsub_items": [],
+      "task_items": []
+    },
+    "namespaces": [
+      [
+        "MessageService",
+        {
+          "type_object_items": [
+            [
+              "InlineCachePayloadMessage",
+              {
+                "properties": [
+                  [
+                    "id",
+                    "String"
+                  ],
+                  [
+                    "sender_id",
+                    {
+                      "Reference": "UserId"
+                    }
+                  ],
+                  [
+                    "recipient_id",
+                    {
+                      "Reference": "UserId"
+                    }
+                  ],
+                  [
+                    "content",
+                    "String"
+                  ],
+                  [
+                    "timestamp",
+                    "U64"
+                  ]
+                ]
+              }
+            ],
+            [
+              "InlinePubSubPayloadNewMessage",
+              {
+                "properties": [
+                  [
+                    "message_id",
+                    "String"
+                  ],
+                  [
+                    "recipient_id",
+                    {
+                      "Reference": "UserId"
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "InlineTaskPayloadMessageProcessingTasks",
+              {
+                "properties": [
+                  [
+                    "message_id",
+                    "String"
+                  ],
+                  [
+                    "processing_type",
+                    "String"
+                  ],
+                  [
+                    "priority",
+                    "U32"
+                  ]
+                ]
+              }
+            ]
+          ],
+          "defaults": {
+            "cache_ttl": null,
+            "task_queue_type": null
+          },
+          "type_items": [],
+          "cache_items": [
+            [
+              "message",
+              {
+                "key": "String",
+                "payload": {
+                  "Reference": "InlineCachePayloadMessage"
+                },
+                "public": [
+                  "Get"
+                ],
+                "ttl": null
+              }
+            ]
+          ],
+          "pubsub_items": [
+            [
+              "new_message",
+              {
+                "key": {
+                  "Reference": "UserId"
+                },
+                "payload": {
+                  "Reference": "InlinePubSubPayloadNewMessage"
+                },
+                "public": [
+                  "Subscribe"
+                ]
+              }
+            ]
+          ],
+          "task_items": [
+            [
+              "message_processing_tasks",
+              {
+                "key": null,
+                "payload": {
+                  "Reference": "InlineTaskPayloadMessageProcessingTasks"
+                },
+                "public": [],
+                "queue_type": {
+                  "String": "Fifo"
+                }
+              }
+            ]
+          ]
+        }
+      ],
+      [
+        "UserService",
+        {
+          "type_object_items": [
+            [
+              "InlineCachePayloadUserProfile",
+              {
+                "properties": [
+                  [
+                    "id",
+                    {
+                      "Reference": "UserId"
+                    }
+                  ],
+                  [
+                    "name",
+                    "String"
+                  ],
+                  [
+                    "email",
+                    "String"
+                  ]
+                ]
+              }
+            ],
+            [
+              "InlineCachePayloadUserSession",
+              {
+                "properties": [
+                  [
+                    "user_id",
+                    {
+                      "Reference": "UserId"
+                    }
+                  ],
+                  [
+                    "session_token",
+                    "String"
+                  ],
+                  [
+                    "expiry",
+                    "U64"
+                  ]
+                ]
+              }
+            ],
+            [
+              "InlinePubSubPayloadUserActivity",
+              {
+                "properties": [
+                  [
+                    "user_id",
+                    {
+                      "Reference": "UserId"
+                    }
+                  ],
+                  [
+                    "action",
+                    "String"
+                  ],
+                  [
+                    "timestamp",
+                    "U64"
+                  ]
+                ]
+              }
+            ],
+            [
+              "InlineTaskPayloadUserRegistrationTasks",
+              {
+                "properties": [
+                  [
+                    "user_id",
+                    {
+                      "Reference": "UserId"
+                    }
+                  ],
+                  [
+                    "email",
+                    "String"
+                  ],
+                  [
+                    "registration_date",
+                    "U64"
+                  ]
+                ]
+              }
+            ]
+          ],
+          "defaults": {
+            "cache_ttl": {
+              "String": "7200"
+            },
+            "task_queue_type": {
+              "Env": "USER_SERVICE_TASK_QUEUE_TYPE"
+            }
+          },
+          "type_items": [
+            [
+              "UserId",
+              "U64"
+            ]
+          ],
+          "cache_items": [
+            [
+              "user_profile",
+              {
+                "key": {
+                  "Reference": "UserId"
+                },
+                "payload": {
+                  "Reference": "InlineCachePayloadUserProfile"
+                },
+                "public": [
+                  "Get"
+                ],
+                "ttl": null
+              }
+            ],
+            [
+              "user_session",
+              {
+                "key": "String",
+                "payload": {
+                  "Reference": "InlineCachePayloadUserSession"
+                },
+                "public": [],
+                "ttl": {
+                  "Env": "USER_SESSION_TTL"
+                }
+              }
+            ]
+          ],
+          "pubsub_items": [
+            [
+              "user_activity",
+              {
+                "key": {
+                  "Reference": "UserId"
+                },
+                "payload": {
+                  "Reference": "InlinePubSubPayloadUserActivity"
+                },
+                "public": [
+                  "Subscribe"
+                ]
+              }
+            ]
+          ],
+          "task_items": [
+            [
+              "user_registration_tasks",
+              {
+                "key": null,
+                "payload": {
+                  "Reference": "InlineTaskPayloadUserRegistrationTasks"
+                },
+                "public": [
+                  "Enqueue",
+                  "GetLen"
+                ],
+                "queue_type": null
+              }
+            ]
+          ]
+        }
+      ]
+    ]
+  }
+]
