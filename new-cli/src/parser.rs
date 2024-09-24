@@ -10,84 +10,36 @@ use nom::{
     sequence::{delimited, pair, preceded, separated_pair, terminated, tuple},
     Finish, IResult, Parser,
 };
-use serde::{Deserialize, Serialize, Serializer};
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::{self, Read};
-use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
 
-pub trait FileSystem {
-    fn read_to_string(&self, path: &str) -> io::Result<String>;
-    fn resolve(
-        &self,
-        relative_file: &str,
-        target_file: &str,
-    ) -> Result<String, Box<dyn std::error::Error>>;
-}
+use crate::FileSystem;
 
-pub struct RealFileSystem;
-
-impl FileSystem for RealFileSystem {
-    fn read_to_string(&self, path: &str) -> io::Result<String> {
-        let mut file = File::open(path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-        Ok(contents)
-    }
-    fn resolve(
-        &self,
-        relative_file: &str,
-        target_file: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {
-        let path = PathBuf::from(relative_file);
-        let new_path = path
-            .parent()
-            .ok_or("Couldn't get parent of schema".to_string())?
-            .join(target_file);
-        let abs = new_path.canonicalize()?;
-        Ok(abs
-            .to_str()
-            .ok_or("Couldn't convert path to string")?
-            .to_string())
-    }
-}
-
-pub fn sorted_map<S: Serializer, K: Serialize + Ord, V: Serialize>(
-    value: &HashMap<K, V>,
-    serializer: S,
-) -> Result<S::Ok, S::Error> {
-    let mut items: Vec<(_, _)> = value.iter().collect();
-    items.sort_by(|a, b| a.0.cmp(&b.0));
-    std::collections::BTreeMap::from_iter(items).serialize(serializer)
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Schema {
     pub config: Config,
     pub global_namespace: Namespace,
-    #[serde(serialize_with = "sorted_map")]
-    pub namespaces: HashMap<String, Namespace>,
+    pub namespaces: Vec<(String, Namespace)>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub import: Vec<Schema>,
     pub export: Option<Export>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Export {
     pub engine: Engine,
     pub files: Vec<FileConfig>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 
 pub enum Engine {
     Redis(Value),
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FileConfig {
     pub language: Language,
     pub path: String,
@@ -100,44 +52,40 @@ pub enum Language {
     Rust,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Namespace {
     pub defaults: NamespaceDefaults,
-    #[serde(serialize_with = "sorted_map")]
-    pub type_items: HashMap<String, TypeItem>,
-    #[serde(serialize_with = "sorted_map")]
-    pub cache_items: HashMap<String, CacheItem>,
-    #[serde(serialize_with = "sorted_map")]
-    pub pubsub_items: HashMap<String, PubSubItem>,
-    #[serde(serialize_with = "sorted_map")]
-    pub task_items: HashMap<String, TaskItem>,
+    pub type_items: Vec<(String, TypeItem)>,
+    pub cache_items: Vec<(String, CacheItem<TypeItem>)>,
+    pub pubsub_items: Vec<(String, PubSubItem<TypeItem>)>,
+    pub task_items: Vec<(String, TaskItem<TypeItem>)>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct NamespaceDefaults {
     pub cache_ttl: Option<Value>,
     pub task_queue_type: Option<Value>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct CacheItem {
-    pub key: Option<TypeItem>,
-    pub payload: TypeItem,
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct CacheItem<T> {
+    pub key: Option<T>,
+    pub payload: T,
     pub public: Vec<CacheOperation>,
     pub ttl: Option<Value>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct PubSubItem {
-    pub key: Option<TypeItem>,
-    pub payload: TypeItem,
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct PubSubItem<T> {
+    pub key: Option<T>,
+    pub payload: T,
     pub public: Vec<PubSubOperation>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct TaskItem {
-    pub key: Option<TypeItem>,
-    pub payload: TypeItem,
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct TaskItem<T> {
+    pub key: Option<T>,
+    pub payload: T,
     pub public: Vec<TaskOperation>,
     pub queue_type: Option<Value>,
 }
@@ -159,8 +107,7 @@ pub enum TypeItem {
     String,
     Boolean,
     Array(Box<TypeItem>),
-    #[serde(serialize_with = "sorted_map")]
-    Object(HashMap<String, TypeItem>),
+    Object(Vec<(String, TypeItem)>),
     Reference(String),
 }
 
@@ -192,7 +139,7 @@ fn hash<
     F: FnMut(&'a str) -> IResult<&'a str, O, E>,
 >(
     mut item_parser: F,
-) -> impl FnMut(&'a str) -> IResult<&'a str, HashMap<String, O>, E> {
+) -> impl FnMut(&'a str) -> IResult<&'a str, Vec<(String, O)>, E> {
     move |input: &'a str| {
         context(
             "hash",
@@ -450,7 +397,7 @@ fn parse_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str
                     tuple((multispace0, tag("Type"), multispace0)),
                     cut(hash(parse_type_config)),
                 )),
-                |x| x.unwrap_or(HashMap::new()),
+                |x| x.unwrap_or(Vec::new()),
             ),
             map(
                 opt(preceded(
@@ -470,7 +417,7 @@ fn parse_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str
                         },
                     ))),
                 )),
-                |x| x.unwrap_or(HashMap::new()),
+                |x| x.unwrap_or(Vec::new()),
             ),
             map(
                 opt(preceded(
@@ -488,7 +435,7 @@ fn parse_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str
                         },
                     ))),
                 )),
-                |x| x.unwrap_or(HashMap::new()),
+                |x| x.unwrap_or(Vec::new()),
             ),
             map(
                 opt(preceded(
@@ -508,7 +455,7 @@ fn parse_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str
                         },
                     ))),
                 )),
-                |x| x.unwrap_or(HashMap::new()),
+                |x| x.unwrap_or(Vec::new()),
             ),
         )),
         |(defaults, type_items, cache_items, pubsub_items, task_items)| Namespace {
@@ -603,7 +550,7 @@ pub fn parse_schema<F: FileSystem>(fs: &F, path: &str) -> Result<Schema, String>
             namespaces: named_namespaces
                 .into_iter()
                 .chain(more_named_namespaces.into_iter())
-                .collect::<HashMap<_, _>>(),
+                .collect(),
         },
     );
     let (_, schema) = parser(input).finish().map_err(|e| {
@@ -611,223 +558,4 @@ pub fn parse_schema<F: FileSystem>(fs: &F, path: &str) -> Result<Schema, String>
         stack
     })?;
     Ok(schema)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    struct MockFileSystem {
-        files: HashMap<&'static str, String>,
-    }
-
-    impl FileSystem for MockFileSystem {
-        fn read_to_string(&self, path: &str) -> io::Result<String> {
-            self.files
-                .get(path)
-                .cloned()
-                .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "File not found"))
-        }
-        fn resolve(
-            &self,
-            _: &str,
-            target_file: &str,
-        ) -> Result<String, Box<dyn std::error::Error>> {
-            Ok(target_file.to_string())
-        }
-    }
-
-    #[test]
-    fn test_parse_example_sdl() -> Result<(), Box<dyn std::error::Error>> {
-        let mock_fs = MockFileSystem {
-            files: HashMap::from([
-                ("another-schema.memorix", "Type { abc: u32 }".to_string()),
-                (
-                    "schema.memorix",
-                    r#"
-Config {
-  import: [
-    "another-schema.memorix"
-  ]
-  export: {
-    engine: Redis( env(REDIS_URL) )
-    files: [
-      {
-        language: TypeScript
-        path: "memorix.generated.ts"
-      }
-      {
-        language: Python
-        path: "memorix_generated.py"
-      }
-      {
-        language: Rust
-        path: "memorix_generated.rs"
-      }
-    ]
-  }
-}
-
-Namespace MessageService {
-    Cache {
-        message: {
-            key: string
-            payload: {
-            id: string
-            sender_id: UserId
-            recipient_id: UserId
-            content: string
-            timestamp: u64
-            }
-            public: [get]
-        }
-    }
-
-    PubSub {
-        new_message: {
-            key: UserId
-            payload: {
-            message_id: string
-            recipient_id: UserId
-            }
-            public: [subscribe]
-        }
-    }
-
-    Task {
-        message_processing_tasks: {
-            payload: {
-                message_id: string
-                processing_type: string
-                priority: u32
-            }
-            queue_type: "Fifo"
-        }
-    }
-}
-
-NamespaceDefaults {
-  cache_ttl: "3600"
-}
-
-Cache {
-  user_profile: {
-    key: u32
-    payload: {
-      id: u32
-      name: string
-      email: string
-    }
-    public: [get]
-  }
-  user_session: {
-    key: string
-    payload: {
-      user_id: u32
-      session_token: string
-      expiry: u64
-    }
-    ttl: env(USER_SESSION_TTL)
-  }
-}
-  
-Namespace UserService {
-  NamespaceDefaults {
-    cache_ttl: "7200"
-    task_queue_type: env(USER_SERVICE_TASK_QUEUE_TYPE)
-  }
-
-  Type {
-    UserId: u64
-  }
-
-  Cache {
-    user_profile: {
-      key: UserId
-      payload: {
-        id: UserId
-        name: string
-        email: string
-      }
-      public: [get]
-    }
-    user_session: {
-      key: string
-      payload: {
-        user_id: UserId
-        session_token: string
-        expiry: u64
-      }
-      ttl: env(USER_SESSION_TTL)
-    }
-  }
-
-  PubSub {
-    user_activity: {
-      key: UserId
-      payload: {
-        user_id: UserId
-        action: string
-        timestamp: u64
-      }
-      public: [subscribe]
-    }
-  }
-
-  Task {
-    user_registration_tasks: {
-      payload: {
-        user_id: UserId
-        email: string
-        registration_date: u64
-      }
-      public: [enqueue get_len]
-    }
-  }
-
-}
-
-"#
-                    .to_string(),
-                ),
-            ]),
-        };
-
-        let parsed_schema = parse_schema(&mock_fs, "schema.memorix")?;
-        insta::assert_snapshot!(serde_json::to_string_pretty(&parsed_schema)?);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_fail_nicely() -> Result<(), Box<dyn std::error::Error>> {
-        let mock_fs = MockFileSystem {
-            files: HashMap::from([(
-                "schema.memorix",
-                r#"
-Config {
-  export: {
-    engine: Redis(env(REDIS_URL))
-    files: [      {
-        language: TypeScript
-        path: "memorix.generated.ts"
-      }]
-  }
-}
-
-Type {
-  a: [u64 u32]
-}
-
-"#
-                .to_string(),
-            )]),
-        };
-
-        let result = parse_schema(&mock_fs, "schema.memorix");
-        let err = result.unwrap_err();
-        insta::assert_snapshot!(err.to_string());
-
-        Ok(())
-    }
 }

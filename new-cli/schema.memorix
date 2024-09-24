@@ -1,0 +1,30 @@
+Config {
+  import: [
+    "./src/schema2.memorix"
+  ]
+  export: {
+    engine: Redis( env(REDIS_URL) )
+    files: [
+      {
+        language: TypeScript
+        path: "memorix.generated.ts"
+      }
+      {
+        language: Python
+        path: "memorix_generated.py"
+      }
+      {
+        language: Rust
+        path: "memorix_generated.rs"
+      }
+    ]
+  }
+}
+
+Cache {
+    abc: {
+        key: u32
+        payload: u64
+        ttl: "60"
+    }
+}
