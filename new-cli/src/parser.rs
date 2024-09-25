@@ -56,9 +56,17 @@ pub enum Language {
 pub struct Namespace {
     pub defaults: NamespaceDefaults,
     pub type_items: Vec<(String, TypeItem)>,
-    pub cache_items: Vec<(String, CacheItem<TypeItem>)>,
-    pub pubsub_items: Vec<(String, PubSubItem<TypeItem>)>,
-    pub task_items: Vec<(String, TaskItem<TypeItem>)>,
+    pub cache_items: Vec<(String, CacheItem<TypeItem, ItemWithPublic<CacheOperation>>)>,
+    pub pubsub_items: Vec<(
+        String,
+        PubSubItem<TypeItem, ItemWithPublic<PubSubOperation>>,
+    )>,
+    pub task_items: Vec<(String, TaskItem<TypeItem, ItemWithPublic<TaskOperation>>)>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct ItemWithPublic<O> {
+    pub public: Vec<O>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -68,26 +76,26 @@ pub struct NamespaceDefaults {
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct CacheItem<T> {
+pub struct CacheItem<T, M> {
     pub key: Option<T>,
     pub payload: T,
-    pub public: Vec<CacheOperation>,
     pub ttl: Option<Value>,
+    pub more: M,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct PubSubItem<T> {
+pub struct PubSubItem<T, M> {
     pub key: Option<T>,
     pub payload: T,
-    pub public: Vec<PubSubOperation>,
+    pub more: M,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct TaskItem<T> {
+pub struct TaskItem<T, M> {
     pub key: Option<T>,
     pub payload: T,
-    pub public: Vec<TaskOperation>,
     pub queue_type: Option<Value>,
+    pub more: M,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -111,25 +119,53 @@ pub enum TypeItem {
     Reference(String),
 }
 
+macro_rules! create_enum_with_const_slice {
+    (
+        $(#[$meta:meta])*
+        $vis:vis enum $name:ident {
+            $($(#[$variant_meta:meta])* $variant:ident),+ $(,)?
+        }
+        $const_name:ident
+    ) => {
+        $(#[$meta])*
+        $vis enum $name {
+            $($(#[$variant_meta])* $variant),+
+        }
+
+        $vis const $const_name: &'static [$name] = &[
+            $($name::$variant),+
+        ];
+    }
+}
+
+create_enum_with_const_slice! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum CacheOperation {
     Get,
     Set,
     Delete,
 }
+ALL_CACHE_OPERATIONS
+}
 
+create_enum_with_const_slice! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum PubSubOperation {
     Publish,
     Subscribe,
 }
+ALL_PUBSUB_OPERATIONS
+}
 
+create_enum_with_const_slice! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum TaskOperation {
     Enqueue,
     Dequeue,
     Empty,
     GetLen,
+}
+ALL_TASK_OPERATIONS
 }
 
 fn hash<
@@ -412,8 +448,10 @@ fn parse_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str
                         |(key, payload, public, ttl)| CacheItem {
                             key,
                             payload,
-                            public: public.unwrap_or(vec![]),
                             ttl,
+                            more: ItemWithPublic {
+                                public: public.unwrap_or(vec![]),
+                            },
                         },
                     ))),
                 )),
@@ -431,7 +469,9 @@ fn parse_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str
                         |(key, payload, public)| PubSubItem {
                             key,
                             payload,
-                            public: public.unwrap_or(vec![]),
+                            more: ItemWithPublic {
+                                public: public.unwrap_or(vec![]),
+                            },
                         },
                     ))),
                 )),
@@ -450,8 +490,10 @@ fn parse_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str
                         |(key, payload, public, queue_type)| TaskItem {
                             key,
                             payload,
-                            public: public.unwrap_or(vec![]),
                             queue_type,
+                            more: ItemWithPublic {
+                                public: public.unwrap_or(vec![]),
+                            },
                         },
                     ))),
                 )),
@@ -505,57 +547,59 @@ fn parse_export<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
     )(input)
 }
 
-pub fn parse_schema<F: FileSystem>(fs: &F, path: &str) -> Result<Schema, String> {
-    let input = fs
-        .read_to_string(path)
-        .map_err(|_| format!("Couldn't read schema at path \"{}\"", path))?;
-    println!("Read schema from \"{}\"", path);
-    let input = input.as_str();
+impl Schema {
+    pub fn new<F: FileSystem>(fs: &F, path: &str) -> Result<Self, String> {
+        let input = fs
+            .read_to_string(path)
+            .map_err(|_| format!("Couldn't read schema at path \"{}\"", path))?;
+        println!("Read schema from \"{}\"", path);
+        let input = input.as_str();
 
-    let mut parser = map(
-        tuple((
-            opt(preceded(
-                multispace0,
-                map(
-                    preceded(
-                        tuple((tag("Config"), multispace1)),
-                        cut(hash_known_keys!(
-                            (
-                                import,
-                                array(map_res(
-                                    map_res(parse_string, |import| fs.resolve(&path, &import)),
-                                    |import_path| parse_schema(fs, &import_path)
-                                )),
-                                false
-                            ),
-                            (export, parse_export, false)
-                        )),
+        let mut parser = map(
+            tuple((
+                opt(preceded(
+                    multispace0,
+                    map(
+                        preceded(
+                            tuple((tag("Config"), multispace1)),
+                            cut(hash_known_keys!(
+                                (
+                                    import,
+                                    array(map_res(
+                                        map_res(parse_string, |import| fs.resolve(&path, &import)),
+                                        |import_path| Self::new(fs, &import_path)
+                                    )),
+                                    false
+                                ),
+                                (export, parse_export, false)
+                            )),
+                        ),
+                        |(import, export)| Config {
+                            import: import.unwrap_or(vec![]),
+                            export,
+                        },
                     ),
-                    |(import, export)| Config {
-                        import: import.unwrap_or(vec![]),
-                        export,
-                    },
-                ),
+                )),
+                many0(preceded(multispace0, parse_named_namespace)),
+                parse_namespace,
+                many0(preceded(multispace0, parse_named_namespace)),
             )),
-            many0(preceded(multispace0, parse_named_namespace)),
-            parse_namespace,
-            many0(preceded(multispace0, parse_named_namespace)),
-        )),
-        |(config, named_namespaces, global_namespace, more_named_namespaces)| Schema {
-            config: config.unwrap_or(Config {
-                import: vec![],
-                export: None,
-            }),
-            global_namespace,
-            namespaces: named_namespaces
-                .into_iter()
-                .chain(more_named_namespaces.into_iter())
-                .collect(),
-        },
-    );
-    let (_, schema) = parser(input).finish().map_err(|e| {
-        let stack = format!("parser feedback:\n{}", convert_error(input, e));
-        stack
-    })?;
-    Ok(schema)
+            |(config, named_namespaces, global_namespace, more_named_namespaces)| Schema {
+                config: config.unwrap_or(Config {
+                    import: vec![],
+                    export: None,
+                }),
+                global_namespace,
+                namespaces: named_namespaces
+                    .into_iter()
+                    .chain(more_named_namespaces.into_iter())
+                    .collect(),
+            },
+        );
+        let (_, schema) = parser(input).finish().map_err(|e| {
+            let stack = format!("parser feedback:\n{}", convert_error(input, e));
+            stack
+        })?;
+        Ok(schema)
+    }
 }

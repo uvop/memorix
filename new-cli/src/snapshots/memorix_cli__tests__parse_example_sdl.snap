@@ -1,9 +1,61 @@
 ---
 source: src/main.rs
-assertion_line: 271
+assertion_line: 311
 expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
 ---
 [
+  {
+    "global_namespace": {
+      "type_object_items": [],
+      "modified_namespace": {
+        "defaults": {
+          "cache_ttl": null,
+          "task_queue_type": null
+        },
+        "type_items": [
+          [
+            "abc",
+            "U32"
+          ]
+        ],
+        "cache_items": [
+          [
+            "number_of_messages",
+            {
+              "key": null,
+              "payload": "U32",
+              "ttl": null,
+              "more": {
+                "expose": [
+                  "Get",
+                  "Set",
+                  "Delete"
+                ]
+              }
+            }
+          ],
+          [
+            "messages",
+            {
+              "key": "String",
+              "payload": "String",
+              "ttl": null,
+              "more": {
+                "expose": [
+                  "Get",
+                  "Set",
+                  "Delete"
+                ]
+              }
+            }
+          ]
+        ],
+        "pubsub_items": [],
+        "task_items": []
+      }
+    },
+    "namespaces": []
+  },
   {
     "global_namespace": {
       "type_object_items": [
@@ -46,43 +98,73 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
           }
         ]
       ],
-      "defaults": {
-        "cache_ttl": {
-          "String": "3600"
+      "modified_namespace": {
+        "defaults": {
+          "cache_ttl": {
+            "String": "3600"
+          },
+          "task_queue_type": null
         },
-        "task_queue_type": null
-      },
-      "type_items": [],
-      "cache_items": [
-        [
-          "user_profile",
-          {
-            "key": "U32",
-            "payload": {
-              "Reference": "InlineCachePayloadUserProfile"
-            },
-            "public": [
-              "Get"
-            ],
-            "ttl": null
-          }
+        "type_items": [
+          [
+            "abc",
+            "U32"
+          ]
         ],
-        [
-          "user_session",
-          {
-            "key": "String",
-            "payload": {
-              "Reference": "InlineCachePayloadUserSession"
-            },
-            "public": [],
-            "ttl": {
-              "Env": "USER_SESSION_TTL"
+        "cache_items": [
+          [
+            "user_profile",
+            {
+              "key": "U32",
+              "payload": {
+                "Reference": "InlineCachePayloadUserProfile"
+              },
+              "ttl": null,
+              "more": {
+                "expose": [
+                  "Get",
+                  "Set",
+                  "Delete"
+                ]
+              }
             }
-          }
-        ]
-      ],
-      "pubsub_items": [],
-      "task_items": []
+          ],
+          [
+            "user_session",
+            {
+              "key": "String",
+              "payload": {
+                "Reference": "InlineCachePayloadUserSession"
+              },
+              "ttl": {
+                "Env": "USER_SESSION_TTL"
+              },
+              "more": {
+                "expose": [
+                  "Get",
+                  "Set",
+                  "Delete"
+                ]
+              }
+            }
+          ],
+          [
+            "number_of_messages",
+            {
+              "key": null,
+              "payload": "U32",
+              "ttl": null,
+              "more": {
+                "expose": [
+                  "Get"
+                ]
+              }
+            }
+          ]
+        ],
+        "pubsub_items": [],
+        "task_items": []
+      }
     },
     "namespaces": [
       [
@@ -157,57 +239,73 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
               }
             ]
           ],
-          "defaults": {
-            "cache_ttl": null,
-            "task_queue_type": null
-          },
-          "type_items": [],
-          "cache_items": [
-            [
-              "message",
-              {
-                "key": "String",
-                "payload": {
-                  "Reference": "InlineCachePayloadMessage"
-                },
-                "public": [
-                  "Get"
-                ],
-                "ttl": null
-              }
-            ]
-          ],
-          "pubsub_items": [
-            [
-              "new_message",
-              {
-                "key": {
-                  "Reference": "UserId"
-                },
-                "payload": {
-                  "Reference": "InlinePubSubPayloadNewMessage"
-                },
-                "public": [
-                  "Subscribe"
-                ]
-              }
-            ]
-          ],
-          "task_items": [
-            [
-              "message_processing_tasks",
-              {
-                "key": null,
-                "payload": {
-                  "Reference": "InlineTaskPayloadMessageProcessingTasks"
-                },
-                "public": [],
-                "queue_type": {
-                  "String": "Fifo"
+          "modified_namespace": {
+            "defaults": {
+              "cache_ttl": null,
+              "task_queue_type": null
+            },
+            "type_items": [],
+            "cache_items": [
+              [
+                "message",
+                {
+                  "key": "String",
+                  "payload": {
+                    "Reference": "InlineCachePayloadMessage"
+                  },
+                  "ttl": null,
+                  "more": {
+                    "expose": [
+                      "Get",
+                      "Set",
+                      "Delete"
+                    ]
+                  }
                 }
-              }
+              ]
+            ],
+            "pubsub_items": [
+              [
+                "new_message",
+                {
+                  "key": {
+                    "Reference": "UserId"
+                  },
+                  "payload": {
+                    "Reference": "InlinePubSubPayloadNewMessage"
+                  },
+                  "more": {
+                    "expose": [
+                      "Publish",
+                      "Subscribe"
+                    ]
+                  }
+                }
+              ]
+            ],
+            "task_items": [
+              [
+                "message_processing_tasks",
+                {
+                  "key": null,
+                  "payload": {
+                    "Reference": "InlineTaskPayloadMessageProcessingTasks"
+                  },
+                  "queue_type": {
+                    "String": "Fifo"
+                  },
+                  "more": {
+                    "expose": [
+                      "Enqueue",
+                      "Dequeue",
+                      "Empty",
+                      "GetLen"
+                    ]
+                  }
+                }
+              ]
             ]
-          ]
+          }
         }
       ],
       [
@@ -299,82 +397,101 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
               }
             ]
           ],
-          "defaults": {
-            "cache_ttl": {
-              "String": "7200"
+          "modified_namespace": {
+            "defaults": {
+              "cache_ttl": {
+                "String": "7200"
+              },
+              "task_queue_type": {
+                "Env": "USER_SERVICE_TASK_QUEUE_TYPE"
+              }
             },
-            "task_queue_type": {
-              "Env": "USER_SERVICE_TASK_QUEUE_TYPE"
-            }
-          },
-          "type_items": [
-            [
-              "UserId",
-              "U64"
-            ]
-          ],
-          "cache_items": [
-            [
-              "user_profile",
-              {
-                "key": {
-                  "Reference": "UserId"
-                },
-                "payload": {
-                  "Reference": "InlineCachePayloadUserProfile"
-                },
-                "public": [
-                  "Get"
-                ],
-                "ttl": null
-              }
+            "type_items": [
+              [
+                "UserId",
+                "U64"
+              ]
             ],
-            [
-              "user_session",
-              {
-                "key": "String",
-                "payload": {
-                  "Reference": "InlineCachePayloadUserSession"
-                },
-                "public": [],
-                "ttl": {
-                  "Env": "USER_SESSION_TTL"
+            "cache_items": [
+              [
+                "user_profile",
+                {
+                  "key": {
+                    "Reference": "UserId"
+                  },
+                  "payload": {
+                    "Reference": "InlineCachePayloadUserProfile"
+                  },
+                  "ttl": null,
+                  "more": {
+                    "expose": [
+                      "Get",
+                      "Set",
+                      "Delete"
+                    ]
+                  }
                 }
-              }
+              ],
+              [
+                "user_session",
+                {
+                  "key": "String",
+                  "payload": {
+                    "Reference": "InlineCachePayloadUserSession"
+                  },
+                  "ttl": {
+                    "Env": "USER_SESSION_TTL"
+                  },
+                  "more": {
+                    "expose": [
+                      "Get",
+                      "Set",
+                      "Delete"
+                    ]
+                  }
+                }
+              ]
+            ],
+            "pubsub_items": [
+              [
+                "user_activity",
+                {
+                  "key": {
+                    "Reference": "UserId"
+                  },
+                  "payload": {
+                    "Reference": "InlinePubSubPayloadUserActivity"
+                  },
+                  "more": {
+                    "expose": [
+                      "Publish",
+                      "Subscribe"
+                    ]
+                  }
+                }
+              ]
+            ],
+            "task_items": [
+              [
+                "user_registration_tasks",
+                {
+                  "key": null,
+                  "payload": {
+                    "Reference": "InlineTaskPayloadUserRegistrationTasks"
+                  },
+                  "queue_type": null,
+                  "more": {
+                    "expose": [
+                      "Enqueue",
+                      "Dequeue",
+                      "Empty",
+                      "GetLen"
+                    ]
+                  }
+                }
+              ]
             ]
-          ],
-          "pubsub_items": [
-            [
-              "user_activity",
-              {
-                "key": {
-                  "Reference": "UserId"
-                },
-                "payload": {
-                  "Reference": "InlinePubSubPayloadUserActivity"
-                },
-                "public": [
-                  "Subscribe"
-                ]
-              }
-            ]
-          ],
-          "task_items": [
-            [
-              "user_registration_tasks",
-              {
-                "key": null,
-                "payload": {
-                  "Reference": "InlineTaskPayloadUserRegistrationTasks"
-                },
-                "public": [
-                  "Enqueue",
-                  "GetLen"
-                ],
-                "queue_type": null
-              }
-            ]
-          ]
+          }
         }
       ]
     ]
