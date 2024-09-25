@@ -1,3 +1,10 @@
+## [1.5.12](https://github.com/uvop/memorix/compare/v1.5.11...v1.5.12) (2024-09-25)
+
+
+### Bug Fixes
+
+* Rust subscribe single object ([cacccd0](https://github.com/uvop/memorix/commit/cacccd07b918625b06daee3787eb1cb4ed9359fc))
+
 ## [1.5.11](https://github.com/uvop/memorix/compare/v1.5.10...v1.5.11) (2024-09-24)
 
 
