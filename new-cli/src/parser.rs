@@ -125,14 +125,14 @@ macro_rules! create_enum_with_const_slice {
         $vis:vis enum $name:ident {
             $($(#[$variant_meta:meta])* $variant:ident),+ $(,)?
         }
-        $const_name:ident
+        $const_vis:ident $const_name:ident
     ) => {
         $(#[$meta])*
         $vis enum $name {
             $($(#[$variant_meta])* $variant),+
         }
 
-        $vis const $const_name: &'static [$name] = &[
+        $const_vis const $const_name: &'static [$name] = &[
             $($name::$variant),+
         ];
     }
@@ -145,7 +145,7 @@ pub enum CacheOperation {
     Set,
     Delete,
 }
-ALL_CACHE_OPERATIONS
+pub ALL_CACHE_OPERATIONS
 }
 
 create_enum_with_const_slice! {
@@ -154,7 +154,7 @@ pub enum PubSubOperation {
     Publish,
     Subscribe,
 }
-ALL_PUBSUB_OPERATIONS
+pub ALL_PUBSUB_OPERATIONS
 }
 
 create_enum_with_const_slice! {
@@ -165,7 +165,7 @@ pub enum TaskOperation {
     Empty,
     GetLen,
 }
-ALL_TASK_OPERATIONS
+pub ALL_TASK_OPERATIONS
 }
 
 fn hash<
