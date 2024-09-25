@@ -308,25 +308,6 @@ where
     }
 }
 
-pub struct MemorixPayload<P>
-where
-    P: serde::de::DeserializeOwned,
-{
-    pub payload: P,
-}
-
-impl<P> redis::FromRedisValue for MemorixPayload<P>
-where
-    P: serde::de::DeserializeOwned,
-{
-    fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {
-        let payload_str: String = redis::from_redis_value(v)?;
-        let payload: P = serde_json::from_str(&payload_str).unwrap();
-
-        Ok(Self { payload })
-    }
-}
-
 #[derive(Clone)]
 pub struct MemorixPubSubItem<K, P>
 where
@@ -388,7 +369,7 @@ where
         core::pin::Pin<
             Box<
                 dyn futures_core::stream::Stream<
-                        Item = Result<MemorixPayload<P>, Box<dyn std::error::Error + Sync + Send>>,
+                        Item = Result<P, Box<dyn std::error::Error + Sync + Send>>,
                     > + std::marker::Send,
             >,
         >,
@@ -403,7 +384,11 @@ where
         pubsub.subscribe(self.key(key)?).await?;
         let stream = pubsub
             .into_on_message()
-            .map(|m| m.get_payload::<MemorixPayload<P>>().map_err(|e| e.into()))
+            .map(|m| {
+                let payload = m.get_payload::<String>()?;
+                let parsed = serde_json::from_str::<P>(&payload)?;
+                Ok(parsed)
+            })
             .boxed();
         Ok(stream)
     }
@@ -446,7 +431,7 @@ where
         core::pin::Pin<
             Box<
                 dyn futures_core::stream::Stream<
-                        Item = Result<MemorixPayload<P>, Box<dyn std::error::Error + Sync + Send>>,
+                        Item = Result<P, Box<dyn std::error::Error + Sync + Send>>,
                     > + std::marker::Send,
             >,
         >,
