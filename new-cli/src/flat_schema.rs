@@ -1,24 +1,20 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    export_schemas::ExportSchema,
-    parser::{CacheItem, Namespace, NamespaceDefaults, PubSubItem, TaskItem, TypeItem},
+    export_schemas::{ExportNamespace, ExportSchema},
+    parser::{CacheItem, PubSubItem, TaskItem, TypeItem},
 };
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct FlatSchemaToExport {
-    pub global_namespace: FlatNamespace,
-    pub namespaces: Vec<(String, FlatNamespace)>,
+pub struct FlatExportSchema {
+    pub global_namespace: FlatExportNamespace,
+    pub namespaces: Vec<(String, FlatExportNamespace)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct FlatNamespace {
+pub struct FlatExportNamespace {
     pub type_object_items: Vec<(String, TypeItemObject)>,
-    pub defaults: NamespaceDefaults,
-    pub type_items: Vec<(String, FlatTypeItem)>,
-    pub cache_items: Vec<(String, CacheItem<FlatTypeItem>)>,
-    pub pubsub_items: Vec<(String, PubSubItem<FlatTypeItem>)>,
-    pub task_items: Vec<(String, TaskItem<FlatTypeItem>)>,
+    pub modified_namespace: ExportNamespace<FlatTypeItem>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -94,7 +90,7 @@ fn type_item_to_flat_type_items(
     }
 }
 
-fn namespace_to_flat_namespace(namespace: Namespace) -> FlatNamespace {
+fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExportNamespace {
     let type_items = namespace
         .type_items
         .into_iter()
@@ -128,7 +124,7 @@ fn namespace_to_flat_namespace(namespace: Namespace) -> FlatNamespace {
                 CacheItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    public: item.public,
+                    more: item.more,
                     ttl: item.ttl,
                 },
                 type_object_items,
@@ -159,7 +155,7 @@ fn namespace_to_flat_namespace(namespace: Namespace) -> FlatNamespace {
                 PubSubItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    public: item.public,
+                    more: item.more,
                 },
                 type_object_items,
             )
@@ -189,7 +185,7 @@ fn namespace_to_flat_namespace(namespace: Namespace) -> FlatNamespace {
                 TaskItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    public: item.public,
+                    more: item.more,
                     queue_type: item.queue_type,
                 },
                 type_object_items,
@@ -207,35 +203,39 @@ fn namespace_to_flat_namespace(namespace: Namespace) -> FlatNamespace {
             acc.extend(x);
             acc
         });
-    FlatNamespace {
-        defaults: namespace.defaults,
+    FlatExportNamespace {
         type_object_items,
-        type_items: type_items
-            .into_iter()
-            .map(|(k, item, _)| (k, item))
-            .collect(),
-        cache_items: cache_items
-            .into_iter()
-            .map(|(k, item, _)| (k, item))
-            .collect(),
-        pubsub_items: pubsub_items
-            .into_iter()
-            .map(|(k, item, _)| (k, item))
-            .collect(),
-        task_items: task_items
-            .into_iter()
-            .map(|(k, item, _)| (k, item))
-            .collect(),
+        modified_namespace: ExportNamespace {
+            defaults: namespace.defaults,
+            type_items: type_items
+                .into_iter()
+                .map(|(k, item, _)| (k, item))
+                .collect(),
+            cache_items: cache_items
+                .into_iter()
+                .map(|(k, item, _)| (k, item))
+                .collect(),
+            pubsub_items: pubsub_items
+                .into_iter()
+                .map(|(k, item, _)| (k, item))
+                .collect(),
+            task_items: task_items
+                .into_iter()
+                .map(|(k, item, _)| (k, item))
+                .collect(),
+        },
     }
 }
 
-pub fn flat_export_schema(export_schema: ExportSchema) -> FlatSchemaToExport {
-    FlatSchemaToExport {
-        global_namespace: namespace_to_flat_namespace(export_schema.global_namespace),
-        namespaces: export_schema
-            .namespaces
-            .into_iter()
-            .map(|(k, n)| (k, namespace_to_flat_namespace(n)))
-            .collect(),
+impl FlatExportSchema {
+    pub fn new(export_schema: ExportSchema) -> Self {
+        Self {
+            global_namespace: namespace_to_flat_namespace(export_schema.global_namespace),
+            namespaces: export_schema
+                .namespaces
+                .into_iter()
+                .map(|(k, n)| (k, namespace_to_flat_namespace(n)))
+                .collect(),
+        }
     }
 }

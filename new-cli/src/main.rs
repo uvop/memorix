@@ -74,9 +74,14 @@ fn main() -> Result<(), PrettyError<String>> {
 
     let fs = RealFileSystem {};
 
-    let schema = parser::parse_schema(&fs, abs_file_path)?;
+    let parsed_schema = crate::parser::Schema::new(&fs, abs_file_path)?;
+    let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
+    let flat_export_schemas = export_schemas
+        .into_iter()
+        .map(crate::flat_schema::FlatExportSchema::new)
+        .collect::<Vec<_>>();
 
-    println!("{:#?}", schema);
+    println!("{:#?}", flat_export_schemas);
 
     Ok(())
 }
@@ -110,7 +115,42 @@ mod tests {
     fn test_parse_example_sdl() -> Result<(), Box<dyn std::error::Error>> {
         let mock_fs = MockFileSystem {
             files: HashMap::from([
-                ("another-schema.memorix", "Type { abc: u32 }".to_string()),
+                (
+                    "another-schema.memorix",
+                    r#"
+Config {
+  export: {
+    engine: Redis( env(REDIS_URL) )
+    files: [
+      {
+        language: TypeScript
+        path: "memorix.generated.ts"
+      }
+      {
+        language: Python
+        path: "memorix_generated.py"
+      }
+      {
+        language: Rust
+        path: "memorix_generated.rs"
+      }
+    ]
+  }
+}
+Type { abc: u32 }
+Cache {
+  number_of_messages: {
+    payload: u32
+    public: [get]
+  }
+  messages: {
+    key: string
+    payload: string
+  }
+}
+"#
+                    .to_string(),
+                ),
                 (
                     "schema.memorix",
                     r#"
@@ -262,11 +302,11 @@ Namespace UserService {
             ]),
         };
 
-        let parsed_schema = crate::parser::parse_schema(&mock_fs, "schema.memorix")?;
-        let export_schemas = crate::export_schemas::get_schemas_to_export(parsed_schema);
+        let parsed_schema = crate::parser::Schema::new(&mock_fs, "schema.memorix")?;
+        let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
         let flat_export_schemas = export_schemas
             .into_iter()
-            .map(crate::flat_schema::flat_export_schema)
+            .map(crate::flat_schema::FlatExportSchema::new)
             .collect::<Vec<_>>();
         insta::assert_snapshot!(serde_json::to_string_pretty(&flat_export_schemas)?);
 
@@ -298,7 +338,7 @@ Type {
             )]),
         };
 
-        let result = crate::parser::parse_schema(&mock_fs, "schema.memorix");
+        let result = crate::parser::Schema::new(&mock_fs, "schema.memorix");
         let err = result.unwrap_err();
         insta::assert_snapshot!(err.to_string());
 
