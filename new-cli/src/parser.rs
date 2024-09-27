@@ -27,12 +27,41 @@ pub struct Config {
     pub export: Option<Export>,
 }
 
-impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Export {
     pub engine: Engine,
     pub files: Option<Vec<FileConfig>>,
 }
+impl FromSdl for Export {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
+        preceded(char('{'),cut(terminated(permutation(({
+            let parser = preceded(tuple((multispace0,tag(stringify!(engine)),multispace0,char(':'),multispace0)),cut(impl_from_and_to_sdl_for_struct!(@from_sdl Engine)));
+            impl_from_and_to_sdl_for_struct!(@final_parser engine,Engine,parser)
+        },{
+            let parser = preceded(tuple((multispace0,tag(stringify!(files)),multispace0,char(':'),multispace0)),cut(impl_from_and_to_sdl_for_struct!(@from_sdl Option<Vec<FileConfig>>)));
+            impl_from_and_to_sdl_for_struct!(@final_parser files,Option<Vec<FileConfig>>,parser)
+        },)),preceded(multispace0,char('}')))))(input).map(|(remaining,fields)|{
+            let(engine,files) = fields;
+            (remaining,Export {
+                engine,files
+            })
+        })
+    }
+}
+impl ToSdl for Export {
+    fn to_sdl(&self, level: usize) -> String {
+        let level_indent = indent(level + 1);
+        let mut result = String::from("{\n");
+        impl_from_and_to_sdl_for_struct!(@to_sdl_field self.engine,stringify!(engine),Engine,level_indent,result,level);
+        impl_from_and_to_sdl_for_struct!(@to_sdl_field self.files,stringify!(files),Option<Vec<FileConfig>>,level_indent,result,level);
+        result.push_str(&format!("{}}}", indent(level)));
+        result
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]

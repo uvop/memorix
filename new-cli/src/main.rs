@@ -1,6 +1,5 @@
 mod export_schemas;
 mod flat_schema;
-mod format;
 mod imports;
 mod parser;
 mod parser_tools;
@@ -9,6 +8,11 @@ use std::fmt;
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
+
+use nom::error::convert_error;
+use nom::Finish;
+use parser::{schema_to_sdl, Schema};
+use parser_tools::FromSdl;
 
 pub struct PrettyError<T>(pub T);
 
@@ -66,6 +70,35 @@ impl FileSystem for RealFileSystem {
     }
 }
 
+pub fn format<F: FileSystem>(
+    fs: &F,
+    path: &str,
+) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
+    let input = fs.read_to_string(path)?;
+    println!("Read schema from \"{}\"", path);
+    let input = input.as_str();
+    let (_, schema) = Schema::from_sdl(input).finish().map_err(|e| {
+        let stack = format!("parser feedback:\n{}", convert_error(input, e));
+        stack
+    })?;
+    let formatted_input = schema_to_sdl(&schema);
+    fs.write_string(path, &formatted_input)?;
+    Ok(())
+}
+
+pub fn codegen<F: FileSystem>(
+    fs: &F,
+    path: &str,
+) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
+    let parsed_schema = crate::imports::ImportedSchema::new(fs, path)?;
+    let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
+    let flat_export_schemas = export_schemas
+        .into_iter()
+        .map(crate::flat_schema::FlatExportSchema::new)
+        .collect::<Vec<_>>();
+    Ok(serde_json::to_string_pretty(&flat_export_schemas)?)
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 2 {
@@ -83,22 +116,18 @@ fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 
     let fs = RealFileSystem {};
 
-    let parsed_schema = crate::imports::ImportedSchema::new(&fs, abs_file_path)?;
-    let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
-    let flat_export_schemas = export_schemas
-        .into_iter()
-        .map(crate::flat_schema::FlatExportSchema::new)
-        .collect::<Vec<_>>();
+    let code = codegen(&fs, abs_file_path)?;
 
-    println!("{:#?}", flat_export_schemas);
+    println!("{}", code);
 
     Ok(())
 }
 
+#[cfg(test)]
 mod tests {
     use std::{cell::RefCell, collections::HashMap, io};
 
-    use crate::FileSystem;
+    use crate::{codegen, FileSystem};
 
     pub struct MockFileSystem {
         pub files: RefCell<HashMap<String, String>>,
@@ -319,14 +348,7 @@ Namespace UserService {
                 ),
             ])),
         };
-
-        let parsed_schema = crate::imports::ImportedSchema::new(&mock_fs, "schema.memorix")?;
-        let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
-        let flat_export_schemas = export_schemas
-            .into_iter()
-            .map(crate::flat_schema::FlatExportSchema::new)
-            .collect::<Vec<_>>();
-        insta::assert_snapshot!(serde_json::to_string_pretty(&flat_export_schemas)?);
+        insta::assert_snapshot!(codegen(&mock_fs, "schema.memorix")?);
 
         Ok(())
     }
@@ -356,9 +378,39 @@ Type {
             )])),
         };
 
-        let result = crate::imports::ImportedSchema::new(&mock_fs, "schema.memorix");
+        let result = codegen(&mock_fs, "schema.memorix");
         let err = result.unwrap_err();
         insta::assert_snapshot!(err.to_string());
+
+        Ok(())
+    }
+    #[test]
+    fn test_format() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let mock_fs = MockFileSystem {
+            files: RefCell::new(HashMap::from([(
+                "schema.memorix".to_string(),
+                r#"
+Config {
+  export: {
+    engine: Redis(env(REDIS_URL))
+    files: [      {
+        language: TypeScript
+        path: "memorix.generated.ts"
+      }]
+  }
+}
+
+Type {
+  a: [u64 u32]
+}
+
+"#
+                .to_string(),
+            )])),
+        };
+        codegen(&mock_fs, "schema.memorix")?;
+        let formatted_schema = mock_fs.read_to_string("schema.memorix")?;
+        insta::assert_snapshot!(formatted_schema);
 
         Ok(())
     }
