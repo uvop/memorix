@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    export_schemas::{ExportNamespace, ExportSchema},
-    parser::{CacheItem, PubSubItem, TaskItem, TypeItem},
+    export_schemas::{
+        ExportCacheItem, ExportNamespace, ExportPubSubItem, ExportSchema, ExportTaskItem,
+    },
+    parser::TypeItem,
 };
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -121,10 +123,10 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
             };
             (
                 k,
-                CacheItem {
+                ExportCacheItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    more: item.more,
+                    expose: item.expose,
                     ttl: item.ttl,
                 },
                 type_object_items,
@@ -152,10 +154,10 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
             };
             (
                 k,
-                PubSubItem {
+                ExportPubSubItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    more: item.more,
+                    expose: item.expose,
                 },
                 type_object_items,
             )
@@ -182,10 +184,10 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
             };
             (
                 k,
-                TaskItem {
+                ExportTaskItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    more: item.more,
+                    expose: item.expose,
                     queue_type: item.queue_type,
                 },
                 type_object_items,

@@ -1,10 +1,13 @@
 mod export_schemas;
 mod flat_schema;
+mod format;
+mod imports;
 mod parser;
+mod parser_tools;
 
 use std::fmt;
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
 pub struct PrettyError<T>(pub T);
@@ -23,6 +26,7 @@ impl<T: fmt::Display> fmt::Debug for PrettyError<T> {
 
 pub trait FileSystem {
     fn read_to_string(&self, path: &str) -> io::Result<String>;
+    fn write_string(&self, path: &str, content: &str) -> io::Result<()>;
     fn resolve(
         &self,
         relative_file: &str,
@@ -38,6 +42,11 @@ impl FileSystem for RealFileSystem {
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         Ok(contents)
+    }
+    fn write_string(&self, path: &str, content: &str) -> io::Result<()> {
+        let mut file = File::open(path)?;
+        file.write_all(content.as_bytes())?;
+        Ok(())
     }
     fn resolve(
         &self,
@@ -57,7 +66,7 @@ impl FileSystem for RealFileSystem {
     }
 }
 
-fn main() -> Result<(), PrettyError<String>> {
+fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 2 {
         eprintln!("Usage: {} <path_to_sdl_file>", args[0]);
@@ -74,7 +83,7 @@ fn main() -> Result<(), PrettyError<String>> {
 
     let fs = RealFileSystem {};
 
-    let parsed_schema = crate::parser::Schema::new(&fs, abs_file_path)?;
+    let parsed_schema = crate::imports::ImportedSchema::new(&fs, abs_file_path)?;
     let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
     let flat_export_schemas = export_schemas
         .into_iter()
@@ -87,21 +96,30 @@ fn main() -> Result<(), PrettyError<String>> {
 }
 
 mod tests {
-    use std::{collections::HashMap, io};
+    use std::{cell::RefCell, collections::HashMap, io};
 
     use crate::FileSystem;
 
     pub struct MockFileSystem {
-        pub files: HashMap<&'static str, String>,
+        pub files: RefCell<HashMap<String, String>>,
     }
 
     impl FileSystem for MockFileSystem {
         fn read_to_string(&self, path: &str) -> io::Result<String> {
             self.files
+                .borrow()
                 .get(path)
                 .cloned()
                 .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "File not found"))
         }
+
+        fn write_string(&self, path: &str, content: &str) -> io::Result<()> {
+            self.files
+                .borrow_mut()
+                .insert(path.to_string(), content.to_string());
+            Ok(())
+        }
+
         fn resolve(
             &self,
             _: &str,
@@ -112,11 +130,11 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_example_sdl() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_parse_example_sdl() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let mock_fs = MockFileSystem {
-            files: HashMap::from([
+            files: RefCell::new(HashMap::from([
                 (
-                    "another-schema.memorix",
+                    "another-schema.memorix".to_string(),
                     r#"
 Config {
   export: {
@@ -152,7 +170,7 @@ Cache {
                     .to_string(),
                 ),
                 (
-                    "schema.memorix",
+                    "schema.memorix".to_string(),
                     r#"
 Config {
   import: [
@@ -299,10 +317,10 @@ Namespace UserService {
 "#
                     .to_string(),
                 ),
-            ]),
+            ])),
         };
 
-        let parsed_schema = crate::parser::Schema::new(&mock_fs, "schema.memorix")?;
+        let parsed_schema = crate::imports::ImportedSchema::new(&mock_fs, "schema.memorix")?;
         let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
         let flat_export_schemas = export_schemas
             .into_iter()
@@ -316,8 +334,8 @@ Namespace UserService {
     #[test]
     fn test_fail_nicely() -> Result<(), Box<dyn std::error::Error>> {
         let mock_fs = MockFileSystem {
-            files: HashMap::from([(
-                "schema.memorix",
+            files: RefCell::new(HashMap::from([(
+                "schema.memorix".to_string(),
                 r#"
 Config {
   export: {
@@ -335,10 +353,10 @@ Type {
 
 "#
                 .to_string(),
-            )]),
+            )])),
         };
 
-        let result = crate::parser::Schema::new(&mock_fs, "schema.memorix");
+        let result = crate::imports::ImportedSchema::new(&mock_fs, "schema.memorix");
         let err = result.unwrap_err();
         insta::assert_snapshot!(err.to_string());
 

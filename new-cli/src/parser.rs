@@ -1,36 +1,38 @@
-use nom::combinator::{cut, map_res};
-use nom::error::{context, ContextError};
+use crate::{
+    create_enum_with_const_slice, impl_from_and_to_sdl_for_enum, impl_from_and_to_sdl_for_struct,
+    parser_tools::{indent, FromSdl, ToSdl},
+};
 use nom::{
     branch::{alt, permutation},
     bytes::complete::{is_not, tag},
-    character::complete::{alpha1, alphanumeric1, char, multispace0, multispace1},
-    combinator::{map, opt, recognize, value},
-    error::{convert_error, ParseError},
-    multi::{many0, separated_list0},
-    sequence::{delimited, pair, preceded, separated_pair, terminated, tuple},
-    Finish, IResult, Parser,
+    character::complete::{char, multispace0, multispace1},
+    combinator::{cut, map, opt, value},
+    error::{context, ParseError},
+    multi::many0,
+    sequence::{delimited, pair, preceded, terminated, tuple},
+    IResult,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::FileSystem;
-
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Schema {
-    pub config: Config,
+    pub config: Option<Config>,
     pub global_namespace: Namespace,
     pub namespaces: Vec<(String, Namespace)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Config {
-    pub import: Vec<Schema>,
+    pub import: Vec<String>,
     pub export: Option<Export>,
 }
 
+impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Export {
     pub engine: Engine,
-    pub files: Vec<FileConfig>,
+    pub files: Option<Vec<FileConfig>>,
+}
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -39,10 +41,12 @@ pub enum Engine {
     Redis(Value),
 }
 
+impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FileConfig {
     pub language: Language,
     pub path: String,
+}
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -52,16 +56,20 @@ pub enum Language {
     Rust,
 }
 
+impl_from_and_to_sdl_for_enum!(
+    Language,
+    TypeScript => "typescript",
+    Python => "python",
+    Rust => "rust"
+);
+
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Namespace {
-    pub defaults: NamespaceDefaults,
-    pub type_items: Vec<(String, TypeItem)>,
-    pub cache_items: Vec<(String, CacheItem<TypeItem, ItemWithPublic<CacheOperation>>)>,
-    pub pubsub_items: Vec<(
-        String,
-        PubSubItem<TypeItem, ItemWithPublic<PubSubOperation>>,
-    )>,
-    pub task_items: Vec<(String, TaskItem<TypeItem, ItemWithPublic<TaskOperation>>)>,
+    pub defaults: Option<NamespaceDefaults>,
+    pub type_items: Option<Vec<(String, TypeItem)>>,
+    pub cache_items: Option<Vec<(String, CacheItem)>>,
+    pub pubsub_items: Option<Vec<(String, PubSubItem)>>,
+    pub task_items: Option<Vec<(String, TaskItem)>>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -69,33 +77,41 @@ pub struct ItemWithPublic<O> {
     pub public: Vec<O>,
 }
 
+impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct NamespaceDefaults {
     pub cache_ttl: Option<Value>,
     pub task_queue_type: Option<Value>,
 }
+}
 
+impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct CacheItem<T, M> {
-    pub key: Option<T>,
-    pub payload: T,
+pub struct CacheItem {
+    pub key: Option<TypeItem>,
+    pub payload: TypeItem,
     pub ttl: Option<Value>,
-    pub more: M,
+    pub public: Option<Vec<CacheOperation>>,
+}
 }
 
+impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct PubSubItem<T, M> {
-    pub key: Option<T>,
-    pub payload: T,
-    pub more: M,
+pub struct PubSubItem {
+    pub key: Option<TypeItem>,
+    pub payload: TypeItem,
+    pub public: Option<Vec<PubSubOperation>>,
+}
 }
 
+impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct TaskItem<T, M> {
-    pub key: Option<T>,
-    pub payload: T,
+pub struct TaskItem {
+    pub key: Option<TypeItem>,
+    pub payload: TypeItem,
     pub queue_type: Option<Value>,
-    pub more: M,
+    pub public: Option<Vec<TaskOperation>>,
+}
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -119,25 +135,6 @@ pub enum TypeItem {
     Reference(String),
 }
 
-macro_rules! create_enum_with_const_slice {
-    (
-        $(#[$meta:meta])*
-        $vis:vis enum $name:ident {
-            $($(#[$variant_meta:meta])* $variant:ident),+ $(,)?
-        }
-        $const_vis:ident $const_name:ident
-    ) => {
-        $(#[$meta])*
-        $vis enum $name {
-            $($(#[$variant_meta])* $variant),+
-        }
-
-        $const_vis const $const_name: &'static [$name] = &[
-            $($name::$variant),+
-        ];
-    }
-}
-
 create_enum_with_const_slice! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum CacheOperation {
@@ -148,6 +145,13 @@ pub enum CacheOperation {
 pub ALL_CACHE_OPERATIONS
 }
 
+impl_from_and_to_sdl_for_enum!(
+    CacheOperation,
+    Get => "get",
+    Set => "set",
+    Delete => "delete"
+);
+
 create_enum_with_const_slice! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum PubSubOperation {
@@ -156,6 +160,12 @@ pub enum PubSubOperation {
 }
 pub ALL_PUBSUB_OPERATIONS
 }
+
+impl_from_and_to_sdl_for_enum!(
+    PubSubOperation,
+    Publish => "publish",
+    Subscribe => "subscribe",
+);
 
 create_enum_with_const_slice! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -168,438 +178,366 @@ pub enum TaskOperation {
 pub ALL_TASK_OPERATIONS
 }
 
-fn hash<
-    'a,
-    O,
-    E: ParseError<&'a str> + ContextError<&'a str>,
-    F: FnMut(&'a str) -> IResult<&'a str, O, E>,
->(
-    mut item_parser: F,
-) -> impl FnMut(&'a str) -> IResult<&'a str, Vec<(String, O)>, E> {
-    move |input: &'a str| {
-        context(
-            "hash",
-            preceded(
-                char('{'),
-                cut(terminated(
-                    map(
-                        separated_list0(
-                            multispace1,
-                            separated_pair(
-                                preceded(multispace0, parse_identifier),
-                                cut(tuple((multispace0, char(':')))),
-                                preceded(multispace0, &mut item_parser),
-                            ),
-                        ),
-                        |tuple_vec| {
-                            tuple_vec
-                                .into_iter()
-                                .map(|(k, v)| (String::from(k), v))
-                                .collect()
-                        },
-                    ),
-                    preceded(multispace0, char('}')),
-                )),
-            ),
-        )
-        .parse(input)
-    }
-}
+impl_from_and_to_sdl_for_enum!(
+    TaskOperation,
+    Enqueue => "enqueue",
+    Dequeue => "dequeue",
+    Empty => "empty",
+    GetLen => "getLen"
+);
 
-macro_rules! hash_known_keys {
-    ($(($key:ident, $parser:expr, $required:tt)),+) => {
+impl FromSdl for TypeItem {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
         preceded(
-            char('{'),
-            cut(terminated(
-                permutation((
-                    $(
-                        {
-                            let parser = preceded(
-                                tuple((multispace0, tag(stringify!($key)), multispace0, char(':'), multispace0)),
-                                cut($parser)
-                            );
-                            hash_known_keys!(@field $key, parser, $required)
-                        },
-                    )+
+            multispace0,
+            alt((
+                context(
+                    "single type config array",
+                    map(
+                        preceded(
+                            tuple((char('['), multispace0)),
+                            cut(terminated(
+                                TypeItem::from_sdl,
+                                preceded(multispace0, char(']')),
+                            )),
+                        ),
+                        |v| TypeItem::Array(Box::new(v)),
+                    ),
+                ),
+                map(Vec::<(String, TypeItem)>::from_sdl, TypeItem::Object),
+                alt((
+                    value(TypeItem::U32, tag("u32")),
+                    value(TypeItem::I32, tag("i32")),
+                    value(TypeItem::U64, tag("u64")),
+                    value(TypeItem::I64, tag("i64")),
+                    value(TypeItem::F32, tag("f32")),
+                    value(TypeItem::F64, tag("f64")),
+                    value(TypeItem::String, tag("string")),
+                    value(TypeItem::Boolean, tag("boolean")),
                 )),
-                preceded(multispace0, char('}'))
-            ))
-        )
-    };
-    (@field $key:ident, $parser:expr, true) => {
-        context(concat!("Missing required key \"", stringify!($key), "\""), $parser)
-    };
-    (@field $key:ident, $parser:expr, false) => {
-        opt($parser)
-    };
-}
-
-fn array<
-    'a,
-    O,
-    E: ParseError<&'a str> + ContextError<&'a str>,
-    F: FnMut(&'a str) -> IResult<&'a str, O, E>,
->(
-    mut item_parser: F,
-) -> impl FnMut(&'a str) -> IResult<&'a str, Vec<O>, E> {
-    move |input: &'a str| {
-        context(
-            "array",
-            preceded(
-                tuple((char('['), multispace0)),
-                cut(terminated(
-                    separated_list0(multispace1, &mut item_parser),
-                    preceded(multispace0, char(']')),
-                )),
-            ),
+                map(String::from_sdl, TypeItem::Reference),
+            )),
         )(input)
     }
 }
 
-fn parse_cache_operation<'a, E: ParseError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, CacheOperation, E> {
-    alt((
-        value(CacheOperation::Get, tag("get")),
-        value(CacheOperation::Set, tag("set")),
-        value(CacheOperation::Delete, tag("delete")),
-    ))(input)
+impl ToSdl for TypeItem {
+    fn to_sdl(&self, level: usize) -> String {
+        match self {
+            Self::U32 => "u32".to_string(),
+            Self::U64 => "u64".to_string(),
+            Self::I32 => "i32".to_string(),
+            Self::I64 => "i64".to_string(),
+            Self::F32 => "f32".to_string(),
+            Self::F64 => "f64".to_string(),
+            Self::Boolean => "boolean".to_string(),
+            Self::String => "string".to_string(),
+            Self::Reference(x) => x.clone(),
+            Self::Array(x) => format!(
+                "[\n{}{}\n{}]",
+                indent(level + 1),
+                x.to_sdl(level + 1),
+                indent(level)
+            )
+            .to_string(),
+            Self::Object(x) => x.to_sdl(level + 1),
+        }
+    }
 }
 
-fn parse_pubsub_operation<'a, E: ParseError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, PubSubOperation, E> {
-    alt((
-        value(PubSubOperation::Publish, tag("publish")),
-        value(PubSubOperation::Subscribe, tag("subscribe")),
-    ))(input)
-}
-
-fn parse_task_operation<'a, E: ParseError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, TaskOperation, E> {
-    alt((
-        value(TaskOperation::Enqueue, tag("enqueue")),
-        value(TaskOperation::Dequeue, tag("dequeue")),
-        value(TaskOperation::GetLen, tag("get_len")),
-        value(TaskOperation::Empty, tag("empty")),
-    ))(input)
-}
-
-fn parse_identifier<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, &str, E> {
-    recognize(pair(
-        alt((alpha1, tag("_"))),
-        many0(alt((alphanumeric1, tag("_")))),
-    ))(input)
-}
-
-fn parse_primitive_type_config<'a, E: ParseError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, TypeItem, E> {
-    alt((
-        value(TypeItem::U32, tag("u32")),
-        value(TypeItem::I32, tag("i32")),
-        value(TypeItem::U64, tag("u64")),
-        value(TypeItem::I64, tag("i64")),
-        value(TypeItem::F32, tag("f32")),
-        value(TypeItem::F64, tag("f64")),
-        value(TypeItem::String, tag("string")),
-        value(TypeItem::Boolean, tag("boolean")),
-    ))(input)
-}
-
-fn parse_language<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, Language, E> {
-    alt((
-        value(Language::TypeScript, tag("TypeScript")),
-        value(Language::Python, tag("Python")),
-        value(Language::Rust, tag("Rust")),
-    ))(input)
-}
-
-fn parse_array_type_config<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, TypeItem, E> {
-    context(
-        "single type config array",
-        map(
-            preceded(
-                tuple((char('['), multispace0)),
-                cut(terminated(
-                    parse_type_config,
-                    preceded(multispace0, char(']')),
-                )),
-            ),
-            |v| TypeItem::Array(Box::new(v)),
-        ),
-    )(input)
-}
-
-fn parse_object_type_config<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, TypeItem, E> {
-    map(hash(parse_type_config), |hm| TypeItem::Object(hm))(input)
-}
-
-fn parse_reference_type_config<'a, E: ParseError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, TypeItem, E> {
-    map(parse_identifier, |s| TypeItem::Reference(s.to_string()))(input)
-}
-
-fn parse_type_config<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, TypeItem, E> {
-    preceded(
-        multispace0,
+impl FromSdl for Value {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
         alt((
-            parse_array_type_config,
-            parse_primitive_type_config,
-            parse_object_type_config,
-            parse_reference_type_config,
-        )),
-    )(input)
+            map(
+                preceded(
+                    tag("env"),
+                    cut(delimited(
+                        tuple((multispace0, char('('), multispace0)),
+                        is_not(") \t\r\n"),
+                        char(')'),
+                    )),
+                ),
+                |s: &str| Value::Env(s.to_string()),
+            ),
+            map(delimited(char('"'), is_not("\""), char('"')), |x: &str| {
+                Value::String(x.to_string())
+            }),
+        ))(input)
+    }
 }
 
-fn parse_string<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, String, E> {
-    map(delimited(char('"'), is_not("\""), char('"')), |s: &str| {
-        s.to_string()
-    })(input)
+impl ToSdl for Value {
+    fn to_sdl(&self, _: usize) -> String {
+        match self {
+            Self::String(x) => format!("\"{}\"", x).to_string(),
+            Self::Env(x) => format!("env({})", x).to_string(),
+        }
+    }
 }
 
-fn parse_value<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, Value, E> {
-    alt((
+impl FromSdl for Engine {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
         map(
             preceded(
-                tag("env"),
-                cut(delimited(
-                    tuple((multispace0, char('('), multispace0)),
-                    is_not(") \t\r\n"),
+                tag("Redis("),
+                cut(terminated(
+                    delimited(multispace0, Value::from_sdl, multispace0),
                     char(')'),
                 )),
             ),
-            |s: &str| Value::Env(s.to_string()),
-        ),
-        map(parse_string, Value::String),
+            |v| Engine::Redis(v),
+        )(input)
+    }
+}
+
+impl ToSdl for Engine {
+    fn to_sdl(&self, level: usize) -> String {
+        match self {
+            Self::Redis(x) => format!("Redis({})", x.to_sdl(level)).to_string(),
+        }
+    }
+}
+
+impl FromSdl for Config {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
+        map(
+            preceded(
+                char('{'),
+                cut(terminated(
+                    permutation((
+                        opt(preceded(
+                            tuple((
+                                multispace0,
+                                tag("import"),
+                                multispace0,
+                                char(':'),
+                                multispace0,
+                            )),
+                            cut(map(Vec::<String>::from_sdl, |v| {
+                                v.into_iter()
+                                    .map(|x| format!("\"{}\"", x).to_string())
+                                    .collect::<Vec<_>>()
+                            })),
+                        )),
+                        opt(preceded(
+                            tuple((
+                                multispace0,
+                                tag("export"),
+                                multispace0,
+                                char(':'),
+                                multispace0,
+                            )),
+                            cut(Export::from_sdl),
+                        )),
+                    )),
+                    preceded(multispace0, char('}')),
+                )),
+            ),
+            |(import, export)| Config {
+                import: import.unwrap_or(vec![]),
+                export,
+            },
+        )(input)
+    }
+}
+
+fn rem_first_and_last(value: &str) -> String {
+    let first_last_off = &value[1..value.len() - 1];
+    first_last_off.to_string()
+}
+
+impl ToSdl for Config {
+    fn to_sdl(&self, level: usize) -> String {
+        let level_indent = indent(level + 1);
+        let mut result = String::from("{\n");
+
+        if self.import.len() != 0 {
+            result.push_str(&format!(
+                "{}import: {}\n",
+                level_indent,
+                self.import
+                    .iter()
+                    .map(|x| rem_first_and_last(x))
+                    .collect::<Vec<_>>()
+                    .to_sdl(level)
+            ));
+        }
+        if let Some(export) = &self.export {
+            result.push_str(&format!(
+                "{}export: {}\n",
+                level_indent,
+                export.to_sdl(level + 1)
+            ));
+        }
+        result.push_str(&format!("{}}}", indent(level)));
+
+        result
+    }
+}
+
+impl FromSdl for Namespace {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
+        map(
+            permutation((
+                opt(preceded(
+                    tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
+                    cut(NamespaceDefaults::from_sdl),
+                )),
+                opt(preceded(
+                    tuple((multispace0, tag("Type"), multispace0)),
+                    cut(Vec::<(String, TypeItem)>::from_sdl),
+                )),
+                opt(preceded(
+                    tuple((multispace0, tag("Cache"), multispace0)),
+                    cut(Vec::<(String, CacheItem)>::from_sdl),
+                )),
+                opt(preceded(
+                    tuple((multispace0, tag("PubSub"), multispace0)),
+                    cut(Vec::<(String, PubSubItem)>::from_sdl),
+                )),
+                opt(preceded(
+                    tuple((multispace0, tag("Task"), multispace0)),
+                    cut(Vec::<(String, TaskItem)>::from_sdl),
+                )),
+            )),
+            |(defaults, type_items, cache_items, pubsub_items, task_items)| Namespace {
+                defaults,
+                type_items,
+                cache_items,
+                pubsub_items,
+                task_items,
+            },
+        )(input)
+    }
+}
+
+impl ToSdl for Namespace {
+    fn to_sdl(&self, level: usize) -> String {
+        let level_indent = indent(level);
+        let mut result = String::from("");
+
+        if let Some(x) = &self.defaults {
+            result.push_str(&format!(
+                "{}NamespaceDefaults {}\n",
+                level_indent,
+                x.to_sdl(level + 1)
+            ));
+        }
+        if let Some(x) = &self.task_items {
+            result.push_str(&format!("{}Type {}\n", level_indent, x.to_sdl(level + 1)));
+        }
+        if let Some(x) = &self.cache_items {
+            result.push_str(&format!("{}Cache {}\n", level_indent, x.to_sdl(level + 1)));
+        }
+        if let Some(x) = &self.pubsub_items {
+            result.push_str(&format!("{}PubSub {}\n", level_indent, x.to_sdl(level + 1)));
+        }
+        if let Some(x) = &self.task_items {
+            result.push_str(&format!("{}Task {}\n", level_indent, x.to_sdl(level + 1)));
+        }
+
+        result
+    }
+}
+
+fn namespaces_from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+    input: &'a str,
+) -> IResult<&'a str, Vec<(String, Namespace)>, E> {
+    many0(preceded(
+        tuple((tag("Namespace"), multispace1)),
+        cut(terminated(
+            pair(
+                terminated(String::from_sdl, tuple((multispace0, char('{')))),
+                Namespace::from_sdl,
+            ),
+            tuple((multispace0, char('}'))),
+        )),
     ))(input)
 }
 
-fn parse_engine<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, Engine, E> {
-    map(
-        preceded(
-            tag("Redis("),
-            cut(terminated(
-                delimited(multispace0, parse_value, multispace0),
-                char(')'),
-            )),
-        ),
-        |v| Engine::Redis(v),
-    )(input)
+fn namespaces_to_sdl(namespaces: &[(String, Namespace)], level: usize) -> String {
+    let level_indent = indent(level + 1);
+    let mut result = String::from("{\n");
+    for (name, namespace) in namespaces {
+        result.push_str(&format!(
+            "{}Namespace {}{}",
+            level_indent,
+            name,
+            namespace.to_sdl(level + 1)
+        ));
+    }
+    result
 }
 
-fn parse_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, Namespace, E> {
-    map(
-        permutation((
-            map(
-                opt(preceded(
-                    tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
-                    cut(hash_known_keys!(
-                        (cache_ttl, parse_value, false),
-                        (task_queue_type, parse_value, false)
-                    )),
-                )),
-                |defaults| match defaults {
-                    None => NamespaceDefaults {
-                        cache_ttl: None,
-                        task_queue_type: None,
-                    },
-                    Some((cache_ttl, task_queue_type)) => NamespaceDefaults {
-                        cache_ttl,
-                        task_queue_type,
-                    },
-                },
-            ),
-            map(
-                opt(preceded(
-                    tuple((multispace0, tag("Type"), multispace0)),
-                    cut(hash(parse_type_config)),
-                )),
-                |x| x.unwrap_or(Vec::new()),
-            ),
-            map(
-                opt(preceded(
-                    tuple((multispace0, tag("Cache"), multispace0)),
-                    cut(hash(map(
-                        hash_known_keys!(
-                            (key, parse_type_config, false),
-                            (payload, parse_type_config, true),
-                            (public, array(parse_cache_operation), false),
-                            (ttl, parse_value, false)
-                        ),
-                        |(key, payload, public, ttl)| CacheItem {
-                            key,
-                            payload,
-                            ttl,
-                            more: ItemWithPublic {
-                                public: public.unwrap_or(vec![]),
-                            },
-                        },
-                    ))),
-                )),
-                |x| x.unwrap_or(Vec::new()),
-            ),
-            map(
-                opt(preceded(
-                    tuple((multispace0, tag("PubSub"), multispace0)),
-                    cut(hash(map(
-                        hash_known_keys!(
-                            (key, parse_type_config, false),
-                            (payload, parse_type_config, true),
-                            (public, array(parse_pubsub_operation), false)
-                        ),
-                        |(key, payload, public)| PubSubItem {
-                            key,
-                            payload,
-                            more: ItemWithPublic {
-                                public: public.unwrap_or(vec![]),
-                            },
-                        },
-                    ))),
-                )),
-                |x| x.unwrap_or(Vec::new()),
-            ),
-            map(
-                opt(preceded(
-                    tuple((multispace0, tag("Task"), multispace0)),
-                    cut(hash(map(
-                        hash_known_keys!(
-                            (key, parse_type_config, false),
-                            (payload, parse_type_config, true),
-                            (public, array(parse_task_operation), false),
-                            (queue_type, parse_value, false)
-                        ),
-                        |(key, payload, public, queue_type)| TaskItem {
-                            key,
-                            payload,
-                            queue_type,
-                            more: ItemWithPublic {
-                                public: public.unwrap_or(vec![]),
-                            },
-                        },
-                    ))),
-                )),
-                |x| x.unwrap_or(Vec::new()),
-            ),
-        )),
-        |(defaults, type_items, cache_items, pubsub_items, task_items)| Namespace {
-            defaults,
-            type_items,
-            cache_items,
-            pubsub_items,
-            task_items,
-        },
-    )(input)
-}
-
-fn parse_named_namespace<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, (String, Namespace), E> {
-    map(
-        preceded(
-            tuple((tag("Namespace"), multispace1)),
-            cut(terminated(
-                pair(
-                    terminated(parse_identifier, tuple((multispace0, char('{')))),
-                    parse_namespace,
-                ),
-                tuple((multispace0, char('}'))),
-            )),
-        ),
-        |(name, namespace)| (name.to_string(), namespace),
-    )(input)
-}
-
-fn parse_export<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-    input: &'a str,
-) -> IResult<&'a str, Export, E> {
-    map(
-        hash_known_keys!(
-            (engine, parse_engine, true),
-            (
-                files,
-                array(map(
-                    hash_known_keys!((language, parse_language, true), (path, parse_string, true)),
-                    |(language, path)| FileConfig { language, path }
-                )),
-                true
-            )
-        ),
-        |(engine, files)| Export { engine, files },
-    )(input)
-}
-
-impl Schema {
-    pub fn new<F: FileSystem>(fs: &F, path: &str) -> Result<Self, String> {
-        let input = fs
-            .read_to_string(path)
-            .map_err(|_| format!("Couldn't read schema at path \"{}\"", path))?;
-        println!("Read schema from \"{}\"", path);
-        let input = input.as_str();
-
-        let mut parser = map(
+impl FromSdl for Schema {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
+        map(
             tuple((
-                opt(preceded(
-                    multispace0,
-                    map(
-                        preceded(
-                            tuple((tag("Config"), multispace1)),
-                            cut(hash_known_keys!(
-                                (
-                                    import,
-                                    array(map_res(
-                                        map_res(parse_string, |import| fs.resolve(&path, &import)),
-                                        |import_path| Self::new(fs, &import_path)
-                                    )),
-                                    false
-                                ),
-                                (export, parse_export, false)
-                            )),
-                        ),
-                        |(import, export)| Config {
-                            import: import.unwrap_or(vec![]),
-                            export,
-                        },
-                    ),
-                )),
-                many0(preceded(multispace0, parse_named_namespace)),
-                parse_namespace,
-                many0(preceded(multispace0, parse_named_namespace)),
+                opt(Config::from_sdl),
+                namespaces_from_sdl,
+                opt(Namespace::from_sdl),
+                namespaces_from_sdl,
             )),
             |(config, named_namespaces, global_namespace, more_named_namespaces)| Schema {
-                config: config.unwrap_or(Config {
-                    import: vec![],
-                    export: None,
+                config,
+                global_namespace: global_namespace.unwrap_or(Namespace {
+                    defaults: None,
+                    type_items: None,
+                    cache_items: None,
+                    pubsub_items: None,
+                    task_items: None,
                 }),
-                global_namespace,
                 namespaces: named_namespaces
                     .into_iter()
                     .chain(more_named_namespaces.into_iter())
                     .collect(),
             },
-        );
-        let (_, schema) = parser(input).finish().map_err(|e| {
-            let stack = format!("parser feedback:\n{}", convert_error(input, e));
-            stack
-        })?;
-        Ok(schema)
+        )(input)
     }
+}
+
+pub fn schema_to_sdl(schema: &Schema) -> String {
+    let mut result = String::from("");
+    let level = 0;
+
+    if let Some(x) = &schema.config {
+        result.push_str(&format!("{}\n", x.to_sdl(level)));
+    }
+    result.push_str(&format!("{}\n", schema.global_namespace.to_sdl(level)));
+    result.push_str(&format!(
+        "{}\n",
+        namespaces_to_sdl(&schema.namespaces, level)
+    ));
+
+    result
 }

@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::parser::{
-    CacheItem, CacheOperation, Export, Namespace, NamespaceDefaults, PubSubItem, PubSubOperation,
-    Schema, TaskItem, TaskOperation, TypeItem, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS,
-    ALL_TASK_OPERATIONS,
+use crate::{
+    imports::ImportedSchema,
+    parser::{
+        CacheOperation, Export, Namespace, NamespaceDefaults, PubSubOperation, TaskOperation,
+        TypeItem, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
+    },
 };
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -28,9 +30,30 @@ pub struct Config {
 pub struct ExportNamespace<T> {
     pub defaults: NamespaceDefaults,
     pub type_items: Vec<(String, T)>,
-    pub cache_items: Vec<(String, CacheItem<T, ItemWithExpose<CacheOperation>>)>,
-    pub pubsub_items: Vec<(String, PubSubItem<T, ItemWithExpose<PubSubOperation>>)>,
-    pub task_items: Vec<(String, TaskItem<T, ItemWithExpose<TaskOperation>>)>,
+    pub cache_items: Vec<(String, ExportCacheItem<T>)>,
+    pub pubsub_items: Vec<(String, ExportPubSubItem<T>)>,
+    pub task_items: Vec<(String, ExportTaskItem<T>)>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct ExportCacheItem<T> {
+    pub key: Option<T>,
+    pub payload: T,
+    pub ttl: Option<Value>,
+    pub expose: Vec<CacheOperation>,
+}
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct ExportPubSubItem<T> {
+    pub key: Option<T>,
+    pub payload: T,
+    pub expose: Vec<PubSubOperation>,
+}
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct ExportTaskItem<T> {
+    pub key: Option<T>,
+    pub payload: T,
+    pub queue_type: Option<Value>,
+    pub expose: Vec<TaskOperation>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -43,82 +66,106 @@ fn namespace_to_export_namespace(
     expose_all: bool,
 ) -> ExportNamespace<TypeItem> {
     ExportNamespace {
-        defaults: namespace.defaults,
-        type_items: namespace.type_items.into_iter().collect(),
+        defaults: namespace.defaults.unwrap_or(NamespaceDefaults {
+            cache_ttl: None,
+            task_queue_type: None,
+        }),
+        type_items: namespace.type_items.unwrap_or(vec![]).into_iter().collect(),
         cache_items: namespace
             .cache_items
+            .unwrap_or(vec![])
             .into_iter()
-            .filter(|(_, x)| expose_all || x.more.public.len() != 0)
-            .map(|(k, x)| {
-                (
+            .filter_map(|(k, x)| match expose_all {
+                true => Some((
                     k,
-                    CacheItem {
+                    ExportCacheItem {
                         key: x.key,
                         payload: x.payload,
+                        expose: ALL_CACHE_OPERATIONS.to_vec(),
                         ttl: x.ttl,
-                        more: ItemWithExpose {
-                            expose: match expose_all {
-                                true => ALL_CACHE_OPERATIONS.to_vec(),
-                                false => x.more.public,
-                            },
-                        },
                     },
-                )
+                )),
+                false => match x.public {
+                    Some(v) if v.len() != 0 => Some((
+                        k,
+                        ExportCacheItem {
+                            key: x.key,
+                            payload: x.payload,
+                            expose: v,
+                            ttl: x.ttl,
+                        },
+                    )),
+                    _ => None,
+                },
             })
             .collect(),
         pubsub_items: namespace
             .pubsub_items
+            .unwrap_or(vec![])
             .into_iter()
-            .filter(|(_, x)| expose_all || x.more.public.len() != 0)
-            .map(|(k, x)| {
-                (
+            .filter_map(|(k, x)| match expose_all {
+                true => Some((
                     k,
-                    PubSubItem {
+                    ExportPubSubItem {
                         key: x.key,
                         payload: x.payload,
-                        more: ItemWithExpose {
-                            expose: match expose_all {
-                                true => ALL_PUBSUB_OPERATIONS.to_vec(),
-                                false => x.more.public,
-                            },
-                        },
+                        expose: ALL_PUBSUB_OPERATIONS.to_vec(),
                     },
-                )
+                )),
+                false => match x.public {
+                    Some(v) if v.len() != 0 => Some((
+                        k,
+                        ExportPubSubItem {
+                            key: x.key,
+                            payload: x.payload,
+                            expose: v,
+                        },
+                    )),
+                    _ => None,
+                },
             })
             .collect(),
         task_items: namespace
             .task_items
+            .unwrap_or(vec![])
             .into_iter()
-            .filter(|(_, x)| expose_all || x.more.public.len() != 0)
-            .map(|(k, x)| {
-                (
+            .filter_map(|(k, x)| match expose_all {
+                true => Some((
                     k,
-                    TaskItem {
+                    ExportTaskItem {
                         key: x.key,
                         payload: x.payload,
+                        expose: ALL_TASK_OPERATIONS.to_vec(),
                         queue_type: x.queue_type,
-                        more: ItemWithExpose {
-                            expose: match expose_all {
-                                true => ALL_TASK_OPERATIONS.to_vec(),
-                                false => x.more.public,
-                            },
-                        },
                     },
-                )
+                )),
+                false => match x.public {
+                    Some(v) if v.len() != 0 => Some((
+                        k,
+                        ExportTaskItem {
+                            key: x.key,
+                            payload: x.payload,
+                            expose: v,
+                            queue_type: x.queue_type,
+                        },
+                    )),
+                    _ => None,
+                },
             })
             .collect(),
     }
 }
 
 impl InnerExportSchema {
-    fn new(schema: Schema, is_import: bool) -> Self {
-        let import_export_schemas = schema
-            .config
-            .import
+    fn new(import_schema: ImportedSchema, is_import: bool) -> Self {
+        let import_export_schemas = import_schema
+            .imports
             .into_iter()
             .map(|x| InnerExportSchema::new(x, true))
             .collect::<Vec<_>>();
-        let namespaces = schema
+
+        let namespaces = import_schema
+            .schema
             .namespaces
             .into_iter()
             .map(|(k, x)| (k, namespace_to_export_namespace(x, !is_import)));
@@ -129,7 +176,8 @@ impl InnerExportSchema {
                     .flat_map(|x| x.namespaces.clone()),
             )
             .collect::<Vec<_>>();
-        let global_namespace = namespace_to_export_namespace(schema.global_namespace, !is_import);
+        let global_namespace =
+            namespace_to_export_namespace(import_schema.schema.global_namespace, !is_import);
         let global_namespace = ExportNamespace {
             defaults: global_namespace.defaults,
             type_items: global_namespace
@@ -182,15 +230,14 @@ impl InnerExportSchema {
 }
 
 impl ExportSchema {
-    pub fn new_vec(schema: Schema) -> Vec<Self> {
-        let schema_clone = schema.clone();
-        schema
-            .config
-            .import
+    pub fn new_vec(import_schema: ImportedSchema) -> Vec<Self> {
+        let schema_clone = import_schema.clone();
+        import_schema
+            .imports
             .into_iter()
             .flat_map(ExportSchema::new_vec)
             .chain(
-                match schema.config.export {
+                match import_schema.schema.config.and_then(|config| config.export) {
                     Some(export) => {
                         let inner_export_schema = InnerExportSchema::new(schema_clone, false);
                         let export_schema = ExportSchema {
