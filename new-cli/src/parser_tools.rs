@@ -103,6 +103,23 @@ impl<T: ToSdl> ToSdl for Vec<T> {
     }
 }
 
+impl<T: FromSdl> FromSdl for Option<T> {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        _: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
+        panic!("Should not be");
+    }
+}
+
+impl<T: ToSdl> ToSdl for Option<T> {
+    fn to_sdl(&self, _: usize) -> String {
+        panic!("Should not be")
+    }
+}
+
 impl<T: FromSdl> FromSdl for Vec<(String, T)> {
     fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
         input: &'a str,
@@ -236,10 +253,15 @@ macro_rules! impl_from_and_to_sdl_for_struct {
         }
     };
 
-    (@from_sdl Option<$inner:ty>) => {
-        $inner::from_sdl
+    (@from_sdl Option<Vec<$inner:ty>>) => {
+        Vec::<$inner>::from_sdl
     };
-
+    (@from_sdl Vec<$inner:ty>) => {
+        Vec::<$inner>::from_sdl
+    };
+    (@from_sdl Option<$inner:ty>) => {
+        <$inner>::from_sdl
+    };
     (@from_sdl $other:ty) => {
         <$other>::from_sdl
     };
