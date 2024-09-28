@@ -1,8 +1,4 @@
-use crate::{
-    parser::{Config, Schema},
-    parser_tools::FromSdl,
-    FileSystem,
-};
+use crate::{parser::Schema, parser_tools::FromSdl, FileSystem};
 use nom::{error::convert_error, Finish};
 use serde::{Deserialize, Serialize};
 
@@ -30,11 +26,7 @@ impl ImportedSchema {
             schema,
             path: path.to_string(),
             imports: config
-                .unwrap_or(Config {
-                    import: None,
-                    export: None,
-                })
-                .import
+                .and_then(|x| x.import)
                 .unwrap_or(vec![])
                 .into_iter()
                 .map(|x| ImportedSchema::new(fs, &x.to_string()))

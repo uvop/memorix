@@ -75,18 +75,16 @@ fn namespace_to_export_namespace(
             .cache_items
             .unwrap_or(vec![])
             .into_iter()
-            .filter_map(|(k, x)| match expose_all {
-                true => Some((
-                    k,
-                    ExportCacheItem {
-                        key: x.key,
-                        payload: x.payload,
-                        expose: ALL_CACHE_OPERATIONS.to_vec(),
-                        ttl: x.ttl,
-                    },
-                )),
-                false => match x.public {
-                    Some(v) if v.len() != 0 => Some((
+            .filter_map(|(k, x)| {
+                (match expose_all {
+                    true => Some(ALL_CACHE_OPERATIONS.to_vec()),
+                    false => x.public.and_then(|v| match v.len() == 0 {
+                        true => None,
+                        false => Some(v),
+                    }),
+                })
+                .and_then(|v| {
+                    Some((
                         k,
                         ExportCacheItem {
                             key: x.key,
@@ -94,53 +92,48 @@ fn namespace_to_export_namespace(
                             expose: v,
                             ttl: x.ttl,
                         },
-                    )),
-                    _ => None,
-                },
+                    ))
+                })
             })
             .collect(),
         pubsub_items: namespace
             .pubsub_items
             .unwrap_or(vec![])
             .into_iter()
-            .filter_map(|(k, x)| match expose_all {
-                true => Some((
-                    k,
-                    ExportPubSubItem {
-                        key: x.key,
-                        payload: x.payload,
-                        expose: ALL_PUBSUB_OPERATIONS.to_vec(),
-                    },
-                )),
-                false => match x.public {
-                    Some(v) if v.len() != 0 => Some((
+            .filter_map(|(k, x)| {
+                (match expose_all {
+                    true => Some(ALL_PUBSUB_OPERATIONS.to_vec()),
+                    false => x.public.and_then(|v| match v.len() == 0 {
+                        true => None,
+                        false => Some(v),
+                    }),
+                })
+                .and_then(|v| {
+                    Some((
                         k,
                         ExportPubSubItem {
                             key: x.key,
                             payload: x.payload,
                             expose: v,
                         },
-                    )),
-                    _ => None,
-                },
+                    ))
+                })
             })
             .collect(),
         task_items: namespace
             .task_items
             .unwrap_or(vec![])
             .into_iter()
-            .filter_map(|(k, x)| match expose_all {
-                true => Some((
-                    k,
-                    ExportTaskItem {
-                        key: x.key,
-                        payload: x.payload,
-                        expose: ALL_TASK_OPERATIONS.to_vec(),
-                        queue_type: x.queue_type,
-                    },
-                )),
-                false => match x.public {
-                    Some(v) if v.len() != 0 => Some((
+            .filter_map(|(k, x)| {
+                (match expose_all {
+                    true => Some(ALL_TASK_OPERATIONS.to_vec()),
+                    false => x.public.and_then(|v| match v.len() == 0 {
+                        true => None,
+                        false => Some(v),
+                    }),
+                })
+                .and_then(|v| {
+                    Some((
                         k,
                         ExportTaskItem {
                             key: x.key,
@@ -148,9 +141,8 @@ fn namespace_to_export_namespace(
                             expose: v,
                             queue_type: x.queue_type,
                         },
-                    )),
-                    _ => None,
-                },
+                    ))
+                })
             })
             .collect(),
     }

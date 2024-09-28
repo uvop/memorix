@@ -103,23 +103,6 @@ impl<T: ToSdl> ToSdl for Vec<T> {
     }
 }
 
-impl<T: FromSdl> FromSdl for Option<T> {
-    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-        _: &'a str,
-    ) -> IResult<&'a str, Self, E>
-    where
-        Self: Sized,
-    {
-        panic!("Should not be");
-    }
-}
-
-impl<T: ToSdl> ToSdl for Option<T> {
-    fn to_sdl(&self, _: usize) -> String {
-        panic!("Should not be")
-    }
-}
-
 impl<T: FromSdl> FromSdl for Vec<(String, T)> {
     fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
         input: &'a str,
@@ -244,7 +227,7 @@ macro_rules! impl_from_and_to_sdl_for_struct {
                 let mut result = String::from("{\n");
 
                 $(
-                    impl_from_and_to_sdl_for_struct!(@to_sdl_field self.$field, stringify!($field), $field_type, level_indent, result, level);
+                    impl_from_and_to_sdl_for_struct!(@to_sdl_field self.$field, $field, $field_type, level_indent, result, level);
                 )+
 
                 result.push_str(&format!("{}}}", indent(level)));
@@ -275,7 +258,7 @@ macro_rules! impl_from_and_to_sdl_for_struct {
         context(concat!("Missing required key \"", stringify!($field), "\""), $parser)
     };
 
-    (@to_sdl_field $field:expr, $field_name:expr, Option<$inner:ty>, $indent:expr, $result:expr, $level:expr) => {
+    (@to_sdl_field $field:expr, $field_name:ident, Option<$inner:ty>, $indent:expr, $result:expr, $level:expr) => {
         if let Some(value) = &$field {
             $result.push_str(&format!(
                 concat!("{}", stringify!($field_name),": {}\n"),
@@ -285,7 +268,7 @@ macro_rules! impl_from_and_to_sdl_for_struct {
         }
     };
 
-    (@to_sdl_field $field:expr, $field_name:expr, $field_type:ty, $indent:expr, $result:expr, $level:expr) => {
+    (@to_sdl_field $field:expr, $field_name:ident, $field_type:ty, $indent:expr, $result:expr, $level:expr) => {
         $result.push_str(&format!(
             concat!("{}", stringify!($field_name),": {}\n"),
             $indent,

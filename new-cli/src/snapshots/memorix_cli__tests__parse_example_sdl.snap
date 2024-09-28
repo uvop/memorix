@@ -1,7 +1,7 @@
 ---
 source: src/main.rs
-assertion_line: 311
-expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
+assertion_line: 351
+expression: "codegen(&mock_fs, \"schema.memorix\")?"
 ---
 [
   {
@@ -25,13 +25,11 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
               "key": null,
               "payload": "U32",
               "ttl": null,
-              "more": {
-                "expose": [
-                  "Get",
-                  "Set",
-                  "Delete"
-                ]
-              }
+              "expose": [
+                "Get",
+                "Set",
+                "Delete"
+              ]
             }
           ],
           [
@@ -40,13 +38,11 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
               "key": "String",
               "payload": "String",
               "ttl": null,
-              "more": {
-                "expose": [
-                  "Get",
-                  "Set",
-                  "Delete"
-                ]
-              }
+              "expose": [
+                "Get",
+                "Set",
+                "Delete"
+              ]
             }
           ]
         ],
@@ -120,13 +116,11 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
                 "Reference": "InlineCachePayloadUserProfile"
               },
               "ttl": null,
-              "more": {
-                "expose": [
-                  "Get",
-                  "Set",
-                  "Delete"
-                ]
-              }
+              "expose": [
+                "Get",
+                "Set",
+                "Delete"
+              ]
             }
           ],
           [
@@ -139,13 +133,11 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
               "ttl": {
                 "Env": "USER_SESSION_TTL"
               },
-              "more": {
-                "expose": [
-                  "Get",
-                  "Set",
-                  "Delete"
-                ]
-              }
+              "expose": [
+                "Get",
+                "Set",
+                "Delete"
+              ]
             }
           ],
           [
@@ -154,11 +146,9 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
               "key": null,
               "payload": "U32",
               "ttl": null,
-              "more": {
-                "expose": [
-                  "Get"
-                ]
-              }
+              "expose": [
+                "Get"
+              ]
             }
           ]
         ],
@@ -254,13 +244,11 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
                     "Reference": "InlineCachePayloadMessage"
                   },
                   "ttl": null,
-                  "more": {
-                    "expose": [
-                      "Get",
-                      "Set",
-                      "Delete"
-                    ]
-                  }
+                  "expose": [
+                    "Get",
+                    "Set",
+                    "Delete"
+                  ]
                 }
               ]
             ],
@@ -274,12 +262,10 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
                   "payload": {
                     "Reference": "InlinePubSubPayloadNewMessage"
                   },
-                  "more": {
-                    "expose": [
-                      "Publish",
-                      "Subscribe"
-                    ]
-                  }
+                  "expose": [
+                    "Publish",
+                    "Subscribe"
+                  ]
                 }
               ]
             ],
@@ -294,14 +280,12 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
                   "queue_type": {
                     "String": "Fifo"
                   },
-                  "more": {
-                    "expose": [
-                      "Enqueue",
-                      "Dequeue",
-                      "Empty",
-                      "GetLen"
-                    ]
-                  }
+                  "expose": [
+                    "Enqueue",
+                    "Dequeue",
+                    "Empty",
+                    "GetLen"
+                  ]
                 }
               ]
             ]
@@ -423,13 +407,11 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
                     "Reference": "InlineCachePayloadUserProfile"
                   },
                   "ttl": null,
-                  "more": {
-                    "expose": [
-                      "Get",
-                      "Set",
-                      "Delete"
-                    ]
-                  }
+                  "expose": [
+                    "Get",
+                    "Set",
+                    "Delete"
+                  ]
                 }
               ],
               [
@@ -442,13 +424,11 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
                   "ttl": {
                     "Env": "USER_SESSION_TTL"
                   },
-                  "more": {
-                    "expose": [
-                      "Get",
-                      "Set",
-                      "Delete"
-                    ]
-                  }
+                  "expose": [
+                    "Get",
+                    "Set",
+                    "Delete"
+                  ]
                 }
               ]
             ],
@@ -462,12 +442,10 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
                   "payload": {
                     "Reference": "InlinePubSubPayloadUserActivity"
                   },
-                  "more": {
-                    "expose": [
-                      "Publish",
-                      "Subscribe"
-                    ]
-                  }
+                  "expose": [
+                    "Publish",
+                    "Subscribe"
+                  ]
                 }
               ]
             ],
@@ -480,14 +458,12 @@ expression: "serde_json::to_string_pretty(&flat_export_schemas)?"
                     "Reference": "InlineTaskPayloadUserRegistrationTasks"
                   },
                   "queue_type": null,
-                  "more": {
-                    "expose": [
-                      "Enqueue",
-                      "Dequeue",
-                      "Empty",
-                      "GetLen"
-                    ]
-                  }
+                  "expose": [
+                    "Enqueue",
+                    "Dequeue",
+                    "Empty",
+                    "GetLen"
+                  ]
                 }
               ]
             ]
