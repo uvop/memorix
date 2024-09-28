@@ -438,6 +438,7 @@ Type {
       Cache {
         how_many_atoms: {
           payload: u32
+          key: u64
         }
       }
       PubSub {
@@ -450,6 +451,11 @@ Type {
       a: [u64      ]
     }
     Namespace Rocket {
+      Cache {
+        launched: {
+          payload: boolean
+        }
+      }
       Enum {
         Operation {
           START
@@ -459,11 +465,6 @@ Type {
           RED
           GREEN
           BLUE
-        }
-      }
-      Cache {
-        launched: {
-          payload: boolean
         }
       }
       PubSub {

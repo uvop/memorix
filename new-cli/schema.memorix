@@ -1,30 +1,49 @@
 Config {
   import: [
-    "./src/schema2.memorix"
+    "src/schema2.memorix"
   ]
   export: {
-    engine: Redis( env(REDIS_URL) )
+    engine: Redis(env(REDIS_URL))
     files: [
       {
-        language: TypeScript
+        language: typescript
         path: "memorix.generated.ts"
       }
       {
-        language: Python
+        language: python
         path: "memorix_generated.py"
       }
       {
-        language: Rust
+        language: rust
         path: "memorix_generated.rs"
       }
     ]
   }
 }
 
-Cache {
-    abc: {
-        key: u32
-        payload: u64
-        ttl: "60"
-    }
+Enum {
+  Operation {
+    START
+    STOP
+  }
+  Color {
+    RED
+    GREEN
+    BLUE
+  }
 }
+Cache {
+  abc: {
+    key: u32
+    payload: u64
+    ttl: "60"
+  }
+}
+PubSub {
+  abc: {
+    key: u32
+    payload: u64
+  }
+}
+
+
