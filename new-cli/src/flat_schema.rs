@@ -213,6 +213,7 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
                 .into_iter()
                 .map(|(k, item, _)| (k, item))
                 .collect(),
+            enum_items: namespace.enum_items,
             cache_items: cache_items
                 .into_iter()
                 .map(|(k, item, _)| (k, item))

@@ -94,14 +94,12 @@ pub fn format<F: FileSystem>(
     path: &str,
 ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let input = fs.read_to_string(path)?;
-    println!("Read schema from \"{}\"", path);
     let input = input.as_str();
     let (_, schema) = Schema::from_sdl(input).finish().map_err(|e| {
         let stack = format!("parser feedback:\n{}", convert_error(input, e));
         stack
     })?;
     let formatted_input = schema_to_sdl(&schema);
-    println!("{}", formatted_input);
     fs.write_string(path, &formatted_input)?;
     Ok(())
 }
@@ -256,6 +254,12 @@ Config {
 }
 
 Namespace MessageService {
+    Enum {
+      Operation {
+        START
+        STOP
+      }
+    }
     Cache {
         message: {
             key: string
@@ -446,6 +450,17 @@ Type {
       a: [u64      ]
     }
     Namespace Rocket {
+      Enum {
+        Operation {
+          START
+          STOP
+        }
+        Color {
+          RED
+          GREEN
+          BLUE
+        }
+      }
       Cache {
         launched: {
           payload: boolean

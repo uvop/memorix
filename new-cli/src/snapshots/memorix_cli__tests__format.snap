@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 467
+assertion_line: 482
 expression: formatted_schema
 ---
 Config {
@@ -35,6 +35,18 @@ Namespace Science {
 }
 
 Namespace Rocket {
+  Enum {
+    Operation {
+      START
+      STOP
+    }
+    Color {
+      RED
+      GREEN
+      BLUE
+    }
+  }
+
   Cache {
     launched: {
       payload: boolean
