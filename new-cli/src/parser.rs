@@ -212,7 +212,7 @@ impl_from_and_to_sdl_for_enum!(
     Enqueue => "enqueue",
     Dequeue => "dequeue",
     Empty => "empty",
-    GetLen => "getLen"
+    GetLen => "get_len"
 );
 
 impl FromSdl for TypeItem {
