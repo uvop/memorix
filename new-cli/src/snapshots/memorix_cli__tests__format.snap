@@ -24,6 +24,7 @@ Type {
 Namespace Science {
   Cache {
     how_many_atoms: {
+      key: u64
       payload: u32
     }
   }

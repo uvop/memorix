@@ -8,7 +8,7 @@ use nom::{
     character::complete::{alphanumeric1, char, multispace0, multispace1},
     combinator::{cut, map, opt, value},
     error::{context, ParseError},
-    multi::{many0, separated_list1},
+    multi::{many0, many_m_n, separated_list1},
     sequence::{delimited, pair, preceded, terminated, tuple},
     IResult,
 };
@@ -458,42 +458,132 @@ impl FromSdl for Namespace {
     where
         Self: Sized,
     {
-        map(
-            permutation((
-                opt(preceded(
-                    tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
-                    cut(NamespaceDefaults::from_sdl),
-                )),
-                opt(preceded(
-                    tuple((multispace0, tag("Type"), multispace0)),
-                    cut(Vec::<(String, TypeItem)>::from_sdl),
-                )),
-                opt(preceded(
-                    tuple((multispace0, tag("Enum"), multispace0)),
-                    cut(EnumItems::from_sdl),
-                )),
-                opt(preceded(
-                    tuple((multispace0, tag("Cache"), multispace0)),
-                    cut(Vec::<(String, CacheItem)>::from_sdl),
-                )),
-                opt(preceded(
-                    tuple((multispace0, tag("PubSub"), multispace0)),
-                    cut(Vec::<(String, PubSubItem)>::from_sdl),
-                )),
-                opt(preceded(
-                    tuple((multispace0, tag("Task"), multispace0)),
-                    cut(Vec::<(String, TaskItem)>::from_sdl),
-                )),
+        many_m_n(
+            0,
+            6,
+            alt((
+                map(
+                    preceded(
+                        tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
+                        cut(NamespaceDefaults::from_sdl),
+                    ),
+                    |x| Namespace {
+                        defaults: Some(x),
+                        type_items: None,
+                        enum_items: None,
+                        cache_items: None,
+                        pubsub_items: None,
+                        task_items: None,
+                    },
+                ),
+                map(
+                    preceded(
+                        tuple((multispace0, tag("Type"), multispace0)),
+                        cut(Vec::<(String, TypeItem)>::from_sdl),
+                    ),
+                    |x| Namespace {
+                        defaults: None,
+                        type_items: Some(x),
+                        enum_items: None,
+                        cache_items: None,
+                        pubsub_items: None,
+                        task_items: None,
+                    },
+                ),
+                map(
+                    preceded(
+                        tuple((multispace0, tag("Enum"), multispace0)),
+                        cut(EnumItems::from_sdl),
+                    ),
+                    |x| Namespace {
+                        defaults: None,
+                        type_items: None,
+                        enum_items: Some(x),
+                        cache_items: None,
+                        pubsub_items: None,
+                        task_items: None,
+                    },
+                ),
+                map(
+                    preceded(
+                        tuple((multispace0, tag("Cache"), multispace0)),
+                        cut(Vec::<(String, CacheItem)>::from_sdl),
+                    ),
+                    |x| Namespace {
+                        defaults: None,
+                        type_items: None,
+                        enum_items: None,
+                        cache_items: Some(x),
+                        pubsub_items: None,
+                        task_items: None,
+                    },
+                ),
+                map(
+                    preceded(
+                        tuple((multispace0, tag("PubSub"), multispace0)),
+                        cut(Vec::<(String, PubSubItem)>::from_sdl),
+                    ),
+                    |x| Namespace {
+                        defaults: None,
+                        type_items: None,
+                        enum_items: None,
+                        cache_items: None,
+                        pubsub_items: Some(x),
+                        task_items: None,
+                    },
+                ),
+                map(
+                    preceded(
+                        tuple((multispace0, tag("Task"), multispace0)),
+                        cut(Vec::<(String, TaskItem)>::from_sdl),
+                    ),
+                    |x| Namespace {
+                        defaults: None,
+                        type_items: None,
+                        enum_items: None,
+                        cache_items: None,
+                        pubsub_items: None,
+                        task_items: Some(x),
+                    },
+                ),
             )),
-            |(defaults, type_items, enum_items, cache_items, pubsub_items, task_items)| Namespace {
-                defaults,
-                type_items,
-                enum_items,
-                cache_items,
-                pubsub_items,
-                task_items,
-            },
         )(input)
+        .map(|(remaining, namespaces)| {
+            (
+                remaining,
+                namespaces.iter().fold(
+                    Namespace {
+                        defaults: None,
+                        type_items: None,
+                        enum_items: None,
+                        cache_items: None,
+                        pubsub_items: None,
+                        task_items: None,
+                    },
+                    |mut acc, ns| {
+                        if acc.defaults.is_none() {
+                            acc.defaults = ns.defaults.clone();
+                        }
+                        if acc.type_items.is_none() {
+                            acc.type_items = ns.type_items.clone();
+                        }
+                        if acc.enum_items.is_none() {
+                            acc.enum_items = ns.enum_items.clone();
+                        }
+                        if acc.cache_items.is_none() {
+                            acc.cache_items = ns.cache_items.clone();
+                        }
+                        if acc.pubsub_items.is_none() {
+                            acc.pubsub_items = ns.pubsub_items.clone();
+                        }
+                        if acc.task_items.is_none() {
+                            acc.task_items = ns.task_items.clone();
+                        }
+                        acc
+                    },
+                ),
+            )
+        })
     }
 }
 
