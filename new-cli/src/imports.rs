@@ -15,10 +15,13 @@ impl ImportedSchema {
         path: &str,
     ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
         let input = fs.read_to_string(path)?;
-        println!("Read schema from \"{}\"", path);
         let input = input.as_str();
         let (_, schema) = Schema::from_sdl(input).finish().map_err(|e| {
-            let stack = format!("parser feedback:\n{}", convert_error(input, e));
+            let stack = format!(
+                "parser feedback for file \"{}\":\n{}",
+                path,
+                convert_error(input, e)
+            );
             stack
         })?;
         let config = schema.config.clone();
