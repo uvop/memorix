@@ -30,6 +30,7 @@ pub struct Config {
 pub struct ExportNamespace<T> {
     pub defaults: NamespaceDefaults,
     pub type_items: Vec<(String, T)>,
+    pub enum_items: Vec<(String, Vec<String>)>,
     pub cache_items: Vec<(String, ExportCacheItem<T>)>,
     pub pubsub_items: Vec<(String, ExportPubSubItem<T>)>,
     pub task_items: Vec<(String, ExportTaskItem<T>)>,
@@ -71,6 +72,13 @@ fn namespace_to_export_namespace(
             task_queue_type: None,
         }),
         type_items: namespace.type_items.unwrap_or(vec![]).into_iter().collect(),
+        enum_items: namespace
+            .enum_items
+            .and_then(|x| Some(x.items))
+            .unwrap_or(vec![])
+            .into_iter()
+            .map(|x| (x.name, x.values))
+            .collect(),
         cache_items: namespace
             .cache_items
             .unwrap_or(vec![])
@@ -179,6 +187,16 @@ impl InnerExportSchema {
                     import_export_schemas
                         .iter()
                         .map(|x| x.global_namespace.type_items.clone())
+                        .flatten(),
+                )
+                .collect(),
+            enum_items: global_namespace
+                .enum_items
+                .into_iter()
+                .chain(
+                    import_export_schemas
+                        .iter()
+                        .map(|x| x.global_namespace.enum_items.clone())
                         .flatten(),
                 )
                 .collect(),

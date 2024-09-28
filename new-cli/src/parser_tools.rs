@@ -177,21 +177,7 @@ macro_rules! impl_from_and_to_sdl_for_enum {
 
 #[macro_export]
 macro_rules! impl_from_and_to_sdl_for_struct {
-    (
-        $(#[$attr:meta])*
-        $vis:vis struct $struct_name:ident {
-            $(
-                $vis_field:vis $field:ident: $field_type:ty
-            ),+ $(,)?
-        }
-    ) => {
-        $(#[$attr])*
-        $vis struct $struct_name {
-            $(
-                $vis_field $field: $field_type
-            ),+
-        }
-
+    ($struct_name:ident, $(($field:ident: $field_type:ty, $required:tt)),+ $(,)?) => {
         impl FromSdl for $struct_name {
             fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(input: &'a str) -> IResult<&'a str, Self, E>
             where
@@ -205,9 +191,9 @@ macro_rules! impl_from_and_to_sdl_for_struct {
                                 {
                                     let parser = preceded(
                                         tuple((multispace0, tag(stringify!($field)), multispace0, char(':'), multispace0)),
-                                        cut(impl_from_and_to_sdl_for_struct!(@from_sdl $field_type))
+                                        cut(<$field_type>::from_sdl)
                                     );
-                                    impl_from_and_to_sdl_for_struct!(@final_parser $field, $field_type, parser)
+                                    impl_from_and_to_sdl_for_struct!(@from_sdl_field $field, parser, $required)
                                 },
                             )+
                         )),
@@ -227,7 +213,7 @@ macro_rules! impl_from_and_to_sdl_for_struct {
                 let mut result = String::from("{\n");
 
                 $(
-                    impl_from_and_to_sdl_for_struct!(@to_sdl_field self.$field, $field, $field_type, level_indent, result, level);
+                    impl_from_and_to_sdl_for_struct!(@to_sdl_field self.$field, $field, $required, level_indent, result, level);
                 )+
 
                 result.push_str(&format!("{}}}", indent(level)));
@@ -236,29 +222,15 @@ macro_rules! impl_from_and_to_sdl_for_struct {
         }
     };
 
-    (@from_sdl Option<Vec<$inner:ty>>) => {
-        Vec::<$inner>::from_sdl
-    };
-    (@from_sdl Vec<$inner:ty>) => {
-        Vec::<$inner>::from_sdl
-    };
-    (@from_sdl Option<$inner:ty>) => {
-        <$inner>::from_sdl
-    };
-    (@from_sdl $other:ty) => {
-        <$other>::from_sdl
-    };
-
-
-    (@final_parser $field:ident, Option<$inner:ty>, $parser:expr) => {
+    (@from_sdl_field $field:ident, $parser:expr, false) => {
         opt($parser)
     };
 
-    (@final_parser $field:ident, $other:ty, $parser:expr) => {
+    (@from_sdl_field $field:ident, $parser:expr, true) => {
         context(concat!("Missing required key \"", stringify!($field), "\""), $parser)
     };
 
-    (@to_sdl_field $field:expr, $field_name:ident, Option<$inner:ty>, $indent:expr, $result:expr, $level:expr) => {
+    (@to_sdl_field $field:expr, $field_name:ident, false, $indent:expr, $result:expr, $level:expr) => {
         if let Some(value) = &$field {
             $result.push_str(&format!(
                 concat!("{}", stringify!($field_name),": {}\n"),
@@ -268,7 +240,7 @@ macro_rules! impl_from_and_to_sdl_for_struct {
         }
     };
 
-    (@to_sdl_field $field:expr, $field_name:ident, $field_type:ty, $indent:expr, $result:expr, $level:expr) => {
+    (@to_sdl_field $field:expr, $field_name:ident, true, $indent:expr, $result:expr, $level:expr) => {
         $result.push_str(&format!(
             concat!("{}", stringify!($field_name),": {}\n"),
             $indent,

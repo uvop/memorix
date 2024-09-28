@@ -5,10 +5,10 @@ use crate::{
 use nom::{
     branch::{alt, permutation},
     bytes::complete::{is_not, tag},
-    character::complete::{char, multispace0, multispace1},
+    character::complete::{alphanumeric1, char, multispace0, multispace1},
     combinator::{cut, map, opt, value},
     error::{context, ParseError},
-    multi::many0,
+    multi::{many0, separated_list1},
     sequence::{delimited, pair, preceded, terminated, tuple},
     IResult,
 };
@@ -49,20 +49,26 @@ pub struct Schema {
     pub namespaces: Vec<(String, Namespace)>,
 }
 
-impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub import: Option<Vec<BracketString>>,
     pub export: Option<Export>,
 }
+impl_from_and_to_sdl_for_struct! {
+    Config,
+    (import: Vec<BracketString>, false),
+    (export: Export, false),
 }
 
-impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Export {
     pub engine: Engine,
     pub files: Option<Vec<FileConfig>>,
 }
+impl_from_and_to_sdl_for_struct! {
+    Export,
+    (engine: Engine, true),
+    (files: Vec<FileConfig>, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -70,12 +76,15 @@ pub enum Engine {
     Redis(Value),
 }
 
-impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FileConfig {
     pub language: Language,
     pub path: BracketString,
 }
+impl_from_and_to_sdl_for_struct! {
+    FileConfig,
+    (language: Language, true),
+    (path: BracketString, true),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -95,7 +104,7 @@ impl_from_and_to_sdl_for_enum!(
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Namespace {
     pub defaults: Option<NamespaceDefaults>,
-    pub enum_items: Option<Vec<(String, Vec<String>)>>,
+    pub enum_items: Option<EnumItems>,
     pub type_items: Option<Vec<(String, TypeItem)>>,
     pub cache_items: Option<Vec<(String, CacheItem)>>,
     pub pubsub_items: Option<Vec<(String, PubSubItem)>>,
@@ -107,15 +116,28 @@ pub struct ItemWithPublic<O> {
     pub public: Vec<O>,
 }
 
-impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct NamespaceDefaults {
     pub cache_ttl: Option<Value>,
     pub task_queue_type: Option<Value>,
 }
+impl_from_and_to_sdl_for_struct! {
+    NamespaceDefaults,
+    (cache_ttl: Value, false),
+    (task_queue_type: Value, false),
 }
 
-impl_from_and_to_sdl_for_struct! {
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct EnumItems {
+    pub items: Vec<EnumItem>,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct EnumItem {
+    pub name: String,
+    pub values: Vec<String>,
+}
+
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct CacheItem {
     pub key: Option<TypeItem>,
@@ -123,18 +145,27 @@ pub struct CacheItem {
     pub ttl: Option<Value>,
     pub public: Option<Vec<CacheOperation>>,
 }
+impl_from_and_to_sdl_for_struct! {
+    CacheItem,
+    (key: TypeItem, false),
+    (payload: TypeItem, true),
+    (ttl: Value, false),
+    (public: Vec<CacheOperation>, false),
 }
 
-impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PubSubItem {
     pub key: Option<TypeItem>,
     pub payload: TypeItem,
     pub public: Option<Vec<PubSubOperation>>,
 }
+impl_from_and_to_sdl_for_struct! {
+    PubSubItem,
+    (key: TypeItem, false),
+    (payload: TypeItem, true),
+    (public: Vec<PubSubOperation>, false),
 }
 
-impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct TaskItem {
     pub key: Option<TypeItem>,
@@ -142,6 +173,12 @@ pub struct TaskItem {
     pub queue_type: Option<Value>,
     pub public: Option<Vec<TaskOperation>>,
 }
+impl_from_and_to_sdl_for_struct! {
+    TaskItem,
+    (key: TypeItem, false),
+    (payload: TypeItem, true),
+    (queue_type: Value, false),
+    (public: Vec<TaskOperation>, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -343,6 +380,77 @@ impl ToSdl for Engine {
     }
 }
 
+impl FromSdl for EnumItems {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
+        map(
+            delimited(
+                tuple((multispace0, char('{'), multispace0)),
+                many0(EnumItem::from_sdl),
+                tuple((multispace0, char('}'))),
+            ),
+            |items| EnumItems { items },
+        )(input)
+    }
+}
+
+impl ToSdl for EnumItems {
+    fn to_sdl(&self, level: usize) -> String {
+        let level_indent = indent(level);
+        let mut result = "{\n".to_string();
+
+        for item in &self.items {
+            result.push_str(&format!("{}", item.to_sdl(level + 1)));
+        }
+        result.push_str(&format!("{}}}\n", level_indent));
+
+        result
+    }
+}
+
+impl FromSdl for EnumItem {
+    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
+        input: &'a str,
+    ) -> IResult<&'a str, Self, E>
+    where
+        Self: Sized,
+    {
+        map(
+            pair(
+                delimited(multispace0, String::from_sdl, multispace1),
+                cut(delimited(
+                    tuple((char('{'), multispace0)),
+                    separated_list1(multispace1, alphanumeric1),
+                    tuple((multispace0, char('}'))),
+                )),
+            ),
+            |(name, values)| Self {
+                name,
+                values: values.into_iter().map(|x| x.to_string()).collect(),
+            },
+        )(input)
+    }
+}
+
+impl ToSdl for EnumItem {
+    fn to_sdl(&self, level: usize) -> String {
+        let level_indent = indent(level);
+        let next_level_indent = indent(level + 1);
+        let mut result = format!("{}{} {{\n", level_indent, self.name).to_string();
+
+        for value in &self.values {
+            result.push_str(&format!("{}{}\n", next_level_indent, value));
+        }
+        result.push_str(&format!("{}}}\n", level_indent));
+
+        result
+    }
+}
+
 impl FromSdl for Namespace {
     fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
         input: &'a str,
@@ -362,7 +470,7 @@ impl FromSdl for Namespace {
                 )),
                 opt(preceded(
                     tuple((multispace0, tag("Enum"), multispace0)),
-                    cut(Vec::<(String, Vec<String>)>::from_sdl),
+                    cut(EnumItems::from_sdl),
                 )),
                 opt(preceded(
                     tuple((multispace0, tag("Cache"), multispace0)),

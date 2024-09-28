@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 351
+assertion_line: 386
 expression: "codegen(&mock_fs, \"schema.memorix\")?"
 ---
 [
@@ -18,6 +18,7 @@ expression: "codegen(&mock_fs, \"schema.memorix\")?"
             "U32"
           ]
         ],
+        "enum_items": [],
         "cache_items": [
           [
             "number_of_messages",
@@ -107,6 +108,7 @@ expression: "codegen(&mock_fs, \"schema.memorix\")?"
             "U32"
           ]
         ],
+        "enum_items": [],
         "cache_items": [
           [
             "user_profile",
@@ -235,6 +237,15 @@ expression: "codegen(&mock_fs, \"schema.memorix\")?"
               "task_queue_type": null
             },
             "type_items": [],
+            "enum_items": [
+              [
+                "Operation",
+                [
+                  "START",
+                  "STOP"
+                ]
+              ]
+            ],
             "cache_items": [
               [
                 "message",
@@ -396,6 +407,7 @@ expression: "codegen(&mock_fs, \"schema.memorix\")?"
                 "U64"
               ]
             ],
+            "enum_items": [],
             "cache_items": [
               [
                 "user_profile",
