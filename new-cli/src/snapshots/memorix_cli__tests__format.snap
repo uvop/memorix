@@ -46,7 +46,6 @@ Namespace Rocket {
       BLUE
     }
   }
-
   Cache {
     launched: {
       payload: boolean

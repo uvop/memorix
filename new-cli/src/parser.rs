@@ -389,7 +389,7 @@ impl FromSdl for EnumItems {
     {
         map(
             delimited(
-                tuple((multispace0, char('{'), multispace0)),
+                tuple((multispace0, char('{'))),
                 many0(EnumItem::from_sdl),
                 tuple((multispace0, char('}'))),
             ),
@@ -406,7 +406,7 @@ impl ToSdl for EnumItems {
         for item in &self.items {
             result.push_str(&format!("{}", item.to_sdl(level + 1)));
         }
-        result.push_str(&format!("{}}}\n", level_indent));
+        result.push_str(&format!("{}}}", level_indent));
 
         result
     }
@@ -423,7 +423,7 @@ impl FromSdl for EnumItem {
             pair(
                 delimited(multispace0, String::from_sdl, multispace1),
                 cut(delimited(
-                    tuple((char('{'), multispace0)),
+                    tuple((multispace0, char('{'), multispace0)),
                     separated_list1(multispace1, alphanumeric1),
                     tuple((multispace0, char('}'))),
                 )),
