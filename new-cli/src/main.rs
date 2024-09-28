@@ -209,15 +209,15 @@ Config {
     engine: Redis( env(REDIS_URL) )
     files: [
       {
-        language: TypeScript
+        language: typescript
         path: "memorix.generated.ts"
       }
       {
-        language: Python
+        language: python
         path: "memorix_generated.py"
       }
       {
-        language: Rust
+        language: rust
         path: "memorix_generated.rs"
       }
     ]
@@ -363,7 +363,7 @@ Config {
   export: {
     engine: Redis(env(REDIS_URL))
     files: [      {
-        language: TypeScript
+        language: typescript
         path: "memorix.generated.ts"
       }]
   }
@@ -394,14 +394,14 @@ Config {
   export: {
     engine: Redis(env(REDIS_URL))
     files: [      {
-        language: TypeScript
+        language: typeScript
         path: "memorix.generated.ts"
       }]
   }
 }
 
 Type {
-  a: [u64]
+  a: [u64      ]
 }
 
 "#

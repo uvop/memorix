@@ -15,57 +15,57 @@ use nom::{
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Schema {
-    pub config: Option<Config>,
-    pub global_namespace: Namespace,
-    pub namespaces: Vec<(String, Namespace)>,
+pub struct BracketString(String);
+
+impl BracketString {
+    pub fn to_string(&self) -> String {
+        self.0.clone()
+    }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Config {
-    pub import: Vec<String>,
-    pub export: Option<Export>,
-}
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Export {
-    pub engine: Engine,
-    pub files: Option<Vec<FileConfig>>,
-}
-impl FromSdl for Export {
+impl FromSdl for BracketString {
     fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
         input: &'a str,
     ) -> IResult<&'a str, Self, E>
     where
         Self: Sized,
     {
-        preceded(char('{'),cut(terminated(permutation(({
-            let parser = preceded(tuple((multispace0,tag(stringify!(engine)),multispace0,char(':'),multispace0)),cut(impl_from_and_to_sdl_for_struct!(@from_sdl Engine)));
-            impl_from_and_to_sdl_for_struct!(@final_parser engine,Engine,parser)
-        },{
-            let parser = preceded(tuple((multispace0,tag(stringify!(files)),multispace0,char(':'),multispace0)),cut(impl_from_and_to_sdl_for_struct!(@from_sdl Option<Vec<FileConfig>>)));
-            impl_from_and_to_sdl_for_struct!(@final_parser files,Option<Vec<FileConfig>>,parser)
-        },)),preceded(multispace0,char('}')))))(input).map(|(remaining,fields)|{
-            let(engine,files) = fields;
-            (remaining,Export {
-                engine,files
-            })
-        })
+        map(delimited(char('"'), is_not("\""), char('"')), |x: &str| {
+            BracketString(x.to_string())
+        })(input)
     }
 }
-impl ToSdl for Export {
-    fn to_sdl(&self, level: usize) -> String {
-        let level_indent = indent(level + 1);
-        let mut result = String::from("{\n");
-        impl_from_and_to_sdl_for_struct!(@to_sdl_field self.engine,stringify!(engine),Engine,level_indent,result,level);
-        impl_from_and_to_sdl_for_struct!(@to_sdl_field self.files,stringify!(files),Option<Vec<FileConfig>>,level_indent,result,level);
-        result.push_str(&format!("{}}}", indent(level)));
-        result
+
+impl ToSdl for BracketString {
+    fn to_sdl(&self, _: usize) -> String {
+        format!("\"{}\"", self.0).to_string()
     }
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Schema {
+    pub config: Option<Config>,
+    pub global_namespace: Namespace,
+    pub namespaces: Vec<(String, Namespace)>,
+}
 
+impl_from_and_to_sdl_for_struct! {
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Config {
+    pub import: Option<Vec<BracketString>>,
+    pub export: Option<Export>,
+}
+}
+
+impl_from_and_to_sdl_for_struct! {
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Export {
+    pub engine: Engine,
+    pub files: Option<Vec<FileConfig>>,
+}
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Engine {
     Redis(Value),
 }
@@ -74,7 +74,7 @@ impl_from_and_to_sdl_for_struct! {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FileConfig {
     pub language: Language,
-    pub path: String,
+    pub path: BracketString,
 }
 }
 
@@ -342,88 +342,6 @@ impl ToSdl for Engine {
     }
 }
 
-impl FromSdl for Config {
-    fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
-        input: &'a str,
-    ) -> IResult<&'a str, Self, E>
-    where
-        Self: Sized,
-    {
-        map(
-            preceded(
-                char('{'),
-                cut(terminated(
-                    permutation((
-                        opt(preceded(
-                            tuple((
-                                multispace0,
-                                tag("import"),
-                                multispace0,
-                                char(':'),
-                                multispace0,
-                            )),
-                            cut(map(Vec::<String>::from_sdl, |v| {
-                                v.into_iter()
-                                    .map(|x| format!("\"{}\"", x).to_string())
-                                    .collect::<Vec<_>>()
-                            })),
-                        )),
-                        opt(preceded(
-                            tuple((
-                                multispace0,
-                                tag("export"),
-                                multispace0,
-                                char(':'),
-                                multispace0,
-                            )),
-                            cut(Export::from_sdl),
-                        )),
-                    )),
-                    preceded(multispace0, char('}')),
-                )),
-            ),
-            |(import, export)| Config {
-                import: import.unwrap_or(vec![]),
-                export,
-            },
-        )(input)
-    }
-}
-
-fn rem_first_and_last(value: &str) -> String {
-    let first_last_off = &value[1..value.len() - 1];
-    first_last_off.to_string()
-}
-
-impl ToSdl for Config {
-    fn to_sdl(&self, level: usize) -> String {
-        let level_indent = indent(level + 1);
-        let mut result = String::from("{\n");
-
-        if self.import.len() != 0 {
-            result.push_str(&format!(
-                "{}import: {}\n",
-                level_indent,
-                self.import
-                    .iter()
-                    .map(|x| rem_first_and_last(x))
-                    .collect::<Vec<_>>()
-                    .to_sdl(level)
-            ));
-        }
-        if let Some(export) = &self.export {
-            result.push_str(&format!(
-                "{}export: {}\n",
-                level_indent,
-                export.to_sdl(level + 1)
-            ));
-        }
-        result.push_str(&format!("{}}}", indent(level)));
-
-        result
-    }
-}
-
 impl FromSdl for Namespace {
     fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
         input: &'a str,
@@ -498,7 +416,7 @@ fn namespaces_from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a
     input: &'a str,
 ) -> IResult<&'a str, Vec<(String, Namespace)>, E> {
     many0(preceded(
-        tuple((tag("Namespace"), multispace1)),
+        tuple((multispace0, tag("Namespace"), multispace1)),
         cut(terminated(
             pair(
                 terminated(String::from_sdl, tuple((multispace0, char('{')))),
@@ -532,7 +450,10 @@ impl FromSdl for Schema {
     {
         map(
             tuple((
-                opt(Config::from_sdl),
+                opt(preceded(
+                    tuple((multispace0, tag("Config"), multispace1)),
+                    cut(Config::from_sdl),
+                )),
                 namespaces_from_sdl,
                 opt(Namespace::from_sdl),
                 namespaces_from_sdl,
@@ -560,7 +481,7 @@ pub fn schema_to_sdl(schema: &Schema) -> String {
     let level = 0;
 
     if let Some(x) = &schema.config {
-        result.push_str(&format!("{}\n", x.to_sdl(level)));
+        result.push_str(&format!("Config {}\n", x.to_sdl(level)));
     }
     result.push_str(&format!("{}\n", schema.global_namespace.to_sdl(level)));
     result.push_str(&format!(

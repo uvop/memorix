@@ -31,12 +31,13 @@ impl ImportedSchema {
             path: path.to_string(),
             imports: config
                 .unwrap_or(Config {
-                    import: vec![],
+                    import: None,
                     export: None,
                 })
                 .import
+                .unwrap_or(vec![])
                 .into_iter()
-                .map(|x| ImportedSchema::new(fs, &x))
+                .map(|x| ImportedSchema::new(fs, &x.to_string()))
                 .collect::<Result<Vec<_>, _>>()?,
         })
     }
