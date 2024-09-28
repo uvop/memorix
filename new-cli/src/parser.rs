@@ -95,6 +95,7 @@ impl_from_and_to_sdl_for_enum!(
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Namespace {
     pub defaults: Option<NamespaceDefaults>,
+    pub enum_items: Option<Vec<(String, Vec<String>)>>,
     pub type_items: Option<Vec<(String, TypeItem)>>,
     pub cache_items: Option<Vec<(String, CacheItem)>>,
     pub pubsub_items: Option<Vec<(String, PubSubItem)>>,
@@ -360,6 +361,10 @@ impl FromSdl for Namespace {
                     cut(Vec::<(String, TypeItem)>::from_sdl),
                 )),
                 opt(preceded(
+                    tuple((multispace0, tag("Enum"), multispace0)),
+                    cut(Vec::<(String, Vec<String>)>::from_sdl),
+                )),
+                opt(preceded(
                     tuple((multispace0, tag("Cache"), multispace0)),
                     cut(Vec::<(String, CacheItem)>::from_sdl),
                 )),
@@ -372,9 +377,10 @@ impl FromSdl for Namespace {
                     cut(Vec::<(String, TaskItem)>::from_sdl),
                 )),
             )),
-            |(defaults, type_items, cache_items, pubsub_items, task_items)| Namespace {
+            |(defaults, type_items, enum_items, cache_items, pubsub_items, task_items)| Namespace {
                 defaults,
                 type_items,
+                enum_items,
                 cache_items,
                 pubsub_items,
                 task_items,
@@ -397,6 +403,9 @@ impl ToSdl for Namespace {
         }
         if let Some(x) = &self.type_items {
             result.push_str(&format!("{}Type {}\n", level_indent, x.to_sdl(level)));
+        }
+        if let Some(x) = &self.enum_items {
+            result.push_str(&format!("{}Enum {}\n", level_indent, x.to_sdl(level)));
         }
         if let Some(x) = &self.cache_items {
             result.push_str(&format!("{}Cache {}\n", level_indent, x.to_sdl(level)));
@@ -464,6 +473,7 @@ impl FromSdl for Schema {
                 global_namespace: global_namespace.unwrap_or(Namespace {
                     defaults: None,
                     type_items: None,
+                    enum_items: None,
                     cache_items: None,
                     pubsub_items: None,
                     task_items: None,
