@@ -4,6 +4,7 @@ mod imports;
 mod parser;
 mod parser_tools;
 
+use std::error::Error;
 use std::fmt;
 use std::fs::File;
 use std::io::{self, Read, Write};
@@ -28,6 +29,20 @@ impl<T: fmt::Display> fmt::Debug for PrettyError<T> {
     }
 }
 
+impl From<Box<dyn Error>> for PrettyError<String> {
+    fn from(error: Box<dyn Error>) -> Self {
+        PrettyError(error.to_string())
+    }
+}
+
+impl<T: fmt::Debug + fmt::Display> Error for PrettyError<T> {}
+
+impl<T: fmt::Display> fmt::Display for PrettyError<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 pub trait FileSystem {
     fn read_to_string(&self, path: &str) -> io::Result<String>;
     fn write_string(&self, path: &str, content: &str) -> io::Result<()>;
@@ -48,7 +63,11 @@ impl FileSystem for RealFileSystem {
         Ok(contents)
     }
     fn write_string(&self, path: &str, content: &str) -> io::Result<()> {
-        let mut file = File::open(path)?;
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(path)?;
         file.write_all(content.as_bytes())?;
         Ok(())
     }
@@ -82,31 +101,39 @@ pub fn format<F: FileSystem>(
         stack
     })?;
     let formatted_input = schema_to_sdl(&schema);
+    println!("{}", formatted_input);
     fs.write_string(path, &formatted_input)?;
     Ok(())
 }
 
-pub fn codegen<F: FileSystem>(
-    fs: &F,
-    path: &str,
-) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
-    let parsed_schema = crate::imports::ImportedSchema::new(fs, path)?;
+pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<String, PrettyError<String>> {
+    let parsed_schema =
+        crate::imports::ImportedSchema::new(fs, path).map_err(|x| format!("{}", x))?;
     let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
     let flat_export_schemas = export_schemas
         .into_iter()
         .map(crate::flat_schema::FlatExportSchema::new)
         .collect::<Vec<_>>();
-    Ok(serde_json::to_string_pretty(&flat_export_schemas)?)
+    Ok(serde_json::to_string_pretty(&flat_export_schemas).unwrap())
+}
+
+enum Command {
+    Format,
+    Codegen,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 2 {
-        eprintln!("Usage: {} <path_to_sdl_file>", args[0]);
-        std::process::exit(1);
+    if args.len() != 3 {
+        return Err(format!("Usage: [codegen/format] <path_to_sdl_file>").into());
     }
+    let command = match args[1].as_str() {
+        "format" => Ok(Command::Format),
+        "codegen" => Ok(Command::Codegen),
+        x => Err(format!("Unknown command \"{}\"", x)),
+    }?;
 
-    let file_path = &args[1];
+    let file_path = &args[2];
     let path = PathBuf::from(file_path)
         .canonicalize()
         .map_err(|_| "Couldn't get abs path for schema".to_string())?;
@@ -116,9 +143,13 @@ fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 
     let fs = RealFileSystem {};
 
-    let code = codegen(&fs, abs_file_path)?;
-
-    println!("{}", code);
+    match command {
+        Command::Format => format(&fs, abs_file_path)?,
+        Command::Codegen => {
+            let code = codegen(&fs, abs_file_path)?;
+            println!("{}", code);
+        }
+    }
 
     Ok(())
 }
@@ -127,7 +158,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 mod tests {
     use std::{cell::RefCell, collections::HashMap, io};
 
-    use crate::{codegen, FileSystem};
+    use crate::{codegen, format, FileSystem};
 
     pub struct MockFileSystem {
         pub files: RefCell<HashMap<String, String>>,
@@ -170,15 +201,15 @@ Config {
     engine: Redis( env(REDIS_URL) )
     files: [
       {
-        language: TypeScript
+        language: typescript
         path: "memorix.generated.ts"
       }
       {
-        language: Python
+        language: python
         path: "memorix_generated.py"
       }
       {
-        language: Rust
+        language: rust
         path: "memorix_generated.rs"
       }
     ]
@@ -390,25 +421,48 @@ Type {
             files: RefCell::new(HashMap::from([(
                 "schema.memorix".to_string(),
                 r#"
-Config {
-  export: {
-    engine: Redis(env(REDIS_URL))
-    files: [      {
-        language: typeScript
-        path: "memorix.generated.ts"
-      }]
-  }
-}
+    Config {
+      export: {
+        engine: Redis(env(REDIS_URL))
+        files: [      {
+            language: typescript
+            path: "memorix.generated.ts"
+          }]
+      }
+    }
+    Namespace Science {
+      Cache {
+        how_many_atoms: {
+          payload: u32
+        }
+      }
+      PubSub {
+        how_many_atoms: {
+          payload: u32
+        }
+      }
+    }
+    Type {
+      a: [u64      ]
+    }
+    Namespace Rocket {
+      Cache {
+        launched: {
+          payload: boolean
+        }
+      }
+      PubSub {
+        launched: {
+          payload: boolean
+        }
+      }
+    }
 
-Type {
-  a: [u64      ]
-}
-
-"#
+    "#
                 .to_string(),
             )])),
         };
-        codegen(&mock_fs, "schema.memorix")?;
+        format(&mock_fs, "schema.memorix")?;
         let formatted_schema = mock_fs.read_to_string("schema.memorix")?;
         insta::assert_snapshot!(formatted_schema);
 

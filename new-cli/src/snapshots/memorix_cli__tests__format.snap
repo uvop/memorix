@@ -1,0 +1,48 @@
+---
+source: src/main.rs
+assertion_line: 467
+expression: formatted_schema
+---
+Config {
+  export: {
+    engine: Redis(env(REDIS_URL))
+    files: [
+      {
+        language: typescript
+        path: "memorix.generated.ts"
+      }
+    ]
+  }
+}
+
+Type {
+  a: [
+    u64
+  ]
+}
+
+Namespace Science {
+  Cache {
+    how_many_atoms: {
+      payload: u32
+    }
+  }
+  PubSub {
+    how_many_atoms: {
+      payload: u32
+    }
+  }
+}
+
+Namespace Rocket {
+  Cache {
+    launched: {
+      payload: boolean
+    }
+  }
+  PubSub {
+    launched: {
+      payload: boolean
+    }
+  }
+}

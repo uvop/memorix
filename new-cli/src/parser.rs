@@ -395,17 +395,17 @@ impl ToSdl for Namespace {
                 x.to_sdl(level + 1)
             ));
         }
-        if let Some(x) = &self.task_items {
-            result.push_str(&format!("{}Type {}\n", level_indent, x.to_sdl(level + 1)));
+        if let Some(x) = &self.type_items {
+            result.push_str(&format!("{}Type {}\n", level_indent, x.to_sdl(level)));
         }
         if let Some(x) = &self.cache_items {
-            result.push_str(&format!("{}Cache {}\n", level_indent, x.to_sdl(level + 1)));
+            result.push_str(&format!("{}Cache {}\n", level_indent, x.to_sdl(level)));
         }
         if let Some(x) = &self.pubsub_items {
-            result.push_str(&format!("{}PubSub {}\n", level_indent, x.to_sdl(level + 1)));
+            result.push_str(&format!("{}PubSub {}\n", level_indent, x.to_sdl(level)));
         }
         if let Some(x) = &self.task_items {
-            result.push_str(&format!("{}Task {}\n", level_indent, x.to_sdl(level + 1)));
+            result.push_str(&format!("{}Task {}\n", level_indent, x.to_sdl(level)));
         }
 
         result
@@ -428,14 +428,15 @@ fn namespaces_from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a
 }
 
 fn namespaces_to_sdl(namespaces: &[(String, Namespace)], level: usize) -> String {
-    let level_indent = indent(level + 1);
-    let mut result = String::from("{\n");
+    let level_indent = indent(level);
+    let mut result = String::from("");
     for (name, namespace) in namespaces {
         result.push_str(&format!(
-            "{}Namespace {}{}",
+            "{}Namespace {} {{\n{}{}}}\n\n",
             level_indent,
             name,
-            namespace.to_sdl(level + 1)
+            namespace.to_sdl(level + 1),
+            level_indent,
         ));
     }
     result
@@ -481,7 +482,7 @@ pub fn schema_to_sdl(schema: &Schema) -> String {
     let level = 0;
 
     if let Some(x) = &schema.config {
-        result.push_str(&format!("Config {}\n", x.to_sdl(level)));
+        result.push_str(&format!("Config {}\n\n", x.to_sdl(level)));
     }
     result.push_str(&format!("{}\n", schema.global_namespace.to_sdl(level)));
     result.push_str(&format!(
