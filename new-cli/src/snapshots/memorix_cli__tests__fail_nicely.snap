@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 414
+assertion_line: 418
 expression: err.to_string()
 ---
 parser feedback for file "schema.memorix":
@@ -16,3 +16,7 @@ expected ']', found u
 2: at line 12, in hash:
 Type {
      ^
+
+3: at line 10, in Missing some required parsers here:
+}
+ ^

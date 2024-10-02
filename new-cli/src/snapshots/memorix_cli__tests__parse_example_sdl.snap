@@ -361,7 +361,9 @@ expression: "codegen(&mock_fs, \"schema.memorix\")?"
                   ],
                   [
                     "action",
-                    "String"
+                    {
+                      "Optional": "String"
+                    }
                   ],
                   [
                     "timestamp",

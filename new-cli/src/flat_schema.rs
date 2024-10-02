@@ -29,6 +29,7 @@ pub enum FlatTypeItem {
     F64,
     String,
     Boolean,
+    Optional(Box<FlatTypeItem>),
     Array(Box<FlatTypeItem>),
     Reference(String),
 }
@@ -47,6 +48,10 @@ fn type_item_to_flat_type_items(
     type_item: TypeItem,
 ) -> (FlatTypeItem, Vec<(String, TypeItemObject)>) {
     match type_item {
+        TypeItem::Optional(x) => {
+            let (y, hm) = type_item_to_flat_type_items(ctx, *x);
+            (FlatTypeItem::Optional(Box::new(y)), hm)
+        }
         TypeItem::Array(x) => {
             let (y, hm) = type_item_to_flat_type_items(ctx, *x);
             (FlatTypeItem::Array(Box::new(y)), hm)

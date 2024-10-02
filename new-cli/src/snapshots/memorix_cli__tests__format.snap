@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 482
+assertion_line: 484
 expression: formatted_schema
 ---
 Config {
@@ -26,11 +26,23 @@ Namespace Science {
     how_many_atoms: {
       key: u64
       payload: u32
+      ttl: env(TTL_HOW_MANY_ATOMS)
     }
   }
   PubSub {
     how_many_atoms: {
-      payload: u32
+      payload: {
+        id: u32
+        number: u64
+      }
+    }
+    how_many_atoms_2: {
+      payload: [
+        {
+          id: u32
+          number: u64
+        }
+      ]
     }
   }
 }
@@ -54,7 +66,7 @@ Namespace Rocket {
   }
   PubSub {
     launched: {
-      payload: boolean
+      payload: boolean?
     }
   }
 }

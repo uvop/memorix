@@ -1,17 +1,19 @@
 use crate::{
     create_enum_with_const_slice, impl_from_and_to_sdl_for_enum, impl_from_and_to_sdl_for_struct,
     parser_tools::{indent, FromSdl, ToSdl},
+    permutation_many,
 };
 use nom::{
-    branch::{alt, permutation},
+    branch::alt,
     bytes::complete::{is_not, tag},
     character::complete::{alphanumeric1, char, multispace0, multispace1},
-    combinator::{cut, map, opt, value},
+    combinator::{cut, map, opt, value, verify},
     error::{context, ParseError},
     multi::{many0, many_m_n, separated_list1},
     sequence::{delimited, pair, preceded, terminated, tuple},
     IResult,
 };
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -54,10 +56,11 @@ pub struct Config {
     pub import: Option<Vec<BracketString>>,
     pub export: Option<Export>,
 }
+
 impl_from_and_to_sdl_for_struct! {
-    Config,
-    (import: Vec<BracketString>, false),
-    (export: Export, false),
+    (Config, 2),
+    (import: Vec<BracketString>, 0, false),
+    (export: Export, 1, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -66,9 +69,9 @@ pub struct Export {
     pub files: Option<Vec<FileConfig>>,
 }
 impl_from_and_to_sdl_for_struct! {
-    Export,
-    (engine: Engine, true),
-    (files: Vec<FileConfig>, false),
+    (Export, 2),
+    (engine: Engine, 0, true),
+    (files: Vec<FileConfig>, 1, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -82,9 +85,9 @@ pub struct FileConfig {
     pub path: BracketString,
 }
 impl_from_and_to_sdl_for_struct! {
-    FileConfig,
-    (language: Language, true),
-    (path: BracketString, true),
+    (FileConfig, 2),
+    (language: Language, 0, true),
+    (path: BracketString, 1, true),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -122,9 +125,9 @@ pub struct NamespaceDefaults {
     pub task_queue_type: Option<Value>,
 }
 impl_from_and_to_sdl_for_struct! {
-    NamespaceDefaults,
-    (cache_ttl: Value, false),
-    (task_queue_type: Value, false),
+    (NamespaceDefaults, 2),
+    (cache_ttl: Value, 0, false),
+    (task_queue_type: Value, 1, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -146,11 +149,11 @@ pub struct CacheItem {
     pub public: Option<Vec<CacheOperation>>,
 }
 impl_from_and_to_sdl_for_struct! {
-    CacheItem,
-    (key: TypeItem, false),
-    (payload: TypeItem, true),
-    (ttl: Value, false),
-    (public: Vec<CacheOperation>, false),
+    (CacheItem, 4),
+    (key: TypeItem, 0, false),
+    (payload: TypeItem, 1, true),
+    (ttl: Value, 2, false),
+    (public: Vec<CacheOperation>, 3, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -160,10 +163,10 @@ pub struct PubSubItem {
     pub public: Option<Vec<PubSubOperation>>,
 }
 impl_from_and_to_sdl_for_struct! {
-    PubSubItem,
-    (key: TypeItem, false),
-    (payload: TypeItem, true),
-    (public: Vec<PubSubOperation>, false),
+    (PubSubItem, 3),
+    (key: TypeItem, 0, false),
+    (payload: TypeItem, 1, true),
+    (public: Vec<PubSubOperation>, 2, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -174,11 +177,11 @@ pub struct TaskItem {
     pub public: Option<Vec<TaskOperation>>,
 }
 impl_from_and_to_sdl_for_struct! {
-    TaskItem,
-    (key: TypeItem, false),
-    (payload: TypeItem, true),
-    (queue_type: Value, false),
-    (public: Vec<TaskOperation>, false),
+    (TaskItem, 4),
+    (key: TypeItem, 0, false),
+    (payload: TypeItem, 1, true),
+    (queue_type: Value, 2, false),
+    (public: Vec<TaskOperation>, 3, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -197,6 +200,7 @@ pub enum TypeItem {
     F64,
     String,
     Boolean,
+    Optional(Box<TypeItem>),
     Array(Box<TypeItem>),
     Object(Vec<(String, TypeItem)>),
     Reference(String),
@@ -260,35 +264,44 @@ impl FromSdl for TypeItem {
     where
         Self: Sized,
     {
-        preceded(
-            multispace0,
-            alt((
-                context(
-                    "single type config array",
-                    map(
-                        preceded(
-                            tuple((char('['), multispace0)),
-                            cut(terminated(
-                                TypeItem::from_sdl,
-                                preceded(multispace0, char(']')),
-                            )),
+        map(
+            tuple((
+                preceded(
+                    multispace0,
+                    alt((
+                        context(
+                            "single type config array",
+                            map(
+                                preceded(
+                                    tuple((char('['), multispace0)),
+                                    cut(terminated(
+                                        TypeItem::from_sdl,
+                                        preceded(multispace0, char(']')),
+                                    )),
+                                ),
+                                |v| TypeItem::Array(Box::new(v)),
+                            ),
                         ),
-                        |v| TypeItem::Array(Box::new(v)),
-                    ),
+                        map(Vec::<(String, TypeItem)>::from_sdl, TypeItem::Object),
+                        alt((
+                            value(TypeItem::U32, tag("u32")),
+                            value(TypeItem::I32, tag("i32")),
+                            value(TypeItem::U64, tag("u64")),
+                            value(TypeItem::I64, tag("i64")),
+                            value(TypeItem::F32, tag("f32")),
+                            value(TypeItem::F64, tag("f64")),
+                            value(TypeItem::String, tag("string")),
+                            value(TypeItem::Boolean, tag("boolean")),
+                        )),
+                        map(String::from_sdl, TypeItem::Reference),
+                    )),
                 ),
-                map(Vec::<(String, TypeItem)>::from_sdl, TypeItem::Object),
-                alt((
-                    value(TypeItem::U32, tag("u32")),
-                    value(TypeItem::I32, tag("i32")),
-                    value(TypeItem::U64, tag("u64")),
-                    value(TypeItem::I64, tag("i64")),
-                    value(TypeItem::F32, tag("f32")),
-                    value(TypeItem::F64, tag("f64")),
-                    value(TypeItem::String, tag("string")),
-                    value(TypeItem::Boolean, tag("boolean")),
-                )),
-                map(String::from_sdl, TypeItem::Reference),
+                opt(tuple((multispace0, char('?')))),
             )),
+            |(t, o)| match o.is_some() {
+                false => t,
+                true => TypeItem::Optional(Box::new(t)),
+            },
         )(input)
     }
 }
@@ -305,6 +318,7 @@ impl ToSdl for TypeItem {
             Self::Boolean => "boolean".to_string(),
             Self::String => "string".to_string(),
             Self::Reference(x) => x.clone(),
+            Self::Optional(x) => format!("{}?", x.to_sdl(level),).to_string(),
             Self::Array(x) => format!(
                 "[\n{}{}\n{}]",
                 indent(level + 1),
@@ -312,7 +326,7 @@ impl ToSdl for TypeItem {
                 indent(level)
             )
             .to_string(),
-            Self::Object(x) => x.to_sdl(level + 1),
+            Self::Object(x) => x.to_sdl(level),
         }
     }
 }
@@ -330,11 +344,11 @@ impl FromSdl for Value {
                     tag("env"),
                     cut(delimited(
                         tuple((multispace0, char('('), multispace0)),
-                        is_not(") \t\r\n"),
-                        char(')'),
+                        String::from_sdl,
+                        tuple((multispace0, char(')'))),
                     )),
                 ),
-                |s: &str| Value::Env(s.to_string()),
+                |s| Value::Env(s),
             ),
             map(delimited(char('"'), is_not("\""), char('"')), |x: &str| {
                 Value::String(x.to_string())
@@ -421,7 +435,7 @@ impl FromSdl for EnumItem {
     {
         map(
             pair(
-                delimited(multispace0, String::from_sdl, multispace1),
+                preceded(multispace0, String::from_sdl),
                 cut(delimited(
                     tuple((multispace0, char('{'), multispace0)),
                     separated_list1(multispace1, alphanumeric1),
@@ -458,132 +472,67 @@ impl FromSdl for Namespace {
     where
         Self: Sized,
     {
-        many_m_n(
-            0,
-            6,
-            alt((
-                map(
+        map(
+            permutation_many!(
+                6,
+                (
                     preceded(
                         tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
                         cut(NamespaceDefaults::from_sdl),
                     ),
-                    |x| Namespace {
-                        defaults: Some(x),
-                        type_items: None,
-                        enum_items: None,
-                        cache_items: None,
-                        pubsub_items: None,
-                        task_items: None,
-                    },
+                    0,
+                    false
                 ),
-                map(
+                (
                     preceded(
                         tuple((multispace0, tag("Type"), multispace0)),
                         cut(Vec::<(String, TypeItem)>::from_sdl),
                     ),
-                    |x| Namespace {
-                        defaults: None,
-                        type_items: Some(x),
-                        enum_items: None,
-                        cache_items: None,
-                        pubsub_items: None,
-                        task_items: None,
-                    },
+                    1,
+                    false
                 ),
-                map(
+                (
                     preceded(
                         tuple((multispace0, tag("Enum"), multispace0)),
                         cut(EnumItems::from_sdl),
                     ),
-                    |x| Namespace {
-                        defaults: None,
-                        type_items: None,
-                        enum_items: Some(x),
-                        cache_items: None,
-                        pubsub_items: None,
-                        task_items: None,
-                    },
+                    2,
+                    false
                 ),
-                map(
+                (
                     preceded(
                         tuple((multispace0, tag("Cache"), multispace0)),
                         cut(Vec::<(String, CacheItem)>::from_sdl),
                     ),
-                    |x| Namespace {
-                        defaults: None,
-                        type_items: None,
-                        enum_items: None,
-                        cache_items: Some(x),
-                        pubsub_items: None,
-                        task_items: None,
-                    },
+                    3,
+                    false
                 ),
-                map(
+                (
                     preceded(
                         tuple((multispace0, tag("PubSub"), multispace0)),
                         cut(Vec::<(String, PubSubItem)>::from_sdl),
                     ),
-                    |x| Namespace {
-                        defaults: None,
-                        type_items: None,
-                        enum_items: None,
-                        cache_items: None,
-                        pubsub_items: Some(x),
-                        task_items: None,
-                    },
+                    4,
+                    false
                 ),
-                map(
+                (
                     preceded(
                         tuple((multispace0, tag("Task"), multispace0)),
                         cut(Vec::<(String, TaskItem)>::from_sdl),
                     ),
-                    |x| Namespace {
-                        defaults: None,
-                        type_items: None,
-                        enum_items: None,
-                        cache_items: None,
-                        pubsub_items: None,
-                        task_items: Some(x),
-                    },
+                    5,
+                    false
                 ),
-            )),
+            ),
+            |(defaults, type_items, enum_items, cache_items, pubsub_items, task_items)| Namespace {
+                defaults,
+                type_items,
+                enum_items,
+                cache_items,
+                pubsub_items,
+                task_items,
+            },
         )(input)
-        .map(|(remaining, namespaces)| {
-            (
-                remaining,
-                namespaces.iter().fold(
-                    Namespace {
-                        defaults: None,
-                        type_items: None,
-                        enum_items: None,
-                        cache_items: None,
-                        pubsub_items: None,
-                        task_items: None,
-                    },
-                    |mut acc, ns| {
-                        if acc.defaults.is_none() {
-                            acc.defaults = ns.defaults.clone();
-                        }
-                        if acc.type_items.is_none() {
-                            acc.type_items = ns.type_items.clone();
-                        }
-                        if acc.enum_items.is_none() {
-                            acc.enum_items = ns.enum_items.clone();
-                        }
-                        if acc.cache_items.is_none() {
-                            acc.cache_items = ns.cache_items.clone();
-                        }
-                        if acc.pubsub_items.is_none() {
-                            acc.pubsub_items = ns.pubsub_items.clone();
-                        }
-                        if acc.task_items.is_none() {
-                            acc.task_items = ns.task_items.clone();
-                        }
-                        acc
-                    },
-                ),
-            )
-        })
     }
 }
 
@@ -659,7 +608,7 @@ impl FromSdl for Schema {
         map(
             tuple((
                 opt(preceded(
-                    tuple((multispace0, tag("Config"), multispace1)),
+                    tuple((multispace0, tag("Config"), multispace0)),
                     cut(Config::from_sdl),
                 )),
                 namespaces_from_sdl,
