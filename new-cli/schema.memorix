@@ -1,6 +1,9 @@
 Config {
   import: [
     "src/schema2.memorix"
+    "123"
+    "123"
+    "123"
   ]
   export: {
     engine: Redis(env(REDIS_URL))
@@ -21,6 +24,9 @@ Config {
   }
 }
 
+Type {
+  ID: string?
+}
 Enum {
   Operation {
     START
@@ -32,17 +38,27 @@ Enum {
     BLUE
   }
 }
-Cache {
-  abc: {
-    key: u32
-    payload: u64
-    ttl: "60"
+
+Namespace standalone {
+  Cache {
+    abc: {
+      key: u32
+      payload: {
+          id: u32
+          other_id: u64
+        }
+      ttl: env(ABC_TTL)
+      public: [
+        get
+        set
+      ]
+    }
   }
-}
-PubSub {
-  abc: {
-    key: u32
-    payload: u64
+  PubSub {
+    abc: {
+      key: u32
+      payload: u64
+    }
   }
 }
 

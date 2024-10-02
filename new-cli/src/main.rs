@@ -120,7 +120,7 @@ enum Command {
     Codegen,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
+fn main() -> Result<(), PrettyError<String>> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 3 {
         return Err(format!("Usage: [codegen/format] <path_to_sdl_file>").into());
@@ -142,7 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let fs = RealFileSystem {};
 
     match command {
-        Command::Format => format(&fs, abs_file_path)?,
+        Command::Format => format(&fs, abs_file_path).map_err(|e| e.to_string())?,
         Command::Codegen => {
             let code = codegen(&fs, abs_file_path)?;
             println!("{}", code);
@@ -358,7 +358,7 @@ Namespace UserService {
       key: UserId
       payload: {
         user_id: UserId
-        action: string
+        action: string?
         timestamp: u64
       }
       public: [subscribe]
@@ -425,7 +425,7 @@ Type {
             files: RefCell::new(HashMap::from([(
                 "schema.memorix".to_string(),
                 r#"
-    Config {
+    Config{
       export: {
         engine: Redis(env(REDIS_URL))
         files: [      {
@@ -439,11 +439,15 @@ Type {
         how_many_atoms: {
           payload: u32
           key: u64
+          ttl:   env(  TTL_HOW_MANY_ATOMS  )
         }
       }
       PubSub {
         how_many_atoms: {
-          payload: u32
+          payload: {id : u32 number: u64}
+        }
+        how_many_atoms_2: {
+          payload: [{id : u32 number: u64}]
         }
       }
     }
@@ -469,7 +473,7 @@ Type {
       }
       PubSub {
         launched: {
-          payload: boolean
+          payload: boolean   ?
         }
       }
     }

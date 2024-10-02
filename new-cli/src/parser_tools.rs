@@ -16,6 +16,75 @@ pub fn indent(level: usize) -> String {
 }
 
 #[macro_export]
+macro_rules! permutation_many {
+    () => {
+        many_m_n(0, 0, nom::combinator::fail)
+    };
+    ( $total:tt, $( ($parser:expr, $index:tt, $required:tt) ),+ $(,)? ) => {
+        map(
+            context(
+                "Missing some required parsers here",
+                verify(
+                    map(
+                        many_m_n(0, $total,
+                            alt((
+                                $( map($parser, move |x| {
+                                    let mut tuple = permutation_many!(@create_none_tuple $total);
+                                    tuple.$index = Some(x);
+                                    tuple
+                                }), )+
+                            ))
+                        ),
+                        |vec| {
+                            let tuple = vec.into_iter().fold(
+                                permutation_many!(@create_none_tuple $total),
+                                |mut acc, item| {
+                                    $( permutation_many!(@collect $index, acc, item); )+
+                                    acc
+                                }
+                            );
+                            (
+                                $( tuple.$index ),+
+                            )
+                        }
+                    ),
+                    #[allow(unused_variables)]
+                    |tuple| {
+                        $( permutation_many!(@verify_field tuple.$index, $required) && )+ true
+                    }
+                ),
+            ),
+            |tuple| {
+                (
+                    $( permutation_many!(@handle_required tuple.$index, $required), )+
+                )
+            }
+        )
+    };
+    (@create_none_tuple 1) => { (None,) };
+    (@create_none_tuple 2) => { (None, None) };
+    (@create_none_tuple 3) => { (None, None, None) };
+    (@create_none_tuple 4) => { (None, None, None, None) };
+    (@create_none_tuple 5) => { (None, None, None, None, None) };
+    (@create_none_tuple 6) => { (None, None, None, None, None, None) };
+    (@collect $index:tt, $acc:expr, $item:expr) => {
+        if $acc.$index.is_none() { $acc.$index = $item.$index; }
+    };
+    (@verify_field $field:expr, true) => {
+        $field.is_some()
+    };
+    (@verify_field $field:expr, false) => {
+        true
+    };
+    (@handle_required $field:expr, true) => {
+        $field.expect("Shouldn't get here")
+    };
+    (@handle_required $field:expr, false) => {
+        $field
+    };
+}
+
+#[macro_export]
 macro_rules! create_enum_with_const_slice {
     (
         $(#[$meta:meta])*
@@ -177,7 +246,7 @@ macro_rules! impl_from_and_to_sdl_for_enum {
 
 #[macro_export]
 macro_rules! impl_from_and_to_sdl_for_struct {
-    ($struct_name:ident, $(($field:ident: $field_type:ty, $required:tt)),+ $(,)?) => {
+    (($struct_name:ident, $total: tt), $(($field:ident: $field_type:ty, $index:tt, $required:tt)),+ $(,)?) => {
         impl FromSdl for $struct_name {
             fn from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(input: &'a str) -> IResult<&'a str, Self, E>
             where
@@ -186,17 +255,20 @@ macro_rules! impl_from_and_to_sdl_for_struct {
                 preceded(
                     char('{'),
                     cut(terminated(
-                        permutation((
+                        permutation_many!(
+                            $total,
+
                             $(
-                                {
-                                    let parser = preceded(
+                                (
+                                    preceded(
                                         tuple((multispace0, tag(stringify!($field)), multispace0, char(':'), multispace0)),
                                         cut(<$field_type>::from_sdl)
-                                    );
-                                    impl_from_and_to_sdl_for_struct!(@from_sdl_field $field, parser, $required)
-                                },
+                                    ),
+                                    $index,
+                                    $required
+                                ),
                             )+
-                        )),
+                        ),
                         preceded(multispace0, char('}'))
                     ))
                 )(input)
