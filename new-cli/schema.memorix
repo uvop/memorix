@@ -44,9 +44,9 @@ Namespace standalone {
     abc: {
       key: u32
       payload: {
-          id: u32
-          other_id: u64
-        }
+        id: u32
+        other_id: u64
+      }
       ttl: env(ABC_TTL)
       public: [
         get

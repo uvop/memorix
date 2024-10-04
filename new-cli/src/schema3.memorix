@@ -1,23 +1,24 @@
 Config {
-    export: {
-        engine: Redis(env(REDIS_URL))
-        files: [
-            {
-                language: Rust
-                path: "./abc.go"
-            }
-        ]
-    }
+  export: {
+    engine: Redis(env(REDIS_URL))
+    files: [
+      {
+        language: rust
+        path: "./abc.go"
+      }
+    ]
+  }
 }
 
 NamespaceDefaults {
-    cache_ttl: "70"
+  cache_ttl: "70"
+}
+Cache {
+  abc: {
+    key: u32
+    payload: u64
+    ttl: "60"
+  }
 }
 
-Cache {
-    abc: {
-        key: u32
-        payload: u64
-        ttl: "60"
-    }
-}
+
