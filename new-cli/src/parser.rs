@@ -545,7 +545,7 @@ impl ToSdl for Namespace {
             result.push_str(&format!(
                 "{}NamespaceDefaults {}\n",
                 level_indent,
-                x.to_sdl(level + 1)
+                x.to_sdl(level)
             ));
         }
         if let Some(x) = &self.type_items {

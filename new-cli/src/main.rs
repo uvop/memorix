@@ -107,12 +107,10 @@ pub fn format<F: FileSystem>(
 pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<String, PrettyError<String>> {
     let parsed_schema =
         crate::imports::ImportedSchema::new(fs, path).map_err(|x| format!("{}", x))?;
-    let export_schemas = crate::export_schemas::ExportSchema::new_vec(parsed_schema);
-    let flat_export_schemas = export_schemas
-        .into_iter()
-        .map(crate::flat_schema::FlatExportSchema::new)
-        .collect::<Vec<_>>();
-    Ok(serde_json::to_string_pretty(&flat_export_schemas).unwrap())
+    let export_schema = crate::export_schemas::ExportSchema::new(parsed_schema);
+    let flat_export_schema =
+        export_schema.and_then(|x| Some(crate::flat_schema::FlatExportSchema::new(x)));
+    Ok(serde_json::to_string_pretty(&flat_export_schema).unwrap())
 }
 
 enum Command {
@@ -122,7 +120,7 @@ enum Command {
 
 fn main() -> Result<(), PrettyError<String>> {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 3 {
+    if args.len() < 3 {
         return Err(format!("Usage: [codegen/format] <path_to_sdl_file>").into());
     }
     let command = match args[1].as_str() {
@@ -131,23 +129,36 @@ fn main() -> Result<(), PrettyError<String>> {
         x => Err(format!("Unknown command \"{}\"", x)),
     }?;
 
-    let file_path = &args[2];
-    let path = PathBuf::from(file_path)
-        .canonicalize()
-        .map_err(|_| "Couldn't get abs path for schema".to_string())?;
-    let abs_file_path = path
-        .to_str()
-        .ok_or("Couldn't get abs path for schema".to_string())?;
+    let file_paths = &args[2..];
+    let abs_file_paths = file_paths
+        .into_iter()
+        .map(|file_path| {
+            let path = PathBuf::from(file_path)
+                .canonicalize()
+                .map_err(|_| "Couldn't get abs path for schema".to_string())?;
+            let abs_file_path = path
+                .to_str()
+                .ok_or("Couldn't get abs path for schema".to_string())?
+                .to_string();
+            Ok(abs_file_path)
+        })
+        .collect::<Result<Vec<_>, PrettyError<String>>>()?;
 
     let fs = RealFileSystem {};
 
-    match command {
-        Command::Format => format(&fs, abs_file_path).map_err(|e| e.to_string())?,
-        Command::Codegen => {
-            let code = codegen(&fs, abs_file_path)?;
-            println!("{}", code);
-        }
-    }
+    let _ = abs_file_paths
+        .into_iter()
+        .map(|abs_file_path| {
+            match command {
+                Command::Format => format(&fs, &abs_file_path).map_err(|e| e.to_string())?,
+                Command::Codegen => {
+                    let code = codegen(&fs, &abs_file_path)?;
+                    println!("{}", code);
+                }
+            }
+            Ok(())
+        })
+        .collect::<Result<Vec<()>, PrettyError<String>>>()?;
 
     Ok(())
 }

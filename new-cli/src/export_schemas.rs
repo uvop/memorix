@@ -63,17 +63,23 @@ pub struct ItemWithExpose<O> {
 }
 
 fn namespace_to_export_namespace(
-    namespace: Namespace,
+    namespace: &Namespace,
     expose_all: bool,
 ) -> ExportNamespace<TypeItem> {
     ExportNamespace {
-        defaults: namespace.defaults.unwrap_or(NamespaceDefaults {
+        defaults: namespace.defaults.clone().unwrap_or(NamespaceDefaults {
             cache_ttl: None,
             task_queue_type: None,
         }),
-        type_items: namespace.type_items.unwrap_or(vec![]).into_iter().collect(),
+        type_items: namespace
+            .type_items
+            .clone()
+            .unwrap_or(vec![])
+            .into_iter()
+            .collect(),
         enum_items: namespace
             .enum_items
+            .clone()
             .and_then(|x| Some(x.items))
             .unwrap_or(vec![])
             .into_iter()
@@ -81,6 +87,7 @@ fn namespace_to_export_namespace(
             .collect(),
         cache_items: namespace
             .cache_items
+            .clone()
             .unwrap_or(vec![])
             .into_iter()
             .filter_map(|(k, x)| {
@@ -106,6 +113,7 @@ fn namespace_to_export_namespace(
             .collect(),
         pubsub_items: namespace
             .pubsub_items
+            .clone()
             .unwrap_or(vec![])
             .into_iter()
             .filter_map(|(k, x)| {
@@ -130,6 +138,7 @@ fn namespace_to_export_namespace(
             .collect(),
         task_items: namespace
             .task_items
+            .clone()
             .unwrap_or(vec![])
             .into_iter()
             .filter_map(|(k, x)| {
@@ -157,18 +166,18 @@ fn namespace_to_export_namespace(
 }
 
 impl InnerExportSchema {
-    fn new(import_schema: ImportedSchema, is_import: bool) -> Self {
+    fn new(import_schema: &ImportedSchema, is_import: bool) -> Self {
         let import_export_schemas = import_schema
             .imports
-            .into_iter()
+            .iter()
             .map(|x| InnerExportSchema::new(x, true))
             .collect::<Vec<_>>();
 
         let namespaces = import_schema
             .schema
             .namespaces
-            .into_iter()
-            .map(|(k, x)| (k, namespace_to_export_namespace(x, !is_import)));
+            .iter()
+            .map(|(k, x)| (k.clone(), namespace_to_export_namespace(x, !is_import)));
         let namespaces = namespaces
             .chain(
                 import_export_schemas
@@ -177,7 +186,7 @@ impl InnerExportSchema {
             )
             .collect::<Vec<_>>();
         let global_namespace =
-            namespace_to_export_namespace(import_schema.schema.global_namespace, !is_import);
+            namespace_to_export_namespace(&import_schema.schema.global_namespace, !is_import);
         let global_namespace = ExportNamespace {
             defaults: global_namespace.defaults,
             type_items: global_namespace
@@ -240,27 +249,25 @@ impl InnerExportSchema {
 }
 
 impl ExportSchema {
-    pub fn new_vec(import_schema: ImportedSchema) -> Vec<Self> {
-        let schema_clone = import_schema.clone();
-        import_schema
-            .imports
-            .into_iter()
-            .flat_map(ExportSchema::new_vec)
-            .chain(
-                match import_schema.schema.config.and_then(|config| config.export) {
-                    Some(export) => {
-                        let inner_export_schema = InnerExportSchema::new(schema_clone, false);
-                        let export_schema = ExportSchema {
-                            global_namespace: inner_export_schema.global_namespace,
-                            namespaces: inner_export_schema.namespaces,
-                            config: Config { export },
-                        };
-                        vec![export_schema]
-                    }
-                    None => vec![],
-                }
-                .into_iter(),
-            )
-            .collect()
+    pub fn new(import_schema: ImportedSchema) -> Option<Self> {
+        match import_schema
+            .schema
+            .config
+            .as_ref()
+            .and_then(|config| config.export.as_ref())
+        {
+            Some(export) => {
+                let inner_export_schema = InnerExportSchema::new(&import_schema, false);
+                let export_schema = ExportSchema {
+                    global_namespace: inner_export_schema.global_namespace,
+                    namespaces: inner_export_schema.namespaces,
+                    config: Config {
+                        export: export.clone(),
+                    },
+                };
+                Some(export_schema)
+            }
+            None => None,
+        }
     }
 }
