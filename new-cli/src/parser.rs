@@ -90,7 +90,7 @@ impl_from_and_to_sdl_for_struct! {
     (path: BracketString, 1, true),
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, Eq, Hash, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Language {
     TypeScript,
     Python,

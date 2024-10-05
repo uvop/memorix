@@ -3,27 +3,15 @@ use serde::{Deserialize, Serialize};
 use crate::{
     imports::ImportedSchema,
     parser::{
-        CacheOperation, Export, Namespace, NamespaceDefaults, PubSubOperation, TaskOperation,
-        TypeItem, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
+        CacheOperation, Namespace, NamespaceDefaults, PubSubOperation, TaskOperation, TypeItem,
+        Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
     },
 };
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct InnerExportSchema {
-    global_namespace: ExportNamespace<TypeItem>,
-    namespaces: Vec<(String, ExportNamespace<TypeItem>)>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ExportSchema {
-    pub config: Config,
     pub global_namespace: ExportNamespace<TypeItem>,
     pub namespaces: Vec<(String, ExportNamespace<TypeItem>)>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Config {
-    pub export: Export,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -165,12 +153,12 @@ fn namespace_to_export_namespace(
     }
 }
 
-impl InnerExportSchema {
-    fn new(import_schema: &ImportedSchema, is_import: bool) -> Self {
+impl ExportSchema {
+    fn new_also_import(import_schema: &ImportedSchema, is_import: bool) -> Self {
         let import_export_schemas = import_schema
             .imports
             .iter()
-            .map(|x| InnerExportSchema::new(x, true))
+            .map(|x| Self::new_also_import(x, true))
             .collect::<Vec<_>>();
 
         let namespaces = import_schema
@@ -246,28 +234,7 @@ impl InnerExportSchema {
             namespaces,
         }
     }
-}
-
-impl ExportSchema {
-    pub fn new(import_schema: ImportedSchema) -> Option<Self> {
-        match import_schema
-            .schema
-            .config
-            .as_ref()
-            .and_then(|config| config.export.as_ref())
-        {
-            Some(export) => {
-                let inner_export_schema = InnerExportSchema::new(&import_schema, false);
-                let export_schema = ExportSchema {
-                    global_namespace: inner_export_schema.global_namespace,
-                    namespaces: inner_export_schema.namespaces,
-                    config: Config {
-                        export: export.clone(),
-                    },
-                };
-                Some(export_schema)
-            }
-            None => None,
-        }
+    pub fn new(import_schema: &ImportedSchema) -> Self {
+        Self::new_also_import(import_schema, false)
     }
 }
