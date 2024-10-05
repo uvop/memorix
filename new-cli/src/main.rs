@@ -1,6 +1,7 @@
-mod export_schemas;
+mod export_schema;
 mod flat_schema;
 mod imports;
+mod languages;
 mod parser;
 mod parser_tools;
 
@@ -10,6 +11,7 @@ use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
+use languages::codegen_per_language;
 use nom::error::convert_error;
 use nom::Finish;
 use parser::{schema_to_sdl, Schema};
@@ -104,13 +106,36 @@ pub fn format<F: FileSystem>(
     Ok(())
 }
 
-pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<String, PrettyError<String>> {
+pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<(), PrettyError<String>> {
     let parsed_schema =
         crate::imports::ImportedSchema::new(fs, path).map_err(|x| format!("{}", x))?;
-    let export_schema = crate::export_schemas::ExportSchema::new(parsed_schema);
-    let flat_export_schema =
-        export_schema.and_then(|x| Some(crate::flat_schema::FlatExportSchema::new(x)));
-    Ok(serde_json::to_string_pretty(&flat_export_schema).unwrap())
+    let export_schema = crate::export_schema::ExportSchema::new(&parsed_schema);
+    let flat_export_schema = crate::flat_schema::FlatExportSchema::new(&export_schema);
+    match &parsed_schema
+        .schema
+        .config
+        .unwrap_or(parser::Config {
+            import: None,
+            export: None,
+        })
+        .export
+    {
+        Some(export) => {
+            let generated_code = codegen_per_language(&export, &export_schema, &flat_export_schema);
+            generated_code
+                .into_iter()
+                .map(|(code_path, content)| {
+                    println!("Schema \"{}\" has been exported to \"{}\"", path, code_path);
+                    fs.write_string(&code_path, &content)
+                })
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|x| format!("{}", x))?;
+        }
+        None => {
+            println!("Schema \"{}\" has no export", path);
+        }
+    }
+    Ok(())
 }
 
 enum Command {
@@ -151,10 +176,7 @@ fn main() -> Result<(), PrettyError<String>> {
         .map(|abs_file_path| {
             match command {
                 Command::Format => format(&fs, &abs_file_path).map_err(|e| e.to_string())?,
-                Command::Codegen => {
-                    let code = codegen(&fs, &abs_file_path)?;
-                    println!("{}", code);
-                }
+                Command::Codegen => codegen(&fs, &abs_file_path)?,
             }
             Ok(())
         })
@@ -175,11 +197,12 @@ mod tests {
 
     impl FileSystem for MockFileSystem {
         fn read_to_string(&self, path: &str) -> io::Result<String> {
-            self.files
-                .borrow()
-                .get(path)
-                .cloned()
-                .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "File not found"))
+            self.files.borrow().get(path).cloned().ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::NotFound,
+                    format!("File \"{}\" not found", path),
+                )
+            })
         }
 
         fn write_string(&self, path: &str, content: &str) -> io::Result<()> {
@@ -394,8 +417,16 @@ Namespace UserService {
                 ),
             ])),
         };
-        insta::assert_snapshot!(codegen(&mock_fs, "schema.memorix")?);
-
+        codegen(&mock_fs, "schema.memorix")?;
+        let typescript_path = "memorix.generated.ts";
+        let typescript_code = mock_fs.read_to_string(typescript_path)?;
+        insta::assert_snapshot!(typescript_code);
+        let python_path = "memorix_generated.py";
+        let python_code = mock_fs.read_to_string(python_path)?;
+        insta::assert_snapshot!(python_code);
+        let rust_path = "memorix_generated.rs";
+        let rust_code = mock_fs.read_to_string(rust_path)?;
+        insta::assert_snapshot!(rust_code);
         Ok(())
     }
 

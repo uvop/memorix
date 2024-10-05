@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    export_schemas::{
+    export_schema::{
         ExportCacheItem, ExportNamespace, ExportPubSubItem, ExportSchema, ExportTaskItem,
     },
     parser::TypeItem,
@@ -45,15 +45,15 @@ fn concat_with_key(ctx: &str, key: &str) -> String {
 
 fn type_item_to_flat_type_items(
     ctx: &str,
-    type_item: TypeItem,
+    type_item: &TypeItem,
 ) -> (FlatTypeItem, Vec<(String, TypeItemObject)>) {
     match type_item {
         TypeItem::Optional(x) => {
-            let (y, hm) = type_item_to_flat_type_items(ctx, *x);
+            let (y, hm) = type_item_to_flat_type_items(ctx, x);
             (FlatTypeItem::Optional(Box::new(y)), hm)
         }
         TypeItem::Array(x) => {
-            let (y, hm) = type_item_to_flat_type_items(ctx, *x);
+            let (y, hm) = type_item_to_flat_type_items(ctx, x);
             (FlatTypeItem::Array(Box::new(y)), hm)
         }
         TypeItem::Object(x) => {
@@ -85,7 +85,7 @@ fn type_item_to_flat_type_items(
 
             (FlatTypeItem::Reference(ctx.to_string()), to_add)
         }
-        TypeItem::Reference(x) => (FlatTypeItem::Reference(x), Vec::new()),
+        TypeItem::Reference(x) => (FlatTypeItem::Reference(x.clone()), Vec::new()),
         TypeItem::U32 => (FlatTypeItem::U32, Vec::new()),
         TypeItem::I32 => (FlatTypeItem::I32, Vec::new()),
         TypeItem::U64 => (FlatTypeItem::U64, Vec::new()),
@@ -97,10 +97,10 @@ fn type_item_to_flat_type_items(
     }
 }
 
-fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExportNamespace {
+fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExportNamespace {
     let type_items = namespace
         .type_items
-        .into_iter()
+        .iter()
         .map(|(k, t)| {
             let (flat_type_item, type_object_items) =
                 type_item_to_flat_type_items(&concat_with_key("InlineType", &k), t);
@@ -109,15 +109,16 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
         .collect::<Vec<_>>();
     let cache_items = namespace
         .cache_items
-        .into_iter()
+        .iter()
         .map(|(k, item)| {
             let (payload_flat_type_item, payload_type_object_items) = type_item_to_flat_type_items(
                 &concat_with_key("InlineCachePayload", &k),
-                item.payload,
+                &item.payload,
             );
             let key = item
                 .key
-                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlineCacheKey", &k), x));
+                .as_ref()
+                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlineCacheKey", &k), &x));
 
             let type_object_items = match key.clone() {
                 None => payload_type_object_items,
@@ -131,8 +132,8 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
                 ExportCacheItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    expose: item.expose,
-                    ttl: item.ttl,
+                    expose: item.expose.clone(),
+                    ttl: item.ttl.clone(),
                 },
                 type_object_items,
             )
@@ -140,15 +141,16 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
         .collect::<Vec<_>>();
     let pubsub_items = namespace
         .pubsub_items
-        .into_iter()
+        .iter()
         .map(|(k, item)| {
             let (payload_flat_type_item, payload_type_object_items) = type_item_to_flat_type_items(
                 &concat_with_key("InlinePubSubPayload", &k),
-                item.payload,
+                &item.payload,
             );
             let key = item
                 .key
-                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlinePubSubKey", &k), x));
+                .as_ref()
+                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlinePubSubKey", &k), &x));
 
             let type_object_items = match key.clone() {
                 None => payload_type_object_items,
@@ -162,7 +164,7 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
                 ExportPubSubItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    expose: item.expose,
+                    expose: item.expose.clone(),
                 },
                 type_object_items,
             )
@@ -170,15 +172,16 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
         .collect::<Vec<_>>();
     let task_items = namespace
         .task_items
-        .into_iter()
+        .iter()
         .map(|(k, item)| {
             let (payload_flat_type_item, payload_type_object_items) = type_item_to_flat_type_items(
                 &concat_with_key("InlineTaskPayload", &k),
-                item.payload,
+                &item.payload,
             );
             let key = item
                 .key
-                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlineTaskKey", &k), x));
+                .as_ref()
+                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlineTaskKey", &k), &x));
 
             let type_object_items = match key.clone() {
                 None => payload_type_object_items,
@@ -192,8 +195,8 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
                 ExportTaskItem {
                     key: key.map(|(x, _)| x),
                     payload: payload_flat_type_item,
-                    expose: item.expose,
-                    queue_type: item.queue_type,
+                    expose: item.expose.clone(),
+                    queue_type: item.queue_type.clone(),
                 },
                 type_object_items,
             )
@@ -213,36 +216,36 @@ fn namespace_to_flat_namespace(namespace: ExportNamespace<TypeItem>) -> FlatExpo
     FlatExportNamespace {
         type_object_items,
         modified_namespace: ExportNamespace {
-            defaults: namespace.defaults,
+            defaults: namespace.defaults.clone(),
             type_items: type_items
                 .into_iter()
-                .map(|(k, item, _)| (k, item))
+                .map(|(k, item, _)| (k.clone(), item.clone()))
                 .collect(),
-            enum_items: namespace.enum_items,
+            enum_items: namespace.enum_items.clone(),
             cache_items: cache_items
                 .into_iter()
-                .map(|(k, item, _)| (k, item))
+                .map(|(k, item, _)| (k.clone(), item.clone()))
                 .collect(),
             pubsub_items: pubsub_items
                 .into_iter()
-                .map(|(k, item, _)| (k, item))
+                .map(|(k, item, _)| (k.clone(), item.clone()))
                 .collect(),
             task_items: task_items
                 .into_iter()
-                .map(|(k, item, _)| (k, item))
+                .map(|(k, item, _)| (k.clone(), item.clone()))
                 .collect(),
         },
     }
 }
 
 impl FlatExportSchema {
-    pub fn new(export_schema: ExportSchema) -> Self {
+    pub fn new(export_schema: &ExportSchema) -> Self {
         Self {
-            global_namespace: namespace_to_flat_namespace(export_schema.global_namespace),
+            global_namespace: namespace_to_flat_namespace(&export_schema.global_namespace),
             namespaces: export_schema
                 .namespaces
-                .into_iter()
-                .map(|(k, n)| (k, namespace_to_flat_namespace(n)))
+                .iter()
+                .map(|(k, n)| (k.clone(), namespace_to_flat_namespace(&n)))
                 .collect(),
         }
     }
