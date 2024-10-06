@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 484
+assertion_line: 535
 expression: formatted_schema
 ---
 Config {
@@ -67,6 +67,14 @@ Namespace Rocket {
   PubSub {
     launched: {
       payload: boolean?
+    }
+  }
+
+  Namespace aa {
+    Cache {
+      bb: {
+        payload: boolean
+      }
     }
   }
 }
