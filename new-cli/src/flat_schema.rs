@@ -14,7 +14,7 @@ pub struct FlatExportSchema {
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FlatExportNamespace {
-    pub type_object_items: Vec<(String, TypeItemObject)>,
+    pub type_item_objects: Vec<(String, TypeItemObject)>,
     pub modified_namespace: ExportNamespace<FlatTypeItem>,
 }
 
@@ -209,7 +209,7 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
             (
                 k.clone(),
                 namespace.modified_namespace,
-                namespace.type_object_items,
+                namespace.type_item_objects,
             )
         })
         .collect::<Vec<_>>();
@@ -227,7 +227,7 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
         });
 
     FlatExportNamespace {
-        type_object_items,
+        type_item_objects: type_object_items,
         modified_namespace: ExportNamespace {
             defaults: namespace.defaults.clone(),
             namespaces: namespaces
