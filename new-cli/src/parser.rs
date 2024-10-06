@@ -48,7 +48,6 @@ impl ToSdl for BracketString {
 pub struct Schema {
     pub config: Option<Config>,
     pub global_namespace: Namespace,
-    pub namespaces: Vec<(String, Namespace)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -112,6 +111,7 @@ pub struct Namespace {
     pub cache_items: Option<Vec<(String, CacheItem)>>,
     pub pubsub_items: Option<Vec<(String, PubSubItem)>>,
     pub task_items: Option<Vec<(String, TaskItem)>>,
+    pub namespaces: Vec<(String, Namespace)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -474,63 +474,93 @@ impl FromSdl for Namespace {
     {
         map(
             permutation_many!(
-                6,
+                13,
+                (namespaces_from_sdl, 0, true),
                 (
                     preceded(
                         tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
                         cut(NamespaceDefaults::from_sdl),
                     ),
-                    0,
+                    1,
                     false
                 ),
+                (namespaces_from_sdl, 2, true),
                 (
                     preceded(
                         tuple((multispace0, tag("Type"), multispace0)),
                         cut(Vec::<(String, TypeItem)>::from_sdl),
                     ),
-                    1,
+                    3,
                     false
                 ),
+                (namespaces_from_sdl, 4, true),
                 (
                     preceded(
                         tuple((multispace0, tag("Enum"), multispace0)),
                         cut(EnumItems::from_sdl),
                     ),
-                    2,
+                    5,
                     false
                 ),
+                (namespaces_from_sdl, 6, true),
                 (
                     preceded(
                         tuple((multispace0, tag("Cache"), multispace0)),
                         cut(Vec::<(String, CacheItem)>::from_sdl),
                     ),
-                    3,
+                    7,
                     false
                 ),
+                (namespaces_from_sdl, 8, true),
                 (
                     preceded(
                         tuple((multispace0, tag("PubSub"), multispace0)),
                         cut(Vec::<(String, PubSubItem)>::from_sdl),
                     ),
-                    4,
+                    9,
                     false
                 ),
+                (namespaces_from_sdl, 10, true),
                 (
                     preceded(
                         tuple((multispace0, tag("Task"), multispace0)),
                         cut(Vec::<(String, TaskItem)>::from_sdl),
                     ),
-                    5,
+                    11,
                     false
                 ),
+                (namespaces_from_sdl, 12, true)
             ),
-            |(defaults, type_items, enum_items, cache_items, pubsub_items, task_items)| Namespace {
+            |(
+                namespaces1,
+                defaults,
+                namespaces2,
+                type_items,
+                namespaces3,
+                enum_items,
+                namespaces4,
+                cache_items,
+                namespaces5,
+                pubsub_items,
+                namespaces6,
+                task_items,
+                namespaces7,
+            )| Namespace {
                 defaults,
                 type_items,
                 enum_items,
                 cache_items,
                 pubsub_items,
                 task_items,
+                namespaces: namespaces1
+                    .into_iter()
+                    .chain(namespaces2.into_iter())
+                    .chain(namespaces3.into_iter())
+                    .chain(namespaces4.into_iter())
+                    .chain(namespaces5.into_iter())
+                    .chain(namespaces6.into_iter())
+                    .chain(namespaces7.into_iter())
+                    .collect(),
             },
         )(input)
     }
@@ -563,6 +593,7 @@ impl ToSdl for Namespace {
         if let Some(x) = &self.task_items {
             result.push_str(&format!("{}Task {}\n", level_indent, x.to_sdl(level)));
         }
+        result.push_str(&format!("{}\n", namespaces_to_sdl(&self.namespaces, level)));
 
         result
     }
@@ -611,11 +642,9 @@ impl FromSdl for Schema {
                     tuple((multispace0, tag("Config"), multispace0)),
                     cut(Config::from_sdl),
                 )),
-                namespaces_from_sdl,
                 opt(Namespace::from_sdl),
-                namespaces_from_sdl,
             )),
-            |(config, named_namespaces, global_namespace, more_named_namespaces)| Schema {
+            |(config, global_namespace)| Schema {
                 config,
                 global_namespace: global_namespace.unwrap_or(Namespace {
                     defaults: None,
@@ -624,11 +653,8 @@ impl FromSdl for Schema {
                     cache_items: None,
                     pubsub_items: None,
                     task_items: None,
+                    namespaces: vec![],
                 }),
-                namespaces: named_namespaces
-                    .into_iter()
-                    .chain(more_named_namespaces.into_iter())
-                    .collect(),
             },
         )(input)
     }
@@ -642,10 +668,6 @@ pub fn schema_to_sdl(schema: &Schema) -> String {
         result.push_str(&format!("Config {}\n\n", x.to_sdl(level)));
     }
     result.push_str(&format!("{}\n", schema.global_namespace.to_sdl(level)));
-    result.push_str(&format!(
-        "{}\n",
-        namespaces_to_sdl(&schema.namespaces, level)
-    ));
 
     result
 }

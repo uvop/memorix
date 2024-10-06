@@ -11,7 +11,6 @@ use crate::{
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ExportSchema {
     pub global_namespace: ExportNamespace<TypeItem>,
-    pub namespaces: Vec<(String, ExportNamespace<TypeItem>)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -22,6 +21,7 @@ pub struct ExportNamespace<T> {
     pub cache_items: Vec<(String, ExportCacheItem<T>)>,
     pub pubsub_items: Vec<(String, ExportPubSubItem<T>)>,
     pub task_items: Vec<(String, ExportTaskItem<T>)>,
+    pub namespaces: Vec<(String, ExportNamespace<T>)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -55,6 +55,11 @@ fn namespace_to_export_namespace(
     expose_all: bool,
 ) -> ExportNamespace<TypeItem> {
     ExportNamespace {
+        namespaces: namespace
+            .namespaces
+            .iter()
+            .map(|(k, n)| (k.clone(), namespace_to_export_namespace(&n, expose_all)))
+            .collect(),
         defaults: namespace.defaults.clone().unwrap_or(NamespaceDefaults {
             cache_ttl: None,
             task_queue_type: None,
@@ -161,16 +166,17 @@ impl ExportSchema {
             .map(|x| Self::new_also_import(x, true))
             .collect::<Vec<_>>();
 
-        let namespaces = import_schema
+        let global_namespaces = import_schema
             .schema
+            .global_namespace
             .namespaces
             .iter()
             .map(|(k, x)| (k.clone(), namespace_to_export_namespace(x, !is_import)));
-        let namespaces = namespaces
+        let global_namespaces = global_namespaces
             .chain(
                 import_export_schemas
                     .iter()
-                    .flat_map(|x| x.namespaces.clone()),
+                    .flat_map(|x| x.global_namespace.namespaces.clone()),
             )
             .collect::<Vec<_>>();
         let global_namespace =
@@ -227,12 +233,10 @@ impl ExportSchema {
                         .flatten(),
                 )
                 .collect(),
+            namespaces: global_namespaces,
         };
 
-        Self {
-            global_namespace,
-            namespaces,
-        }
+        Self { global_namespace }
     }
     pub fn new(import_schema: &ImportedSchema) -> Self {
         Self::new_also_import(import_schema, false)

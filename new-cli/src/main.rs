@@ -513,6 +513,13 @@ Type {
           BLUE
         }
       }
+      Namespace aa {
+        Cache {
+          bb: {
+            payload:boolean
+          }
+        }
+      }
       PubSub {
         launched: {
           payload: boolean   ?

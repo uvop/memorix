@@ -67,6 +67,13 @@ macro_rules! permutation_many {
     (@create_none_tuple 4) => { (None, None, None, None) };
     (@create_none_tuple 5) => { (None, None, None, None, None) };
     (@create_none_tuple 6) => { (None, None, None, None, None, None) };
+    (@create_none_tuple 7) => { (None, None, None, None, None, None, None) };
+    (@create_none_tuple 8) => { (None, None, None, None, None, None, None, None) };
+    (@create_none_tuple 9) => { (None, None, None, None, None, None, None, None) };
+    (@create_none_tuple 10) => { (None, None, None, None, None, None, None, None, None, None) };
+    (@create_none_tuple 11) => { (None, None, None, None, None, None, None, None, None, None, None) };
+    (@create_none_tuple 12) => { (None, None, None, None, None, None, None, None, None, None, None, None) };
+    (@create_none_tuple 13) => { (None, None, None, None, None, None, None, None, None, None, None, None, None) };
     (@collect $index:tt, $acc:expr, $item:expr) => {
         if $acc.$index.is_none() { $acc.$index = $item.$index; }
     };
