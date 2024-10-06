@@ -3,4 +3,49 @@ source: src/main.rs
 assertion_line: 429
 expression: rust_code
 ---
-rust
+#![allow(dead_code)]
+extern crate memorix_client_redis;
+
+type abc = u32
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+pub struct InlineCachePayloadMessage {
+  id: String,
+  sender_id: UserId,
+  recipient_id: UserId,
+  content: String,
+  timestamp: u64,
+}
+
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+pub struct InlinePubSubPayloadNewMessage {
+  message_id: String,
+  recipient_id: UserId,
+}
+
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+pub struct InlineTaskPayloadMessageProcessingTasks {
+  message_id: String,
+  processing_type: String,
+  priority: u32,
+}
+
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+pub struct InlineCachePayloadUserProfile {
+  id: u32,
+  name: String,
+  email: String,
+}
+
+#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+pub struct InlineCachePayloadUserSession {
+  user_id: u32,
+  session_token: String,
+  expiry: u64,
+}
+
+#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct Memorix {
+}
+
+const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
