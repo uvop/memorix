@@ -10,7 +10,6 @@ use crate::{
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FlatExportSchema {
     pub global_namespace: FlatExportNamespace,
-    pub namespaces: Vec<(String, FlatExportNamespace)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -202,10 +201,23 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
             )
         })
         .collect::<Vec<_>>();
+    let namespaces = namespace
+        .namespaces
+        .iter()
+        .map(|(k, n)| {
+            let namespace = namespace_to_flat_namespace(&n);
+            (
+                k.clone(),
+                namespace.modified_namespace,
+                namespace.type_object_items,
+            )
+        })
+        .collect::<Vec<_>>();
     let type_object_items = type_items
         .iter()
         .cloned()
         .map(|(_, _, x)| x)
+        .chain(namespaces.iter().cloned().map(|(_, _, x)| x))
         .chain(cache_items.iter().cloned().map(|(_, _, x)| x))
         .chain(pubsub_items.iter().cloned().map(|(_, _, x)| x))
         .chain(task_items.iter().cloned().map(|(_, _, x)| x))
@@ -213,10 +225,15 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
             acc.extend(x);
             acc
         });
+
     FlatExportNamespace {
         type_object_items,
         modified_namespace: ExportNamespace {
             defaults: namespace.defaults.clone(),
+            namespaces: namespaces
+                .into_iter()
+                .map(|(k, item, _)| (k, item))
+                .collect(),
             type_items: type_items
                 .into_iter()
                 .map(|(k, item, _)| (k.clone(), item.clone()))
@@ -242,11 +259,6 @@ impl FlatExportSchema {
     pub fn new(export_schema: &ExportSchema) -> Self {
         Self {
             global_namespace: namespace_to_flat_namespace(&export_schema.global_namespace),
-            namespaces: export_schema
-                .namespaces
-                .iter()
-                .map(|(k, n)| (k.clone(), namespace_to_flat_namespace(&n)))
-                .collect(),
         }
     }
 }
