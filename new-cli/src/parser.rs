@@ -9,7 +9,7 @@ use nom::{
     character::complete::{alphanumeric1, char, multispace0, multispace1},
     combinator::{cut, map, opt, value, verify},
     error::{context, ParseError},
-    multi::{many0, many_m_n, separated_list1},
+    multi::{many0, many1, many_m_n, separated_list1},
     sequence::{delimited, pair, preceded, terminated, tuple},
     IResult,
 };
@@ -474,8 +474,8 @@ impl FromSdl for Namespace {
     {
         map(
             permutation_many!(
-                13,
-                (namespaces_from_sdl, 0, true),
+                7,
+                (namespaces_from_sdl, 0, false),
                 (
                     preceded(
                         tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
@@ -484,67 +484,55 @@ impl FromSdl for Namespace {
                     1,
                     false
                 ),
-                (namespaces_from_sdl, 2, true),
                 (
                     preceded(
                         tuple((multispace0, tag("Type"), multispace0)),
                         cut(Vec::<(String, TypeItem)>::from_sdl),
                     ),
-                    3,
+                    2,
                     false
                 ),
-                (namespaces_from_sdl, 4, true),
                 (
                     preceded(
                         tuple((multispace0, tag("Enum"), multispace0)),
                         cut(EnumItems::from_sdl),
                     ),
-                    5,
+                    3,
                     false
                 ),
-                (namespaces_from_sdl, 6, true),
                 (
                     preceded(
                         tuple((multispace0, tag("Cache"), multispace0)),
                         cut(Vec::<(String, CacheItem)>::from_sdl),
                     ),
-                    7,
+                    4,
                     false
                 ),
-                (namespaces_from_sdl, 8, true),
                 (
                     preceded(
                         tuple((multispace0, tag("PubSub"), multispace0)),
                         cut(Vec::<(String, PubSubItem)>::from_sdl),
                     ),
-                    9,
+                    5,
                     false
                 ),
-                (namespaces_from_sdl, 10, true),
                 (
                     preceded(
                         tuple((multispace0, tag("Task"), multispace0)),
                         cut(Vec::<(String, TaskItem)>::from_sdl),
                     ),
-                    11,
+                    6,
                     false
-                ),
-                (namespaces_from_sdl, 12, true)
+                )
             ),
             |(
-                namespaces1,
+                namespaces,
                 defaults,
-                namespaces2,
                 type_items,
-                namespaces3,
                 enum_items,
-                namespaces4,
                 cache_items,
-                namespaces5,
                 pubsub_items,
-                namespaces6,
                 task_items,
-                namespaces7,
             )| Namespace {
                 defaults,
                 type_items,
@@ -552,15 +540,7 @@ impl FromSdl for Namespace {
                 cache_items,
                 pubsub_items,
                 task_items,
-                namespaces: namespaces1
-                    .into_iter()
-                    .chain(namespaces2.into_iter())
-                    .chain(namespaces3.into_iter())
-                    .chain(namespaces4.into_iter())
-                    .chain(namespaces5.into_iter())
-                    .chain(namespaces6.into_iter())
-                    .chain(namespaces7.into_iter())
-                    .collect(),
+                namespaces: namespaces.unwrap_or(vec![]),
             },
         )(input)
     }
@@ -593,7 +573,7 @@ impl ToSdl for Namespace {
         if let Some(x) = &self.task_items {
             result.push_str(&format!("{}Task {}\n", level_indent, x.to_sdl(level)));
         }
-        result.push_str(&format!("{}\n", namespaces_to_sdl(&self.namespaces, level)));
+        result.push_str(&format!("{}", namespaces_to_sdl(&self.namespaces, level)));
 
         result
     }
@@ -602,7 +582,7 @@ impl ToSdl for Namespace {
 fn namespaces_from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a str>>(
     input: &'a str,
 ) -> IResult<&'a str, Vec<(String, Namespace)>, E> {
-    many0(preceded(
+    many1(preceded(
         tuple((multispace0, tag("Namespace"), multispace1)),
         cut(terminated(
             pair(
@@ -616,10 +596,17 @@ fn namespaces_from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a
 
 fn namespaces_to_sdl(namespaces: &[(String, Namespace)], level: usize) -> String {
     let level_indent = indent(level);
-    let mut result = String::from("");
-    for (name, namespace) in namespaces {
+    if namespaces.len() == 0 {
+        return "".to_string();
+    }
+    let mut result = String::from("\n");
+    for (i, (name, namespace)) in namespaces.into_iter().enumerate() {
         result.push_str(&format!(
-            "{}Namespace {} {{\n{}{}}}\n\n",
+            "{}{}Namespace {} {{\n{}{}}}\n",
+            match i == 0 {
+                true => "",
+                false => "\n",
+            },
             level_indent,
             name,
             namespace.to_sdl(level + 1),

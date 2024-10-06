@@ -493,9 +493,6 @@ Type {
         }
       }
     }
-    Type {
-      a: [u64      ]
-    }
     Namespace Rocket {
       Cache {
         launched: {
@@ -526,7 +523,9 @@ Type {
         }
       }
     }
-
+    Type {
+      a: [u64      ]
+    }
     "#
                 .to_string(),
             )])),
