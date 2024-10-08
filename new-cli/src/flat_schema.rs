@@ -4,11 +4,12 @@ use crate::{
     export_schema::{
         ExportCacheItem, ExportNamespace, ExportPubSubItem, ExportSchema, ExportTaskItem,
     },
-    parser::TypeItem,
+    parser::{Engine, TypeItem},
 };
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FlatExportSchema {
+    pub engine: Engine,
     pub global_namespace: FlatExportNamespace,
 }
 
@@ -258,6 +259,7 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
 impl FlatExportSchema {
     pub fn new(export_schema: &ExportSchema) -> Self {
         Self {
+            engine: export_schema.engine.clone(),
             global_namespace: namespace_to_flat_namespace(&export_schema.global_namespace),
         }
     }

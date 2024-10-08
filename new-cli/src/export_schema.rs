@@ -3,13 +3,14 @@ use serde::{Deserialize, Serialize};
 use crate::{
     imports::ImportedSchema,
     parser::{
-        CacheOperation, Namespace, NamespaceDefaults, PubSubOperation, TaskOperation, TypeItem,
-        Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
+        CacheOperation, Engine, Namespace, NamespaceDefaults, PubSubOperation, TaskOperation,
+        TypeItem, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
     },
 };
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ExportSchema {
+    pub engine: Engine,
     pub global_namespace: ExportNamespace<TypeItem>,
 }
 
@@ -159,11 +160,14 @@ fn namespace_to_export_namespace(
 }
 
 impl ExportSchema {
-    fn new_also_import(import_schema: &ImportedSchema, is_import: bool) -> Self {
+    fn new_global_namespace(
+        import_schema: &ImportedSchema,
+        is_import: bool,
+    ) -> ExportNamespace<TypeItem> {
         let import_export_schemas = import_schema
             .imports
             .iter()
-            .map(|x| Self::new_also_import(x, true))
+            .map(|x| Self::new_global_namespace(x, true))
             .collect::<Vec<_>>();
 
         let global_namespaces = import_schema
@@ -176,7 +180,7 @@ impl ExportSchema {
             .chain(
                 import_export_schemas
                     .iter()
-                    .flat_map(|x| x.global_namespace.namespaces.clone()),
+                    .flat_map(|x| x.namespaces.clone()),
             )
             .collect::<Vec<_>>();
         let global_namespace =
@@ -189,7 +193,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.global_namespace.type_items.clone())
+                        .map(|x| x.type_items.clone())
                         .flatten(),
                 )
                 .collect(),
@@ -199,7 +203,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.global_namespace.enum_items.clone())
+                        .map(|x| x.enum_items.clone())
                         .flatten(),
                 )
                 .collect(),
@@ -209,7 +213,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.global_namespace.cache_items.clone())
+                        .map(|x| x.cache_items.clone())
                         .flatten(),
                 )
                 .collect(),
@@ -219,7 +223,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.global_namespace.pubsub_items.clone())
+                        .map(|x| x.pubsub_items.clone())
                         .flatten(),
                 )
                 .collect(),
@@ -229,16 +233,27 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.global_namespace.task_items.clone())
+                        .map(|x| x.task_items.clone())
                         .flatten(),
                 )
                 .collect(),
             namespaces: global_namespaces,
         };
 
-        Self { global_namespace }
+        global_namespace
     }
     pub fn new(import_schema: &ImportedSchema) -> Self {
-        Self::new_also_import(import_schema, false)
+        let global_namespace = Self::new_global_namespace(import_schema, false);
+        Self {
+            global_namespace,
+            engine: import_schema
+                .clone()
+                .schema
+                .config
+                .expect("Config must be")
+                .export
+                .expect("Export must be")
+                .engine,
+        }
     }
 }

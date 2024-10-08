@@ -1,6 +1,7 @@
 use crate::{
     export_schema::ExportNamespace,
     flat_schema::{FlatExportSchema, FlatTypeItem, TypeItemObject},
+    parser::{Engine, Value},
 };
 
 fn indent(level: usize) -> String {
@@ -20,6 +21,15 @@ fn flat_type_item_to_code(flat_type_item: &FlatTypeItem) -> String {
         FlatTypeItem::I64 => "i64".to_string(),
         FlatTypeItem::F32 => "f32".to_string(),
         FlatTypeItem::F64 => "f64".to_string(),
+    }
+}
+
+fn value_to_code(value: &Value) -> String {
+    match value {
+        Value::String(x) => format!("\"{x}\""),
+        Value::Env(x) => {
+            format!("std::env::var(\"{x}\").expect(\"missing environment variable {x}\")")
+        }
     }
 }
 
@@ -43,7 +53,11 @@ pub struct {name} {{
     ).to_string()).collect::<Vec<_>>().join("\n")).to_string()
 }
 
-fn namespace_to_code(namespace: &ExportNamespace<FlatTypeItem>, name_tree: Vec<String>) -> String {
+fn namespace_to_code(
+    namespace: &ExportNamespace<FlatTypeItem>,
+    name_tree: Vec<String>,
+    engine: &Engine,
+) -> String {
     let mut result = String::from("");
     let indent1 = indent(1);
     let indent3 = indent(3);
@@ -84,7 +98,8 @@ pub enum {name} {{
                     .clone()
                     .into_iter()
                     .chain(std::iter::once(name.clone()))
-                    .collect()
+                    .collect(),
+                engine,
             ),
         ));
     }
@@ -103,6 +118,7 @@ impl MemorixCache{name_pascal} {{
         }}
     }}
 }}
+
 "#,
             struct_content = namespace
                 .cache_items
@@ -142,6 +158,115 @@ impl MemorixCache{name_pascal} {{
                 .join("\n")
         ));
     }
+    if namespace.pubsub_items.len() != 0 {
+        result.push_str(&format!(
+            r#"#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixPubSub{name_pascal} {{
+{struct_content}
+}}
+
+impl MemorixPubSub{name_pascal} {{
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {{
+        Self {{
+{impl_content}
+        }}
+    }}
+}}
+
+"#,
+            struct_content = namespace
+                .pubsub_items
+                .iter()
+                .map(|(name, item)| {
+                    let payload = flat_type_item_to_code(&item.payload);
+                    format!(
+                        "{indent1}pub {name}: memorix_client_redis::MemorixPubSubItem{},",
+                        match &item.key {
+                            None => format!("NoKey<{payload}>"),
+                            Some(key) => {
+                                let key = flat_type_item_to_code(&key);
+                                format!("<{key}, {payload}>")
+                            }
+                        }
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+            impl_content = namespace
+                .pubsub_items
+                .iter()
+                .map(|(name, item)| {
+                    format!(
+                        r#"{indent3}{name}: memorix_client_redis::MemorixPubSubItem{}::new(
+{indent4}memorix_base.clone(),
+{indent4}"{name}".to_string(),
+{indent3}),"#,
+                        match &item.key {
+                            None => format!("NoKey"),
+                            Some(_) => format!(""),
+                        },
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
+        ));
+    }
+    if namespace.task_items.len() != 0 {
+        result.push_str(&format!(
+            r#"#[derive(Clone)]
+#[allow(non_snake_case)]
+pub struct MemorixTask{name_pascal} {{
+{struct_content}
+}}
+
+impl MemorixTask{name_pascal} {{
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {{
+        Self {{
+{impl_content}
+        }}
+    }}
+}}
+
+"#,
+            struct_content = namespace
+                .task_items
+                .iter()
+                .map(|(name, item)| {
+                    let payload = flat_type_item_to_code(&item.payload);
+                    format!(
+                        "{indent1}pub {name}: memorix_client_redis::MemorixTaskItem{},",
+                        match &item.key {
+                            None => format!("NoKey<{payload}>"),
+                            Some(key) => {
+                                let key = flat_type_item_to_code(&key);
+                                format!("<{key}, {payload}>")
+                            }
+                        }
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+            impl_content = namespace
+                .task_items
+                .iter()
+                .map(|(name, item)| {
+                    format!(
+                        r#"{indent3}{name}: memorix_client_redis::MemorixTaskItem{}::new(
+{indent4}memorix_base.clone(),
+{indent4}"{name}".to_string(),
+{indent4}None,
+{indent3}),"#,
+                        match &item.key {
+                            None => format!("NoKey"),
+                            Some(_) => format!(""),
+                        },
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
+        ));
+    }
 
     let name_tree_const_name = match name_tree.len() == 0 {
         true => "MEMORIX_NAMESPACE_NAME_TREE".to_string(),
@@ -154,8 +279,17 @@ pub struct Memorix{name_pascal} {{
 {struct_content}
 }}
 
-const {name_tree_const_name}: &[&str] = &[{}];"#,
-        name_tree
+const {name_tree_const_name}: &[&str] = &[{name_tree}];
+
+impl Memorix{name_pascal} {{
+{impl_new}
+        Ok(Self {{
+{impl_content}
+        }})
+    }}
+}}
+"#,
+        name_tree = name_tree
             .iter()
             .map(|x| format!("\"{}\"", x))
             .collect::<Vec<_>>()
@@ -177,6 +311,54 @@ const {name_tree_const_name}: &[&str] = &[{}];"#,
                     .then(|| format!("{indent1}pub pubsub: MemorixPubSub{name_pascal},")),
                 (!namespace.task_items.is_empty())
                     .then(|| format!("{indent1}pub task: MemorixTask{name_pascal},")),
+            ]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join("\n")
+        ]
+        .into_iter()
+        .filter(|x| !x.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n\n"),
+        impl_new = match name_tree.is_empty() {
+            true => format!(r#"    pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {{
+        let memorix_base =
+            memorix_client_redis::MemorixBase::new({redis_url}, {name_tree_const_name}, None)
+                .await?;"#, redis_url= match engine {
+            Engine::Redis(redis) => value_to_code(redis),
+            }),
+            false => format!(
+                r#"    pub fn new(
+        other: memorix_client_redis::MemorixBase,
+    ) -> Result<Memorix{name_pascal}, Box<dyn std::error::Error + Sync + Send>> {{
+        let memorix_base = memorix_client_redis::MemorixBase::from(
+            other,
+{indent3}{name_tree_const_name},
+            None,
+        );"#
+            ),
+        },
+        impl_content = [
+            namespace
+                .namespaces
+                .iter()
+                .map(|(name, _)| format!(
+                    "{indent3}{name}: Memorix{}::new(memorix_base.clone())?,",
+                    stringcase::pascal_case(&name)
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            [
+                (!namespace.cache_items.is_empty()).then(|| format!(
+                    "{indent3}cache: MemorixCache{name_pascal}::new(memorix_base.clone()),"
+                )),
+                (!namespace.pubsub_items.is_empty()).then(|| format!(
+                    "{indent3}pubsub: MemorixPubSub{name_pascal}::new(memorix_base.clone()),"
+                )),
+                (!namespace.task_items.is_empty()).then(|| format!(
+                    "{indent3}task: MemorixTask{name_pascal}::new(memorix_base.clone()),"
+                )),
             ]
             .into_iter()
             .flatten()
@@ -210,7 +392,8 @@ extern crate memorix_client_redis;
             .join("\n"),
         namespace_to_code(
             &flat_export_schema.global_namespace.modified_namespace,
-            vec![]
+            vec![],
+            &flat_export_schema.engine,
         )
     )
     .to_string()
