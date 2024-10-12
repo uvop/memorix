@@ -1,4 +1,4 @@
-name: Cli
+name: Client Redis Rust
 
 on: [push]
 
@@ -10,21 +10,16 @@ jobs:
         working-directory: ./cli
     steps:
       - uses: actions/checkout@v2
+      - uses: hecrj/setup-rust-action@v2
         with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "16"
-          cache: "yarn"
-          cache-dependency-path: "./cli/yarn.lock"
-      - name: Install dependencies
-        run: yarn install
+          rust-version: 1.81.0
+      - name: Install
+        run: make install
       - name: Format
-        run: yarn format:check
+        run: make format-check
       - name: Lint
-        run: yarn lint:err
+        run: make lint
       - name: Typecheck
-        run: yarn typecheck
+        run: make typecheck
       - name: Test
-        run: yarn test
+        run: make test
