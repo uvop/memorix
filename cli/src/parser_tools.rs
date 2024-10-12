@@ -191,16 +191,13 @@ impl<T: FromSdl> FromSdl for Vec<(String, T)> {
             preceded(
                 char('{'),
                 cut(terminated(
-                    map(
-                        separated_list0(
-                            multispace1,
-                            separated_pair(
-                                preceded(multispace0, String::from_sdl),
-                                cut(tuple((multispace0, char(':')))),
-                                preceded(multispace0, T::from_sdl),
-                            ),
+                    separated_list0(
+                        multispace1,
+                        separated_pair(
+                            preceded(multispace0, String::from_sdl),
+                            cut(tuple((multispace0, char(':')))),
+                            preceded(multispace0, T::from_sdl),
                         ),
-                        |tuple_vec| tuple_vec.into_iter().map(|(k, v)| (k, v)).collect(),
                     ),
                     preceded(multispace0, char('}')),
                 )),

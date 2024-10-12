@@ -40,7 +40,7 @@ pub struct TypeItemObject {
 }
 
 fn concat_with_key(ctx: &str, key: &str) -> String {
-    format!("{}{}", ctx, stringcase::pascal_case(&key)).to_string()
+    format!("{}{}", ctx, stringcase::pascal_case(key)).to_string()
 }
 
 fn type_item_to_flat_type_items(
@@ -58,11 +58,11 @@ fn type_item_to_flat_type_items(
         }
         TypeItem::Object(x) => {
             let sub_props = x
-                .into_iter()
+                .iter()
                 .map(|(key, x)| {
                     (
                         key.clone(),
-                        type_item_to_flat_type_items(&concat_with_key(ctx, &key), x),
+                        type_item_to_flat_type_items(&concat_with_key(ctx, key), x),
                     )
                 })
                 .collect::<Vec<_>>();
@@ -103,7 +103,7 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
         .iter()
         .map(|(k, t)| {
             let (flat_type_item, type_object_items) =
-                type_item_to_flat_type_items(&concat_with_key("InlineType", &k), t);
+                type_item_to_flat_type_items(&concat_with_key("InlineType", k), t);
             (k, flat_type_item, type_object_items)
         })
         .collect::<Vec<_>>();
@@ -112,19 +112,19 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
         .iter()
         .map(|(k, item)| {
             let (payload_flat_type_item, payload_type_object_items) = type_item_to_flat_type_items(
-                &concat_with_key("InlineCachePayload", &k),
+                &concat_with_key("InlineCachePayload", k),
                 &item.payload,
             );
             let key = item
                 .key
                 .as_ref()
-                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlineCacheKey", &k), &x));
+                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlineCacheKey", k), x));
 
             let type_object_items = match key.clone() {
                 None => payload_type_object_items,
                 Some((_, key_type_object_items)) => key_type_object_items
                     .into_iter()
-                    .chain(payload_type_object_items.into_iter())
+                    .chain(payload_type_object_items)
                     .collect(),
             };
             (
@@ -145,19 +145,19 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
         .iter()
         .map(|(k, item)| {
             let (payload_flat_type_item, payload_type_object_items) = type_item_to_flat_type_items(
-                &concat_with_key("InlinePubSubPayload", &k),
+                &concat_with_key("InlinePubSubPayload", k),
                 &item.payload,
             );
             let key = item
                 .key
                 .as_ref()
-                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlinePubSubKey", &k), &x));
+                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlinePubSubKey", k), x));
 
             let type_object_items = match key.clone() {
                 None => payload_type_object_items,
                 Some((_, key_type_object_items)) => key_type_object_items
                     .into_iter()
-                    .chain(payload_type_object_items.into_iter())
+                    .chain(payload_type_object_items)
                     .collect(),
             };
             (
@@ -176,19 +176,19 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
         .iter()
         .map(|(k, item)| {
             let (payload_flat_type_item, payload_type_object_items) = type_item_to_flat_type_items(
-                &concat_with_key("InlineTaskPayload", &k),
+                &concat_with_key("InlineTaskPayload", k),
                 &item.payload,
             );
             let key = item
                 .key
                 .as_ref()
-                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlineTaskKey", &k), &x));
+                .map(|x| type_item_to_flat_type_items(&concat_with_key("InlineTaskKey", k), x));
 
             let type_object_items = match key.clone() {
                 None => payload_type_object_items,
                 Some((_, key_type_object_items)) => key_type_object_items
                     .into_iter()
-                    .chain(payload_type_object_items.into_iter())
+                    .chain(payload_type_object_items)
                     .collect(),
             };
             (
@@ -207,7 +207,7 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
         .namespaces
         .iter()
         .map(|(k, n)| {
-            let namespace = namespace_to_flat_namespace(&n);
+            let namespace = namespace_to_flat_namespace(n);
             (
                 k.clone(),
                 namespace.modified_namespace,

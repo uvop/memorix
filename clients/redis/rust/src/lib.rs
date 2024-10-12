@@ -131,10 +131,10 @@ impl<K, P, G, S, D> Clone for MemorixCacheItem<K, P, G, S, D> {
     fn clone(&self) -> Self {
         Self {
             memorix_base: self.memorix_base.clone(),
-            has_key: self.has_key.clone(),
+            has_key: self.has_key,
             id: self.id.clone(),
             options: self.options.clone(),
-            _marker: self._marker.clone(),
+            _marker: self._marker,
         }
     }
 }
@@ -320,9 +320,7 @@ impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S: CanCacheSet, D>
         &mut self,
         payload: &P,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
-        self.base_item
-            .set(&std::marker::PhantomData, &payload)
-            .await
+        self.base_item.set(&std::marker::PhantomData, payload).await
     }
 }
 impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S, D: CanCacheDelete>
@@ -351,9 +349,9 @@ impl<K, P, PU, S> Clone for MemorixPubSubItem<K, P, PU, S> {
     fn clone(&self) -> Self {
         Self {
             memorix_base: self.memorix_base.clone(),
-            has_key: self.has_key.clone(),
+            has_key: self.has_key,
             id: self.id.clone(),
-            _marker: self._marker.clone(),
+            _marker: self._marker,
         }
     }
 }
@@ -538,9 +536,9 @@ impl<K, P, E, D, EM, G> Clone for MemorixTaskItem<K, P, E, D, EM, G> {
         Self {
             memorix_base: self.memorix_base.clone(),
             id: self.id.clone(),
-            has_key: self.has_key.clone(),
+            has_key: self.has_key,
             options: self.options.clone(),
-            _marker: self._marker.clone(),
+            _marker: self._marker,
         }
     }
 }
@@ -725,7 +723,7 @@ impl<P: serde::Serialize + serde::de::DeserializeOwned, E: CanTaskEnqueue, D, EM
         payload: &P,
     ) -> Result<MemorixTaskItemEnqueue, Box<dyn std::error::Error + Sync + Send>> {
         self.base_item
-            .enqueue(&std::marker::PhantomData, &payload)
+            .enqueue(&std::marker::PhantomData, payload)
             .await
     }
 }

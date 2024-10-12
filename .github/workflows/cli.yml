@@ -1,4 +1,4 @@
-name: Client Redis Rust
+name: Cli
 
 on: [push]
 

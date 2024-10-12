@@ -102,7 +102,7 @@ pub enum {name} {{
             ),
         ));
     }
-    if namespace.cache_items.len() != 0 {
+    if !namespace.cache_items.is_empty() {
         result.push_str(&format!(
             r#"#[derive(Clone)]
 #[allow(non_snake_case)]
@@ -130,11 +130,11 @@ impl MemorixCache{name_pascal} {{
                         key = match &item.key {
                             None => format!("NoKey<{payload}, "),
                             Some(key) => {
-                                let key = flat_type_item_to_code(&key);
+                                let key = flat_type_item_to_code(key);
                                 format!("<{key}, {payload}, ")
                             }
                         },
-                        api = ALL_CACHE_OPERATIONS.iter().map(|x| match item.expose.contains(&x) {
+                        api = ALL_CACHE_OPERATIONS.iter().map(|x| match item.expose.contains(x) {
                             true => "memorix_client_redis::Expose",
                             false => "memorix_client_redis::Hide",
                         }).collect::<Vec<_>>().join(", ")
@@ -146,6 +146,30 @@ impl MemorixCache{name_pascal} {{
                 .cache_items
                 .iter()
                 .map(|(name, item)| {
+                    let options = format!(
+                        r#"Some(memorix_client_redis::MemorixCacheOptions {{
+{content}
+            }})"#,
+                        content = [
+                            format!(
+                                "                    ttl: {},",
+                                item.ttl.as_ref().map_or("None".to_string(), |x| format!(
+                                    "Some({})",
+                                    value_to_code(x)
+                                ))
+                            ),
+                            format!(
+                                "                    extend_on_get: {},",
+                                item.extend_on_get.as_ref().map_or(
+                                    "None".to_string(),
+                                    |x| format!("Some({})", value_to_code(x))
+                                )
+                            ),
+                        ]
+                        .into_iter()
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                    );
                     format!(
                         r#"{indent3}{name}: memorix_client_redis::MemorixCacheItem{key}::new(
 {indent4}memorix_base.clone(),
@@ -153,40 +177,17 @@ impl MemorixCache{name_pascal} {{
 {indent4}{options},
 {indent3})?,"#,
                         key = match &item.key {
-                            None => format!("NoKey"),
-                            Some(_) => format!(""),
+                            None => "NoKey",
+                            Some(_) => "",
                         },
-                        options = format!(
-                            r#"Some(memorix_client_redis::MemorixCacheOptions {{
-{content}
-                }})"#,
-                            content = [
-                                format!(
-                                    "                    ttl: {},",
-                                    item.ttl.as_ref().map_or("None".to_string(), |x| format!(
-                                        "Some({})",
-                                        value_to_code(&x)
-                                    ))
-                                ),
-                                format!(
-                                    "                    extend_on_get: {},",
-                                    item.extend_on_get.as_ref().map_or(
-                                        "None".to_string(),
-                                        |x| format!("Some({})", value_to_code(&x))
-                                    )
-                                ),
-                            ]
-                            .into_iter()
-                            .collect::<Vec<_>>()
-                            .join("\n")
-                        ),
+                        options = options,
                     )
                 })
                 .collect::<Vec<_>>()
                 .join("\n")
         ));
     }
-    if namespace.pubsub_items.len() != 0 {
+    if !namespace.pubsub_items.is_empty() {
         result.push_str(&format!(
             r#"#[derive(Clone)]
 #[allow(non_snake_case)]
@@ -214,11 +215,11 @@ impl MemorixPubSub{name_pascal} {{
                         key = match &item.key {
                             None => format!("NoKey<{payload}, "),
                             Some(key) => {
-                                let key = flat_type_item_to_code(&key);
+                                let key = flat_type_item_to_code(key);
                                 format!("<{key}, {payload}, ")
                             }
                         },
-                        api = ALL_PUBSUB_OPERATIONS.iter().map(|x| match item.expose.contains(&x) {
+                        api = ALL_PUBSUB_OPERATIONS.iter().map(|x| match item.expose.contains(x) {
                             true => "memorix_client_redis::Expose",
                             false => "memorix_client_redis::Hide",
                         }).collect::<Vec<_>>().join(", ")
@@ -236,8 +237,8 @@ impl MemorixPubSub{name_pascal} {{
 {indent4}"{name}".to_string(),
 {indent3})?,"#,
                         key = match &item.key {
-                            None => format!("NoKey"),
-                            Some(_) => format!(""),
+                            None => "NoKey",
+                            Some(_) => "",
                         },
                     )
                 })
@@ -245,7 +246,7 @@ impl MemorixPubSub{name_pascal} {{
                 .join("\n")
         ));
     }
-    if namespace.task_items.len() != 0 {
+    if !namespace.task_items.is_empty() {
         result.push_str(&format!(
             r#"#[derive(Clone)]
 #[allow(non_snake_case)]
@@ -273,11 +274,11 @@ impl MemorixTask{name_pascal} {{
                         key = match &item.key {
                             None => format!("NoKey<{payload}, "),
                             Some(key) => {
-                                let key = flat_type_item_to_code(&key);
+                                let key = flat_type_item_to_code(key);
                                 format!("<{key}, {payload}, ")
                             }
                         },
-                        api = ALL_TASK_OPERATIONS.iter().map(|x| match item.expose.contains(&x) {
+                        api = ALL_TASK_OPERATIONS.iter().map(|x| match item.expose.contains(x) {
                             true => "memorix_client_redis::Expose",
                             false => "memorix_client_redis::Hide",
                         }).collect::<Vec<_>>().join(", ")
@@ -289,6 +290,22 @@ impl MemorixTask{name_pascal} {{
                 .task_items
                 .iter()
                 .map(|(name, item)| {
+                    let options = format!(
+                        r#"Some(memorix_client_redis::MemorixTaskOptions {{
+{content}
+            }})"#,
+                        content =
+                            [format!(
+                                "                    queue_type: {},",
+                                item.queue_type.as_ref().map_or(
+                                    "None".to_string(),
+                                    |x| format!("Some({})", value_to_code(x))
+                                )
+                            ),]
+                            .into_iter()
+                            .collect::<Vec<_>>()
+                            .join("\n")
+                    );
                     format!(
                         r#"{indent3}{name}: memorix_client_redis::MemorixTaskItem{key}::new(
 {indent4}memorix_base.clone(),
@@ -296,25 +313,10 @@ impl MemorixTask{name_pascal} {{
 {indent4}{options},
 {indent3})?,"#,
                         key = match &item.key {
-                            None => format!("NoKey"),
-                            Some(_) => format!(""),
+                            None => "NoKey",
+                            Some(_) => "",
                         },
-                        options = format!(
-                            r#"Some(memorix_client_redis::MemorixTaskOptions {{
-{content}
-                }})"#,
-                            content =
-                                [format!(
-                                    "                    queue_type: {},",
-                                    item.queue_type.as_ref().map_or(
-                                        "None".to_string(),
-                                        |x| format!("Some({})", value_to_code(&x))
-                                    )
-                                ),]
-                                .into_iter()
-                                .collect::<Vec<_>>()
-                                .join("\n")
-                        ),
+                        options = options,
                     )
                 })
                 .collect::<Vec<_>>()
@@ -322,7 +324,7 @@ impl MemorixTask{name_pascal} {{
         ));
     }
 
-    let name_tree_const_name = match name_tree.len() == 0 {
+    let name_tree_const_name = match name_tree.is_empty() {
         true => "MEMORIX_NAMESPACE_NAME_TREE".to_string(),
         false => format!("MEMORIX_{name_macro}_NAMESPACE_NAME_TREE"),
     };
@@ -354,7 +356,7 @@ impl Memorix{name_pascal} {{
                 .iter()
                 .map(|(name, _)| format!(
                     "{indent1}pub {name}: Memorix{},",
-                    stringcase::pascal_case(&name)
+                    stringcase::pascal_case(name)
                 ))
                 .collect::<Vec<_>>()
                 .join("\n"),
@@ -399,7 +401,7 @@ impl Memorix{name_pascal} {{
                 .iter()
                 .map(|(name, _)| format!(
                     "{indent3}{name}: Memorix{}::new(memorix_base.clone())?,",
-                    stringcase::pascal_case(&name)
+                    stringcase::pascal_case(name)
                 ))
                 .collect::<Vec<_>>()
                 .join("\n"),

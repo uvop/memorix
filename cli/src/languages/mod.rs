@@ -18,13 +18,13 @@ pub fn codegen_per_language(
         .files
         .as_ref()
         .unwrap_or(&vec![])
-        .into_iter()
+        .iter()
         .map(|file| {
             let path = file.path.to_string();
             let content = match file.language {
-                Language::TypeScript => typescript::codegen(&export_schema),
-                Language::Python => python::codegen(&flat_export_schema),
-                Language::Rust => rust::codegen(&flat_export_schema),
+                Language::TypeScript => typescript::codegen(export_schema),
+                Language::Python => python::codegen(flat_export_schema),
+                Language::Rust => rust::codegen(flat_export_schema),
             };
             (path, content)
         })

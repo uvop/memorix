@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     create_enum_with_const_slice, impl_from_and_to_sdl_for_enum, impl_from_and_to_sdl_for_struct,
     parser_tools::{indent, FromSdl, ToSdl},
@@ -19,9 +21,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct BracketString(String);
 
-impl BracketString {
-    pub fn to_string(&self) -> String {
-        self.0.clone()
+impl Display for BracketString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -338,7 +340,7 @@ impl FromSdl for Value {
                         tuple((multispace0, char(')'))),
                     )),
                 ),
-                |s| Value::Env(s),
+                Value::Env,
             ),
             map(delimited(char('"'), is_not("\""), char('"')), |x: &str| {
                 Value::String(x.to_string())
@@ -371,7 +373,7 @@ impl FromSdl for Engine {
                     char(')'),
                 )),
             ),
-            |v| Engine::Redis(v),
+            Engine::Redis,
         )(input)
     }
 }
@@ -408,7 +410,7 @@ impl ToSdl for EnumItems {
         let mut result = "{\n".to_string();
 
         for item in &self.items {
-            result.push_str(&format!("{}", item.to_sdl(level + 1)));
+            result.push_str(&item.to_sdl(level + 1));
         }
         result.push_str(&format!("{}}}", level_indent));
 
@@ -538,7 +540,7 @@ impl ToSdl for Namespace {
         if let Some(x) = &self.task_items {
             result.push_str(&format!("{}Task {}\n", level_indent, x.to_sdl(level)));
         }
-        result.push_str(&format!("{}", namespaces_to_sdl(&self.namespaces, level)));
+        result.push_str(&namespaces_to_sdl(&self.namespaces, level));
 
         result
     }
@@ -561,11 +563,11 @@ fn namespaces_from_sdl<'a, E: ParseError<&'a str> + nom::error::ContextError<&'a
 
 fn namespaces_to_sdl(namespaces: &[(String, Namespace)], level: usize) -> String {
     let level_indent = indent(level);
-    if namespaces.len() == 0 {
+    if namespaces.is_empty() {
         return "".to_string();
     }
     let mut result = String::from("\n");
-    for (i, (name, namespace)) in namespaces.into_iter().enumerate() {
+    for (i, (name, namespace)) in namespaces.iter().enumerate() {
         result.push_str(&format!(
             "{}{}Namespace {} {{\n{}{}}}\n",
             match i == 0 {

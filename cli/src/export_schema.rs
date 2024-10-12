@@ -59,37 +59,37 @@ fn namespace_to_export_namespace(
         namespaces: namespace
             .namespaces
             .iter()
-            .map(|(k, n)| (k.clone(), namespace_to_export_namespace(&n, expose_all)))
+            .map(|(k, n)| (k.clone(), namespace_to_export_namespace(n, expose_all)))
             .collect(),
         type_items: namespace
             .type_items
             .clone()
-            .unwrap_or(vec![])
+            .unwrap_or_default()
             .into_iter()
             .collect(),
         enum_items: namespace
             .enum_items
             .clone()
-            .and_then(|x| Some(x.items))
-            .unwrap_or(vec![])
+            .map(|x| x.items)
+            .unwrap_or_default()
             .into_iter()
             .map(|x| (x.name, x.values))
             .collect(),
         cache_items: namespace
             .cache_items
             .clone()
-            .unwrap_or(vec![])
+            .unwrap_or_default()
             .into_iter()
             .filter_map(|(k, x)| {
                 (match expose_all {
                     true => Some(ALL_CACHE_OPERATIONS.to_vec()),
-                    false => x.public.and_then(|v| match v.len() == 0 {
+                    false => x.public.and_then(|v| match v.is_empty() {
                         true => None,
                         false => Some(v),
                     }),
                 })
-                .and_then(|v| {
-                    Some((
+                .map(|v| {
+                    (
                         k,
                         ExportCacheItem {
                             key: x.key,
@@ -98,50 +98,50 @@ fn namespace_to_export_namespace(
                             ttl: x.ttl,
                             extend_on_get: x.extend_on_get,
                         },
-                    ))
+                    )
                 })
             })
             .collect(),
         pubsub_items: namespace
             .pubsub_items
             .clone()
-            .unwrap_or(vec![])
+            .unwrap_or_default()
             .into_iter()
             .filter_map(|(k, x)| {
                 (match expose_all {
                     true => Some(ALL_PUBSUB_OPERATIONS.to_vec()),
-                    false => x.public.and_then(|v| match v.len() == 0 {
+                    false => x.public.and_then(|v| match v.is_empty() {
                         true => None,
                         false => Some(v),
                     }),
                 })
-                .and_then(|v| {
-                    Some((
+                .map(|v| {
+                    (
                         k,
                         ExportPubSubItem {
                             key: x.key,
                             payload: x.payload,
                             expose: v,
                         },
-                    ))
+                    )
                 })
             })
             .collect(),
         task_items: namespace
             .task_items
             .clone()
-            .unwrap_or(vec![])
+            .unwrap_or_default()
             .into_iter()
             .filter_map(|(k, x)| {
                 (match expose_all {
                     true => Some(ALL_TASK_OPERATIONS.to_vec()),
-                    false => x.public.and_then(|v| match v.len() == 0 {
+                    false => x.public.and_then(|v| match v.is_empty() {
                         true => None,
                         false => Some(v),
                     }),
                 })
-                .and_then(|v| {
-                    Some((
+                .map(|v| {
+                    (
                         k,
                         ExportTaskItem {
                             key: x.key,
@@ -149,7 +149,7 @@ fn namespace_to_export_namespace(
                             expose: v,
                             queue_type: x.queue_type,
                         },
-                    ))
+                    )
                 })
             })
             .collect(),
@@ -189,8 +189,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.type_items.clone())
-                        .flatten(),
+                        .flat_map(|x| x.type_items.clone()),
                 )
                 .collect(),
             enum_items: global_namespace
@@ -199,8 +198,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.enum_items.clone())
-                        .flatten(),
+                        .flat_map(|x| x.enum_items.clone()),
                 )
                 .collect(),
             cache_items: global_namespace
@@ -209,8 +207,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.cache_items.clone())
-                        .flatten(),
+                        .flat_map(|x| x.cache_items.clone()),
                 )
                 .collect(),
             pubsub_items: global_namespace
@@ -219,8 +216,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.pubsub_items.clone())
-                        .flatten(),
+                        .flat_map(|x| x.pubsub_items.clone()),
                 )
                 .collect(),
             task_items: global_namespace
@@ -229,8 +225,7 @@ impl ExportSchema {
                 .chain(
                     import_export_schemas
                         .iter()
-                        .map(|x| x.task_items.clone())
-                        .flatten(),
+                        .flat_map(|x| x.task_items.clone()),
                 )
                 .collect(),
             namespaces: global_namespaces,

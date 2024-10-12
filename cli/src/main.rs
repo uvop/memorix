@@ -122,11 +122,11 @@ pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<(), PrettyError<Stri
         .export
     {
         Some(export) => {
-            let generated_code = codegen_per_language(&export, &export_schema, &flat_export_schema);
+            let generated_code = codegen_per_language(export, &export_schema, &flat_export_schema);
             generated_code
                 .into_iter()
                 .map(|(code_path, content)| {
-                    let abs_code_path = resolve_path(&path, &code_path)?;
+                    let abs_code_path = resolve_path(path, &code_path)?;
                     println!(
                         "Schema \"{}\" has been exported to \"{}\"",
                         path, abs_code_path,
@@ -151,7 +151,9 @@ enum Command {
 fn main() -> Result<(), PrettyError<String>> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 3 {
-        return Err(format!("Usage: [codegen/format] <path_to_sdl_file>").into());
+        return Err("Usage: [codegen/format] <path_to_sdl_file>"
+            .to_string()
+            .into());
     }
     let command = match args[1].as_str() {
         "format" => Ok(Command::Format),
@@ -161,7 +163,7 @@ fn main() -> Result<(), PrettyError<String>> {
 
     let file_paths = &args[2..];
     let abs_file_paths = file_paths
-        .into_iter()
+        .iter()
         .map(|file_path| {
             let path = PathBuf::from(file_path)
                 .canonicalize()
