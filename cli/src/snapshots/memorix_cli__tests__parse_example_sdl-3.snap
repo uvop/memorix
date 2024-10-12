@@ -1,12 +1,14 @@
 ---
 source: src/main.rs
-assertion_line: 417
+assertion_line: 419
 expression: rust_code
 ---
 #![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct InlineCachePayloadMessage {
     pub id: String,
     pub sender_id: UserId,
@@ -16,14 +18,18 @@ pub struct InlineCachePayloadMessage {
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct InlinePubSubPayloadNewMessage {
     pub message_id: String,
     pub recipient_id: UserId,
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct InlineTaskPayloadMessageProcessingTasks {
     pub message_id: String,
     pub processing_type: String,
@@ -31,7 +37,9 @@ pub struct InlineTaskPayloadMessageProcessingTasks {
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct InlineCachePayloadUserProfile {
     pub id: u32,
     pub name: String,
@@ -39,7 +47,9 @@ pub struct InlineCachePayloadUserProfile {
 }
 
 
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct InlineCachePayloadUserSession {
     pub user_id: u32,
     pub session_token: String,
@@ -49,8 +59,10 @@ pub struct InlineCachePayloadUserSession {
 
 pub type abc = u32;
 
+
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug,
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug,
 )]
 pub enum Operation {
     START,

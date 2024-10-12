@@ -1,38 +1,22 @@
 #![allow(dead_code)]
 extern crate memorix_client_redis;
 
-#[derive(
-    Clone,
-    memorix_client_redis::Serialize,
-    memorix_client_redis::Deserialize,
-    PartialEq,
-    std::fmt::Debug,
-)]
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct InlineTypeUser {
     pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub age: Option<i32>,
 }
 
-#[derive(
-    Clone,
-    memorix_client_redis::Serialize,
-    memorix_client_redis::Deserialize,
-    PartialEq,
-    std::fmt::Debug,
-)]
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct InlineCachePayloadPilot {
     pub name: String,
 }
 
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(
-    Clone,
-    memorix_client_redis::Serialize,
-    memorix_client_redis::Deserialize,
-    PartialEq,
-    std::fmt::Debug,
-)]
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub enum Animal {
     dog,
     cat,

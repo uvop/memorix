@@ -34,22 +34,30 @@ fn value_to_code(value: &Value) -> String {
 
 fn type_item_object_to_code(name: &str, type_item_object: &TypeItemObject) -> String {
     let property_indent = indent(1);
-    format!(r#"#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug)]
+    format!(
+        r#"
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct {name} {{
 {}
 }}
-"#, type_item_object.properties.iter().map(|(property_name, flat_type_item)| format!(
-    "{}{property_indent}pub {}: {},",
-        match flat_type_item {
-            FlatTypeItem::Optional(_) => format!("{property_indent}#[serde(skip_serializing_if = \"Option::is_none\")]\n"),
-            _ => "".to_string(),
-        },
-        match property_name == "type" {
-            true => "r#type",
-            false => property_name,
-        },
-        flat_type_item_to_code(flat_type_item)
-    ).to_string()).collect::<Vec<_>>().join("\n")).to_string()
+"#,
+        type_item_object
+            .properties
+            .iter()
+            .map(|(property_name, flat_type_item)| format!(
+                "{property_indent}pub {}: {},",
+                match property_name == "type" {
+                    true => "r#type",
+                    false => property_name,
+                },
+                flat_type_item_to_code(flat_type_item)
+            )
+            .to_string())
+            .collect::<Vec<_>>()
+            .join("\n")
+    )
+    .to_string()
 }
 
 fn namespace_to_code(
@@ -67,8 +75,10 @@ fn namespace_to_code(
 
     for (name, values) in &namespace.enum_items {
         result.push_str(&format!(
-            r#"#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(Clone, memorix_client_redis::Serialize, memorix_client_redis::Deserialize, PartialEq, std::fmt::Debug,
+            r#"
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug,
 )]
 pub enum {name} {{
 {}

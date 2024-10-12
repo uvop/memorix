@@ -11,9 +11,8 @@ mod utils;
 use redis::AsyncCommands;
 
 pub use futures_util::StreamExt;
+pub use memorix_client_redis_macros::serialization;
 use redis::Value;
-pub use serde::Deserialize;
-pub use serde::Serialize;
 
 pub struct Expose;
 pub struct Hide;

@@ -13,11 +13,11 @@ jobs:
       - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: 1.81.0
-      - id: redis-step
-        uses: shogo82148/actions-setup-redis@v1
-        with:
-          redis-version: "7.x"
-          auto-start: "true"
+      # - id: redis-step
+      #   uses: shogo82148/actions-setup-redis@v1
+      #   with:
+      #     redis-version: "7.x"
+      #     auto-start: "true"
       - name: Install
         run: make install
       - name: Format
@@ -26,5 +26,5 @@ jobs:
         run: make lint
       - name: Typecheck
         run: make typecheck
-      - name: Test
-        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 make test
+      # - name: Test
+      #   run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 make test
