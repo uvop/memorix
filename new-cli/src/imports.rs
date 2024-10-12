@@ -32,8 +32,13 @@ impl ImportedSchema {
                 .and_then(|x| x.import)
                 .unwrap_or(vec![])
                 .into_iter()
-                .map(|x| ImportedSchema::new(fs, &x.to_string()))
-                .collect::<Result<Vec<_>, _>>()?,
+                .map(|x| {
+                    Ok(ImportedSchema::new(
+                        fs,
+                        &crate::resolve_path(&path, &x.to_string())?,
+                    )?)
+                })
+                .collect::<Result<Vec<_>, Box<dyn std::error::Error + Sync + Send>>>()?,
         })
     }
 }

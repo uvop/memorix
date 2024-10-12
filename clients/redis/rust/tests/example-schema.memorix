@@ -1,108 +1,92 @@
 Config {
-    output: [
-        {
-            language: "rust"
-            file: "example_schema_generated.rs"
-        }
+  export: {
+    engine: Redis(env(REDIS_URL))
+    files: [
+      {
+        language: rust
+        path: "example_schema_generated.rs"
+      }
     ]
+  }
 }
 
-DefaultOptions {
-    cache: {
-        expire: {
-            value: 2
-        }
-    }
+Type {
+  User: {
+    name: string
+    age: int?
+  }
 }
-
-Namespace spaceship {
-    Cache {
-        pilot {
-            payload: {
-                name: string
-            }
-        }
-    }
-    Namespace crew {
-        Cache {
-            count {
-                payload: int
-            }
-        }
-    }
-}
-
-Enum Animal {
+Enum {
+  Animal {
     dog
     cat
     person
+  }
 }
-
-Model User {
-    name: string
-    age: int?
-}
-
 Cache {
-    favoriteAnimal {
-        key: string
-        payload: Animal
-    }
-    user {
-        key: string
-        payload: User
-    }
-    userNoKey {
-        payload: User
-    }
-    userExpire {
-        key: string
-        payload: User
-        options: {
-            expire: {
-                value: 1000
-                isInMs: true
-            }
-        }
-    }
-    userExpire2 {
-        key: string
-        payload: User
-        options: {
-            expire: null
-        }
-    }
-    userExpire3 {
-        key: string
-        payload: User
-        options: {
-            expire: {
-                value: 2
-                extendOnGet: true
-            }
-        }
-    }
+  favoriteAnimal: {
+    key: string
+    payload: Animal
+    ttl: "2"
+  }
+  user: {
+    key: string
+    payload: User
+    ttl: "2"
+  }
+  userNoKey: {
+    payload: User
+    ttl: "2"
+  }
+  userExpire: {
+    key: string
+    payload: User
+    ttl: "1"
+  }
+  userExpire2: {
+    key: string
+    payload: User
+  }
+  userExpire3: {
+    key: string
+    payload: User
+    ttl: "2"
+    extend_on_get: "true"
+  }
 }
-
 PubSub {
-    message {
-        payload: string
-    }
+  message: {
+    payload: string
+  }
+}
+Task {
+  runAlgo: {
+    payload: string
+  }
+  runAlgo2: {
+    payload: string
+  }
+  runAlgoNewest: {
+    payload: string
+    queue_type: "lifo"
+  }
 }
 
-Task {
-    runAlgo {
-        payload: string
-        returns: Animal
+Namespace spaceship {
+  Cache {
+    pilot: {
+      payload: {
+        name: string
+      }
     }
-    runAlgo2 {
-        payload: string
+  }
+
+  Namespace crew {
+    Cache {
+      count: {
+        payload: int
+      }
     }
-    runAlgoNewest {
-        payload: string
-        returns: Animal
-        options: {
-            takeNewest: true
-        }
-    }
+  }
 }
+

@@ -48,11 +48,28 @@ impl<T: fmt::Display> fmt::Display for PrettyError<T> {
 pub trait FileSystem {
     fn read_to_string(&self, path: &str) -> io::Result<String>;
     fn write_string(&self, path: &str, content: &str) -> io::Result<()>;
-    fn resolve(
-        &self,
-        relative_file: &str,
-        target_file: &str,
-    ) -> Result<String, Box<dyn std::error::Error>>;
+}
+
+pub fn resolve_path(relative_file: &str, target_file: &str) -> io::Result<String> {
+    let parent_path = std::path::Path::new(relative_file)
+        .parent()
+        .ok_or(io::Error::new(
+            io::ErrorKind::NotFound,
+            "Couldn't find parent dir".to_string(),
+        ))?;
+
+    let path = std::path::Path::new(&target_file);
+    Ok(match path.is_absolute() {
+        true => target_file.to_string(),
+        false => parent_path
+            .join(path)
+            .to_str()
+            .ok_or(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Couldn't append parent dir and codedir",
+            ))?
+            .to_string(),
+    })
 }
 
 pub struct RealFileSystem;
@@ -72,22 +89,6 @@ impl FileSystem for RealFileSystem {
             .open(path)?;
         file.write_all(content.as_bytes())?;
         Ok(())
-    }
-    fn resolve(
-        &self,
-        relative_file: &str,
-        target_file: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {
-        let path = PathBuf::from(relative_file);
-        let new_path = path
-            .parent()
-            .ok_or("Couldn't get parent of schema".to_string())?
-            .join(target_file);
-        let abs = new_path.canonicalize()?;
-        Ok(abs
-            .to_str()
-            .ok_or("Couldn't convert path to string")?
-            .to_string())
     }
 }
 
@@ -125,8 +126,12 @@ pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<(), PrettyError<Stri
             generated_code
                 .into_iter()
                 .map(|(code_path, content)| {
-                    println!("Schema \"{}\" has been exported to \"{}\"", path, code_path);
-                    fs.write_string(&code_path, &content)
+                    let abs_code_path = resolve_path(&path, &code_path)?;
+                    println!(
+                        "Schema \"{}\" has been exported to \"{}\"",
+                        path, abs_code_path,
+                    );
+                    fs.write_string(&abs_code_path, &content)
                 })
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(|x| format!("{}", x))?;
@@ -211,14 +216,6 @@ mod tests {
                 .insert(path.to_string(), content.to_string());
             Ok(())
         }
-
-        fn resolve(
-            &self,
-            _: &str,
-            target_file: &str,
-        ) -> Result<String, Box<dyn std::error::Error>> {
-            Ok(target_file.to_string())
-        }
     }
 
     #[test]
@@ -226,7 +223,7 @@ mod tests {
         let mock_fs = MockFileSystem {
             files: RefCell::new(HashMap::from([
                 (
-                    "another-schema.memorix".to_string(),
+                    "output/another-schema.memorix".to_string(),
                     r#"
 Config {
   export: {
@@ -262,7 +259,7 @@ Cache {
                     .to_string(),
                 ),
                 (
-                    "schema.memorix".to_string(),
+                    "output/schema.memorix".to_string(),
                     r#"
 Config {
   import: [
@@ -408,14 +405,14 @@ Namespace UserService {
                 ),
             ])),
         };
-        codegen(&mock_fs, "schema.memorix")?;
-        let typescript_path = "memorix.generated.ts";
+        codegen(&mock_fs, "output/schema.memorix")?;
+        let typescript_path = "output/memorix.generated.ts";
         let typescript_code = mock_fs.read_to_string(typescript_path)?;
         insta::assert_snapshot!(typescript_code);
-        let python_path = "memorix_generated.py";
+        let python_path = "output/memorix_generated.py";
         let python_code = mock_fs.read_to_string(python_path)?;
         insta::assert_snapshot!(python_code);
-        let rust_path = "memorix_generated.rs";
+        let rust_path = "output/memorix_generated.rs";
         let rust_code = mock_fs.read_to_string(rust_path)?;
         insta::assert_snapshot!(rust_code);
         Ok(())
