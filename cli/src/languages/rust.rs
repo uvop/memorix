@@ -149,7 +149,7 @@ impl MemorixCache{name_pascal} {{
                     let options = format!(
                         r#"Some(memorix_client_redis::MemorixCacheOptions {{
 {content}
-            }})"#,
+                }})"#,
                         content = [
                             format!(
                                 "                    ttl: {},",
@@ -293,7 +293,7 @@ impl MemorixTask{name_pascal} {{
                     let options = format!(
                         r#"Some(memorix_client_redis::MemorixTaskOptions {{
 {content}
-            }})"#,
+                }})"#,
                         content =
                             [format!(
                                 "                    queue_type: {},",
