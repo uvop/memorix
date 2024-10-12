@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 420
+assertion_line: 417
 expression: rust_code
 ---
 #![allow(dead_code)]
@@ -64,14 +64,17 @@ pub struct MemorixCacheMessageService {
 }
 
 impl MemorixCacheMessageService {
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
-        Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        Ok(Self {
             message: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "message".to_string(),
-                None,
-            ),
-        }
+                Some(memorix_client_redis::MemorixCacheOptions {
+                    ttl: None,
+                    extend_on_get: None,
+                }),
+            )?,
+        })
     }
 }
 
@@ -82,13 +85,13 @@ pub struct MemorixPubSubMessageService {
 }
 
 impl MemorixPubSubMessageService {
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
-        Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        Ok(Self {
             new_message: memorix_client_redis::MemorixPubSubItem::new(
                 memorix_base.clone(),
                 "new_message".to_string(),
-            ),
-        }
+            )?,
+        })
     }
 }
 
@@ -99,16 +102,16 @@ pub struct MemorixTaskMessageService {
 }
 
 impl MemorixTaskMessageService {
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
-        Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        Ok(Self {
             message_processing_tasks: memorix_client_redis::MemorixTaskItemNoKey::new(
                 memorix_base.clone(),
                 "message_processing_tasks".to_string(),
-                memorix_client_redis::MemorixTaskOptions {
-                    queue_type: "Fifo",
-                },
-            ),
-        }
+                Some(memorix_client_redis::MemorixTaskOptions {
+                    queue_type: Some("Fifo".to_string()),
+                }),
+            )?,
+        })
     }
 }
 
@@ -131,9 +134,9 @@ impl MemorixMessageService {
             MEMORIX_MESSAGE_SERVICE_NAMESPACE_NAME_TREE
         );
         Ok(Self {
-            cache: MemorixCacheMessageService::new(memorix_base.clone()),
-            pubsub: MemorixPubSubMessageService::new(memorix_base.clone()),
-            task: MemorixTaskMessageService::new(memorix_base.clone()),
+            cache: MemorixCacheMessageService::new(memorix_base.clone())?,
+            pubsub: MemorixPubSubMessageService::new(memorix_base.clone())?,
+            task: MemorixTaskMessageService::new(memorix_base.clone())?,
         })
     }
 }
@@ -147,26 +150,33 @@ pub struct MemorixCache {
 }
 
 impl MemorixCache {
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {
-        Self {
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        Ok(Self {
             user_profile: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "user_profile".to_string(),
-                None,
-            ),
+                Some(memorix_client_redis::MemorixCacheOptions {
+                    ttl: None,
+                    extend_on_get: None,
+                }),
+            )?,
             user_session: memorix_client_redis::MemorixCacheItem::new(
                 memorix_base.clone(),
                 "user_session".to_string(),
-                memorix_client_redis::MemorixCacheOptions {
-                    ttl: std::env::var("USER_SESSION_TTL").expect("missing environment variable USER_SESSION_TTL"),
-                },
-            ),
+                Some(memorix_client_redis::MemorixCacheOptions {
+                    ttl: Some(std::env::var("USER_SESSION_TTL").expect("missing environment variable USER_SESSION_TTL")),
+                    extend_on_get: None,
+                }),
+            )?,
             number_of_messages: memorix_client_redis::MemorixCacheItemNoKey::new(
                 memorix_base.clone(),
                 "number_of_messages".to_string(),
-                None,
-            ),
-        }
+                Some(memorix_client_redis::MemorixCacheOptions {
+                    ttl: None,
+                    extend_on_get: None,
+                }),
+            )?,
+        })
     }
 }
 
@@ -183,14 +193,14 @@ const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 impl Memorix {
     pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
         let memorix_base = memorix_client_redis::MemorixBase::new(
-            std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL"),
+            &std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL"),
             MEMORIX_NAMESPACE_NAME_TREE
         )
         .await?;
         Ok(Self {
             MessageService: MemorixMessageService::new(memorix_base.clone())?,
 
-            cache: MemorixCache::new(memorix_base.clone()),
+            cache: MemorixCache::new(memorix_base.clone())?,
         })
     }
 }

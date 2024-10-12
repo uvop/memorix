@@ -13,7 +13,7 @@ Config {
 Type {
   User: {
     name: string
-    age: int?
+    age: i32?
   }
 }
 Enum {
@@ -46,6 +46,7 @@ Cache {
   userExpire2: {
     key: string
     payload: User
+    ttl: "10"
   }
   userExpire3: {
     key: string
@@ -84,7 +85,7 @@ Namespace spaceship {
   Namespace crew {
     Cache {
       count: {
-        payload: int
+        payload: i32
       }
     }
   }

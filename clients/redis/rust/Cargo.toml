@@ -12,10 +12,6 @@ license = "MIT"
 name = "memorix_client_redis"
 path = "src/lib.rs"
 
-[[example]]
-name = "example"
-path = "examples/main.rs"
-
 [dependencies]
 redis = { version = "^0.22.3", features = ["tokio-comp"] }
 serde_json = "^1.0.94"

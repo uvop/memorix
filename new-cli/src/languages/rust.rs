@@ -25,7 +25,7 @@ fn flat_type_item_to_code(flat_type_item: &FlatTypeItem) -> String {
 
 fn value_to_code(value: &Value) -> String {
     match value {
-        Value::String(x) => format!("\"{x}\""),
+        Value::String(x) => format!("\"{x}\".to_string()"),
         Value::Env(x) => {
             format!("std::env::var(\"{x}\").expect(\"missing environment variable {x}\")")
         }
@@ -111,10 +111,10 @@ pub struct MemorixCache{name_pascal} {{
 }}
 
 impl MemorixCache{name_pascal} {{
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {{
-        Self {{
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {{
+        Ok(Self {{
 {impl_content}
-        }}
+        }})
     }}
 }}
 
@@ -151,37 +151,35 @@ impl MemorixCache{name_pascal} {{
 {indent4}memorix_base.clone(),
 {indent4}"{name}".to_string(),
 {indent4}{options},
-{indent3}),"#,
+{indent3})?,"#,
                         key = match &item.key {
                             None => format!("NoKey"),
                             Some(_) => format!(""),
                         },
-                        options = {
-                            let content = [
-                                item.ttl.clone().map(|x| {
-                                    format!("                    ttl: {},", value_to_code(&x))
-                                }),
-                                item.extend_on_get.clone().map(|x| {
-                                    format!(
-                                        "                    extend_on_get: {},",
+                        options = format!(
+                            r#"Some(memorix_client_redis::MemorixCacheOptions {{
+{content}
+                }})"#,
+                            content = [
+                                format!(
+                                    "                    ttl: {},",
+                                    item.ttl.as_ref().map_or("None".to_string(), |x| format!(
+                                        "Some({})",
                                         value_to_code(&x)
+                                    ))
+                                ),
+                                format!(
+                                    "                    extend_on_get: {},",
+                                    item.extend_on_get.as_ref().map_or(
+                                        "None".to_string(),
+                                        |x| format!("Some({})", value_to_code(&x))
                                     )
-                                }),
+                                ),
                             ]
                             .into_iter()
-                            .flatten()
                             .collect::<Vec<_>>()
-                            .join("\n");
-
-                            match content.is_empty() {
-                                true => "None".to_string(),
-                                false => format!(
-                                    r#"memorix_client_redis::MemorixCacheOptions {{
-{content}
-                }}"#
-                                ),
-                            }
-                        },
+                            .join("\n")
+                        ),
                     )
                 })
                 .collect::<Vec<_>>()
@@ -197,10 +195,10 @@ pub struct MemorixPubSub{name_pascal} {{
 }}
 
 impl MemorixPubSub{name_pascal} {{
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {{
-        Self {{
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {{
+        Ok(Self {{
 {impl_content}
-        }}
+        }})
     }}
 }}
 
@@ -236,7 +234,7 @@ impl MemorixPubSub{name_pascal} {{
                         r#"{indent3}{name}: memorix_client_redis::MemorixPubSubItem{key}::new(
 {indent4}memorix_base.clone(),
 {indent4}"{name}".to_string(),
-{indent3}),"#,
+{indent3})?,"#,
                         key = match &item.key {
                             None => format!("NoKey"),
                             Some(_) => format!(""),
@@ -256,10 +254,10 @@ pub struct MemorixTask{name_pascal} {{
 }}
 
 impl MemorixTask{name_pascal} {{
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Self {{
-        Self {{
+    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {{
+        Ok(Self {{
 {impl_content}
-        }}
+        }})
     }}
 }}
 
@@ -296,29 +294,27 @@ impl MemorixTask{name_pascal} {{
 {indent4}memorix_base.clone(),
 {indent4}"{name}".to_string(),
 {indent4}{options},
-{indent3}),"#,
+{indent3})?,"#,
                         key = match &item.key {
                             None => format!("NoKey"),
                             Some(_) => format!(""),
                         },
-                        options = {
-                            let content = [item.queue_type.clone().map(|x| {
-                                format!("                    queue_type: {},", value_to_code(&x))
-                            })]
-                            .into_iter()
-                            .flatten()
-                            .collect::<Vec<_>>()
-                            .join("\n");
-
-                            match content.is_empty() {
-                                true => "None".to_string(),
-                                false => format!(
-                                    r#"memorix_client_redis::MemorixTaskOptions {{
+                        options = format!(
+                            r#"Some(memorix_client_redis::MemorixTaskOptions {{
 {content}
-                }}"#
-                                ),
-                            }
-                        }
+                }})"#,
+                            content =
+                                [format!(
+                                    "                    queue_type: {},",
+                                    item.queue_type.as_ref().map_or(
+                                        "None".to_string(),
+                                        |x| format!("Some({})", value_to_code(&x))
+                                    )
+                                ),]
+                                .into_iter()
+                                .collect::<Vec<_>>()
+                                .join("\n")
+                        ),
                     )
                 })
                 .collect::<Vec<_>>()
@@ -386,7 +382,7 @@ impl Memorix{name_pascal} {{
             {name_tree_const_name}
         )
         .await?;"#, redis_url= match engine {
-            Engine::Redis(redis) => value_to_code(redis),
+            Engine::Redis(x) => format!("&{}", value_to_code(x)),
             }),
             false => format!(
                 r#"    pub fn new(
@@ -409,13 +405,13 @@ impl Memorix{name_pascal} {{
                 .join("\n"),
             [
                 (!namespace.cache_items.is_empty()).then(|| format!(
-                    "{indent3}cache: MemorixCache{name_pascal}::new(memorix_base.clone()),"
+                    "{indent3}cache: MemorixCache{name_pascal}::new(memorix_base.clone())?,"
                 )),
                 (!namespace.pubsub_items.is_empty()).then(|| format!(
-                    "{indent3}pubsub: MemorixPubSub{name_pascal}::new(memorix_base.clone()),"
+                    "{indent3}pubsub: MemorixPubSub{name_pascal}::new(memorix_base.clone())?,"
                 )),
                 (!namespace.task_items.is_empty()).then(|| format!(
-                    "{indent3}task: MemorixTask{name_pascal}::new(memorix_base.clone()),"
+                    "{indent3}task: MemorixTask{name_pascal}::new(memorix_base.clone())?,"
                 )),
             ]
             .into_iter()
