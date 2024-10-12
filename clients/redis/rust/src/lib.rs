@@ -628,7 +628,7 @@ impl<
     > MemorixTaskItem<K, P, E, D, EM, G>
 {
     pub async fn dequeue(
-        &mut self,
+        &self,
         key: &K,
     ) -> Result<
         impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error + Sync + Send>>> + '_,
@@ -730,7 +730,7 @@ impl<P: serde::Serialize + serde::de::DeserializeOwned, E, D: CanTaskDequeue, EM
     MemorixTaskItemNoKey<P, E, D, EM, G>
 {
     pub async fn dequeue(
-        &mut self,
+        &self,
     ) -> Result<
         impl futures_core::Stream<Item = Result<P, Box<dyn std::error::Error + Sync + Send>>> + '_,
         Box<dyn std::error::Error + Sync + Send>,
