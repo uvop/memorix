@@ -105,7 +105,6 @@ impl_from_and_to_sdl_for_enum!(
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Namespace {
-    pub defaults: Option<NamespaceDefaults>,
     pub enum_items: Option<EnumItems>,
     pub type_items: Option<Vec<(String, TypeItem)>>,
     pub cache_items: Option<Vec<(String, CacheItem)>>,
@@ -117,19 +116,6 @@ pub struct Namespace {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ItemWithPublic<O> {
     pub public: Vec<O>,
-}
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct NamespaceDefaults {
-    pub cache_ttl: Option<Value>,
-    pub cache_extend_on_get: Option<Value>,
-    pub task_queue_type: Option<Value>,
-}
-impl_from_and_to_sdl_for_struct! {
-    (NamespaceDefaults, 3),
-    (cache_ttl: Value, 0, false),
-    (cache_extend_on_get: Value, 1, false),
-    (task_queue_type: Value, 2, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -475,22 +461,14 @@ impl FromSdl for Namespace {
     {
         map(
             permutation_many!(
-                7,
+                6,
                 (namespaces_from_sdl, 0, false),
-                (
-                    preceded(
-                        tuple((multispace0, tag("NamespaceDefaults"), multispace0)),
-                        cut(NamespaceDefaults::from_sdl),
-                    ),
-                    1,
-                    false
-                ),
                 (
                     preceded(
                         tuple((multispace0, tag("Type"), multispace0)),
                         cut(Vec::<(String, TypeItem)>::from_sdl),
                     ),
-                    2,
+                    1,
                     false
                 ),
                 (
@@ -498,7 +476,7 @@ impl FromSdl for Namespace {
                         tuple((multispace0, tag("Enum"), multispace0)),
                         cut(EnumItems::from_sdl),
                     ),
-                    3,
+                    2,
                     false
                 ),
                 (
@@ -506,7 +484,7 @@ impl FromSdl for Namespace {
                         tuple((multispace0, tag("Cache"), multispace0)),
                         cut(Vec::<(String, CacheItem)>::from_sdl),
                     ),
-                    4,
+                    3,
                     false
                 ),
                 (
@@ -514,7 +492,7 @@ impl FromSdl for Namespace {
                         tuple((multispace0, tag("PubSub"), multispace0)),
                         cut(Vec::<(String, PubSubItem)>::from_sdl),
                     ),
-                    5,
+                    4,
                     false
                 ),
                 (
@@ -522,26 +500,19 @@ impl FromSdl for Namespace {
                         tuple((multispace0, tag("Task"), multispace0)),
                         cut(Vec::<(String, TaskItem)>::from_sdl),
                     ),
-                    6,
+                    5,
                     false
                 )
             ),
-            |(
-                namespaces,
-                defaults,
-                type_items,
-                enum_items,
-                cache_items,
-                pubsub_items,
-                task_items,
-            )| Namespace {
-                defaults,
-                type_items,
-                enum_items,
-                cache_items,
-                pubsub_items,
-                task_items,
-                namespaces: namespaces.unwrap_or(vec![]),
+            |(namespaces, type_items, enum_items, cache_items, pubsub_items, task_items)| {
+                Namespace {
+                    type_items,
+                    enum_items,
+                    cache_items,
+                    pubsub_items,
+                    task_items,
+                    namespaces: namespaces.unwrap_or(vec![]),
+                }
             },
         )(input)
     }
@@ -552,13 +523,6 @@ impl ToSdl for Namespace {
         let level_indent = indent(level);
         let mut result = String::from("");
 
-        if let Some(x) = &self.defaults {
-            result.push_str(&format!(
-                "{}NamespaceDefaults {}\n",
-                level_indent,
-                x.to_sdl(level)
-            ));
-        }
         if let Some(x) = &self.type_items {
             result.push_str(&format!("{}Type {}\n", level_indent, x.to_sdl(level)));
         }
@@ -635,7 +599,6 @@ impl FromSdl for Schema {
             |(config, global_namespace)| Schema {
                 config,
                 global_namespace: global_namespace.unwrap_or(Namespace {
-                    defaults: None,
                     type_items: None,
                     enum_items: None,
                     cache_items: None,

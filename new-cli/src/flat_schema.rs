@@ -231,7 +231,6 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
     FlatExportNamespace {
         type_item_objects: type_object_items,
         modified_namespace: ExportNamespace {
-            defaults: namespace.defaults.clone(),
             namespaces: namespaces
                 .into_iter()
                 .map(|(k, item, _)| (k, item))

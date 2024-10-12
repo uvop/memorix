@@ -331,10 +331,6 @@ Namespace MessageService {
     }
 }
 
-NamespaceDefaults {
-  cache_ttl: "3600"
-}
-
 Cache {
   user_profile: {
     key: u32
@@ -357,11 +353,6 @@ Cache {
 }
   
 Namespace UserService {
-  NamespaceDefaults {
-    cache_ttl: "7200"
-    task_queue_type: env(USER_SERVICE_TASK_QUEUE_TYPE)
-  }
-
   Type {
     UserId: u64
   }

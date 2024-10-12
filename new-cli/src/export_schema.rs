@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     imports::ImportedSchema,
     parser::{
-        CacheOperation, Engine, Namespace, NamespaceDefaults, PubSubOperation, TaskOperation,
-        TypeItem, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
+        CacheOperation, Engine, Namespace, PubSubOperation, TaskOperation, TypeItem, Value,
+        ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
     },
 };
 
@@ -16,7 +16,6 @@ pub struct ExportSchema {
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ExportNamespace<T> {
-    pub defaults: NamespaceDefaults,
     pub type_items: Vec<(String, T)>,
     pub enum_items: Vec<(String, Vec<String>)>,
     pub cache_items: Vec<(String, ExportCacheItem<T>)>,
@@ -62,11 +61,6 @@ fn namespace_to_export_namespace(
             .iter()
             .map(|(k, n)| (k.clone(), namespace_to_export_namespace(&n, expose_all)))
             .collect(),
-        defaults: namespace.defaults.clone().unwrap_or(NamespaceDefaults {
-            cache_ttl: None,
-            cache_extend_on_get: None,
-            task_queue_type: None,
-        }),
         type_items: namespace
             .type_items
             .clone()
@@ -189,7 +183,6 @@ impl ExportSchema {
         let global_namespace =
             namespace_to_export_namespace(&import_schema.schema.global_namespace, !is_import);
         let global_namespace = ExportNamespace {
-            defaults: global_namespace.defaults,
             type_items: global_namespace
                 .type_items
                 .into_iter()

@@ -1,48 +1,12 @@
 use crate::{
     export_schema::ExportNamespace,
     flat_schema::{FlatExportSchema, FlatTypeItem, TypeItemObject},
-    parser::{
-        Engine, NamespaceDefaults, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS,
-        ALL_TASK_OPERATIONS,
-    },
+    parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
 };
 
 fn indent(level: usize) -> String {
     "    ".repeat(level)
 }
-
-fn namespace_defaults_to_code(namespace_defaults: &NamespaceDefaults, level: usize) -> String {
-    let i1 = indent(level);
-    let i2 = indent(level + 1);
-    let content = [
-        namespace_defaults
-            .cache_ttl
-            .clone()
-            .map(|x| format!("{i2}cache_ttl: {},", value_to_code(&x))),
-        namespace_defaults
-            .cache_extend_on_get
-            .clone()
-            .map(|x| format!("{i2}cache_extend_on_get: {},", value_to_code(&x))),
-        namespace_defaults
-            .task_queue_type
-            .clone()
-            .map(|x| format!("{i2}task_queue_type: {},", value_to_code(&x))),
-    ]
-    .into_iter()
-    .flatten()
-    .collect::<Vec<_>>()
-    .join("\n");
-
-    match content.is_empty() {
-        true => "None".to_string(),
-        false => format!(
-            r#"memorix_client_redis::MemorixNamespaceDefaults {{
-{content}
-{i1}}}"#
-        ),
-    }
-}
-
 fn flat_type_item_to_code(flat_type_item: &FlatTypeItem) -> String {
     match flat_type_item {
         FlatTypeItem::Optional(x) => format!("Option<{}>", flat_type_item_to_code(x)).to_string(),
@@ -366,7 +330,6 @@ impl MemorixTask{name_pascal} {{
         true => "MEMORIX_NAMESPACE_NAME_TREE".to_string(),
         false => format!("MEMORIX_{name_macro}_NAMESPACE_NAME_TREE"),
     };
-    let namespace_defaults = namespace_defaults_to_code(&namespace.defaults, 3);
     result.push_str(&format!(
         r#"#[derive(Clone)]
 #[allow(non_snake_case)]
@@ -420,8 +383,7 @@ impl Memorix{name_pascal} {{
             true => format!(r#"    pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {{
         let memorix_base = memorix_client_redis::MemorixBase::new(
             {redis_url},
-            {name_tree_const_name},
-            {namespace_defaults}
+            {name_tree_const_name}
         )
         .await?;"#, redis_url= match engine {
             Engine::Redis(redis) => value_to_code(redis),
@@ -432,8 +394,7 @@ impl Memorix{name_pascal} {{
     ) -> Result<Memorix{name_pascal}, Box<dyn std::error::Error + Sync + Send>> {{
         let memorix_base = memorix_client_redis::MemorixBase::from(
             other,
-{indent3}{name_tree_const_name},
-            {namespace_defaults},
+{indent3}{name_tree_const_name}
         );"#),
         },
         impl_content = [
