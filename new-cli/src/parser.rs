@@ -6,7 +6,7 @@ use crate::{
 use nom::{
     branch::alt,
     bytes::complete::{is_not, tag},
-    character::complete::{alphanumeric1, char, multispace0, multispace1},
+    character::complete::{char, multispace0, multispace1},
     combinator::{cut, map, opt, value, verify},
     error::{context, ParseError},
     multi::{many0, many1, many_m_n, separated_list1},
@@ -122,12 +122,14 @@ pub struct ItemWithPublic<O> {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct NamespaceDefaults {
     pub cache_ttl: Option<Value>,
+    pub cache_extend_on_get: Option<Value>,
     pub task_queue_type: Option<Value>,
 }
 impl_from_and_to_sdl_for_struct! {
-    (NamespaceDefaults, 2),
+    (NamespaceDefaults, 3),
     (cache_ttl: Value, 0, false),
-    (task_queue_type: Value, 1, false),
+    (cache_extend_on_get: Value, 1, false),
+    (task_queue_type: Value, 2, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -146,14 +148,16 @@ pub struct CacheItem {
     pub key: Option<TypeItem>,
     pub payload: TypeItem,
     pub ttl: Option<Value>,
+    pub extend_on_get: Option<Value>,
     pub public: Option<Vec<CacheOperation>>,
 }
 impl_from_and_to_sdl_for_struct! {
-    (CacheItem, 4),
+    (CacheItem, 5),
     (key: TypeItem, 0, false),
     (payload: TypeItem, 1, true),
     (ttl: Value, 2, false),
-    (public: Vec<CacheOperation>, 3, false),
+    (extend_on_get: Value, 3, false),
+    (public: Vec<CacheOperation>, 4, false),
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -438,14 +442,11 @@ impl FromSdl for EnumItem {
                 preceded(multispace0, String::from_sdl),
                 cut(delimited(
                     tuple((multispace0, char('{'), multispace0)),
-                    separated_list1(multispace1, alphanumeric1),
+                    separated_list1(multispace1, String::from_sdl),
                     tuple((multispace0, char('}'))),
                 )),
             ),
-            |(name, values)| Self {
-                name,
-                values: values.into_iter().map(|x| x.to_string()).collect(),
-            },
+            |(name, values)| Self { name, values },
         )(input)
     }
 }

@@ -134,6 +134,7 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
                     payload: payload_flat_type_item,
                     expose: item.expose.clone(),
                     ttl: item.ttl.clone(),
+                    extend_on_get: item.extend_on_get.clone(),
                 },
                 type_object_items,
             )

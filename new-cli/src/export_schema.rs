@@ -30,6 +30,7 @@ pub struct ExportCacheItem<T> {
     pub key: Option<T>,
     pub payload: T,
     pub ttl: Option<Value>,
+    pub extend_on_get: Option<Value>,
     pub expose: Vec<CacheOperation>,
 }
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -63,6 +64,7 @@ fn namespace_to_export_namespace(
             .collect(),
         defaults: namespace.defaults.clone().unwrap_or(NamespaceDefaults {
             cache_ttl: None,
+            cache_extend_on_get: None,
             task_queue_type: None,
         }),
         type_items: namespace
@@ -100,6 +102,7 @@ fn namespace_to_export_namespace(
                             payload: x.payload,
                             expose: v,
                             ttl: x.ttl,
+                            extend_on_get: x.extend_on_get,
                         },
                     ))
                 })
