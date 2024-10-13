@@ -22,22 +22,23 @@ pub fn serialization(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let expanded = quote! {
-        #[derive(::serde::Serialize, ::serde::Deserialize)]
+        #[derive(::memorix_client_redis::__private::serde::Serialize, ::memorix_client_redis::__private::serde::Deserialize)]
+        #[serde(crate = "::memorix_client_redis::__private::serde")]
         #input
 
         impl #impl_generics #name #ty_generics #where_clause {
             pub fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: ::serde::Serializer,
+                S: ::memorix_client_redis::__private::serde::Serializer,
             {
-                ::serde::Serialize::serialize(self, serializer)
+                ::memorix_client_redis::__private::serde::Serialize::serialize(self, serializer)
             }
 
             pub fn deserialize<'de, D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: ::serde::Deserializer<'de>,
+                D: ::memorix_client_redis::__private::serde::Deserializer<'de>,
             {
-                ::serde::Deserialize::deserialize(deserializer)
+                ::memorix_client_redis::__private::serde::Deserialize::deserialize(deserializer)
             }
         }
     };

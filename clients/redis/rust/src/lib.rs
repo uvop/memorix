@@ -14,6 +14,11 @@ pub use futures_util::StreamExt;
 pub use memorix_client_redis_macros::serialization;
 use redis::Value;
 
+#[doc(hidden)]
+pub mod __private {
+    pub extern crate serde;
+}
+
 pub struct Expose;
 pub struct Hide;
 
