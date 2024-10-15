@@ -1,1 +1,1 @@
-export { MemorixBase } from "./MemorixBase";
+export { MemorixBase } from "./MemorixBase.ts";

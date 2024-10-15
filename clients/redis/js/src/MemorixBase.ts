@@ -1,9 +1,10 @@
 // eslint-disable-next-line max-classes-per-file
-import Redis from "ioredis";
-import { v4 as uuidv4 } from "uuid";
-import callbackToAsyncIterator from "callback-to-async-iterator";
-import * as types from "./types";
-import { hashKey } from "./utils/hashKey";
+import { Redis } from "npm:ioredis@^5.4.1";
+// @deno-types="npm:@types/callback-to-async-iterator@1.1.7"
+import callbackToAsyncIteratorModule from "npm:callback-to-async-iterator@1.1.1";
+import * as types from "./types.ts";
+import { hashKey } from "./utils/hashKey.ts";
+const callbackToAsyncIterator = callbackToAsyncIteratorModule.default;
 
 export type DefaultOptions = {
   cache?: types.CacheOptions;
@@ -11,7 +12,7 @@ export type DefaultOptions = {
 };
 
 export class MemorixBase {
-  protected namespaceNameTree: string[];
+  protected namespaceNameTree: string[] = [];
 
   protected defaultOptions?: DefaultOptions;
 
@@ -62,20 +63,22 @@ export class MemorixBase {
   }
 
   protected getNamespaceItem<T extends MemorixBase>(
-    NamespaceClass: new (...arg: ConstructorParameters<typeof MemorixBase>) => T
+    NamespaceClass: new (
+      ...arg: ConstructorParameters<typeof MemorixBase>
+    ) => T,
   ): T {
     return new NamespaceClass({ redisUrl: "unused" }, this);
   }
 
   protected getCacheItem<Key, Payload>(
     identifier: string,
-    iOptions?: types.CacheOptions
+    iOptions?: types.CacheOptions,
   ): types.CacheItem<Key, Payload> {
     const hashCacheKey = (key: Key | undefined) => {
       return hashKey(
         key
           ? [...this.namespaceNameTree, identifier, key]
-          : [...this.namespaceNameTree, identifier]
+          : [...this.namespaceNameTree, identifier],
       );
     };
 
@@ -93,7 +96,7 @@ export class MemorixBase {
         await this.redis.set(
           hashedKey,
           JSON.stringify(payload),
-          ...(params as any)
+          ...(params as any),
         );
       },
       get: async (key, options) => {
@@ -146,13 +149,13 @@ export class MemorixBase {
   }
 
   protected getPubsubItem<Key, Payload>(
-    identifier: string
+    identifier: string,
   ): types.PubsubItem<Key, Payload> {
     const hashPubsubKey = (key: Key | undefined) => {
       return hashKey(
         key
           ? [...this.namespaceNameTree, identifier, key]
-          : [...this.namespaceNameTree, identifier]
+          : [...this.namespaceNameTree, identifier],
       );
     };
 
@@ -161,7 +164,7 @@ export class MemorixBase {
         const hashedKey = hashPubsubKey(key);
         const subscribersSize = await this.redis.publish(
           hashedKey,
-          JSON.stringify(payload)
+          JSON.stringify(payload),
         );
         return { subscribersSize };
       },
@@ -193,10 +196,10 @@ export class MemorixBase {
                 }
                 this.subscriptionCallbacks.set(
                   hashedKey,
-                  callbacks.filter((_, i) => i !== callbackIndex)
+                  callbacks.filter((_, i) => i !== callbackIndex),
                 );
               },
-            }
+            },
           );
           return {
             asyncIterator,
@@ -229,7 +232,7 @@ export class MemorixBase {
             }
             this.subscriptionCallbacks.set(
               hashedKey,
-              callbacks.filter((_, i) => i !== callbackIndex)
+              callbacks.filter((_, i) => i !== callbackIndex),
             );
           },
         } as any;
@@ -244,61 +247,40 @@ export class MemorixBase {
 
     return {
       publish: (...args) => item.publish(undefined, ...args),
-      subscribe: (...args) => (item.subscribe as any)(undefined, ...args),
+      subscribe: (...args: any[]) =>
+        (item.subscribe as any)(undefined, ...args),
     };
   }
 
   protected getTaskItem<Key, Payload, Returns>(
     identifier: string,
     hasReturns: Returns extends undefined ? false : true,
-    iOptions?: types.TaskOptions
+    iOptions?: types.TaskOptions,
   ): types.TaskItem<Key, Payload, Returns> {
     const hashPubsubKey = (key: Key | undefined) => {
       return hashKey(
         key
           ? [...this.namespaceNameTree, identifier, key]
-          : [...this.namespaceNameTree, identifier]
+          : [...this.namespaceNameTree, identifier],
       );
     };
 
     const returnTask = hasReturns
       ? this.getTaskItem<string, Returns, undefined>(
-          `${identifier}_returns`,
-          false
-        )
+        `${identifier}_returns`,
+        false,
+      )
       : undefined;
 
     return {
       queue: async (key, payload) => {
         const hashedKey = hashPubsubKey(key);
-        const returnsId = hasReturns ? uuidv4() : undefined;
 
         const queueSize = await this.redis.rpush(
           hashedKey,
-          JSON.stringify(hasReturns ? [returnsId, payload] : [payload])
+          JSON.stringify(payload),
         );
 
-        const returnsPromise = hasReturns
-          ? new Promise((res, rej) => {
-              let stop: () => Promise<void> | undefined;
-              returnTask!
-                .dequeue(returnsId!, (returns) => {
-                  stop();
-                  res(returns);
-                })
-                .then((dequeueObj) => {
-                  stop = dequeueObj.stop;
-                })
-                .catch(rej);
-            })
-          : undefined;
-
-        if (hasReturns) {
-          return {
-            queueSize,
-            getReturns: () => returnsPromise,
-          };
-        }
         return {
           queueSize,
         } as any;
@@ -307,10 +289,9 @@ export class MemorixBase {
         let key: Key;
         let callback: types.TaskDequeueCallback<Payload, Returns> | undefined;
         let options: types.TaskOptions | undefined;
-        if (args.length === 1) {
-          [key] = args;
-        } else if (typeof args[1] === "function") {
-          [key, callback, options] = args;
+        if (typeof args[1] === "function") {
+          [key, callback] = args;
+          options = args[2] as any;
         } else {
           [key, options] = args;
         }
@@ -356,17 +337,16 @@ export class MemorixBase {
                   } else {
                     res({ value: { payload } });
                   }
-                }
+                },
               );
-            }
+            },
           );
         let currentPop: undefined | ReturnType<typeof pop>;
 
         if (callback === undefined) {
           const asyncIterator: AsyncIterableIterator<{
             payload: Payload;
-            returnValue: Returns extends undefined
-              ? undefined
+            returnValue: Returns extends undefined ? undefined
               : (value: Returns) => Promise<void>;
           }> = {
             [Symbol.asyncIterator]() {

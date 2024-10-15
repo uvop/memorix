@@ -1,8 +1,8 @@
 /* eslint-disable */
-import { MemorixBase } from "./index";
+import { MemorixBase } from "./index.ts";
 
 class MemorixSpaceshipCrew extends MemorixBase {
-  protected namespaceNameTree = ["spaceship", "crew"];
+  protected override namespaceNameTree = ["spaceship", "crew"];
 
   cache = {
     count: this.getCacheItemNoKey<number>("count"),
@@ -10,7 +10,7 @@ class MemorixSpaceshipCrew extends MemorixBase {
 }
 
 class MemorixSpaceship extends MemorixBase {
-  protected namespaceNameTree = ["spaceship"];
+  protected override namespaceNameTree = ["spaceship"];
 
   crew = this.getNamespaceItem(MemorixSpaceshipCrew);
 
@@ -33,10 +33,9 @@ export type User = {
 };
 
 export class Memorix extends MemorixBase {
-  protected namespaceNameTree = [];
+  protected override namespaceNameTree = [];
 
-  // prettier-ignore
-  protected defaultOptions = {cache:{expire:{value:2}}};
+  protected override defaultOptions = { cache: { expire: { value: 2 } } };
 
   spaceship = this.getNamespaceItem(MemorixSpaceship);
 
@@ -45,11 +44,17 @@ export class Memorix extends MemorixBase {
     user: this.getCacheItem<string, User>("user"),
     userNoKey: this.getCacheItemNoKey<User>("userNoKey"),
     // prettier-ignore
-    userExpire: this.getCacheItem<string, User>("userExpire", {expire:{value:1000,isInMs:true}}),
+    userExpire: this.getCacheItem<string, User>("userExpire", {
+      expire: { value: 1000, isInMs: true },
+    }),
     // prettier-ignore
-    userExpire2: this.getCacheItem<string, User>("userExpire2", {expire:undefined}),
+    userExpire2: this.getCacheItem<string, User>("userExpire2", {
+      expire: undefined,
+    }),
     // prettier-ignore
-    userExpire3: this.getCacheItem<string, User>("userExpire3", {expire:{value:2,extendOnGet:true}}),
+    userExpire3: this.getCacheItem<string, User>("userExpire3", {
+      expire: { value: 2, extendOnGet: true },
+    }),
   };
 
   pubsub = {
@@ -59,6 +64,10 @@ export class Memorix extends MemorixBase {
   task = {
     runAlgo: this.getTaskItemNoKey<string, Animal>("runAlgo", true),
     // prettier-ignore
-    runAlgoNewest: this.getTaskItemNoKey<string, Animal>("runAlgoNewest", true, {takeNewest:true}),
+    runAlgoNewest: this.getTaskItemNoKey<string, Animal>(
+      "runAlgoNewest",
+      true,
+      { takeNewest: true },
+    ),
   };
 }
