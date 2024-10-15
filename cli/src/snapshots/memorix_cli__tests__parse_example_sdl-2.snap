@@ -1,0 +1,6 @@
+---
+source: src/main.rs
+assertion_line: 426
+expression: python_code
+---
+python

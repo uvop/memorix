@@ -1,0 +1,6 @@
+---
+source: src/main.rs
+assertion_line: 423
+expression: typescript_code
+---
+typescript

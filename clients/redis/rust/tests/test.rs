@@ -6,8 +6,7 @@ use example_schema_generated as mx;
 // use memorix_client_redis::StreamExt;
 
 async fn get_memorix() -> Result<mx::Memorix, Box<dyn std::error::Error + Sync + Send>> {
-    let redis_url = std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL");
-    let memorix = mx::Memorix::new(&redis_url).await?;
+    let memorix = mx::Memorix::new().await?;
     Ok(memorix)
 }
 
@@ -103,7 +102,7 @@ mod tests {
         tokio::time::timeout(std::time::Duration::from_millis(200), async {
             let mut memorix = crate::get_memorix().await?;
 
-            memorix.task.runAlgo2.queue(&"123".to_string()).await?;
+            memorix.task.runAlgo2.enqueue(&"123".to_string()).await?;
             let v: Vec<BoxPinFuture<()>> = vec![
                 Box::pin(async {
                     let mut stream = memorix.task.runAlgo.dequeue().await?;

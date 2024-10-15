@@ -301,12 +301,23 @@ dependencies = [
  "futures",
  "futures-core",
  "futures-util",
+ "memorix-client-redis-macros",
  "ntest",
  "redis",
  "serde",
  "serde_json",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "memorix-client-redis-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 1.0.109",
 ]
 
 [[package]]
