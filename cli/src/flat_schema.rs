@@ -16,7 +16,12 @@ pub struct FlatExportSchema {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct FlatExportNamespace {
     pub type_item_objects: Vec<(String, TypeItemObject)>,
-    pub modified_namespace: ExportNamespace<FlatTypeItem>,
+    pub flat_type_items: Vec<(String, FlatTypeItem)>,
+    pub enum_items: Vec<(String, Vec<String>)>,
+    pub cache_items: Vec<(String, ExportCacheItem<FlatTypeItem>)>,
+    pub pubsub_items: Vec<(String, ExportPubSubItem<FlatTypeItem>)>,
+    pub task_items: Vec<(String, ExportTaskItem<FlatTypeItem>)>,
+    pub namespaces: Vec<(String, FlatExportNamespace)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -203,23 +208,10 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
             )
         })
         .collect::<Vec<_>>();
-    let namespaces = namespace
-        .namespaces
-        .iter()
-        .map(|(k, n)| {
-            let namespace = namespace_to_flat_namespace(n);
-            (
-                k.clone(),
-                namespace.modified_namespace,
-                namespace.type_item_objects,
-            )
-        })
-        .collect::<Vec<_>>();
     let type_object_items = type_items
         .iter()
         .cloned()
         .map(|(_, _, x)| x)
-        .chain(namespaces.iter().cloned().map(|(_, _, x)| x))
         .chain(cache_items.iter().cloned().map(|(_, _, x)| x))
         .chain(pubsub_items.iter().cloned().map(|(_, _, x)| x))
         .chain(task_items.iter().cloned().map(|(_, _, x)| x))

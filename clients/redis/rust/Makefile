@@ -1,8 +1,7 @@
 install:
 	cargo build
 codegen:
-	(cd ../../../cli && cargo run -- format ../clients/redis/rust/tests/example-schema.memorix && cargo run -- codegen ../clients/redis/rust/tests/example-schema.memorix) && \
-	make format
+	(cd ../../../cli && cargo run -- format ../clients/redis/rust/tests/example-schema.memorix && cargo run -- codegen ../clients/redis/rust/tests/example-schema.memorix)
 format:
 	cargo fmt
 format-check:
