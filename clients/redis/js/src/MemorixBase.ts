@@ -146,11 +146,12 @@ export class MemorixBase {
   }
 
   protected getPubsubItem<Key, Payload>(
-    identifier: string
+    identifier: string,
+    hasKey = true
   ): types.PubsubItem<Key, Payload> {
     const hashPubsubKey = (key: Key | undefined) => {
       return hashKey(
-        key
+        hasKey
           ? [...this.namespaceNameTree, identifier, key]
           : [...this.namespaceNameTree, identifier]
       );
@@ -238,9 +239,9 @@ export class MemorixBase {
   }
 
   protected getPubsubItemNoKey<Payload>(
-    ...itemArgs: any[]
+    identifier: string
   ): types.PubsubItemNoKey<Payload> {
-    const item = (this.getPubsubItem as any)(...itemArgs);
+    const item = this.getPubsubItem(identifier, false);
 
     return {
       publish: (...args) => item.publish(undefined, ...args),
