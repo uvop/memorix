@@ -1,3 +1,10 @@
+## [1.5.13](https://github.com/uvop/memorix/compare/v1.5.12...v1.5.13) (2024-10-15)
+
+
+### Bug Fixes
+
+* Key is missing even when provided ([#65](https://github.com/uvop/memorix/issues/65)) ([c4557bf](https://github.com/uvop/memorix/commit/c4557bf35352730365804176997c56fa36b95c9a))
+
 ## [1.5.12](https://github.com/uvop/memorix/compare/v1.5.11...v1.5.12) (2024-09-25)
 
 
