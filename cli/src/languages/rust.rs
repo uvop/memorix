@@ -31,21 +31,21 @@ fn value_to_code(value: &Value) -> String {
     }
 }
 
-fn type_item_object_to_code(name: &str, type_item_object: &TypeItemObject) -> String {
-    let property_indent = indent(1);
+fn type_item_object_to_code(name: &str, type_item_object: &TypeItemObject, level: usize) -> String {
+    let base_indent = indent(level);
     format!(
         r#"
-#[memorix_client_redis::serialization]
-#[derive(Clone, PartialEq, std::fmt::Debug)]
-pub struct {name} {{
+{base_indent}#[memorix_client_redis::serialization]
+{base_indent}#[derive(Clone, PartialEq, std::fmt::Debug)]
+{base_indent}pub struct {name} {{
 {}
-}}
+{base_indent}}}
 "#,
         type_item_object
             .properties
             .iter()
             .map(|(property_name, flat_type_item)| format!(
-                "{property_indent}pub {}: {},",
+                "{base_indent}    pub {}: {},",
                 match property_name == "type" {
                     true => "r#type",
                     false => property_name,
@@ -88,7 +88,7 @@ fn namespace_to_code(
     for (name, type_item_object) in &namespace.type_item_objects {
         result.push_str(&format!(
             "{}\n",
-            type_item_object_to_code(name.as_str(), type_item_object)
+            type_item_object_to_code(name.as_str(), type_item_object, name_tree.len())
         ));
     }
     for (name, flat_type_item) in &namespace.flat_type_items {
@@ -392,7 +392,7 @@ fn namespace_to_code(
             true => format!(r#"{base_indent}    pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {{
 {base_indent}        let memorix_base = memorix_client_redis::MemorixBase::new(
 {base_indent}            {redis_url},
-{base_indent}            MEMORIX_NAMESPACE_NAME_TREE
+{base_indent}            MEMORIX_NAMESPACE_NAME_TREE,
 {base_indent}        )
 {base_indent}        .await?;"#, redis_url= match engine {
             Engine::Redis(x) => format!("&{}", value_to_code(x)),
@@ -403,7 +403,7 @@ fn namespace_to_code(
 {base_indent}    ) -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {{
 {base_indent}        let memorix_base = memorix_client_redis::MemorixBase::from(
 {base_indent}            other,
-{base_indent}            MEMORIX_NAMESPACE_NAME_TREE
+{base_indent}            MEMORIX_NAMESPACE_NAME_TREE,
 {base_indent}        );"#),
         },
         impl_content = [
@@ -418,7 +418,7 @@ fn namespace_to_code(
                 .join("\n"),
             [
                 (!namespace.cache_items.is_empty()).then(|| format!(
-                    "{base_indent}           cache: MemorixCache::new(memorix_base.clone())?,"
+                    "{base_indent}            cache: MemorixCache::new(memorix_base.clone())?,"
                 )),
                 (!namespace.pubsub_items.is_empty()).then(|| format!(
                     "{base_indent}            pubsub: MemorixPubSub::new(memorix_base.clone())?,"
