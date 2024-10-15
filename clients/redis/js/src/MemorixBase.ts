@@ -239,7 +239,7 @@ export class MemorixBase {
   }
 
   protected getPubsubItemNoKey<Payload>(
-    identifier: string,
+    identifier: string
   ): types.PubsubItemNoKey<Payload> {
     const item = this.getPubsubItem(identifier, false);
 

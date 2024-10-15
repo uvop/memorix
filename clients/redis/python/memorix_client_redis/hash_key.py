@@ -12,7 +12,7 @@ def hash_key(api: MemorixBase, id: str, key: typing.Any) -> str:
     )
 
 
-def hash_key_better(api: MemorixBase, id: str, has_key:bool, key: typing.Any) -> str:
+def hash_key_better(api: MemorixBase, id: str, has_key: bool, key: typing.Any) -> str:
     if has_key:
         return to_json(
             value=[*api._namespace_name_tree, id, key],

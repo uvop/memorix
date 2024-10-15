@@ -60,7 +60,14 @@ class PubSubItem(Generic[KT, PT]):
 
     def subscribe(self, key: KT) -> Generator[PubSubItemSubscribe[PT], None, None]:
         sub = self._api._connection.redis.pubsub()
-        sub.subscribe(hash_key_better(api=self._api, id=self._id, has_key=self._has_key, key=key))
+        sub.subscribe(
+            hash_key_better(
+                api=self._api,
+                id=self._id,
+                has_key=self._has_key,
+                key=key,
+            ),
+        )
         for message in cast(
             Generator[Dict[str, Union[int, bytes]], None, None],
             sub.listen(),  # type: ignore
@@ -76,7 +83,14 @@ class PubSubItem(Generic[KT, PT]):
         key: KT,
     ) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:
         sub = self._api._connection.redis.pubsub()
-        sub.subscribe(hash_key_better(api=self._api, id=self._id, has_key=self._has_key, key=key))
+        sub.subscribe(
+            hash_key_better(
+                api=self._api,
+                id=self._id,
+                has_key=self._has_key,
+                key=key,
+            ),
+        )
         loop = asyncio.get_running_loop()
         while True:
             message = await loop.run_in_executor(
@@ -101,13 +115,14 @@ class PubSubItemNoKey(PubSubItem[None, PT]):
         id: str,
         payload_class: Type[PT],
     ) -> None:
-        super(PubSubItemNoKey, self).__init__(
+        super().__init__(
             self,
             api,
             id,
             payload_class,
         )
         self._has_key = False
+
     # Different signature on purpose
     def publish(self, payload: PT) -> PubSubItemPublish:  # type: ignore
         return PubSubItem.publish(self, key=None, payload=payload)
