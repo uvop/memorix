@@ -116,10 +116,9 @@ class PubSubItemNoKey(PubSubItem[None, PT]):
         payload_class: Type[PT],
     ) -> None:
         super().__init__(
-            self,
-            api,
-            id,
-            payload_class,
+            api=api,
+            id=id,
+            payload_class=payload_class,
         )
         self._has_key = False
 
