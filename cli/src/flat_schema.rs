@@ -222,29 +222,28 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExp
 
     FlatExportNamespace {
         type_item_objects: type_object_items,
-        modified_namespace: ExportNamespace {
-            namespaces: namespaces
-                .into_iter()
-                .map(|(k, item, _)| (k, item))
-                .collect(),
-            type_items: type_items
-                .into_iter()
-                .map(|(k, item, _)| (k.clone(), item.clone()))
-                .collect(),
-            enum_items: namespace.enum_items.clone(),
-            cache_items: cache_items
-                .into_iter()
-                .map(|(k, item, _)| (k.clone(), item.clone()))
-                .collect(),
-            pubsub_items: pubsub_items
-                .into_iter()
-                .map(|(k, item, _)| (k.clone(), item.clone()))
-                .collect(),
-            task_items: task_items
-                .into_iter()
-                .map(|(k, item, _)| (k.clone(), item.clone()))
-                .collect(),
-        },
+        namespaces: namespace
+            .namespaces
+            .iter()
+            .map(|(k, item)| (k.clone(), namespace_to_flat_namespace(&item)))
+            .collect(),
+        flat_type_items: type_items
+            .into_iter()
+            .map(|(k, item, _)| (k.clone(), item.clone()))
+            .collect(),
+        enum_items: namespace.enum_items.clone(),
+        cache_items: cache_items
+            .into_iter()
+            .map(|(k, item, _)| (k.clone(), item.clone()))
+            .collect(),
+        pubsub_items: pubsub_items
+            .into_iter()
+            .map(|(k, item, _)| (k.clone(), item.clone()))
+            .collect(),
+        task_items: task_items
+            .into_iter()
+            .map(|(k, item, _)| (k.clone(), item.clone()))
+            .collect(),
     }
 }
 

@@ -1,6 +1,5 @@
 use crate::{
-    export_schema::ExportNamespace,
-    flat_schema::{FlatExportSchema, FlatTypeItem, TypeItemObject},
+    flat_schema::{FlatExportNamespace, FlatExportSchema, FlatTypeItem, TypeItemObject},
     parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
 };
 
@@ -61,7 +60,7 @@ pub struct {name} {{
 }
 
 fn namespace_to_code(
-    namespace: &ExportNamespace<FlatTypeItem>,
+    namespace: &FlatExportNamespace,
     name_tree: Vec<String>,
     engine: &Engine,
 ) -> String {
@@ -86,7 +85,13 @@ fn namespace_to_code(
                 .join("\n")
         ));
     }
-    for (name, flat_type_item) in &namespace.type_items {
+    for (name, type_item_object) in &namespace.type_item_objects {
+        result.push_str(&format!(
+            "{}\n",
+            type_item_object_to_code(name.as_str(), type_item_object)
+        ));
+    }
+    for (name, flat_type_item) in &namespace.flat_type_items {
         result.push_str(&format!(
             "{base_indent}pub type {name} = {};\n\n",
             flat_type_item_to_code(flat_type_item)
@@ -440,20 +445,9 @@ pub fn codegen(flat_export_schema: &FlatExportSchema) -> String {
         r#"#![allow(dead_code)]
 extern crate memorix_client_redis;
 
-{}
 {}"#,
-        flat_export_schema
-            .global_namespace
-            .type_item_objects
-            .iter()
-            .map(|(name, type_item_object)| format!(
-                "{}\n",
-                type_item_object_to_code(name.as_str(), type_item_object)
-            ))
-            .collect::<Vec<_>>()
-            .join("\n"),
         namespace_to_code(
-            &flat_export_schema.global_namespace.modified_namespace,
+            &flat_export_schema.global_namespace,
             vec![],
             &flat_export_schema.engine,
         )

@@ -2,23 +2,6 @@
 extern crate memorix_client_redis;
 
 
-#[memorix_client_redis::serialization]
-#[derive(Clone, PartialEq, std::fmt::Debug)]
-pub struct InlineTypeUser {
-    pub name: String,
-    pub age: Option<i32>,
-}
-
-
-
-#[memorix_client_redis::serialization]
-#[derive(Clone, PartialEq, std::fmt::Debug)]
-pub struct InlineCachePayloadPilot {
-    pub name: String,
-}
-
-
-
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[memorix_client_redis::serialization]
 #[derive(Clone, PartialEq, std::fmt::Debug)]
@@ -28,10 +11,25 @@ pub enum Animal {
     person,
 }
 
+
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
+pub struct InlineTypeUser {
+    pub name: String,
+    pub age: Option<i32>,
+}
+
 pub type User = InlineTypeUser;
 
 pub mod spaceship {
     use super::*;
+
+
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
+pub struct InlineCachePayloadPilot {
+    pub name: String,
+}
 
     pub mod crew {
         use super::*;
