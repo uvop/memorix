@@ -308,7 +308,7 @@ export class MemorixBase {
         let isStopped = false;
 
         const pop = () =>
-          new Promise<{ value?: { payload: Payload; returnsId?: string } }>(
+          new Promise<{ value?: Payload }>(
             (res, rej) => {
               redisClient[takeNewest ? "brpop" : "blpop"](
                 hashedKey,
@@ -325,18 +325,10 @@ export class MemorixBase {
                   if (!popValue) {
                     return;
                   }
-                  const [, wrapedPayloadStr] = popValue;
-                  const wrapedPayload = JSON.parse(wrapedPayloadStr);
-                  const payload: Payload = hasReturns
-                    ? wrapedPayload[1]
-                    : wrapedPayload[0];
+                  const [, payloadStr] = popValue;
+                  const payload: Payload = JSON.parse(payloadStr);
 
-                  if (hasReturns) {
-                    const returnsId: string = wrapedPayload[0];
-                    res({ value: { payload, returnsId } });
-                  } else {
-                    res({ value: { payload } });
-                  }
+                  res({ value: payload });
                 },
               );
             },
@@ -344,39 +336,20 @@ export class MemorixBase {
         let currentPop: undefined | ReturnType<typeof pop>;
 
         if (callback === undefined) {
-          const asyncIterator: AsyncIterableIterator<{
-            payload: Payload;
-            returnValue: Returns extends undefined ? undefined
-              : (value: Returns) => Promise<void>;
-          }> = {
+          const asyncIterator: AsyncIterableIterator<Payload> = {
             [Symbol.asyncIterator]() {
               return this;
             },
             next: async () => {
               currentPop = pop();
-              const { value } = await currentPop;
-              if (!value) {
+              const { value: payload } = await currentPop;
+              if (!payload) {
                 return {
                   done: true,
                 };
               }
-              const { payload, returnsId } = value;
-              if (hasReturns && returnsId !== undefined) {
-                return {
-                  value: {
-                    payload,
-                    returnValue: async (returns) => {
-                      await returnTask!.queue(returnsId, returns);
-                    },
-                  },
-                  done: false,
-                };
-              }
               return {
-                value: {
-                  payload,
-                  returnValue: undefined,
-                },
+                value: payload,
                 done: false,
               } as any;
             },
@@ -405,20 +378,9 @@ export class MemorixBase {
             if (blpop) {
               redisClient[takeNewest ? "brpop" : "blpop"](hashedKey, 0, cb);
 
-              const [, wrapedPayloadStr] = blpop;
-              const wrapedPayload = JSON.parse(wrapedPayloadStr);
-              const payload: Payload = hasReturns
-                ? wrapedPayload[1]
-                : wrapedPayload[0];
-
-              const result = callback!(payload);
-              if (hasReturns) {
-                const returnsId: string = wrapedPayload[0];
-                const returns = (
-                  result instanceof Promise ? await result : result
-                ) as Returns;
-                await returnTask!.queue(returnsId, returns);
-              }
+              const [, payloadStr] = blpop;
+              const payload: Payload = JSON.parse(payloadStr);
+              callback!(payload);
             }
           };
 

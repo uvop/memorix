@@ -12,7 +12,8 @@ Deno.test("simple cache", async () => {
   const user = await memorix.cache.user.get("uv");
   assertEquals(user!.age, 29);
 });
-Deno.test.ignore("simple cache expire", async () => {
+Deno.test// .ignore
+("simple cache expire", async () => {
   await memorix.cache.user.set("uv", { name: "uv", age: 29 });
   const user1 = await memorix.cache.user.get("uv");
   assertEquals(user1!.age, 29);
@@ -21,7 +22,8 @@ Deno.test.ignore("simple cache expire", async () => {
   assertEquals(user2, null);
 });
 
-Deno.test.ignore("cache expire", async () => {
+Deno.test// .ignore
+("cache expire", async () => {
   await memorix.cache.user.set(
     "uv",
     { name: "uv", age: 29 },
@@ -33,7 +35,8 @@ Deno.test.ignore("cache expire", async () => {
   const user2 = await memorix.cache.user.get("uv");
   assertEquals(user2, null);
 });
-Deno.test.ignore("cache expire in schema", async () => {
+Deno.test// .ignore
+("cache expire in schema", async () => {
   await memorix.cache.userExpire.set("uv", { name: "uv", age: 29 });
   const user1 = await memorix.cache.userExpire.get("uv");
   assertEquals(user1!.age, 29);
@@ -41,13 +44,15 @@ Deno.test.ignore("cache expire in schema", async () => {
   const user2 = await memorix.cache.userExpire.get("uv");
   assertEquals(user2, null);
 });
-Deno.test.ignore("cache expire none", async () => {
+Deno.test// .ignore
+("cache expire none", async () => {
   await memorix.cache.userExpire2.set("uv", { name: "uv", age: 29 });
   await new Promise((res) => setTimeout(res, 2500));
   const user = await memorix.cache.userExpire2.get("uv");
   assertNotEquals(user, null);
 });
-Deno.test.ignore("cache expire extending on get", async () => {
+Deno.test// .ignore
+("cache expire extending on get", async () => {
   await memorix.cache.userExpire3.set("uv", { name: "uv", age: 29 });
   await new Promise((res) => setTimeout(res, 1500));
   await memorix.cache.userExpire3.get("uv");
@@ -55,7 +60,8 @@ Deno.test.ignore("cache expire extending on get", async () => {
   const user = await memorix.cache.userExpire3.get("uv");
   assertNotEquals(user, null);
 });
-Deno.test.ignore("cache expire extending manually", async () => {
+Deno.test// .ignore
+("cache expire extending manually", async () => {
   await memorix.cache.userNoKey.set({ name: "uv", age: 29 });
   await new Promise((res) => setTimeout(res, 1500));
   await memorix.cache.userNoKey.get();

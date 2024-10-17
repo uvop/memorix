@@ -26,7 +26,7 @@ export type PubsubItem<Key, Payload> = {
   }>;
   subscribe(
     key: Key,
-    cb: (payload: Payload) => void
+    cb: (payload: Payload) => void,
   ): Promise<{
     unsubscribe: () => Promise<void>;
   }>;
@@ -48,37 +48,30 @@ export type TaskOptions = {
 };
 
 type TaskQueue<Returns> = Promise<
-  { queueSize: number } & (Returns extends undefined
-    ? Record<string, unknown>
+  & { queueSize: number }
+  & (Returns extends undefined ? Record<string, unknown>
     : { getReturns: () => Promise<Returns> })
 >;
 
 type TaskDequeue = Promise<{ stop: () => Promise<void> }>;
 type TaskDequeueAsyncIterator<Payload, Returns> = Promise<{
   stop: () => Promise<void>;
-  asyncIterator: AsyncIterableIterator<{
-    payload: Payload;
-    returnValue: Returns extends undefined
-      ? undefined
-      : (value: Returns) => Promise<void>;
-  }>;
+  asyncIterator: AsyncIterableIterator<Payload>;
 }>;
 export type TaskDequeueCallback<Payload, Returns> = (
-  payload: Payload
-) => Returns extends undefined
-  ? void | Promise<void>
-  : Returns | Promise<Returns>;
+  payload: Payload,
+) => void;
 
 export type TaskItem<Key, Payload, Returns> = {
   queue(key: Key, payload: Payload): TaskQueue<Returns>;
   dequeue(
     key: Key,
     callback: TaskDequeueCallback<Payload, Returns>,
-    options?: TaskOptions
+    options?: TaskOptions,
   ): TaskDequeue;
   dequeue(
     key: Key,
-    options?: TaskOptions
+    options?: TaskOptions,
   ): TaskDequeueAsyncIterator<Payload, Returns>;
   clear(key: Key): void;
 };
@@ -86,7 +79,7 @@ export type TaskItemNoKey<Payload, Returns> = {
   queue(payload: Payload): TaskQueue<Returns>;
   dequeue(
     callback: TaskDequeueCallback<Payload, Returns>,
-    options?: TaskOptions
+    options?: TaskOptions,
   ): TaskDequeue;
   dequeue(options?: TaskOptions): TaskDequeueAsyncIterator<Payload, Returns>;
   clear(): void;
