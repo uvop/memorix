@@ -225,7 +225,7 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace) -> FlatExportNamespa
         namespaces: namespace
             .namespaces
             .iter()
-            .map(|(k, item)| (k.clone(), namespace_to_flat_namespace(&item)))
+            .map(|(k, item)| (k.clone(), namespace_to_flat_namespace(item)))
             .collect(),
         flat_type_items: type_items
             .into_iter()

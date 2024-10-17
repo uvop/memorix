@@ -106,11 +106,11 @@ fn namespace_to_code(
 
 {class_content}
 {base_indent}}}"#,
-start= match name_tree.len() == 0 {
+start= match name_tree.is_empty() {
       true => format!(r#"
 {base_indent}  protected override redisUrl = {redis_url};
 "#, redis_url = match engine {
-    Engine::Redis(x) => format!("{}", value_to_code(x)),
+    Engine::Redis(x) => value_to_code(x),
     }),
     false => "".to_string(),
 },
@@ -159,12 +159,12 @@ start= match name_tree.len() == 0 {
                                     options = {
                                         let content = [
                                             item.ttl.as_ref().map(|x| format!(
-                                                "{base_indent}      ttl: {},",value_to_code(&x))),
+                                                "{base_indent}      ttl: {},",value_to_code(x))),
                                             item.extend_on_get.as_ref().map(|x| format!(
-                                                    "{base_indent}      extendOnGet: {},",value_to_code(&x))),
+                                                    "{base_indent}      extendOnGet: {},",value_to_code(x))),
                                         ]
                                         .into_iter()
-                                        .filter_map(|x| x)
+                                        .flatten()
                                         .collect::<Vec<_>>()
                                         .join("\n");
                                         match content.is_empty() {
@@ -174,7 +174,7 @@ start= match name_tree.len() == 0 {
 {content}
 {base_indent}    }}"#
                                             )
-                                        } 
+                                        }
                                     }
                             )
                         })
@@ -241,10 +241,10 @@ start= match name_tree.len() == 0 {
                                     options = {
                                         let content = [
                                             item.queue_type.as_ref().map(|x| format!(
-                                                "{base_indent}      queueType: {},",value_to_code(&x))),
+                                                "{base_indent}      queueType: {},",value_to_code(x))),
                                         ]
                                         .into_iter()
-                                        .filter_map(|x| x)
+                                        .flatten()
                                         .collect::<Vec<_>>()
                                         .join("\n");
                                         match content.is_empty() {
@@ -254,7 +254,7 @@ start= match name_tree.len() == 0 {
 {content}
 {base_indent}    }}"#
                                             )
-                                        } 
+                                        }
                                     }
                             )
                         })
