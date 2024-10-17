@@ -1,73 +1,73 @@
+// deno-lint-ignore-file
 /* eslint-disable */
-import { MemorixBase } from "./index.ts";
-
-class MemorixSpaceshipCrew extends MemorixBase {
-  protected override namespaceNameTree = ["spaceship", "crew"];
-
-  cache = {
-    count: this.getCacheItemNoKey<number>("count"),
-  };
-}
-
-class MemorixSpaceship extends MemorixBase {
-  protected override namespaceNameTree = ["spaceship"];
-
-  crew = this.getNamespaceItem(MemorixSpaceshipCrew);
-
-  cache = {
-    pilot: this.getCacheItemNoKey<{
-      name: string;
-    }>("pilot"),
-  };
-}
+import { MemorixBase, getEnvVariable } from "./index.ts";
 
 export enum Animal {
-  dog = "dog",
-  cat = "cat",
-  person = "person",
+    dog = "dog",
+    cat = "cat",
+    person = "person",
 }
 
 export type User = {
-  name: string;
-  age?: number;
+  name: string,
+  age: undefined | number,
 };
 
+export namespace spaceship {
+  export namespace crew {
+    export class Memorix extends MemorixBase {
+      protected override namespaceNameTree = ["spaceship", "crew"];
+
+      cache = {
+        count: this.getCacheItemNoKey<number, true, true, true>("count", {
+          ttl: "2",
+        }),
+      };
+    }
+  }
+  export class Memorix extends MemorixBase {
+    protected override namespaceNameTree = ["spaceship"];
+
+    crew = this.getNamespaceItem(crew.Memorix);
+
+    cache = {
+      pilot: this.getCacheItemNoKey<{
+        name: string,
+      }, true, true, true>("pilot", {
+        ttl: "2",
+      }),
+    };
+  }
+}
 export class Memorix extends MemorixBase {
+  protected override redisUrl = getEnvVariable("REDIS_URL");
+
   protected override namespaceNameTree = [];
 
-  protected override defaultOptions = { cache: { expire: { value: 2 } } };
-
-  spaceship = this.getNamespaceItem(MemorixSpaceship);
+  spaceship = this.getNamespaceItem(spaceship.Memorix);
 
   cache = {
-    favoriteAnimal: this.getCacheItem<string, Animal>("favoriteAnimal"),
-    user: this.getCacheItem<string, User>("user"),
-    userNoKey: this.getCacheItemNoKey<User>("userNoKey"),
-    // prettier-ignore
-    userExpire: this.getCacheItem<string, User>("userExpire", {
-      expire: { value: 1000, isInMs: true },
+    favoriteAnimal: this.getCacheItem<string, Animal, true, true, true>("favoriteAnimal"),
+    user: this.getCacheItem<string, User, true, true, true>("user"),
+    userNoKey: this.getCacheItemNoKey<User, true, true, true>("userNoKey"),
+    userExpire: this.getCacheItem<string, User, true, true, true>("userExpire", {
+      ttl: "1",
     }),
-    // prettier-ignore
-    userExpire2: this.getCacheItem<string, User>("userExpire2", {
-      expire: undefined,
+    userExpire2: this.getCacheItem<string, User, true, true, true>("userExpire2", {
+      ttl: "0",
     }),
-    // prettier-ignore
-    userExpire3: this.getCacheItem<string, User>("userExpire3", {
-      expire: { value: 2, extendOnGet: true },
+    userExpire3: this.getCacheItem<string, User, true, true, true>("userExpire3", {
+      ttl: "2",
+      extendOnGet: "true",
     }),
   };
-
   pubsub = {
-    message: this.getPubsubItemNoKey<string>("message"),
+    message: this.getPubsubItemNoKey<string, true, true>("message"),
   };
-
   task = {
-    runAlgo: this.getTaskItemNoKey<string, Animal>("runAlgo", true),
-    // prettier-ignore
-    runAlgoNewest: this.getTaskItemNoKey<string, Animal>(
-      "runAlgoNewest",
-      true,
-      { takeNewest: true },
-    ),
+    runAlgo: this.getTaskItemNoKey<string, true, true, true, true>("runAlgo"),
+    runAlgoNewest: this.getTaskItemNoKey<string, true, true, true, true>("runAlgoNewest", {
+      queueType: "lifo",
+    }),
   };
 }

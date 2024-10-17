@@ -1,10 +1,7 @@
 import { assertEquals, assertNotEquals } from "jsr:@std/assert";
 import { Animal, Memorix } from "./example-schema.generated.ts";
-// import { afterEach, beforeEach, describe, it } from "jsr:@std/testing/bdd";
-// import { expect } from "jsr:@std/expect";
 
-const redisUrl = Deno.env.get("REDIS_URL")!;
-const memorix = new Memorix({ redisUrl });
+const memorix = new Memorix();
 await memorix.connect();
 
 Deno.test("simple cache", async () => {
@@ -12,30 +9,7 @@ Deno.test("simple cache", async () => {
   const user = await memorix.cache.user.get("uv");
   assertEquals(user!.age, 29);
 });
-Deno.test// .ignore
-("simple cache expire", async () => {
-  await memorix.cache.user.set("uv", { name: "uv", age: 29 });
-  const user1 = await memorix.cache.user.get("uv");
-  assertEquals(user1!.age, 29);
-  await new Promise((res) => setTimeout(res, 2500));
-  const user2 = await memorix.cache.user.get("uv");
-  assertEquals(user2, null);
-});
-
-Deno.test// .ignore
-("cache expire", async () => {
-  await memorix.cache.user.set(
-    "uv",
-    { name: "uv", age: 29 },
-    { expire: { value: 1 } },
-  );
-  const user1 = await memorix.cache.user.get("uv");
-  assertEquals(user1!.age, 29);
-  await new Promise((res) => setTimeout(res, 1500));
-  const user2 = await memorix.cache.user.get("uv");
-  assertEquals(user2, null);
-});
-Deno.test// .ignore
+Deno.test // .ignore
 ("cache expire in schema", async () => {
   await memorix.cache.userExpire.set("uv", { name: "uv", age: 29 });
   const user1 = await memorix.cache.userExpire.get("uv");
@@ -44,14 +18,14 @@ Deno.test// .ignore
   const user2 = await memorix.cache.userExpire.get("uv");
   assertEquals(user2, null);
 });
-Deno.test// .ignore
+Deno.test // .ignore
 ("cache expire none", async () => {
   await memorix.cache.userExpire2.set("uv", { name: "uv", age: 29 });
   await new Promise((res) => setTimeout(res, 2500));
   const user = await memorix.cache.userExpire2.get("uv");
   assertNotEquals(user, null);
 });
-Deno.test// .ignore
+Deno.test // .ignore
 ("cache expire extending on get", async () => {
   await memorix.cache.userExpire3.set("uv", { name: "uv", age: 29 });
   await new Promise((res) => setTimeout(res, 1500));
@@ -60,7 +34,7 @@ Deno.test// .ignore
   const user = await memorix.cache.userExpire3.get("uv");
   assertNotEquals(user, null);
 });
-Deno.test// .ignore
+Deno.test // .ignore
 ("cache expire extending manually", async () => {
   await memorix.cache.userNoKey.set({ name: "uv", age: 29 });
   await new Promise((res) => setTimeout(res, 1500));
@@ -131,42 +105,32 @@ Deno.test("subscribe gets payload with AsyncIterableIterator", async () => {
 });
 
 const beforeTask = async () => {
-  await memorix.task.runAlgo.clear();
-  await memorix.task.runAlgoNewest.clear();
+  await memorix.task.runAlgo.empty();
+  await memorix.task.runAlgoNewest.empty();
 };
 
 Deno.test("queue returns the queue size", async () => {
   await beforeTask();
-  await memorix.task.runAlgo.queue("uv1");
-  const { queueSize } = await memorix.task.runAlgo.queue("uv2");
+  await memorix.task.runAlgo.enqueue("uv1");
+  const { queueSize } = await memorix.task.runAlgo.enqueue("uv2");
   assertEquals(queueSize, 2);
 });
 Deno.test("queue clears correctly", async () => {
   await beforeTask();
-  await memorix.task.runAlgo.queue("uv1");
-  const { queueSize } = await memorix.task.runAlgo.queue("uv2");
+  await memorix.task.runAlgo.enqueue("uv1");
+  const { queueSize } = await memorix.task.runAlgo.enqueue("uv2");
   assertEquals(queueSize, 2);
-  await memorix.task.runAlgo.clear();
+  await memorix.task.runAlgo.empty();
   const { queueSize: queueSizeAfterClear } = await memorix.task.runAlgo
-    .queue("uv2");
-  assertEquals(queueSizeAfterClear, 1);
-});
-Deno.test("queue clears correctly", async () => {
-  await beforeTask();
-  await memorix.task.runAlgo.queue("uv1");
-  const { queueSize } = await memorix.task.runAlgo.queue("uv2");
-  assertEquals(queueSize, 2);
-  await memorix.task.runAlgo.clear();
-  const { queueSize: queueSizeAfterClear } = await memorix.task.runAlgo
-    .queue("uv2");
+    .enqueue("uv2");
   assertEquals(queueSizeAfterClear, 1);
 });
 Deno.test("dequeue receives a message", async () => {
   await beforeTask();
   const p = new Promise((res, rej) => {
     memorix.task.runAlgo
-      .queue("uv3")
-      .then(() => memorix.task.runAlgo.queue("uv4"))
+      .enqueue("uv3")
+      .then(() => memorix.task.runAlgo.enqueue("uv4"))
       .then(({ queueSize }) => {
         assertEquals(queueSize, 2);
 
@@ -182,7 +146,6 @@ Deno.test("dequeue receives a message", async () => {
                   stop,
                 });
               }
-              return Animal.cat;
             })
             .then((args) => {
               stop = args.stop;
@@ -199,56 +162,13 @@ Deno.test("dequeue receives a message", async () => {
   await p;
 });
 Deno.test(
-  "dequeue receives a message in opposite order if asked",
-  async () => {
-    await beforeTask();
-    const p = new Promise((res, rej) => {
-      memorix.task.runAlgo
-        .queue("uv6")
-        .then(() => memorix.task.runAlgo.queue("uv7"))
-        .then(({ queueSize }) => {
-          assertEquals(queueSize, 2);
-
-          return new Promise((res) => {
-            const payloads: string[] = [];
-            let stop: any;
-            memorix.task.runAlgo
-              .dequeue(
-                (payload) => {
-                  payloads.push(payload);
-                  if (payloads.length === 2) {
-                    res({
-                      payloads,
-                      stop,
-                    });
-                  }
-                  return Animal.cat;
-                },
-                { takeNewest: true },
-              )
-              .then((args) => {
-                stop = args.stop;
-              });
-          });
-        })
-        .then(async ({ payloads, stop }: any) => {
-          assertEquals(payloads, ["uv7", "uv6"]);
-          await stop();
-          res(undefined);
-        })
-        .catch(rej);
-    });
-    await p;
-  },
-);
-Deno.test(
   "dequeue receives a message in opposite order if asked from schema",
   async () => {
     await beforeTask();
     const p = new Promise((res, rej) => {
       memorix.task.runAlgoNewest
-        .queue("uv6")
-        .then(() => memorix.task.runAlgoNewest.queue("uv7"))
+        .enqueue("uv6")
+        .then(() => memorix.task.runAlgoNewest.enqueue("uv7"))
         .then(({ queueSize }) => {
           assertEquals(queueSize, 2);
 

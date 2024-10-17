@@ -102,7 +102,7 @@ fn type_item_to_flat_type_items(
     }
 }
 
-fn namespace_to_flat_namespace(namespace: &ExportNamespace<TypeItem>) -> FlatExportNamespace {
+fn namespace_to_flat_namespace(namespace: &ExportNamespace) -> FlatExportNamespace {
     let type_items = namespace
         .type_items
         .iter()

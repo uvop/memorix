@@ -11,17 +11,17 @@ use crate::{
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ExportSchema {
     pub engine: Engine,
-    pub global_namespace: ExportNamespace<TypeItem>,
+    pub global_namespace: ExportNamespace,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct ExportNamespace<T> {
-    pub type_items: Vec<(String, T)>,
+pub struct ExportNamespace {
+    pub type_items: Vec<(String, TypeItem)>,
     pub enum_items: Vec<(String, Vec<String>)>,
-    pub cache_items: Vec<(String, ExportCacheItem<T>)>,
-    pub pubsub_items: Vec<(String, ExportPubSubItem<T>)>,
-    pub task_items: Vec<(String, ExportTaskItem<T>)>,
-    pub namespaces: Vec<(String, ExportNamespace<T>)>,
+    pub cache_items: Vec<(String, ExportCacheItem<TypeItem>)>,
+    pub pubsub_items: Vec<(String, ExportPubSubItem<TypeItem>)>,
+    pub task_items: Vec<(String, ExportTaskItem<TypeItem>)>,
+    pub namespaces: Vec<(String, ExportNamespace)>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -51,10 +51,7 @@ pub struct ItemWithExpose<O> {
     expose: Vec<O>,
 }
 
-fn namespace_to_export_namespace(
-    namespace: &Namespace,
-    expose_all: bool,
-) -> ExportNamespace<TypeItem> {
+fn namespace_to_export_namespace(namespace: &Namespace, expose_all: bool) -> ExportNamespace {
     ExportNamespace {
         namespaces: namespace
             .namespaces
@@ -157,10 +154,7 @@ fn namespace_to_export_namespace(
 }
 
 impl ExportSchema {
-    fn new_global_namespace(
-        import_schema: &ImportedSchema,
-        is_import: bool,
-    ) -> ExportNamespace<TypeItem> {
+    fn new_global_namespace(import_schema: &ImportedSchema, is_import: bool) -> ExportNamespace {
         let import_export_schemas = import_schema
             .imports
             .iter()

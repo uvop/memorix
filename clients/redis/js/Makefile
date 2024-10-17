@@ -1,5 +1,6 @@
 codegen:
-	deno run -A codegen.ts
+	(cd ../../../cli && cargo run -- format ../clients/redis/js/src/example-schema.memorix && cargo run -- codegen ../clients/redis/js/src/example-schema.memorix) && \
+	sed -i '' 's|@memorix/client-redis|./index.ts|g' ./src/example-schema.generated.ts
 format:
 	deno fmt
 lint:
