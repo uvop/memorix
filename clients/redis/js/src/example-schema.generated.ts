@@ -1,16 +1,17 @@
+// deno-fmt-ignore-file
 // deno-lint-ignore-file
 /* eslint-disable */
 import { MemorixBase, getEnvVariable } from "./index.ts";
 
 export enum Animal {
-    dog = "dog",
-    cat = "cat",
-    person = "person",
+  dog = "dog",
+  cat = "cat",
+  person = "person",
 }
 
 export type User = {
-  name: string,
-  age: undefined | number,
+  name: string;
+  age: undefined | number;
 };
 
 export namespace spaceship {
@@ -32,7 +33,7 @@ export namespace spaceship {
 
     cache = {
       pilot: this.getCacheItemNoKey<{
-        name: string,
+        name: string;
       }, true, true, true>("pilot", {
         ttl: "2",
       }),

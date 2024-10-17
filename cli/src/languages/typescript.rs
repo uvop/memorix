@@ -17,7 +17,7 @@ fn type_item_to_code(type_item: &TypeItem, level: usize) -> String {
 {base_indent}}}"#,
             x.iter()
                 .map(|(property_name, type_item)| format!(
-                    "{base_indent}  {property_name}: {},",
+                    "{base_indent}  {property_name}: {};",
                     type_item_to_code(type_item, level + 1)
                 )
                 .to_string())
@@ -71,7 +71,7 @@ fn namespace_to_code(
 "#,
             values
                 .iter()
-                .map(|x| format!("{base_indent}    {x} = \"{x}\","))
+                .map(|x| format!("{base_indent}  {x} = \"{x}\","))
                 .collect::<Vec<_>>()
                 .join("\n")
         ));
@@ -277,7 +277,8 @@ start= match name_tree.len() == 0 {
 
 pub fn codegen(export_schema: &ExportSchema) -> String {
     format!(
-        r#"// deno-lint-ignore-file
+        r#"// deno-fmt-ignore-file
+// deno-lint-ignore-file
 /* eslint-disable */
 import {{ MemorixBase, getEnvVariable }} from "@memorix/client-redis";
 
