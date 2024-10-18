@@ -9,43 +9,11 @@ extern crate memorix_client_redis;
 
 #[memorix_client_redis::serialization]
 #[derive(Clone, PartialEq, std::fmt::Debug)]
-pub struct InlineCachePayloadMessage {
-    pub id: String,
-    pub sender_id: UserId,
-    pub recipient_id: UserId,
-    pub content: String,
-    pub timestamp: u64,
-}
-
-
-
-#[memorix_client_redis::serialization]
-#[derive(Clone, PartialEq, std::fmt::Debug)]
-pub struct InlinePubSubPayloadNewMessage {
-    pub message_id: String,
-    pub recipient_id: UserId,
-}
-
-
-
-#[memorix_client_redis::serialization]
-#[derive(Clone, PartialEq, std::fmt::Debug)]
-pub struct InlineTaskPayloadMessageProcessingTasks {
-    pub message_id: String,
-    pub processing_type: String,
-    pub priority: u32,
-}
-
-
-
-#[memorix_client_redis::serialization]
-#[derive(Clone, PartialEq, std::fmt::Debug)]
 pub struct InlineCachePayloadUserProfile {
     pub id: u32,
     pub name: String,
     pub email: String,
 }
-
 
 
 #[memorix_client_redis::serialization]
@@ -56,103 +24,133 @@ pub struct InlineCachePayloadUserSession {
     pub expiry: u64,
 }
 
-
 pub type abc = u32;
 
+pub mod message_service {
+    use super::*;
 
-#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[memorix_client_redis::serialization]
-#[derive(Clone, PartialEq, std::fmt::Debug,
-)]
-pub enum Operation {
-    START,
-    STOP,
+
+    #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
+    #[memorix_client_redis::serialization]
+    #[derive(Clone, PartialEq, std::fmt::Debug)]
+    pub enum Operation {
+        START,
+        STOP,
 }
 
-#[derive(Clone)]
-#[allow(non_snake_case)]
-pub struct MemorixCacheMessageService {
-    pub message: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadMessage, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
-}
 
-impl MemorixCacheMessageService {
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        Ok(Self {
-            message: memorix_client_redis::MemorixCacheItem::new(
-                memorix_base.clone(),
-                "message".to_string(),
-                Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: None,
-                    extend_on_get: None,
-                }),
-            )?,
-        })
+    #[memorix_client_redis::serialization]
+    #[derive(Clone, PartialEq, std::fmt::Debug)]
+    pub struct InlineCachePayloadMessage {
+        pub id: String,
+        pub sender_id: UserId,
+        pub recipient_id: UserId,
+        pub content: String,
+        pub timestamp: u64,
     }
-}
 
-#[derive(Clone)]
-#[allow(non_snake_case)]
-pub struct MemorixPubSubMessageService {
-    pub new_message: memorix_client_redis::MemorixPubSubItem<UserId, InlinePubSubPayloadNewMessage, memorix_client_redis::Expose, memorix_client_redis::Expose>,
-}
 
-impl MemorixPubSubMessageService {
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        Ok(Self {
-            new_message: memorix_client_redis::MemorixPubSubItem::new(
-                memorix_base.clone(),
-                "new_message".to_string(),
-            )?,
-        })
+    #[memorix_client_redis::serialization]
+    #[derive(Clone, PartialEq, std::fmt::Debug)]
+    pub struct InlinePubSubPayloadNewMessage {
+        pub message_id: String,
+        pub recipient_id: UserId,
     }
-}
 
-#[derive(Clone)]
-#[allow(non_snake_case)]
-pub struct MemorixTaskMessageService {
-    pub message_processing_tasks: memorix_client_redis::MemorixTaskItemNoKey<InlineTaskPayloadMessageProcessingTasks, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
-}
 
-impl MemorixTaskMessageService {
-    fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        Ok(Self {
-            message_processing_tasks: memorix_client_redis::MemorixTaskItemNoKey::new(
-                memorix_base.clone(),
+    #[memorix_client_redis::serialization]
+    #[derive(Clone, PartialEq, std::fmt::Debug)]
+    pub struct InlineTaskPayloadMessageProcessingTasks {
+        pub message_id: String,
+        pub processing_type: String,
+        pub priority: u32,
+    }
+
+    #[derive(Clone)]
+    #[allow(non_snake_case)]
+    pub struct MemorixCache {
+        pub message: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadMessage, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+    }
+
+    impl MemorixCache {
+        fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+            Ok(Self {
+                message: memorix_client_redis::MemorixCacheItem::new(
+                    memorix_base.clone(),
+                    "message".to_string(),
+                    Some(memorix_client_redis::MemorixCacheOptions {
+                        ttl: None,
+                        extend_on_get: None,
+                    }),
+                )?,
+            })
+        }
+    }
+
+    #[derive(Clone)]
+    #[allow(non_snake_case)]
+    pub struct MemorixPubSub {
+        pub new_message: memorix_client_redis::MemorixPubSubItem<UserId, InlinePubSubPayloadNewMessage, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+    }
+
+    impl MemorixPubSub {
+        fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+            Ok(Self {
+                new_message: memorix_client_redis::MemorixPubSubItem::new(
+                    memorix_base.clone(),
+                    "new_message".to_string(),
+                )?,
+            })
+        }
+    }
+
+    #[derive(Clone)]
+    #[allow(non_snake_case)]
+    pub struct MemorixTask {
+        pub message_processing_tasks: memorix_client_redis::MemorixTaskItemNoKey<InlineTaskPayloadMessageProcessingTasks, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+    }
+
+    impl MemorixTask {
+        fn new(memorix_base: memorix_client_redis::MemorixBase) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+            Ok(Self {
+                message_processing_tasks: memorix_client_redis::MemorixTaskItemNoKey::new(
+                    memorix_base.clone(),
                 "message_processing_tasks".to_string(),
-                Some(memorix_client_redis::MemorixTaskOptions {
-                    queue_type: Some("Fifo".to_string()),
-                }),
-            )?,
-        })
+                    Some(memorix_client_redis::MemorixTaskOptions {
+                        queue_type: Some("Fifo".to_string()),
+                    }),
+                )?,
+            })
+        }
     }
-}
 
-#[derive(Clone)]
-#[allow(non_snake_case)]
-pub struct MemorixMessageService {
-    pub cache: MemorixCacheMessageService,
-    pub pubsub: MemorixPubSubMessageService,
-    pub task: MemorixTaskMessageService,
-}
-
-const MEMORIX_MESSAGE_SERVICE_NAMESPACE_NAME_TREE: &[&str] = &["MessageService"];
-
-impl MemorixMessageService {
-    pub fn new(
-        other: memorix_client_redis::MemorixBase,
-    ) -> Result<MemorixMessageService, Box<dyn std::error::Error + Sync + Send>> {
-        let memorix_base = memorix_client_redis::MemorixBase::from(
-            other,
-            MEMORIX_MESSAGE_SERVICE_NAMESPACE_NAME_TREE
-        );
-        Ok(Self {
-            cache: MemorixCacheMessageService::new(memorix_base.clone())?,
-            pubsub: MemorixPubSubMessageService::new(memorix_base.clone())?,
-            task: MemorixTaskMessageService::new(memorix_base.clone())?,
-        })
+    #[derive(Clone)]
+    #[allow(non_snake_case)]
+    pub struct Memorix {
+        pub cache: MemorixCache,
+        pub pubsub: MemorixPubSub,
+        pub task: MemorixTask,
     }
-}
 
+    const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &["MessageService"];
+
+    impl Memorix {
+        pub fn new(
+            other: memorix_client_redis::MemorixBase,
+        ) -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
+            let memorix_base = memorix_client_redis::MemorixBase::from(
+                other,
+                MEMORIX_NAMESPACE_NAME_TREE,
+            );
+            Ok(Self {
+                cache: MemorixCache::new(memorix_base.clone())?,
+                pubsub: MemorixPubSub::new(memorix_base.clone())?,
+                task: MemorixTask::new(memorix_base.clone())?,
+            })
+        }
+    }
+
+}
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
@@ -195,7 +193,7 @@ impl MemorixCache {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct Memorix {
-    pub MessageService: MemorixMessageService,
+    pub MessageService: message_service::Memorix,
 
     pub cache: MemorixCache,
 }
@@ -206,11 +204,11 @@ impl Memorix {
     pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
         let memorix_base = memorix_client_redis::MemorixBase::new(
             &std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL"),
-            MEMORIX_NAMESPACE_NAME_TREE
+            MEMORIX_NAMESPACE_NAME_TREE,
         )
         .await?;
         Ok(Self {
-            MessageService: MemorixMessageService::new(memorix_base.clone())?,
+            MessageService: message_service::Memorix::new(memorix_base.clone())?,
 
             cache: MemorixCache::new(memorix_base.clone())?,
         })

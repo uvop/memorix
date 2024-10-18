@@ -3,6 +3,8 @@ codegen:
 	sed -i '' 's|@memorix/client-redis|./index.ts|g' ./src/example-schema.generated.ts
 format:
 	deno fmt
+format-check:
+	deno fmt --check
 lint:
 	deno lint
 typecheck:

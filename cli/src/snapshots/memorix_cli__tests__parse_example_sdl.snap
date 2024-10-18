@@ -1,6 +1,70 @@
 ---
 source: src/main.rs
-assertion_line: 423
+assertion_line: 413
 expression: typescript_code
 ---
-typescript
+// deno-fmt-ignore-file
+// deno-lint-ignore-file
+/* eslint-disable */
+import { MemorixBase, getEnvVariable } from "@memorix/client-redis";
+
+export type abc = number;
+
+export namespace messageService {
+  export enum Operation {
+    START = "START",
+    STOP = "STOP",
+}
+
+  export class Memorix extends MemorixBase {
+    protected override namespaceNameTree = ["MessageService"];
+
+    cache = {
+      message: this.getCacheItem<string, {
+        id: string;
+        sender_id: UserId;
+        recipient_id: UserId;
+        content: string;
+        timestamp: number;
+      }, true, true, true>("message"),
+    };
+    pubsub = {
+      new_message: this.getPubsubItem<UserId, {
+      message_id: string;
+      recipient_id: UserId;
+    }, true, true>("new_message"),
+    };
+    task = {
+      message_processing_tasks: this.getTaskItemNoKey<{
+      message_id: string;
+      processing_type: string;
+      priority: number;
+    }, true, true, true, true>("message_processing_tasks", {
+        queueType: "Fifo",
+      }),
+    };
+  }
+}
+export class Memorix extends MemorixBase {
+  protected override redisUrl = getEnvVariable("REDIS_URL");
+
+  protected override namespaceNameTree = [];
+
+  MessageService = this.getNamespaceItem(messageService.Memorix);
+
+  cache = {
+    user_profile: this.getCacheItem<number, {
+      id: number;
+      name: string;
+      email: string;
+    }, true, true, true>("user_profile"),
+    user_session: this.getCacheItem<string, {
+      user_id: number;
+      session_token: string;
+      expiry: number;
+    }, true, true, true>("user_session", {
+      ttl: getEnvVariable("USER_SESSION_TTL"),
+    }),
+    number_of_messages: this.getCacheItemNoKey<number, true, false, false>("number_of_messages"),
+  };
+}

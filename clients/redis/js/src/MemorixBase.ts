@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 // eslint-disable-next-line max-classes-per-file
 import { Redis } from "npm:ioredis@^5.4.1";
 // @deno-types="npm:@types/callback-to-async-iterator@1.1.7"
@@ -205,6 +206,7 @@ export class MemorixBase {
             Payload,
             (payload: Payload) => void
           >(
+            // deno-lint-ignore require-await
             async (cb) => {
               this.subscriptionCallbacks.set(hashedKey, [
                 ...(this.subscriptionCallbacks.get(hashedKey) ?? []),
@@ -236,7 +238,7 @@ export class MemorixBase {
               if (asyncIterator.throw) {
                 try {
                   await asyncIterator.throw();
-                } catch (error) {
+                } catch (_error) {
                   // Ignore error
                 }
               }
@@ -411,6 +413,7 @@ export class MemorixBase {
           };
         }
         const stoppedPromise = new Promise((res) => {
+          // deno-lint-ignore require-await
           const cb = async (err: any, blpop: any) => {
             if (err) {
               res(err);
