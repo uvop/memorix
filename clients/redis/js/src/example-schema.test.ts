@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { assertEquals, assertNotEquals } from "jsr:@std/assert";
 import { Animal, Memorix } from "./example-schema.generated.ts";
 
