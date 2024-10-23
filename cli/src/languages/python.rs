@@ -1,6 +1,328 @@
-use crate::flat_schema::FlatExportSchema;
+use crate::{
+    flat_schema::{FlatExportNamespace, FlatExportSchema, FlatTypeItem, TypeItemObject},
+    parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
+};
+
+fn indent(level: usize) -> String {
+    "    ".repeat(level)
+}
+fn flat_type_item_to_code(flat_type_item: &FlatTypeItem) -> String {
+    match flat_type_item {
+        FlatTypeItem::Optional(x) => {
+            format!("typing.Optional[{}]", flat_type_item_to_code(x)).to_string()
+        }
+        FlatTypeItem::Array(x) => format!("typing.List[{}]", flat_type_item_to_code(x)).to_string(),
+        FlatTypeItem::Reference(x) => x.clone(),
+        FlatTypeItem::Boolean => "bool".to_string(),
+        FlatTypeItem::String => "str".to_string(),
+        FlatTypeItem::U32 => "int".to_string(),
+        FlatTypeItem::U64 => "int".to_string(),
+        FlatTypeItem::I32 => "int".to_string(),
+        FlatTypeItem::I64 => "int".to_string(),
+        FlatTypeItem::F32 => "float".to_string(),
+        FlatTypeItem::F64 => "float".to_string(),
+    }
+}
+
+fn value_to_code(value: &Value) -> String {
+    match value {
+        Value::String(x) => format!("'{x}'"),
+        Value::Env(x) => {
+            format!("os.environ['{x}']")
+        }
+    }
+}
+
+fn type_item_object_to_code(name: &str, type_item_object: &TypeItemObject, level: usize) -> String {
+    let base_indent = indent(level);
+    format!(
+        r#"
+{base_indent}@dataclass
+{base_indent}class {name}(object):
+{}
+"#,
+        type_item_object
+            .properties
+            .iter()
+            .map(|(property_name, flat_type_item)| format!(
+                "{base_indent}    {property_name}: {}",
+                flat_type_item_to_code(flat_type_item)
+            )
+            .to_string())
+            .collect::<Vec<_>>()
+            .join("\n")
+    )
+    .to_string()
+}
+
+fn namespace_to_code(
+    namespace: &FlatExportNamespace,
+    name_tree: Vec<String>,
+    engine: &Engine,
+) -> String {
+    let mut result = String::from("");
+    let base_indent = indent(name_tree.len());
+
+    for (name, values) in &namespace.enum_items {
+        result.push_str(&format!(
+            r#"
+{base_indent}class {name}(str, Enum):
+{}
+
+"#,
+            values
+                .iter()
+                .map(|x| format!("{base_indent}    {x} = \"{x}\""))
+                .collect::<Vec<_>>()
+                .join("\n")
+        ));
+    }
+    for (name, type_item_object) in &namespace.type_item_objects {
+        result.push_str(&format!(
+            "{}\n",
+            type_item_object_to_code(name.as_str(), type_item_object, name_tree.len())
+        ));
+    }
+    for (name, flat_type_item) in &namespace.flat_type_items {
+        result.push_str(&format!(
+            "{base_indent}{name} = {}\n\n",
+            flat_type_item_to_code(flat_type_item)
+        ));
+    }
+    for (name, sub_namespace) in &namespace.namespaces {
+        result.push_str(&format!(
+            r#"{base_indent}class {name}(object):
+{namespace_content}
+"#,
+            name = stringcase::pascal_case(name),
+            namespace_content = namespace_to_code(
+                sub_namespace,
+                name_tree
+                    .clone()
+                    .into_iter()
+                    .chain(std::iter::once(name.clone()))
+                    .collect(),
+                engine,
+            ),
+        ));
+    }
+    if !namespace.cache_items.is_empty() {
+        result.push_str(&format!(
+            r#"
+{base_indent}class MemorixCache(MemorixCacheBase):
+{base_indent}    def __init__(self, api: MemorixBase) -> None:
+{base_indent}        super().__init__(api=api)
+
+{class_content}
+
+"#,
+            class_content = namespace
+                .cache_items
+                .iter()
+                .map(|(name, item)| {
+                    let payload = flat_type_item_to_code(&item.payload);
+                    format!(
+                        r#"{base_indent}        self.{name} = MemorixCacheItem{key}{api}](
+{base_indent}            api=api,
+{base_indent}            id="{name}",
+{base_indent}            payload_class={payload},
+{base_indent}        )"#,
+                        key = match &item.key {
+                            None => format!("NoKey[{payload}, "),
+                            Some(key) => {
+                                let key = flat_type_item_to_code(key);
+                                format!("[{key}, {payload}, ")
+                            }
+                        },
+                        api = ALL_CACHE_OPERATIONS
+                            .iter()
+                            .map(|x| match item.expose.contains(x) {
+                                true => "true",
+                                false => "false",
+                            })
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+        ));
+    }
+    if !namespace.pubsub_items.is_empty() {
+        result.push_str(&format!(
+            r#"
+{base_indent}class MemorixPubSub(MemorixPubSubBase):
+{base_indent}    def __init__(self, api: MemorixBase) -> None:
+{base_indent}        super().__init__(api=api)
+
+{class_content}
+
+"#,
+            class_content = namespace
+                .pubsub_items
+                .iter()
+                .map(|(name, item)| {
+                    let payload = flat_type_item_to_code(&item.payload);
+                    format!(
+                        r#"{base_indent}        self.{name} = MemorixPubSubItem{key}{api}](
+{base_indent}            api=api,
+{base_indent}            id="{name}",
+{base_indent}            payload_class={payload},
+{base_indent}        )"#,
+                        key = match &item.key {
+                            None => format!("NoKey[{payload}, "),
+                            Some(key) => {
+                                let key = flat_type_item_to_code(key);
+                                format!("[{key}, {payload}, ")
+                            }
+                        },
+                        api = ALL_PUBSUB_OPERATIONS
+                            .iter()
+                            .map(|x| match item.expose.contains(x) {
+                                true => "true",
+                                false => "false",
+                            })
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+        ));
+    }
+    if !namespace.task_items.is_empty() {
+        result.push_str(&format!(
+            r#"
+{base_indent}class MemorixTask(MemorixTaskBase):
+{base_indent}    def __init__(self, api: MemorixBase) -> None:
+{base_indent}        super().__init__(api=api)
+
+{class_content}
+
+"#,
+            class_content = namespace
+                .task_items
+                .iter()
+                .map(|(name, item)| {
+                    let payload = flat_type_item_to_code(&item.payload);
+                    format!(
+                        r#"{base_indent}        self.{name} = MemorixTaskItem{key}{api}](
+{base_indent}            api=api,
+{base_indent}            id="{name}",
+{base_indent}            payload_class={payload},
+{base_indent}        )"#,
+                        key = match &item.key {
+                            None => format!("NoKey[{payload}, "),
+                            Some(key) => {
+                                let key = flat_type_item_to_code(key);
+                                format!("[{key}, {payload}, ")
+                            }
+                        },
+                        api = ALL_TASK_OPERATIONS
+                            .iter()
+                            .map(|x| match item.expose.contains(x) {
+                                true => "true",
+                                false => "false",
+                            })
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+        ));
+    }
+    result.push_str(&format!(
+        r#"{base_indent}class Memorix(MemorixBase):
+{init_def}
+
+{base_indent}        self._namespace_name_tree = [{name_tree}]
+{class_content}
+"#,
+        name_tree = name_tree
+            .iter()
+            .map(|x| format!("\"{}\"", x))
+            .collect::<Vec<_>>()
+            .join(", "),
+        init_def = match name_tree.is_empty() {
+            true => format!(
+                r#"{base_indent}    def __init__(self) -> None:
+{base_indent}        super.__init__(redis_url={redis_url}, ref=None)
+"#,
+                redis_url = match engine {
+                    Engine::Redis(x) => format!("{}", value_to_code(x)),
+                }
+            ),
+            false => format!(
+                r#"{base_indent}    def __init__(self, ref: MemorixBase) -> None:
+{base_indent}        super().__init__(redis_url=None, ref=ref)
+"#
+            ),
+        },
+        class_content = [
+            namespace
+                .namespaces
+                .iter()
+                .map(|(name, _)| format!(
+                    "{base_indent}        self.{name} = {namespace_name}.Memorix(ref=self)",
+                    namespace_name = stringcase::pascal_case(name)
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            [
+                (!namespace.cache_items.is_empty())
+                    .then(|| format!("{base_indent}        self.cache = MemorixCache(self)")),
+                (!namespace.pubsub_items.is_empty())
+                    .then(|| format!("{base_indent}        self.pubsub = MemorixPubSub(self)")),
+                (!namespace.task_items.is_empty())
+                    .then(|| format!("{base_indent}        self.task = MemorixTask(self)")),
+            ]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join("\n")
+        ]
+        .into_iter()
+        .filter(|x| !x.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n\n"),
+    ));
+    result
+}
 
 pub fn codegen(flat_export_schema: &FlatExportSchema) -> String {
-    let _ = flat_export_schema;
-    "python".to_string()
+    format!(
+        r#"# flake8: noqa
+import typing
+import os
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from enum import Enum
+from memorix_client_redis import (
+    MemorixBase,
+    MemorixCacheBase,
+    MemorixCacheItem,
+    MemorixCacheItemNoKey,
+    MemorixPubSubBase,
+    MemorixPubSubItem,
+    MemorixPubSubItemNoKey,
+    MemorixTaskBase,
+    MemorixTaskItem,
+    MemorixTaskItemNoKey,
+    MemorixTaskItemNoReturns,
+    MemorixTaskItemNoKeyNoReturns,
+)
+
+{}"#,
+        namespace_to_code(
+            &flat_export_schema.global_namespace,
+            vec![],
+            &flat_export_schema.engine,
+        )
+    )
+    .to_string()
 }

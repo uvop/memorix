@@ -1,122 +1,105 @@
 Config {
-    output: [
-        {
-            language: "python"
-            file: "example_schema_generated.py"
-        }
+  export: {
+    engine: Redis(env(REDIS_URL))
+    files: [
+      {
+        language: python
+        path: "example_schema_generated.py"
+      }
     ]
+  }
 }
 
-Namespace spaceship {
-    DefaultOptions {
-        cache: {
-            expire: {
-                value: 1
-            }
-        }
-    }
-    
-    Cache {
-        pilot {
-            payload: {
-                name: string
-            }
-        }
-    }
-
-    Namespace crew {
-        Cache {
-            count {
-                payload: int
-            }
-        }
-    }
+Type {
+  User: {
+    name: string
+    age: int?
+  }
 }
-
-DefaultOptions {
-    cache: {
-        expire: {
-            value: 2
-        }
-    }
-}
-
-Enum Animal {
+Enum {
+  Animal {
     dog
     cat
     person
+  }
 }
-
-Model User {
-    name: string
-    age: int?
-}
-
 Cache {
-    bestStr {
-        payload: string
+  bestStr: {
+    payload: string
+    ttl: "2"
+  }
+  allUsers: {
+    payload: [
+      [
+        User?
+      ]
+    ]
+    ttl: "2"
+  }
+  favoriteAnimal: {
+    key: string
+    payload: Animal
+    ttl: "2"
+  }
+  user: {
+    key: string
+    payload: User
+    ttl: "2"
+  }
+  user2: {
+    key: {
+      id: string
     }
-    allUsers {
-        payload: [[User?]]
-    }
-    favoriteAnimal {
-        key: string
-        payload: Animal
-    }
-    user {
-        key: string
-        payload: User
-    }
-    user2 {
-        key: {
-            id: string
-        }
-        payload: User
-    }
-    userExpire {
-        key: string
-        payload: User
-        options: {
-            expire: {
-                value: 1000
-                isInMs: true
-            }
-        }
-    }
-    userExpire2 {
-        key: string
-        payload: User
-        options: {
-            expire: null
-        }
-    }
-    userExpire3 {
-        payload: User
-        options: {
-            expire: {
-                value: 2
-                extendOnGet: true
-            }
-        }
-    }
+    payload: User
+    ttl: "2"
+  }
+  userExpire: {
+    key: string
+    payload: User
+    ttl: "1"
+  }
+  userExpire2: {
+    key: string
+    payload: User
+  }
+  userExpire3: {
+    payload: User
+    ttl: "2"
+    extend_on_get: "true"
+  }
 }
-
 PubSub {
-    message {
-        payload: string
-    }
+  message: {
+    payload: string
+  }
+}
+Task {
+  runAlgo: {
+    payload: string
+  }
+  runAlgoNewest: {
+    payload: string
+    queue_type: "lifo"
+  }
 }
 
-Task {
-    runAlgo {
-        payload: string
-        returns: Animal
+Namespace spaceship {
+  Cache {
+    pilot: {
+      payload: {
+        name: string
+      }
+      ttl: "1"
     }
-    runAlgoNewest {
-        payload: string
-        returns: Animal
-        options: {
-            takeNewest: true
-        }
+  }
+
+  Namespace crew {
+    Cache {
+      count: {
+        payload: u32
+        ttl: "1"
+      }
     }
+  }
 }
+
