@@ -4,8 +4,8 @@ import pytest
 import os
 from .example_schema_generated import (
     Animal,
-    CacheUser2Key,
-    CachePilotPayload,
+    InlineCacheKeyUser2,
+    Spaceship,
     Memorix,
     User,
 )
@@ -13,36 +13,19 @@ import multiprocessing
 from time import sleep
 from .timeout import with_timeout
 
-redis_url = os.environ["REDIS_URL"]
-
-
 def listen_to_message() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
     for res in memorix.pubsub.message.subscribe():
         print("message:", res.payload)
 
 
 def listen_to_algo() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
     for res in memorix.task.runAlgo.dequeue():
         print("task:", res.payload)
-        res.send_returns(
-            returns=Animal.cat if res.payload == "send me cat" else Animal.dog,
-        )
-
-
-def test_connect_should_fail() -> None:
-    memorix = Memorix(redis_url="redis://hello-world:6379/0")
-    try:
-        memorix.connect()
-    except AttributeError as err:  # noqa: WPS329
-        raise err
-    except Exception:  # noqa: S110
-        pass
-
 
 def test_cache() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.cache.user.set("uv", User(name="uv", age=29))
 
@@ -54,7 +37,7 @@ def test_cache() -> None:
 
 @pytest.mark.asyncio
 async def test_cache_async() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     await memorix.cache.user.async_set(
         "uv",
@@ -69,7 +52,7 @@ async def test_cache_async() -> None:
 
 @pytest.mark.asyncio
 async def test_cache_async_no_key() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     await memorix.cache.bestStr.async_set(
         "uv",
@@ -88,7 +71,7 @@ async def test_cache_async_no_key() -> None:
 
 
 def test_cache_list() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.cache.allUsers.set(
         payload=[[User(name="uv", age=29), None], [None]],
@@ -106,21 +89,21 @@ def test_cache_list() -> None:
 
 
 def test_cache_complex_key() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.cache.user2.set(
-        key=CacheUser2Key(id="uv"),
+        key=InlineCacheKeyUser2(id="uv"),
         payload=User(name="uv", age=29),
     )
 
-    user = memorix.cache.user2.get(key=CacheUser2Key(id="uv"))
+    user = memorix.cache.user2.get(key=InlineCacheKeyUser2(id="uv"))
     if user is None:
         raise Exception("Didn't get user from redis")
     assert user.age == 29
 
 
 def test_cache_expire() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.cache.user.set(
         "uv",
@@ -144,7 +127,6 @@ def test_cache_expire() -> None:
 
 def test_cache_expire_schema() -> None:
     memorix = Memorix(
-        redis_url=redis_url,
     )
 
     memorix.cache.userExpire.set(
@@ -161,28 +143,8 @@ def test_cache_expire_schema() -> None:
     assert user2 is None
 
 
-def test_cache_expire_defaults_config() -> None:
-    memorix = Memorix(
-        redis_url=redis_url,
-    )
-
-    memorix.cache.user.set(
-        "uv",
-        User(name="uv", age=29),
-    )
-
-    user1 = memorix.cache.user.get("uv")
-    if user1 is None:
-        raise Exception("Didn't get user from redis")
-    assert user1.age == 29
-    sleep(2.5)
-    user2 = memorix.cache.user.get("uv")
-    assert user2 is None
-
-
 def test_cache_expire_none() -> None:
     memorix = Memorix(
-        redis_url=redis_url,
     )
 
     memorix.cache.userExpire2.set(
@@ -197,7 +159,6 @@ def test_cache_expire_none() -> None:
 
 def test_cache_expire_extending_on_get() -> None:
     memorix = Memorix(
-        redis_url=redis_url,
     )
 
     memorix.cache.userExpire3.set(
@@ -213,7 +174,7 @@ def test_cache_expire_extending_on_get() -> None:
 
 
 def test_pubsub() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     process1 = multiprocessing.Process(target=listen_to_message)
     process2 = multiprocessing.Process(target=listen_to_message)
@@ -232,7 +193,7 @@ def test_pubsub() -> None:
 @pytest.mark.asyncio
 @with_timeout(3)
 async def test_pubsub_async() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     res = await memorix.pubsub.message.async_publish(payload="Heyy")
     assert res.subscribers_size == 0
@@ -252,7 +213,7 @@ async def test_pubsub_async() -> None:
 
 
 def test_task_dequeue() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
     memorix.task.runAlgo.clear()
     memorix.task.runAlgo.queue(payload="send me dog")
     sleep(0.1)
@@ -262,7 +223,7 @@ def test_task_dequeue() -> None:
 
 
 def test_task() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
     memorix.task.runAlgo.clear()
 
     task1 = multiprocessing.Process(target=listen_to_algo)
@@ -275,10 +236,6 @@ def test_task() -> None:
 
     assert queue.queue_size == 1
 
-    res = queue.get_returns()
-
-    assert res.value == Animal.cat.value
-
     sleep(0.1)
 
     task1.kill()
@@ -286,7 +243,7 @@ def test_task() -> None:
 
 
 def test_task_clear() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
     memorix.task.runAlgo.clear()
 
     try:
@@ -302,7 +259,7 @@ def test_task_clear() -> None:
 
 
 def test_task_options_schema() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
     memorix.task.runAlgoNewest.clear()
 
     try:
@@ -316,9 +273,9 @@ def test_task_options_schema() -> None:
 
 
 def test_cache_namespace() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
-    memorix.spaceship.cache.pilot.set(CachePilotPayload(name="uv"))
+    memorix.spaceship.cache.pilot.set(Spaceship.CachePilotPayload(name="uv"))
 
     pilot = memorix.spaceship.cache.pilot.get()
     if pilot is None:
@@ -332,7 +289,7 @@ def test_cache_namespace() -> None:
 
 
 def test_cache_recursive_namespace() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.spaceship.crew.cache.count.set(10)
 

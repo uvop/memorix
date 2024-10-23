@@ -137,8 +137,8 @@ fn namespace_to_code(
                         api = ALL_CACHE_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {
-                                true => "true",
-                                false => "false",
+                                true => "True",
+                                false => "False",
                             })
                             .collect::<Vec<_>>()
                             .join(", ")
@@ -179,8 +179,8 @@ fn namespace_to_code(
                         api = ALL_PUBSUB_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {
-                                true => "true",
-                                false => "false",
+                                true => "True",
+                                false => "False",
                             })
                             .collect::<Vec<_>>()
                             .join(", ")
@@ -221,8 +221,8 @@ fn namespace_to_code(
                         api = ALL_TASK_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {
-                                true => "true",
-                                false => "false",
+                                true => "True",
+                                false => "False",
                             })
                             .collect::<Vec<_>>()
                             .join(", ")
@@ -232,6 +232,17 @@ fn namespace_to_code(
                 .join("\n"),
         ));
     }
+    let pre_namespace = match name_tree.is_empty() {
+        true => "".to_string(),
+        false => format!(
+            "{}.",
+            name_tree
+                .iter()
+                .map(|x| stringcase::pascal_case(x))
+                .collect::<Vec<_>>()
+                .join(".")
+        ),
+    };
     result.push_str(&format!(
         r#"{base_indent}class Memorix(MemorixBase):
 {init_def}
@@ -247,7 +258,7 @@ fn namespace_to_code(
         init_def = match name_tree.is_empty() {
             true => format!(
                 r#"{base_indent}    def __init__(self) -> None:
-{base_indent}        super.__init__(redis_url={redis_url}, ref=None)
+{base_indent}        super().__init__(redis_url={redis_url})
 "#,
                 redis_url = match engine {
                     Engine::Redis(x) => format!("{}", value_to_code(x)),
@@ -255,7 +266,7 @@ fn namespace_to_code(
             ),
             false => format!(
                 r#"{base_indent}    def __init__(self, ref: MemorixBase) -> None:
-{base_indent}        super().__init__(redis_url=None, ref=ref)
+{base_indent}        super().__init__(ref=ref)
 "#
             ),
         },
@@ -264,18 +275,18 @@ fn namespace_to_code(
                 .namespaces
                 .iter()
                 .map(|(name, _)| format!(
-                    "{base_indent}        self.{name} = {namespace_name}.Memorix(ref=self)",
+                    "{base_indent}        self.{name} = {pre_namespace}{namespace_name}.Memorix(ref=self)",
                     namespace_name = stringcase::pascal_case(name)
                 ))
                 .collect::<Vec<_>>()
                 .join("\n"),
             [
                 (!namespace.cache_items.is_empty())
-                    .then(|| format!("{base_indent}        self.cache = MemorixCache(self)")),
+                    .then(|| format!("{base_indent}        self.cache = {pre_namespace}MemorixCache(self)")),
                 (!namespace.pubsub_items.is_empty())
-                    .then(|| format!("{base_indent}        self.pubsub = MemorixPubSub(self)")),
+                    .then(|| format!("{base_indent}        self.pubsub = {pre_namespace}MemorixPubSub(self)")),
                 (!namespace.task_items.is_empty())
-                    .then(|| format!("{base_indent}        self.task = MemorixTask(self)")),
+                    .then(|| format!("{base_indent}        self.task = {pre_namespace}MemorixTask(self)")),
             ]
             .into_iter()
             .flatten()

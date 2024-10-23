@@ -12,7 +12,7 @@ class MemorixBase(object):
 
     def __init__(
         self,
-        redis_url: str,
+        redis_url: typing.Optional[str] = None,
         ref: typing.Optional["MemorixBase"] = None,
     ) -> None:
         if ref is None:
