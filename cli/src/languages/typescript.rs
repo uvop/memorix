@@ -1,7 +1,9 @@
 use crate::{
     export_schema::{ExportNamespace, ExportSchema},
-    parser::TypeItem,
-    parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
+    parser::{
+        Engine, TypeItem, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
+    },
+    validate::ValidatedSchema,
 };
 
 fn indent(level: usize) -> String {
@@ -275,7 +277,7 @@ start= match name_tree.is_empty() {
     result
 }
 
-pub fn codegen(export_schema: &ExportSchema) -> String {
+pub fn codegen(schema: &ValidatedSchema) -> String {
     format!(
         r#"// deno-fmt-ignore-file
 // deno-lint-ignore-file
@@ -283,11 +285,7 @@ pub fn codegen(export_schema: &ExportSchema) -> String {
 import {{ MemorixBase, getEnvVariable }} from "@memorix/client-redis";
 
 {}"#,
-        namespace_to_code(
-            &export_schema.global_namespace,
-            vec![],
-            &export_schema.engine,
-        )
+        namespace_to_code(&schema.global_namespace, vec![], &schema.engine,)
     )
     .to_string()
 }

@@ -1,6 +1,147 @@
 ---
 source: src/main.rs
-assertion_line: 426
+assertion_line: 417
 expression: python_code
 ---
-python
+# flake8: noqa
+import typing
+import os
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from enum import Enum
+from memorix_client_redis import (
+    MemorixBase,
+    MemorixCacheBase,
+    MemorixCacheItem,
+    MemorixCacheItemNoKey,
+    MemorixPubSubBase,
+    MemorixPubSubItem,
+    MemorixPubSubItemNoKey,
+    MemorixTaskBase,
+    MemorixTaskItem,
+    MemorixTaskItemNoKey,
+    MemorixTaskItemNoReturns,
+    MemorixTaskItemNoKeyNoReturns,
+)
+
+
+@dataclass
+class InlineCachePayloadUserProfile(object):
+    id: int
+    name: str
+    email: str
+
+
+@dataclass
+class InlineCachePayloadUserSession(object):
+    user_id: int
+    session_token: str
+    expiry: int
+
+abc = int
+
+class MessageService(object):
+
+    class Operation(str, Enum):
+        START = "START"
+        STOP = "STOP"
+
+
+    @dataclass
+    class InlineCachePayloadMessage(object):
+        id: str
+        sender_id: UserId
+        recipient_id: UserId
+        content: str
+        timestamp: int
+
+
+    @dataclass
+    class InlinePubSubPayloadNewMessage(object):
+        message_id: str
+        recipient_id: UserId
+
+
+    @dataclass
+    class InlineTaskPayloadMessageProcessingTasks(object):
+        message_id: str
+        processing_type: str
+        priority: int
+
+
+    class MemorixCache(MemorixCacheBase):
+        def __init__(self, api: MemorixBase) -> None:
+            super().__init__(api=api)
+
+            self.message = MemorixCacheItem[str, InlineCachePayloadMessage, True, True, True](
+                api=api,
+                id="message",
+                payload_class=InlineCachePayloadMessage,
+            )
+
+
+    class MemorixPubSub(MemorixPubSubBase):
+        def __init__(self, api: MemorixBase) -> None:
+            super().__init__(api=api)
+
+            self.new_message = MemorixPubSubItem[UserId, InlinePubSubPayloadNewMessage, True, True](
+                api=api,
+                id="new_message",
+                payload_class=InlinePubSubPayloadNewMessage,
+            )
+
+
+    class MemorixTask(MemorixTaskBase):
+        def __init__(self, api: MemorixBase) -> None:
+            super().__init__(api=api)
+
+            self.message_processing_tasks = MemorixTaskItemNoKey[InlineTaskPayloadMessageProcessingTasks, True, True, True, True](
+                api=api,
+                id="message_processing_tasks",
+                payload_class=InlineTaskPayloadMessageProcessingTasks,
+            )
+
+    class Memorix(MemorixBase):
+        def __init__(self, ref: MemorixBase) -> None:
+            super().__init__(ref=ref)
+
+
+            self._namespace_name_tree = ["MessageService"]
+            self.cache = MessageService.MemorixCache(self)
+            self.pubsub = MessageService.MemorixPubSub(self)
+            self.task = MessageService.MemorixTask(self)
+
+
+class MemorixCache(MemorixCacheBase):
+    def __init__(self, api: MemorixBase) -> None:
+        super().__init__(api=api)
+
+        self.user_profile = MemorixCacheItem[int, InlineCachePayloadUserProfile, True, True, True](
+            api=api,
+            id="user_profile",
+            payload_class=InlineCachePayloadUserProfile,
+        )
+        self.user_session = MemorixCacheItem[str, InlineCachePayloadUserSession, True, True, True](
+            api=api,
+            id="user_session",
+            payload_class=InlineCachePayloadUserSession,
+        )
+        self.number_of_messages = MemorixCacheItemNoKey[int, True, False, False](
+            api=api,
+            id="number_of_messages",
+            payload_class=int,
+        )
+
+class Memorix(MemorixBase):
+    def __init__(self) -> None:
+        super().__init__(redis_url=os.environ['REDIS_URL'])
+
+
+        self._namespace_name_tree = []
+        self.MessageService = MessageService.Memorix(ref=self)
+
+        self.cache = MemorixCache(self)

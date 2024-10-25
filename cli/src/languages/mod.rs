@@ -3,16 +3,16 @@ mod rust;
 mod typescript;
 
 use crate::{
-    export_schema::ExportSchema,
-    flat_schema::FlatExportSchema,
+    flat_schema::FlatValidatedSchema,
     parser::{Export, Language},
+    validate::ValidatedSchema,
 };
 use std::collections::HashMap;
 
 pub fn codegen_per_language(
     export: &Export,
-    export_schema: &ExportSchema,
-    flat_export_schema: &FlatExportSchema,
+    validated_schema: &ValidatedSchema,
+    flat_validated_schema: &FlatValidatedSchema,
 ) -> HashMap<String, String> {
     export
         .files
@@ -22,9 +22,9 @@ pub fn codegen_per_language(
         .map(|file| {
             let path = file.path.to_string();
             let content = match file.language {
-                Language::TypeScript => typescript::codegen(export_schema),
-                Language::Python => python::codegen(flat_export_schema),
-                Language::Rust => rust::codegen(flat_export_schema),
+                Language::TypeScript => typescript::codegen(validated_schema),
+                Language::Python => python::codegen(flat_validated_schema),
+                Language::Rust => rust::codegen(flat_validated_schema),
             };
             (path, content)
         })

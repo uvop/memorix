@@ -1,26 +1,30 @@
 use crate::{
-    flat_schema::{FlatExportNamespace, FlatExportSchema, FlatTypeItem, TypeItemObject},
+    flat_schema::{
+        FlatValidatedNamespace, FlatValidatedSchema, FlatValidatedTypeItem, TypeItemObject,
+    },
     parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
 };
 
 fn indent(level: usize) -> String {
     "    ".repeat(level)
 }
-fn flat_type_item_to_code(flat_type_item: &FlatTypeItem) -> String {
+fn flat_type_item_to_code(flat_type_item: &FlatValidatedTypeItem) -> String {
     match flat_type_item {
-        FlatTypeItem::Optional(x) => {
+        FlatValidatedTypeItem::Optional(x) => {
             format!("typing.Optional[{}]", flat_type_item_to_code(x)).to_string()
         }
-        FlatTypeItem::Array(x) => format!("typing.List[{}]", flat_type_item_to_code(x)).to_string(),
-        FlatTypeItem::Reference(x) => x.clone(),
-        FlatTypeItem::Boolean => "bool".to_string(),
-        FlatTypeItem::String => "str".to_string(),
-        FlatTypeItem::U32 => "int".to_string(),
-        FlatTypeItem::U64 => "int".to_string(),
-        FlatTypeItem::I32 => "int".to_string(),
-        FlatTypeItem::I64 => "int".to_string(),
-        FlatTypeItem::F32 => "float".to_string(),
-        FlatTypeItem::F64 => "float".to_string(),
+        FlatValidatedTypeItem::Array(x) => {
+            format!("typing.List[{}]", flat_type_item_to_code(x)).to_string()
+        }
+        FlatValidatedTypeItem::Reference(x) => x.clone(),
+        FlatValidatedTypeItem::Boolean => "bool".to_string(),
+        FlatValidatedTypeItem::String => "str".to_string(),
+        FlatValidatedTypeItem::U32 => "int".to_string(),
+        FlatValidatedTypeItem::U64 => "int".to_string(),
+        FlatValidatedTypeItem::I32 => "int".to_string(),
+        FlatValidatedTypeItem::I64 => "int".to_string(),
+        FlatValidatedTypeItem::F32 => "float".to_string(),
+        FlatValidatedTypeItem::F64 => "float".to_string(),
     }
 }
 
@@ -56,7 +60,7 @@ fn type_item_object_to_code(name: &str, type_item_object: &TypeItemObject, level
 }
 
 fn namespace_to_code(
-    namespace: &FlatExportNamespace,
+    namespace: &FlatValidatedNamespace,
     name_tree: Vec<String>,
     engine: &Engine,
 ) -> String {
@@ -301,7 +305,7 @@ fn namespace_to_code(
     result
 }
 
-pub fn codegen(flat_export_schema: &FlatExportSchema) -> String {
+pub fn codegen(flat_export_schema: &FlatValidatedSchema) -> String {
     format!(
         r#"# flake8: noqa
 import typing

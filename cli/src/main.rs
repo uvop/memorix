@@ -4,6 +4,7 @@ mod imports;
 mod languages;
 mod parser;
 mod parser_tools;
+mod validate;
 
 use std::error::Error;
 use std::fmt;
@@ -102,6 +103,10 @@ pub fn format<F: FileSystem>(
         let stack = format!("parser feedback:\n{}", convert_error(input, e));
         stack
     })?;
+    // let parsed_schema =
+    //     crate::imports::ImportedSchema::new(fs, path).map_err(|x| format!("{}", x))?;
+    // let export_schema = crate::export_schema::ExportSchema::new(&parsed_schema);
+    // let _ = crate::validate::validate_schema(&export_schema);
     let formatted_input = schema_to_sdl(&schema);
     fs.write_string(path, &formatted_input)?;
     Ok(())
@@ -111,7 +116,8 @@ pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<(), PrettyError<Stri
     let parsed_schema =
         crate::imports::ImportedSchema::new(fs, path).map_err(|x| format!("{}", x))?;
     let export_schema = crate::export_schema::ExportSchema::new(&parsed_schema);
-    let flat_export_schema = crate::flat_schema::FlatExportSchema::new(&export_schema);
+    let validated_schema = crate::validate::validate_schema(&export_schema);
+    let flat_validated_schema = crate::flat_schema::FlatValidatedSchema::new(&validated_schema);
     match &parsed_schema
         .schema
         .config
@@ -122,7 +128,8 @@ pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<(), PrettyError<Stri
         .export
     {
         Some(export) => {
-            let generated_code = codegen_per_language(export, &export_schema, &flat_export_schema);
+            let generated_code =
+                codegen_per_language(export, &validated_schema, &flat_validated_schema);
             generated_code
                 .into_iter()
                 .map(|(code_path, content)| {

@@ -1,31 +1,30 @@
-use serde::{Deserialize, Serialize};
-
 use crate::{
-    export_schema::{
-        ExportCacheItem, ExportNamespace, ExportPubSubItem, ExportSchema, ExportTaskItem,
+    export_schema::{ExportCacheItem, ExportPubSubItem, ExportTaskItem},
+    parser::Engine,
+    validate::{
+        ValidatedNamespace, ValidatedReferenceTypeItem, ValidatedSchema, ValidatedTypeItem,
     },
-    parser::{Engine, TypeItem},
 };
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct FlatExportSchema {
+#[derive(Debug, PartialEq, Clone)]
+pub struct FlatValidatedSchema {
     pub engine: Engine,
-    pub global_namespace: FlatExportNamespace,
+    pub global_namespace: FlatValidatedNamespace,
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct FlatExportNamespace {
+#[derive(Debug, PartialEq, Clone)]
+pub struct FlatValidatedNamespace {
     pub type_item_objects: Vec<(String, TypeItemObject)>,
-    pub flat_type_items: Vec<(String, FlatTypeItem)>,
+    pub flat_type_items: Vec<(String, FlatValidatedTypeItem)>,
     pub enum_items: Vec<(String, Vec<String>)>,
-    pub cache_items: Vec<(String, ExportCacheItem<FlatTypeItem>)>,
-    pub pubsub_items: Vec<(String, ExportPubSubItem<FlatTypeItem>)>,
-    pub task_items: Vec<(String, ExportTaskItem<FlatTypeItem>)>,
-    pub namespaces: Vec<(String, FlatExportNamespace)>,
+    pub cache_items: Vec<(String, ExportCacheItem<FlatValidatedTypeItem>)>,
+    pub pubsub_items: Vec<(String, ExportPubSubItem<FlatValidatedTypeItem>)>,
+    pub task_items: Vec<(String, ExportTaskItem<FlatValidatedTypeItem>)>,
+    pub namespaces: Vec<(String, FlatValidatedNamespace)>,
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub enum FlatTypeItem {
+#[derive(Debug, PartialEq, Clone)]
+pub enum FlatValidatedTypeItem {
     U32,
     I32,
     U64,
@@ -34,14 +33,14 @@ pub enum FlatTypeItem {
     F64,
     String,
     Boolean,
-    Optional(Box<FlatTypeItem>),
-    Array(Box<FlatTypeItem>),
-    Reference(String),
+    Optional(Box<FlatValidatedTypeItem>),
+    Array(Box<FlatValidatedTypeItem>),
+    Reference(ValidatedReferenceTypeItem),
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct TypeItemObject {
-    pub properties: Vec<(String, FlatTypeItem)>,
+    pub properties: Vec<(String, FlatValidatedTypeItem)>,
 }
 
 fn concat_with_key(ctx: &str, key: &str) -> String {
@@ -50,18 +49,18 @@ fn concat_with_key(ctx: &str, key: &str) -> String {
 
 fn type_item_to_flat_type_items(
     ctx: &str,
-    type_item: &TypeItem,
-) -> (FlatTypeItem, Vec<(String, TypeItemObject)>) {
+    type_item: &ValidatedTypeItem,
+) -> (FlatValidatedTypeItem, Vec<(String, TypeItemObject)>) {
     match type_item {
-        TypeItem::Optional(x) => {
+        ValidatedTypeItem::Optional(x) => {
             let (y, hm) = type_item_to_flat_type_items(ctx, x);
-            (FlatTypeItem::Optional(Box::new(y)), hm)
+            (FlatValidatedTypeItem::Optional(Box::new(y)), hm)
         }
-        TypeItem::Array(x) => {
+        ValidatedTypeItem::Array(x) => {
             let (y, hm) = type_item_to_flat_type_items(ctx, x);
-            (FlatTypeItem::Array(Box::new(y)), hm)
+            (FlatValidatedTypeItem::Array(Box::new(y)), hm)
         }
-        TypeItem::Object(x) => {
+        ValidatedTypeItem::Object(x) => {
             let sub_props = x
                 .iter()
                 .map(|(key, x)| {
@@ -88,21 +87,23 @@ fn type_item_to_flat_type_items(
                 },
             );
 
-            (FlatTypeItem::Reference(ctx.to_string()), to_add)
+            (FlatValidatedTypeItem::Reference(ctx.to_string()), to_add)
         }
-        TypeItem::Reference(x) => (FlatTypeItem::Reference(x.clone()), Vec::new()),
-        TypeItem::U32 => (FlatTypeItem::U32, Vec::new()),
-        TypeItem::I32 => (FlatTypeItem::I32, Vec::new()),
-        TypeItem::U64 => (FlatTypeItem::U64, Vec::new()),
-        TypeItem::I64 => (FlatTypeItem::I64, Vec::new()),
-        TypeItem::F32 => (FlatTypeItem::F32, Vec::new()),
-        TypeItem::F64 => (FlatTypeItem::F64, Vec::new()),
-        TypeItem::String => (FlatTypeItem::String, Vec::new()),
-        TypeItem::Boolean => (FlatTypeItem::Boolean, Vec::new()),
+        ValidatedTypeItem::Reference(x) => {
+            (FlatValidatedTypeItem::Reference(x.clone()), Vec::new())
+        }
+        ValidatedTypeItem::U32 => (FlatValidatedTypeItem::U32, Vec::new()),
+        ValidatedTypeItem::I32 => (FlatValidatedTypeItem::I32, Vec::new()),
+        ValidatedTypeItem::U64 => (FlatValidatedTypeItem::U64, Vec::new()),
+        ValidatedTypeItem::I64 => (FlatValidatedTypeItem::I64, Vec::new()),
+        ValidatedTypeItem::F32 => (FlatValidatedTypeItem::F32, Vec::new()),
+        ValidatedTypeItem::F64 => (FlatValidatedTypeItem::F64, Vec::new()),
+        ValidatedTypeItem::String => (FlatValidatedTypeItem::String, Vec::new()),
+        ValidatedTypeItem::Boolean => (FlatValidatedTypeItem::Boolean, Vec::new()),
     }
 }
 
-fn namespace_to_flat_namespace(namespace: &ExportNamespace) -> FlatExportNamespace {
+fn namespace_to_flat_namespace(namespace: &ValidatedNamespace) -> FlatValidatedNamespace {
     let type_items = namespace
         .type_items
         .iter()
@@ -220,7 +221,7 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace) -> FlatExportNamespa
             acc
         });
 
-    FlatExportNamespace {
+    FlatValidatedNamespace {
         type_item_objects: type_object_items,
         namespaces: namespace
             .namespaces
@@ -247,11 +248,11 @@ fn namespace_to_flat_namespace(namespace: &ExportNamespace) -> FlatExportNamespa
     }
 }
 
-impl FlatExportSchema {
-    pub fn new(export_schema: &ExportSchema) -> Self {
+impl FlatValidatedSchema {
+    pub fn new(schema: &ValidatedSchema) -> Self {
         Self {
-            engine: export_schema.engine.clone(),
-            global_namespace: namespace_to_flat_namespace(&export_schema.global_namespace),
+            engine: schema.engine.clone(),
+            global_namespace: namespace_to_flat_namespace(&schema.global_namespace),
         }
     }
 }
