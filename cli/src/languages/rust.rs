@@ -1,6 +1,6 @@
 use crate::{
     flat_schema::{
-        FlatValidatedNamespace, FlatValidatedSchema, FlatValidatedTypeItem, TypeItemObject,
+        FlatValidatedNamespace, FlatValidatedSchema, FlatValidatedTypeItem, TypeObjectItem,
     },
     parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
 };
@@ -37,7 +37,7 @@ fn value_to_code(value: &Value) -> String {
     }
 }
 
-fn type_item_object_to_code(name: &str, type_item_object: &TypeItemObject, level: usize) -> String {
+fn type_item_object_to_code(name: &str, type_item_object: &TypeObjectItem, level: usize) -> String {
     let base_indent = indent(level);
     format!(
         r#"
@@ -91,7 +91,7 @@ fn namespace_to_code(
                 .join("\n")
         ));
     }
-    for (name, type_item_object) in &namespace.type_item_objects {
+    for (name, type_item_object) in &namespace.type_object_items {
         result.push_str(&format!(
             "{}\n",
             type_item_object_to_code(name.as_str(), type_item_object, name_tree.len())
