@@ -1,48 +1,57 @@
 use crate::{
-    export_schema::{ExportNamespace, ExportSchema},
-    parser::{
-        Engine, TypeItem, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS,
-    },
-    validate::ValidatedSchema,
+    parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
+    validate::{ValidatedNamespace, ValidatedSchema, ValidatedTypeItem},
 };
 
 fn indent(level: usize) -> String {
     "  ".repeat(level)
 }
-fn type_item_to_code(type_item: &TypeItem, level: usize) -> String {
+fn type_item_to_code(
+    type_item: &ValidatedTypeItem,
+    schema: &ValidatedSchema,
+    level: usize,
+) -> String {
     let base_indent = indent(level);
 
     match type_item {
-        TypeItem::Object(x) => format!(
+        ValidatedTypeItem::Object(x) => format!(
             r#"{{
 {}
 {base_indent}}}"#,
             x.iter()
                 .map(|(property_name, type_item)| format!(
                     "{base_indent}  {property_name}: {};",
-                    type_item_to_code(type_item, level + 1)
+                    type_item_to_code(type_item, schema, level + 1)
                 )
                 .to_string())
                 .collect::<Vec<_>>()
                 .join("\n")
         ),
-        TypeItem::Optional(x) => format!("undefined | {}", type_item_to_code(x, level)).to_string(),
-        TypeItem::Array(x) => format!(
+        ValidatedTypeItem::Optional(x) => {
+            format!("undefined | {}", type_item_to_code(x, schema, level)).to_string()
+        }
+        ValidatedTypeItem::Array(x) => format!(
             r#"Array<
 {}
 {base_indent}>"#,
-            type_item_to_code(x, level + 1)
+            type_item_to_code(x, schema, level + 1)
         )
         .to_string(),
-        TypeItem::Reference(x) => x.clone(),
-        TypeItem::Boolean => "boolean".to_string(),
-        TypeItem::String => "string".to_string(),
-        TypeItem::U32 => "number".to_string(),
-        TypeItem::U64 => "number".to_string(),
-        TypeItem::I32 => "number".to_string(),
-        TypeItem::I64 => "number".to_string(),
-        TypeItem::F32 => "number".to_string(),
-        TypeItem::F64 => "number".to_string(),
+        ValidatedTypeItem::Reference(x) => {
+            let namespace = x
+                .namespace_indexes
+                .iter()
+                .fold(&schema.global_namespace, |acc, &i| &acc.namespaces[i].1);
+            namespace.type_items[x.type_item_index].0.clone()
+        }
+        ValidatedTypeItem::Boolean => "boolean".to_string(),
+        ValidatedTypeItem::String => "string".to_string(),
+        ValidatedTypeItem::U32 => "number".to_string(),
+        ValidatedTypeItem::U64 => "number".to_string(),
+        ValidatedTypeItem::I32 => "number".to_string(),
+        ValidatedTypeItem::I64 => "number".to_string(),
+        ValidatedTypeItem::F32 => "number".to_string(),
+        ValidatedTypeItem::F64 => "number".to_string(),
     }
 }
 
@@ -56,9 +65,9 @@ fn value_to_code(value: &Value) -> String {
 }
 
 fn namespace_to_code(
-    namespace: &ExportNamespace,
+    namespace: &ValidatedNamespace,
     name_tree: Vec<String>,
-    engine: &Engine,
+    schema: &ValidatedSchema,
 ) -> String {
     let mut result = String::from("");
     let level = name_tree.len();
@@ -81,7 +90,7 @@ fn namespace_to_code(
     for (name, type_item) in &namespace.type_items {
         result.push_str(&format!(
             "{base_indent}export type {name} = {};\n\n",
-            type_item_to_code(type_item, level)
+            type_item_to_code(type_item, schema, level)
         ));
     }
     for (name, sub_namespace) in &namespace.namespaces {
@@ -98,7 +107,7 @@ fn namespace_to_code(
                     .into_iter()
                     .chain(std::iter::once(name.clone()))
                     .collect(),
-                engine,
+                schema,
             ),
         ));
     }
@@ -111,7 +120,7 @@ fn namespace_to_code(
 start= match name_tree.is_empty() {
       true => format!(r#"
 {base_indent}  protected override redisUrl = {redis_url};
-"#, redis_url = match engine {
+"#, redis_url = match &schema.engine {
     Engine::Redis(x) => value_to_code(x),
     }),
     false => "".to_string(),
@@ -140,13 +149,13 @@ start= match name_tree.is_empty() {
                         .cache_items
                         .iter()
                         .map(|(name, item)| {
-                            let payload = type_item_to_code(&item.payload, level + 2);
+                            let payload = type_item_to_code(&item.payload, schema, level + 2);
                             format!(
                                 "{base_indent}    {name}: this.getCacheItem{key}{api}>(\"{name}\"{options}),",
                                 key = match &item.key {
                                     None => format!("NoKey<{payload}, "),
                                     Some(key) => {
-                                        let key = type_item_to_code(key, level + 2);
+                                        let key = type_item_to_code(key, schema, level + 2);
                                         format!("<{key}, {payload}, ")
                                     }
                                 },
@@ -191,13 +200,13 @@ start= match name_tree.is_empty() {
                         .pubsub_items
                         .iter()
                         .map(|(name, item)| {
-                            let payload = type_item_to_code(&item.payload, level + 1);
+                            let payload = type_item_to_code(&item.payload, schema, level + 1);
                             format!(
                                 "{base_indent}    {name}: this.getPubsubItem{key}{api}>(\"{name}\"),",
                                 key = match &item.key {
                                     None => format!("NoKey<{payload}, "),
                                     Some(key) => {
-                                        let key = type_item_to_code(key, level + 1);
+                                        let key = type_item_to_code(key, schema, level + 1);
                                         format!("<{key}, {payload}, ")
                                     }
                                 },
@@ -222,13 +231,13 @@ start= match name_tree.is_empty() {
                         .task_items
                         .iter()
                         .map(|(name, item)| {
-                            let payload = type_item_to_code(&item.payload, level + 1);
+                            let payload = type_item_to_code(&item.payload, schema, level + 1);
                             format!(
                                 "{base_indent}    {name}: this.getTaskItem{key}{api}>(\"{name}\"{options}),",
                                 key = match &item.key {
                                     None => format!("NoKey<{payload}, "),
                                     Some(key) => {
-                                        let key = type_item_to_code(key, level + 1);
+                                        let key = type_item_to_code(key, schema, level + 1);
                                         format!("<{key}, {payload}, ")
                                     }
                                 },
@@ -285,7 +294,7 @@ pub fn codegen(schema: &ValidatedSchema) -> String {
 import {{ MemorixBase, getEnvVariable }} from "@memorix/client-redis";
 
 {}"#,
-        namespace_to_code(&schema.global_namespace, vec![], &schema.engine,)
+        namespace_to_code(&schema.global_namespace, vec![], &schema)
     )
     .to_string()
 }

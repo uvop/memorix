@@ -1,6 +1,7 @@
 use crate::{
     flat_schema::{
-        FlatValidatedNamespace, FlatValidatedSchema, FlatValidatedTypeItem, TypeObjectItem,
+        FlatValidatedNamespace, FlatValidatedReferenceTypeItemKind, FlatValidatedSchema,
+        FlatValidatedTypeItem, TypeObjectItem,
     },
     parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
 };
@@ -8,15 +9,31 @@ use crate::{
 fn indent(level: usize) -> String {
     "    ".repeat(level)
 }
-fn flat_type_item_to_code(flat_type_item: &FlatValidatedTypeItem) -> String {
+fn flat_type_item_to_code(
+    flat_type_item: &FlatValidatedTypeItem,
+    schema: &FlatValidatedSchema,
+) -> String {
     match flat_type_item {
         FlatValidatedTypeItem::Optional(x) => {
-            format!("Option<{}>", flat_type_item_to_code(x)).to_string()
+            format!("Option<{}>", flat_type_item_to_code(x, schema)).to_string()
         }
         FlatValidatedTypeItem::Array(x) => {
-            format!("Vec<{}>", flat_type_item_to_code(x)).to_string()
+            format!("Vec<{}>", flat_type_item_to_code(x, schema)).to_string()
         }
-        FlatValidatedTypeItem::Reference(x) => x.clone(),
+        FlatValidatedTypeItem::Reference(x) => {
+            let namespace = x
+                .namespace_indexes
+                .iter()
+                .fold(&schema.global_namespace, |acc, &i| &acc.namespaces[i].1);
+            match x.kind {
+                FlatValidatedReferenceTypeItemKind::ToTypeItem(i) => {
+                    namespace.flat_type_items[i].0.clone()
+                }
+                FlatValidatedReferenceTypeItemKind::ToTypeObjectItem(i) => {
+                    namespace.type_object_items[i].0.clone()
+                }
+            }
+        }
         FlatValidatedTypeItem::Boolean => "bool".to_string(),
         FlatValidatedTypeItem::String => "String".to_string(),
         FlatValidatedTypeItem::U32 => "u32".to_string(),
@@ -37,7 +54,12 @@ fn value_to_code(value: &Value) -> String {
     }
 }
 
-fn type_item_object_to_code(name: &str, type_item_object: &TypeObjectItem, level: usize) -> String {
+fn type_object_item_to_code(
+    name: &str,
+    type_item_object: &TypeObjectItem,
+    schema: &FlatValidatedSchema,
+    level: usize,
+) -> String {
     let base_indent = indent(level);
     format!(
         r#"
@@ -56,7 +78,7 @@ fn type_item_object_to_code(name: &str, type_item_object: &TypeObjectItem, level
                     true => "r#type",
                     false => property_name,
                 },
-                flat_type_item_to_code(flat_type_item)
+                flat_type_item_to_code(flat_type_item, schema)
             )
             .to_string())
             .collect::<Vec<_>>()
@@ -68,7 +90,7 @@ fn type_item_object_to_code(name: &str, type_item_object: &TypeObjectItem, level
 fn namespace_to_code(
     namespace: &FlatValidatedNamespace,
     name_tree: Vec<String>,
-    engine: &Engine,
+    schema: &FlatValidatedSchema,
 ) -> String {
     let mut result = String::from("");
     let base_indent = indent(name_tree.len());
@@ -94,13 +116,13 @@ fn namespace_to_code(
     for (name, type_item_object) in &namespace.type_object_items {
         result.push_str(&format!(
             "{}\n",
-            type_item_object_to_code(name.as_str(), type_item_object, name_tree.len())
+            type_object_item_to_code(name.as_str(), type_item_object, schema, name_tree.len())
         ));
     }
     for (name, flat_type_item) in &namespace.flat_type_items {
         result.push_str(&format!(
             "{base_indent}pub type {name} = {};\n\n",
-            flat_type_item_to_code(flat_type_item)
+            flat_type_item_to_code(flat_type_item, schema)
         ));
     }
     for (name, sub_namespace) in &namespace.namespaces {
@@ -119,7 +141,7 @@ fn namespace_to_code(
                     .into_iter()
                     .chain(std::iter::once(name.clone()))
                     .collect(),
-                engine,
+                schema,
             ),
         ));
     }
@@ -145,13 +167,13 @@ fn namespace_to_code(
                     .cache_items
                     .iter()
                     .map(|(name, item)| {
-                        let payload = flat_type_item_to_code(&item.payload);
+                        let payload = flat_type_item_to_code(&item.payload, schema);
                         format!(
                         "{base_indent}    pub {name}: memorix_client_redis::MemorixCacheItem{key}{api}>,",
                         key = match &item.key {
                             None => format!("NoKey<{payload}, "),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key);
+                                let key = flat_type_item_to_code(key, schema);
                                 format!("<{key}, {payload}, ")
                             }
                         },
@@ -230,13 +252,13 @@ fn namespace_to_code(
                     .pubsub_items
                     .iter()
                     .map(|(name, item)| {
-                        let payload = flat_type_item_to_code(&item.payload);
+                        let payload = flat_type_item_to_code(&item.payload, schema);
                         format!(
                         "{base_indent}    pub {name}: memorix_client_redis::MemorixPubSubItem{key}{api}>,",
                         key = match &item.key {
                             None => format!("NoKey<{payload}, "),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key);
+                                let key = flat_type_item_to_code(key, schema);
                                 format!("<{key}, {payload}, ")
                             }
                         },
@@ -289,13 +311,13 @@ fn namespace_to_code(
                     .task_items
                     .iter()
                     .map(|(name, item)| {
-                        let payload = flat_type_item_to_code(&item.payload);
+                        let payload = flat_type_item_to_code(&item.payload, schema);
                         format!(
                         "{base_indent}    pub {name}: memorix_client_redis::MemorixTaskItem{key}{api}>,",
                         key = match &item.key {
                             None => format!("NoKey<{payload}, "),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key);
+                                let key = flat_type_item_to_code(key, schema);
                                 format!("<{key}, {payload}, ")
                             }
                         },
@@ -400,7 +422,7 @@ fn namespace_to_code(
 {base_indent}            {redis_url},
 {base_indent}            MEMORIX_NAMESPACE_NAME_TREE,
 {base_indent}        )
-{base_indent}        .await?;"#, redis_url= match engine {
+{base_indent}        .await?;"#, redis_url= match &schema.engine {
             Engine::Redis(x) => format!("&{}", value_to_code(x)),
             }),
             false => format!(
@@ -446,17 +468,13 @@ fn namespace_to_code(
     result
 }
 
-pub fn codegen(flat_export_schema: &FlatValidatedSchema) -> String {
+pub fn codegen(schema: &FlatValidatedSchema) -> String {
     format!(
         r#"#![allow(dead_code)]
 extern crate memorix_client_redis;
 
 {}"#,
-        namespace_to_code(
-            &flat_export_schema.global_namespace,
-            vec![],
-            &flat_export_schema.engine,
-        )
+        namespace_to_code(&schema.global_namespace, vec![], &schema,)
     )
     .to_string()
 }

@@ -305,8 +305,8 @@ Namespace MessageService {
             key: string
             payload: {
             id: string
-            sender_id: UserId
-            recipient_id: UserId
+            sender_id: u64
+            recipient_id: u64
             content: string
             timestamp: u64
             }
@@ -316,10 +316,10 @@ Namespace MessageService {
 
     PubSub {
         new_message: {
-            key: UserId
+            key: u64
             payload: {
             message_id: string
-            recipient_id: UserId
+            recipient_id: u64
             }
             public: [subscribe]
         }

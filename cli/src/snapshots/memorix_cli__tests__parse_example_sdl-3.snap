@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 419
+assertion_line: 426
 expression: rust_code
 ---
 #![allow(dead_code)]
@@ -43,8 +43,8 @@ pub mod message_service {
     #[derive(Clone, PartialEq, std::fmt::Debug)]
     pub struct InlineCachePayloadMessage {
         pub id: String,
-        pub sender_id: UserId,
-        pub recipient_id: UserId,
+        pub sender_id: u64,
+        pub recipient_id: u64,
         pub content: String,
         pub timestamp: u64,
     }
@@ -54,7 +54,7 @@ pub mod message_service {
     #[derive(Clone, PartialEq, std::fmt::Debug)]
     pub struct InlinePubSubPayloadNewMessage {
         pub message_id: String,
-        pub recipient_id: UserId,
+        pub recipient_id: u64,
     }
 
 
@@ -90,7 +90,7 @@ pub mod message_service {
     #[derive(Clone)]
     #[allow(non_snake_case)]
     pub struct MemorixPubSub {
-        pub new_message: memorix_client_redis::MemorixPubSubItem<UserId, InlinePubSubPayloadNewMessage, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+        pub new_message: memorix_client_redis::MemorixPubSubItem<u64, InlinePubSubPayloadNewMessage, memorix_client_redis::Expose, memorix_client_redis::Expose>,
     }
 
     impl MemorixPubSub {

@@ -69,13 +69,17 @@ fn validate_type_item(
                 .collect(),
         ),
         TypeItem::Reference(x) => {
-            let mut current_namespace = &schema.global_namespace;
-            let mut namespaces = vec![&schema.global_namespace];
-            for i in namespace_indexes {
-                current_namespace = &current_namespace.namespaces[*i].1;
-                namespaces.push(current_namespace);
-            }
-            namespaces.reverse();
+            let namespaces = namespace_indexes
+                .iter()
+                .fold(vec![&schema.global_namespace], |mut acc, &i| {
+                    let current_namespace = acc[acc.len() - 1];
+                    let child_namespace = &current_namespace.namespaces[i].1;
+                    acc.push(child_namespace);
+                    acc
+                })
+                .into_iter()
+                .rev()
+                .collect::<Vec<_>>();
             let mut current_namespace_indexes = namespace_indexes.to_vec();
             for namespace in namespaces {
                 let type_item_index = namespace.type_items.iter().position(|(k, _)| *k == *x);

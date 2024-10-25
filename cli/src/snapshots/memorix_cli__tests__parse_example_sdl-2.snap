@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 417
+assertion_line: 423
 expression: python_code
 ---
 # flake8: noqa
@@ -54,8 +54,8 @@ class MessageService(object):
     @dataclass
     class InlineCachePayloadMessage(object):
         id: str
-        sender_id: UserId
-        recipient_id: UserId
+        sender_id: int
+        recipient_id: int
         content: str
         timestamp: int
 
@@ -63,7 +63,7 @@ class MessageService(object):
     @dataclass
     class InlinePubSubPayloadNewMessage(object):
         message_id: str
-        recipient_id: UserId
+        recipient_id: int
 
 
     @dataclass
@@ -77,10 +77,10 @@ class MessageService(object):
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.message = MemorixCacheItem[str, InlineCachePayloadMessage, True, True, True](
+            self.message = MemorixCacheItem[str, MessageService.InlineCachePayloadMessage, True, True, True](
                 api=api,
                 id="message",
-                payload_class=InlineCachePayloadMessage,
+                payload_class=MessageService.InlineCachePayloadMessage,
             )
 
 
@@ -88,10 +88,10 @@ class MessageService(object):
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.new_message = MemorixPubSubItem[UserId, InlinePubSubPayloadNewMessage, True, True](
+            self.new_message = MemorixPubSubItem[int, MessageService.InlinePubSubPayloadNewMessage, True, True](
                 api=api,
                 id="new_message",
-                payload_class=InlinePubSubPayloadNewMessage,
+                payload_class=MessageService.InlinePubSubPayloadNewMessage,
             )
 
 
@@ -99,10 +99,10 @@ class MessageService(object):
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.message_processing_tasks = MemorixTaskItemNoKey[InlineTaskPayloadMessageProcessingTasks, True, True, True, True](
+            self.message_processing_tasks = MemorixTaskItemNoKey[MessageService.InlineTaskPayloadMessageProcessingTasks, True, True, True, True](
                 api=api,
                 id="message_processing_tasks",
-                payload_class=InlineTaskPayloadMessageProcessingTasks,
+                payload_class=MessageService.InlineTaskPayloadMessageProcessingTasks,
             )
 
     class Memorix(MemorixBase):

@@ -1,9 +1,7 @@
 use crate::{
     export_schema::{ExportCacheItem, ExportPubSubItem, ExportTaskItem},
     parser::Engine,
-    validate::{
-        ValidatedNamespace, ValidatedReferenceTypeItem, ValidatedSchema, ValidatedTypeItem,
-    },
+    validate::{ValidatedNamespace, ValidatedSchema, ValidatedTypeItem},
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -24,6 +22,18 @@ pub struct FlatValidatedNamespace {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct FlatValidatedReferenceTypeItem {
+    pub namespace_indexes: Vec<usize>,
+    pub kind: FlatValidatedReferenceTypeItemKind,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum FlatValidatedReferenceTypeItemKind {
+    ToTypeItem(usize),
+    ToTypeObjectItem(usize),
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum FlatValidatedTypeItem {
     U32,
     I32,
@@ -35,7 +45,7 @@ pub enum FlatValidatedTypeItem {
     Boolean,
     Optional(Box<FlatValidatedTypeItem>),
     Array(Box<FlatValidatedTypeItem>),
-    Reference(ValidatedReferenceTypeItem),
+    Reference(FlatValidatedReferenceTypeItem),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -76,12 +86,19 @@ fn type_item_to_flat_type_items(
                 })
                 .collect::<Vec<_>>();
             type_item_objects.push((ctx.to_string(), TypeObjectItem { properties }));
-            FlatValidatedTypeItem::Reference(ValidatedReferenceTypeItem {
+            FlatValidatedTypeItem::Reference(FlatValidatedReferenceTypeItem {
                 namespace_indexes: namespace_indexes.to_vec(),
-                type_item_index: type_item_objects.len(),
+                kind: FlatValidatedReferenceTypeItemKind::ToTypeObjectItem(
+                    type_item_objects.len() - 1,
+                ),
             })
         }
-        ValidatedTypeItem::Reference(x) => FlatValidatedTypeItem::Reference(x.clone()),
+        ValidatedTypeItem::Reference(x) => {
+            FlatValidatedTypeItem::Reference(FlatValidatedReferenceTypeItem {
+                namespace_indexes: namespace_indexes.to_vec(),
+                kind: FlatValidatedReferenceTypeItemKind::ToTypeItem(x.type_item_index),
+            })
+        }
         ValidatedTypeItem::U32 => FlatValidatedTypeItem::U32,
         ValidatedTypeItem::I32 => FlatValidatedTypeItem::I32,
         ValidatedTypeItem::U64 => FlatValidatedTypeItem::U64,

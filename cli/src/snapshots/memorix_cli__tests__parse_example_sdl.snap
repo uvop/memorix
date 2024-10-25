@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 413
+assertion_line: 420
 expression: typescript_code
 ---
 // deno-fmt-ignore-file
@@ -22,16 +22,16 @@ export namespace messageService {
     cache = {
       message: this.getCacheItem<string, {
         id: string;
-        sender_id: UserId;
-        recipient_id: UserId;
+        sender_id: number;
+        recipient_id: number;
         content: string;
         timestamp: number;
       }, true, true, true>("message"),
     };
     pubsub = {
-      new_message: this.getPubsubItem<UserId, {
+      new_message: this.getPubsubItem<number, {
       message_id: string;
-      recipient_id: UserId;
+      recipient_id: number;
     }, true, true>("new_message"),
     };
     task = {
