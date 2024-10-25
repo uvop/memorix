@@ -24,7 +24,13 @@ pub struct ValidatedNamespace {
 #[derive(Debug, PartialEq, Clone)]
 pub struct ValidatedReferenceTypeItem {
     pub namespace_indexes: Vec<usize>,
-    pub type_item_index: usize,
+    pub kind: ValidatedReferenceTypeItemKind,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum ValidatedReferenceTypeItemKind {
+    ToTypeItem(usize),
+    ToEnum(usize),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -87,11 +93,22 @@ fn validate_type_item(
                     Some(type_item_index) => {
                         return ValidatedTypeItem::Reference(ValidatedReferenceTypeItem {
                             namespace_indexes: current_namespace_indexes,
-                            type_item_index,
+                            kind: ValidatedReferenceTypeItemKind::ToTypeItem(type_item_index),
                         })
                     }
                     None => {
-                        current_namespace_indexes.pop();
+                        let enum_index = namespace.enum_items.iter().position(|(k, _)| *k == *x);
+                        match enum_index {
+                            Some(enum_index) => {
+                                return ValidatedTypeItem::Reference(ValidatedReferenceTypeItem {
+                                    namespace_indexes: current_namespace_indexes,
+                                    kind: ValidatedReferenceTypeItemKind::ToEnum(enum_index),
+                                })
+                            }
+                            None => {
+                                current_namespace_indexes.pop();
+                            }
+                        }
                     }
                 }
             }

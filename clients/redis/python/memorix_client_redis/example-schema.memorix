@@ -13,7 +13,7 @@ Config {
 Type {
   User: {
     name: string
-    age: int?
+    age: u32?
   }
 }
 Enum {

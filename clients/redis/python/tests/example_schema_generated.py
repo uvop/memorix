@@ -64,7 +64,7 @@ class Spaceship(object):
 
 
                 self._namespace_name_tree = ["spaceship", "crew"]
-                self.cache = MemorixCache(self)
+                self.cache = Spaceship.Crew.MemorixCache(self)
 
 
     class MemorixCache(MemorixCacheBase):
@@ -85,7 +85,7 @@ class Spaceship(object):
             self._namespace_name_tree = ["spaceship"]
             self.crew = Spaceship.Crew.Memorix(ref=self)
 
-            self.cache = MemorixCache(self)
+            self.cache = Spaceship.MemorixCache(self)
 
 
 class MemorixCache(MemorixCacheBase):

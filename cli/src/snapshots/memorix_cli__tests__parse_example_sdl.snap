@@ -14,7 +14,7 @@ export namespace messageService {
   export enum Operation {
     START = "START",
     STOP = "STOP",
-}
+  }
 
   export class Memorix extends MemorixBase {
     protected override namespaceNameTree = ["MessageService"];

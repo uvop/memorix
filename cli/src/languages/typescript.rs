@@ -1,6 +1,8 @@
 use crate::{
     parser::{Engine, Value, ALL_CACHE_OPERATIONS, ALL_PUBSUB_OPERATIONS, ALL_TASK_OPERATIONS},
-    validate::{ValidatedNamespace, ValidatedSchema, ValidatedTypeItem},
+    validate::{
+        ValidatedNamespace, ValidatedReferenceTypeItemKind, ValidatedSchema, ValidatedTypeItem,
+    },
 };
 
 fn indent(level: usize) -> String {
@@ -42,7 +44,10 @@ fn type_item_to_code(
                 .namespace_indexes
                 .iter()
                 .fold(&schema.global_namespace, |acc, &i| &acc.namespaces[i].1);
-            namespace.type_items[x.type_item_index].0.clone()
+            match x.kind {
+                ValidatedReferenceTypeItemKind::ToEnum(i) => namespace.enum_items[i].0.clone(),
+                ValidatedReferenceTypeItemKind::ToTypeItem(i) => namespace.type_items[i].0.clone(),
+            }
         }
         ValidatedTypeItem::Boolean => "boolean".to_string(),
         ValidatedTypeItem::String => "string".to_string(),
@@ -77,7 +82,7 @@ fn namespace_to_code(
         result.push_str(&format!(
             r#"{base_indent}export enum {name} {{
 {}
-}}
+{base_indent}}}
 
 "#,
             values

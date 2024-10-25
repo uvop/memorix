@@ -32,6 +32,7 @@ fn flat_type_item_to_code(
                 FlatValidatedReferenceTypeItemKind::ToTypeObjectItem(i) => {
                     namespace.type_object_items[i].0.clone()
                 }
+                FlatValidatedReferenceTypeItemKind::ToEnum(i) => namespace.enum_items[i].0.clone(),
             }
         }
         FlatValidatedTypeItem::Boolean => "bool".to_string(),

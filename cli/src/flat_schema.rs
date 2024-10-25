@@ -1,7 +1,9 @@
 use crate::{
     export_schema::{ExportCacheItem, ExportPubSubItem, ExportTaskItem},
     parser::Engine,
-    validate::{ValidatedNamespace, ValidatedSchema, ValidatedTypeItem},
+    validate::{
+        ValidatedNamespace, ValidatedReferenceTypeItemKind, ValidatedSchema, ValidatedTypeItem,
+    },
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -30,6 +32,7 @@ pub struct FlatValidatedReferenceTypeItem {
 #[derive(Debug, PartialEq, Clone)]
 pub enum FlatValidatedReferenceTypeItemKind {
     ToTypeItem(usize),
+    ToEnum(usize),
     ToTypeObjectItem(usize),
 }
 
@@ -96,7 +99,14 @@ fn type_item_to_flat_type_items(
         ValidatedTypeItem::Reference(x) => {
             FlatValidatedTypeItem::Reference(FlatValidatedReferenceTypeItem {
                 namespace_indexes: namespace_indexes.to_vec(),
-                kind: FlatValidatedReferenceTypeItemKind::ToTypeItem(x.type_item_index),
+                kind: match x.kind {
+                    ValidatedReferenceTypeItemKind::ToEnum(x) => {
+                        FlatValidatedReferenceTypeItemKind::ToEnum(x)
+                    }
+                    ValidatedReferenceTypeItemKind::ToTypeItem(x) => {
+                        FlatValidatedReferenceTypeItemKind::ToTypeItem(x)
+                    }
+                },
             })
         }
         ValidatedTypeItem::U32 => FlatValidatedTypeItem::U32,

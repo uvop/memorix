@@ -31,7 +31,11 @@ fn flat_type_item_to_code(
             );
             format!(
                 "{prefix}{seperator}{name}",
-                prefix = namespace_names.join("."),
+                prefix = namespace_names
+                    .iter()
+                    .map(|x| stringcase::pascal_case(x))
+                    .collect::<Vec<_>>()
+                    .join("."),
                 seperator = match namespace_names.is_empty() {
                     true => "",
                     false => ".",
@@ -42,6 +46,9 @@ fn flat_type_item_to_code(
                     }
                     FlatValidatedReferenceTypeItemKind::ToTypeObjectItem(i) => {
                         namespace.type_object_items[i].0.clone()
+                    }
+                    FlatValidatedReferenceTypeItemKind::ToEnum(i) => {
+                        namespace.enum_items[i].0.clone()
                     }
                 }
             )
@@ -362,8 +369,6 @@ from memorix_client_redis import (
     MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
-    MemorixTaskItemNoReturns,
-    MemorixTaskItemNoKeyNoReturns,
 )
 
 {}"#,
