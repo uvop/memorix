@@ -1,14 +1,12 @@
-import os
-from .example_schema_generated import Animal, Memorix, User
+from .example_schema_generated import Memorix, User
 import multiprocessing
 from time import sleep
 
 
-
 def listen_to_message() -> None:
     memorix = Memorix()
-    for res in memorix.pubsub.message.subscribe():
-        print("message:", res.payload)
+    for payload in memorix.pubsub.message.subscribe():
+        print("message:", payload)
 
 
 def listen_to_algo() -> None:

@@ -4,7 +4,6 @@ import functools
 from .redis_connection import RedisConnection
 
 
-
 class MemorixBase(object):
     def __init__(
         self,

@@ -14,8 +14,14 @@ from memorix_client_redis import (
     MemorixCacheItem,
     MemorixCacheItemNoKey,
     MemorixPubSubBase,
-    MemorixPubSubItem,
-    MemorixPubSubItemNoKey,
+    MemorixPubSubItemTT,
+    MemorixPubSubItemTF,
+    MemorixPubSubItemFT,
+    MemorixPubSubItemFF,
+    MemorixPubSubItemNoKeyTT,
+    MemorixPubSubItemNoKeyTF,
+    MemorixPubSubItemNoKeyFT,
+    MemorixPubSubItemNoKeyFF,
     MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
@@ -38,16 +44,16 @@ class InlineTypeUser(object):
 class InlineCacheKeyUser2(object):
     id: str
 
+
 User = InlineTypeUser
 
-class Spaceship(object):
 
+class Spaceship(object):
     @dataclass
     class InlineCachePayloadPilot(object):
         name: str
 
     class Crew(object):
-
         class MemorixCache(MemorixCacheBase):
             def __init__(self, api: MemorixBase) -> None:
                 super().__init__(api=api)
@@ -57,18 +63,16 @@ class Spaceship(object):
                     id="count",
                     payload_class=int,
                     options=MemorixCacheItem.Options(
-                        ttl='1',
-                    )
+                        ttl="1",
+                    ),
                 )
 
         class Memorix(MemorixBase):
             def __init__(self, ref: MemorixBase) -> None:
                 super().__init__(ref=ref)
 
-
                 self._namespace_name_tree = ["spaceship", "crew"]
                 self.cache = Spaceship.Crew.MemorixCache(self)
-
 
     class MemorixCache(MemorixCacheBase):
         def __init__(self, api: MemorixBase) -> None:
@@ -79,14 +83,13 @@ class Spaceship(object):
                 id="pilot",
                 payload_class=Spaceship.InlineCachePayloadPilot,
                 options=MemorixCacheItem.Options(
-                    ttl='1',
-                )
+                    ttl="1",
+                ),
             )
 
     class Memorix(MemorixBase):
         def __init__(self, ref: MemorixBase) -> None:
             super().__init__(ref=ref)
-
 
             self._namespace_name_tree = ["spaceship"]
             self.crew = Spaceship.Crew.Memorix(ref=self)
@@ -103,48 +106,50 @@ class MemorixCache(MemorixCacheBase):
             id="bestStr",
             payload_class=str,
             options=MemorixCacheItem.Options(
-                ttl='2',
-            )
+                ttl="2",
+            ),
         )
-        self.allUsers = MemorixCacheItemNoKey[typing.List[typing.List[typing.Optional[User]]]](
+        self.allUsers = MemorixCacheItemNoKey[
+            typing.List[typing.List[typing.Optional[User]]]
+        ](
             api=api,
             id="allUsers",
             payload_class=typing.List[typing.List[typing.Optional[User]]],
             options=MemorixCacheItem.Options(
-                ttl='2',
-            )
+                ttl="2",
+            ),
         )
         self.favoriteAnimal = MemorixCacheItem[str, Animal](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
             options=MemorixCacheItem.Options(
-                ttl='2',
-            )
+                ttl="2",
+            ),
         )
         self.user = MemorixCacheItem[str, User](
             api=api,
             id="user",
             payload_class=User,
             options=MemorixCacheItem.Options(
-                ttl='2',
-            )
+                ttl="2",
+            ),
         )
         self.user2 = MemorixCacheItem[InlineCacheKeyUser2, User](
             api=api,
             id="user2",
             payload_class=User,
             options=MemorixCacheItem.Options(
-                ttl='2',
-            )
+                ttl="2",
+            ),
         )
         self.userExpire = MemorixCacheItem[str, User](
             api=api,
             id="userExpire",
             payload_class=User,
             options=MemorixCacheItem.Options(
-                ttl='1',
-            )
+                ttl="1",
+            ),
         )
         self.userExpire2 = MemorixCacheItem[str, User](
             api=api,
@@ -156,9 +161,9 @@ class MemorixCache(MemorixCacheBase):
             id="userExpire3",
             payload_class=User,
             options=MemorixCacheItem.Options(
-                ttl='2',
-                extend_on_get='true',
-            )
+                ttl="2",
+                extend_on_get="true",
+            ),
         )
 
 
@@ -166,7 +171,7 @@ class MemorixPubSub(MemorixPubSubBase):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.message = MemorixPubSubItemNoKey[str, True, False](
+        self.message = MemorixPubSubItemNoKeyTT[str](
             api=api,
             id="message",
             payload_class=str,
@@ -187,14 +192,14 @@ class MemorixTask(MemorixTaskBase):
             id="runAlgoNewest",
             payload_class=str,
             options=MemorixTaskItem.Options(
-                queue_type='lifo',
-            )
+                queue_type="lifo",
+            ),
         )
+
 
 class Memorix(MemorixBase):
     def __init__(self) -> None:
-        super().__init__(redis_url=os.environ['REDIS_URL'])
-
+        super().__init__(redis_url=os.environ["REDIS_URL"])
 
         self._namespace_name_tree = []
         self.spaceship = Spaceship.Memorix(ref=self)

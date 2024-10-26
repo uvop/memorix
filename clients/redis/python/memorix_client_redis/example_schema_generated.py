@@ -14,8 +14,14 @@ from memorix_client_redis import (
     MemorixCacheItem,
     MemorixCacheItemNoKey,
     MemorixPubSubBase,
-    MemorixPubSubItem,
-    MemorixPubSubItemNoKey,
+    MemorixPubSubItemTT,
+    MemorixPubSubItemTF,
+    MemorixPubSubItemFT,
+    MemorixPubSubItemFF,
+    MemorixPubSubItemNoKeyTT,
+    MemorixPubSubItemNoKeyTF,
+    MemorixPubSubItemNoKeyFT,
+    MemorixPubSubItemNoKeyFF,
     MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
@@ -32,6 +38,7 @@ class Animal(str, Enum):
 class InlineTypeUser(object):
     name: str
     age: typing.Optional[int]
+
 
 User = InlineTypeUser
 
@@ -56,7 +63,7 @@ class MemorixPubSub(MemorixPubSubBase):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.message = MemorixPubSubItemNoKey[str, True, True](
+        self.message = MemorixPubSubItemNoKeyTT[str](
             api=api,
             id="message",
             payload_class=str,
@@ -73,10 +80,10 @@ class MemorixTask(MemorixTaskBase):
             payload_class=str,
         )
 
+
 class Memorix(MemorixBase):
     def __init__(self) -> None:
-        super().__init__(redis_url=os.environ['REDIS_URL'])
-
+        super().__init__(redis_url=os.environ["REDIS_URL"])
 
         self._namespace_name_tree = []
         self.cache = MemorixCache(self)

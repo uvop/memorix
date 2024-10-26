@@ -24,13 +24,17 @@ class CacheItem(typing.Generic[KT, PT]):
         self._id = id
         self._payload_class = payload_class
         self._options = options
+        self._has_key = True
+
+    def key(self, key: KT) -> str:
+        return hash_key(api=self._api, id=self._id, key=key, has_key=self._has_key)
 
     def get(
         self,
         key: KT,
     ) -> typing.Optional[PT]:
         data_bytes = self._api._connection.redis.get(
-            hash_key(api=self._api, id=self._id, key=key),
+            self.key(key=key),
         )
         if data_bytes is None:
             return None
@@ -64,7 +68,7 @@ class CacheItem(typing.Generic[KT, PT]):
     ) -> typing.Optional[bool]:
         payload_json = to_json(payload)
         return self._api._connection.redis.set(
-            hash_key(api=self._api, id=self._id, key=key),
+            self.key(key=key),
             payload_json,
             ex=int(self._options.ttl)
             if self._options is not None
@@ -94,11 +98,15 @@ class CacheItem(typing.Generic[KT, PT]):
         self,
         key: KT,
     ) -> None:
-        if self._options is None or self._options.ttl is None or self._options.ttl == "0":
+        if (
+            self._options is None
+            or self._options.ttl is None
+            or self._options.ttl == "0"
+        ):
             return
         ttl = int(self._options.ttl)
 
-        hashed_key = hash_key(api=self._api, id=self._id, key=key)
+        hashed_key = self.key(key=key)
 
         self._api._connection.redis.expire(
             hashed_key,
@@ -127,7 +135,10 @@ class CacheItemNoKey(CacheItem[None, PT]):
 
     # Different signature on purpose
     async def async_get(self) -> typing.Optional[PT]:  # type: ignore
-        casted_self = typing.cast(CacheItem[None, typing.Optional[PT]], self)  # Not sure why needed
+        casted_self = typing.cast(
+            CacheItem[None, typing.Optional[PT]],
+            self,
+        )  # Not sure why needed
         return await CacheItem.async_get(casted_self, key=None)
 
     # Different signature on purpose

@@ -1,7 +1,6 @@
 import asyncio
 import functools
 from memorix_client_redis.hash_key import hash_key
-from uuid import uuid4
 from memorix_client_redis.json import from_json, to_json, bytes_to_str
 import typing
 from memorix_client_redis.memorix_base import MemorixBase
@@ -30,6 +29,10 @@ class TaskItem(typing.Generic[KT, PT]):
         self._id = id
         self._payload_class = payload_class
         self._options = options
+        self._has_key = True
+
+    def key(self, key: KT) -> str:
+        return hash_key(api=self._api, id=self._id, key=key, has_key=self._has_key)
 
     def queue(self, key: KT, payload: PT) -> TaskItemQueue:
         wrapped_payload_json = to_json(
@@ -37,7 +40,7 @@ class TaskItem(typing.Generic[KT, PT]):
         )
 
         queue_size = self._api._connection.redis.rpush(
-            hash_key(api=self._api, id=self._id, key=key),
+            self.key(key=key),
             wrapped_payload_json,
         )
         return TaskItemQueue(queue_size=queue_size)
@@ -54,11 +57,11 @@ class TaskItem(typing.Generic[KT, PT]):
         while True:
             if self._options is not None and self._options.queue_type == "lifo":
                 [channel_bytes, data_bytes] = self._api._connection.redis.brpop(
-                    hash_key(api=self._api, id=self._id, key=key),
+                    self.key(key=key),
                 )
             else:
                 [channel_bytes, data_bytes] = self._api._connection.redis.blpop(
-                    hash_key(api=self._api, id=self._id, key=key),
+                    self.key(key=key),
                 )
 
             data_str = bytes_to_str(data_bytes)
@@ -77,7 +80,7 @@ class TaskItem(typing.Generic[KT, PT]):
 
     def clear(self, key: KT) -> None:
         self._api._connection.redis.delete(
-            hash_key(api=self._api, id=self._id, key=key),
+            self.key(key=key),
         )
 
     async def async_clear(self, key: KT) -> None:

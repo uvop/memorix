@@ -1,9 +1,7 @@
 import typing
 import asyncio
 import pytest
-import os
 from .example_schema_generated import (
-    Animal,
     InlineCacheKeyUser2,
     Spaceship,
     Memorix,
@@ -13,16 +11,18 @@ import multiprocessing
 from time import sleep
 from .timeout import with_timeout
 
+
 def listen_to_message() -> None:
     memorix = Memorix()
-    for res in memorix.pubsub.message.subscribe():
-        print("message:", res.payload)
+    for payload in memorix.pubsub.message.subscribe():
+        print("message:", payload)
 
 
 def listen_to_algo() -> None:
     memorix = Memorix()
     for payload in memorix.task.runAlgo.dequeue():
         print("task:", payload)
+
 
 def test_cache() -> None:
     memorix = Memorix()
@@ -95,9 +95,9 @@ def test_cache_complex_key() -> None:
         raise Exception("Didn't get user from redis")
     assert user.age == 29
 
+
 def test_cache_expire_schema() -> None:
-    memorix = Memorix(
-    )
+    memorix = Memorix()
 
     memorix.cache.userExpire.set(
         "uv",
@@ -114,8 +114,7 @@ def test_cache_expire_schema() -> None:
 
 
 def test_cache_expire_none() -> None:
-    memorix = Memorix(
-    )
+    memorix = Memorix()
 
     memorix.cache.userExpire2.set(
         "uv",
@@ -128,8 +127,7 @@ def test_cache_expire_none() -> None:
 
 
 def test_cache_expire_extending_on_get() -> None:
-    memorix = Memorix(
-    )
+    memorix = Memorix()
 
     memorix.cache.userExpire3.set(
         User(name="uv", age=29),
@@ -175,8 +173,8 @@ async def test_pubsub_async() -> None:
     asyncio.create_task(publish_in_a_second())
 
     payload: typing.Optional[str] = None
-    async for message in memorix.pubsub.message.async_subscribe():
-        payload = message.payload
+    async for msg in memorix.pubsub.message.async_subscribe():
+        payload = msg
         break
 
     assert payload == "buddy"
