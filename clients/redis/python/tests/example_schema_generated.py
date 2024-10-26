@@ -13,15 +13,7 @@ from memorix_client_redis import (
     MemorixCacheBase,
     MemorixCacheItem,
     MemorixCacheItemNoKey,
-    MemorixPubSubBase,
-    MemorixPubSubItemTT,
-    MemorixPubSubItemTF,
-    MemorixPubSubItemFT,
-    MemorixPubSubItemFF,
-    MemorixPubSubItemNoKeyTT,
-    MemorixPubSubItemNoKeyTF,
-    MemorixPubSubItemNoKeyFT,
-    MemorixPubSubItemNoKeyFF,
+    MemorixPubSubAll,
     MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
@@ -167,11 +159,11 @@ class MemorixCache(MemorixCacheBase):
         )
 
 
-class MemorixPubSub(MemorixPubSubBase):
+class MemorixPubSub(MemorixPubSubAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.message = MemorixPubSubItemNoKeyTT[str](
+        self.message = MemorixPubSubAll.ItemNoKeyTT[str](
             api=api,
             id="message",
             payload_class=str,
