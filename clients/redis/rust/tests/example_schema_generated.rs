@@ -20,7 +20,6 @@ pub struct InlineTypeUser {
 pub type User = InlineTypeUser;
 
 pub mod spaceship {
-    use super::*;
 
     #[memorix_client_redis::serialization]
     #[derive(Clone, PartialEq, std::fmt::Debug)]
@@ -29,13 +28,17 @@ pub mod spaceship {
     }
 
     pub mod crew {
-        use super::*;
-
         #[derive(Clone)]
         #[allow(non_snake_case)]
         pub struct MemorixCache {
             pub count: memorix_client_redis::MemorixCacheItemNoKey<
                 i32,
+                memorix_client_redis::Expose,
+                memorix_client_redis::Expose,
+                memorix_client_redis::Expose,
+            >,
+            pub another: memorix_client_redis::MemorixCacheItemNoKey<
+                super::super::User,
                 memorix_client_redis::Expose,
                 memorix_client_redis::Expose,
                 memorix_client_redis::Expose,
@@ -50,6 +53,14 @@ pub mod spaceship {
                     count: memorix_client_redis::MemorixCacheItemNoKey::new(
                         memorix_base.clone(),
                         "count".to_string(),
+                        Some(memorix_client_redis::MemorixCacheOptions {
+                            ttl: None,
+                            extend_on_get: None,
+                        }),
+                    )?,
+                    another: memorix_client_redis::MemorixCacheItemNoKey::new(
+                        memorix_base.clone(),
+                        "another".to_string(),
                         Some(memorix_client_redis::MemorixCacheOptions {
                             ttl: None,
                             extend_on_get: None,

@@ -87,6 +87,9 @@ Namespace spaceship {
       count: {
         payload: i32
       }
+      another: {
+        payload: User
+      }
     }
   }
 }

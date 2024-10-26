@@ -98,7 +98,7 @@ fn type_item_to_flat_type_items(
         }
         ValidatedTypeItem::Reference(x) => {
             FlatValidatedTypeItem::Reference(FlatValidatedReferenceTypeItem {
-                namespace_indexes: namespace_indexes.to_vec(),
+                namespace_indexes: x.namespace_indexes.clone(),
                 kind: match x.kind {
                     ValidatedReferenceTypeItemKind::ToEnum(x) => {
                         FlatValidatedReferenceTypeItemKind::ToEnum(x)
