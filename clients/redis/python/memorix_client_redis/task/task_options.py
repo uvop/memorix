@@ -1,18 +1,9 @@
 import typing
 
 
-class TaskDequequeOptions(object):
+class TaskOptions(object):
     def __init__(
         self,
-        take_newest: typing.Optional[bool] = False,
+        queue_type: typing.Optional[str] = None,
     ) -> None:
-        self.take_newest = take_newest
-
-    @staticmethod
-    def merge(
-        item1: typing.Optional["TaskDequequeOptions"],
-        item2: typing.Optional["TaskDequequeOptions"],
-    ) -> typing.Optional["TaskDequequeOptions"]:
-        if item2 is None:
-            return item1
-        return item2
+        self.queue_type = queue_type

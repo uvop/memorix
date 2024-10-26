@@ -3,24 +3,22 @@ from .example_schema_generated import Animal, Memorix, User
 import multiprocessing
 from time import sleep
 
-redis_url = os.environ["REDIS_URL"]
 
 
 def listen_to_message() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
     for res in memorix.pubsub.message.subscribe():
         print("message:", res.payload)
 
 
 def listen_to_algo() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
     for res in memorix.task.runAlgo.dequeue():
         print("task:", res.payload)
-        res.send_returns(returns=Animal.dog)
 
 
 def start() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.cache.user.set("uv", User(name="uv", age=29))
 
@@ -47,8 +45,6 @@ def start() -> None:
         sleep(0.1)
         queue = memorix.task.runAlgo.queue(payload="Im a task!")
         print("queue_size:", queue.queue_size)
-        res2 = queue.get_returns()
-        print("animal:", res2.value)
 
     sleep(0.2)
     task.kill()

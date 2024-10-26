@@ -5,7 +5,7 @@ from uuid import uuid4
 from memorix_client_redis.json import from_json, to_json, bytes_to_str
 import typing
 from memorix_client_redis.memorix_base import MemorixBase
-from .task_options import TaskDequequeOptions
+from .task_options import TaskOptions
 
 KT = typing.TypeVar("KT")
 PT = typing.TypeVar("PT")
@@ -16,23 +16,15 @@ class TaskItemQueue(object):
         self.queue_size = queue_size
 
 
-class TaskItemDequeue(typing.Generic[PT]):
-    def __init__(
-        self,
-        payload: PT,
-    ) -> None:
-        self.payload = payload
-
-
 class TaskItem(typing.Generic[KT, PT]):
-    Options = TaskDequequeOptions
+    Options = TaskOptions
 
     def __init__(
         self,
         api: MemorixBase,
         id: str,
         payload_class: typing.Type[PT],
-        options: typing.Optional[TaskDequequeOptions] = None,
+        options: typing.Optional[TaskOptions] = None,
     ) -> None:
         self._api = api
         self._id = id
@@ -57,21 +49,10 @@ class TaskItem(typing.Generic[KT, PT]):
     def dequeue(
         self,
         key: KT,
-        options: typing.Optional[TaskDequequeOptions] = None,
-    ) -> typing.Generator[TaskItemDequeue, None, None]:
-        merged_options = self._options
-        if self._api._default_options is not None:
-            merged_options = TaskDequequeOptions.merge(
-                self._api._default_options.task,
-                self._options,
-            )
-        merged_options = TaskDequequeOptions.merge(
-            merged_options,
-            options,
-        )
+    ) -> typing.Generator[PT, None, None]:
 
         while True:
-            if merged_options is not None and merged_options.take_newest:
+            if self._options is not None and self._options.queue_type == "lifo":
                 [channel_bytes, data_bytes] = self._api._connection.redis.brpop(
                     hash_key(api=self._api, id=self._id, key=key),
                 )
@@ -85,17 +66,14 @@ class TaskItem(typing.Generic[KT, PT]):
             payload_str = data_str[1:-1]
             payload = from_json(payload_str, self._payload_class)
 
-            yield typing.cast(
-                TaskItemDequeue,
-                TaskItemDequeue(payload=payload),
-            )
+            yield payload
 
     async def async_dequeue(
         self,
         key: KT,
-    ) -> typing.AsyncGenerator[TaskItemDequeue, None]:
+    ) -> typing.AsyncGenerator[PT, None]:
         print("dequeue async")
-        yield typing.cast(TaskItemDequeue, None)
+        yield typing.cast(PT, None)
 
     def clear(self, key: KT) -> None:
         self._api._connection.redis.delete(

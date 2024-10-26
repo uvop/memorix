@@ -56,12 +56,6 @@ async def test_cache_async_no_key() -> None:
 
     await memorix.cache.bestStr.async_set(
         "uv",
-        Memorix.DefaultOptions.Cache(
-            expire=Memorix.DefaultOptions.Cache.Expire(
-                value=500,
-                is_in_ms=True,
-            ),
-        ),
     )
 
     best_str = await memorix.cache.bestStr.async_get()
@@ -100,30 +94,6 @@ def test_cache_complex_key() -> None:
     if user is None:
         raise Exception("Didn't get user from redis")
     assert user.age == 29
-
-
-def test_cache_expire() -> None:
-    memorix = Memorix()
-
-    memorix.cache.user.set(
-        "uv",
-        User(name="uv", age=29),
-        Memorix.DefaultOptions.Cache(
-            expire=Memorix.DefaultOptions.Cache.Expire(
-                value=500,
-                is_in_ms=True,
-            ),
-        ),
-    )
-
-    user1 = memorix.cache.user.get("uv")
-    if user1 is None:
-        raise Exception("Didn't get user from redis")
-    assert user1.age == 29
-    sleep(0.7)
-    user2 = memorix.cache.user.get("uv")
-    assert user2 is None
-
 
 def test_cache_expire_schema() -> None:
     memorix = Memorix(
@@ -275,7 +245,7 @@ def test_task_options_schema() -> None:
 def test_cache_namespace() -> None:
     memorix = Memorix()
 
-    memorix.spaceship.cache.pilot.set(Spaceship.CachePilotPayload(name="uv"))
+    memorix.spaceship.cache.pilot.set(Spaceship.InlineCachePayloadPilot(name="uv"))
 
     pilot = memorix.spaceship.cache.pilot.get()
     if pilot is None:

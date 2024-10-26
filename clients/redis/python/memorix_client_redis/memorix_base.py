@@ -1,27 +1,24 @@
 import typing
 import asyncio
 import functools
-from .default_options import DefaultOptions
 from .redis_connection import RedisConnection
 
-_DefaultOptions = DefaultOptions
 
 
 class MemorixBase(object):
-    DefaultOptions = _DefaultOptions
-
     def __init__(
         self,
         redis_url: typing.Optional[str] = None,
         ref: typing.Optional["MemorixBase"] = None,
     ) -> None:
-        if ref is None:
+        if ref is None and redis_url is not None:
             self._connection = RedisConnection(redis_url=redis_url)
-        else:
+        elif ref is not None:
             self._connection = ref._connection
+        else:
+            raise Exception("Didn't get redis_url or ref")
 
         self._namespace_name_tree = typing.cast(typing.List[str], [])
-        self._default_options = typing.cast(typing.Optional[_DefaultOptions], None)
 
     def connect(self) -> None:
         self._connection.redis.ping()
