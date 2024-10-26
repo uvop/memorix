@@ -170,7 +170,7 @@ fn namespace_to_code(
                         r#"{base_indent}        self.{name} = MemorixCacheItem{key}{api}](
 {base_indent}            api=api,
 {base_indent}            id="{name}",
-{base_indent}            payload_class={payload},
+{base_indent}            payload_class={payload},{options}
 {base_indent}        )"#,
                         key = match &item.key {
                             None => format!("NoKey[{payload}, "),
@@ -186,7 +186,36 @@ fn namespace_to_code(
                                 false => "False",
                             })
                             .collect::<Vec<_>>()
-                            .join(", ")
+                            .join(", "),
+                        options = {
+                            let content = [
+                                item.ttl.as_ref().map(|x| {
+                                    format!(
+                                        "{base_indent}                ttl={},",
+                                        value_to_code(x)
+                                    )
+                                }),
+                                item.extend_on_get.as_ref().map(|x| {
+                                    format!(
+                                        "{base_indent}                extend_on_get={},",
+                                        value_to_code(x)
+                                    )
+                                }),
+                            ]
+                            .into_iter()
+                            .flatten()
+                            .collect::<Vec<_>>()
+                            .join("\n");
+                            match content.is_empty() {
+                                true => "".to_string(),
+                                false => format!(
+                                    r#"
+{base_indent}            options=MemorixCacheItem.Options(
+{content}
+{base_indent}            )"#
+                                ),
+                            }
+                        }
                     )
                 })
                 .collect::<Vec<_>>()
@@ -254,7 +283,7 @@ fn namespace_to_code(
                         r#"{base_indent}        self.{name} = MemorixTaskItem{key}{api}](
 {base_indent}            api=api,
 {base_indent}            id="{name}",
-{base_indent}            payload_class={payload},
+{base_indent}            payload_class={payload},{options}
 {base_indent}        )"#,
                         key = match &item.key {
                             None => format!("NoKey[{payload}, "),
@@ -270,7 +299,28 @@ fn namespace_to_code(
                                 false => "False",
                             })
                             .collect::<Vec<_>>()
-                            .join(", ")
+                            .join(", "),
+                        options = {
+                            let content = [item.queue_type.as_ref().map(|x| {
+                                format!(
+                                    "{base_indent}                queue_type={},",
+                                    value_to_code(x)
+                                )
+                            })]
+                            .into_iter()
+                            .flatten()
+                            .collect::<Vec<_>>()
+                            .join("\n");
+                            match content.is_empty() {
+                                true => "".to_string(),
+                                false => format!(
+                                    r#"
+{base_indent}            options=MemorixTaskItem.Options(
+{content}
+{base_indent}            )"#
+                                ),
+                            }
+                        }
                     )
                 })
                 .collect::<Vec<_>>()

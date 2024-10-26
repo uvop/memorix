@@ -24,8 +24,6 @@ from memorix_client_redis import (
     MemorixTaskBase,
     MemorixTaskItem,
     MemorixTaskItemNoKey,
-    MemorixTaskItemNoReturns,
-    MemorixTaskItemNoKeyNoReturns,
 )
 
 
@@ -103,6 +101,9 @@ class MessageService(object):
                 api=api,
                 id="message_processing_tasks",
                 payload_class=MessageService.InlineTaskPayloadMessageProcessingTasks,
+                options=MemorixTaskItem.Options(
+                    queue_type='Fifo',
+                )
             )
 
     class Memorix(MemorixBase):
@@ -129,6 +130,9 @@ class MemorixCache(MemorixCacheBase):
             api=api,
             id="user_session",
             payload_class=InlineCachePayloadUserSession,
+            options=MemorixCacheItem.Options(
+                ttl=os.environ['USER_SESSION_TTL'],
+            )
         )
         self.number_of_messages = MemorixCacheItemNoKey[int, True, False, False](
             api=api,
