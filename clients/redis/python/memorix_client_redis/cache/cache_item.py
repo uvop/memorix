@@ -122,7 +122,7 @@ class CacheItem(typing.Generic[KT, PT]):
 
 class CacheItemNoKey(CacheItem[None, PT]):
     # Different signature on purpose
-    def get(self) -> Optional[PT]:  # type: ignore
+    def get(self) -> typing.Optional[PT]:  # type: ignore
         return CacheItem.get(self, key=None)
 
     # Different signature on purpose

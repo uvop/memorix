@@ -92,49 +92,19 @@ class PubSubItem(typing.Generic[KT, PT]):
                     data = from_json(value=data_str, data_class=self._payload_class)
                     yield PubSubItemSubscribe(payload=data)
 
-
-class PubSubItemNoKeyPublishOnly(typing.Protocol[PT]):
-    def publish(self, payload: PT) -> PubSubItemPublish: ...
-    async def async_publish(self, payload: PT) -> PubSubItemPublish: ...
-
-class PubSubItemNoKeySubscribeOnly(typing.Protocol[PT]):
-    def subscribe(self) -> typing.Generator[PubSubItemSubscribe[PT], None, None]: ...
-    def async_subscribe(self) -> typing.AsyncGenerator[PubSubItemSubscribe[PT], None]: ...
-
-class PubSubItemNoKeyPublishAndSubscribe(PubSubItemNoKeyPublishOnly[PT], PubSubItemNoKeySubscribeOnly[PT], typing.Protocol[PT]):
-    pass
-
-class PubSubItemNoKeyNoMethods(typing.Protocol[PT]):
-    pass
-
 class PubSubItemNoKey(PubSubItem[None, PT]):
-    def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
-        super().__init__(api=api, id=id, payload_class=payload_class)
-        self._has_key = False
-
-    @typing.overload
-    def __class_getitem__(cls, params: tuple[type[PT], typing.Literal[True], typing.Literal[True]]) -> type[PubSubItemNoKeyPublishAndSubscribe[PT]]: ...
-
-    @typing.overload
-    def __class_getitem__(cls, params: tuple[type[PT], typing.Literal[True], typing.Literal[False]]) -> type[PubSubItemNoKeyPublishOnly[PT]]: ...
-
-    @typing.overload
-    def __class_getitem__(cls, params: tuple[type[PT], typing.Literal[False], typing.Literal[True]]) -> type[PubSubItemNoKeySubscribeOnly[PT]]: ...
-
-    @typing.overload
-    def __class_getitem__(cls, params: tuple[type[PT], typing.Literal[False], typing.Literal[False]]) -> type[PubSubItemNoKeyNoMethods[PT]]: ...
-
-    def __class_getitem__(cls, params):
-        return super().__class_getitem__(params[0])  # type: ignore
-
+    # Different signature on purpose
     def publish(self, payload: PT) -> PubSubItemPublish:  # type: ignore
         return PubSubItem.publish(self, key=None, payload=payload)
 
+    # Different signature on purpose
     async def async_publish(self, payload: PT) -> PubSubItemPublish:  # type: ignore
         return await PubSubItem.async_publish(self, key=None, payload=payload)
 
-    def subscribe(self) -> Generator[PubSubItemSubscribe[PT], None, None]:  # type: ignore
+    # Different signature on purpose
+    def subscribe(self) -> typing.Generator[PubSubItemSubscribe[PT], None, None]:  # type: ignore
         return PubSubItem.subscribe(self, key=None)
 
-    def async_subscribe(self) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:  # type: ignore
+    # Different signature on purpose
+    def async_subscribe(self) -> typing.AsyncGenerator[PubSubItemSubscribe[PT], None]:  # type: ignore
         return PubSubItem.async_subscribe(self, key=None)

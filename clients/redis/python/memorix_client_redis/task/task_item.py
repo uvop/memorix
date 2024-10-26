@@ -102,11 +102,11 @@ class TaskItemNoKey(TaskItem[None, PT]):
         return await TaskItem.async_queue(self, key=None, payload=payload)
 
     # Different signature on purpose
-    def dequeue(self) -> typing.Generator[TaskItemDequeue, None, None]:  # type: ignore
+    def dequeue(self) -> typing.Generator[PT, None, None]:  # type: ignore
         return TaskItem.dequeue(self, key=None)
 
     # Different signature on purpose
-    async def async_dequeue(self) -> typing.AsyncGenerator[TaskItemDequeue, None]:  # type: ignore
+    async def async_dequeue(self) -> typing.AsyncGenerator[PT, None]:  # type: ignore
         return TaskItem.async_dequeue(self, key=None)
 
     # Different signature on purpose

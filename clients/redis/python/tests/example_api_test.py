@@ -21,8 +21,8 @@ def listen_to_message() -> None:
 
 def listen_to_algo() -> None:
     memorix = Memorix()
-    for res in memorix.task.runAlgo.dequeue():
-        print("task:", res.payload)
+    for payload in memorix.task.runAlgo.dequeue():
+        print("task:", payload)
 
 def test_cache() -> None:
     memorix = Memorix()
@@ -187,8 +187,8 @@ def test_task_dequeue() -> None:
     memorix.task.runAlgo.clear()
     memorix.task.runAlgo.queue(payload="send me dog")
     sleep(0.1)
-    for res in memorix.task.runAlgo.dequeue():
-        assert res.payload == "send me dog"
+    for payload in memorix.task.runAlgo.dequeue():
+        assert payload == "send me dog"
         break
 
 
@@ -235,8 +235,8 @@ def test_task_options_schema() -> None:
     try:
         memorix.task.runAlgoNewest.queue(payload="send me cat")
         memorix.task.runAlgoNewest.queue(payload="send me dog")
-        for res in memorix.task.runAlgoNewest.dequeue():
-            assert res.payload == "send me dog"
+        for payload in memorix.task.runAlgoNewest.dequeue():
+            assert payload == "send me dog"
             break
     finally:
         memorix.task.runAlgo.clear()

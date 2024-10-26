@@ -13,8 +13,8 @@ def listen_to_message() -> None:
 
 def listen_to_algo() -> None:
     memorix = Memorix()
-    for res in memorix.task.runAlgo.dequeue():
-        print("task:", res.payload)
+    for payload in memorix.task.runAlgo.dequeue():
+        print("task:", payload)
 
 
 def start() -> None:
