@@ -2,7 +2,7 @@
   "branches": [
     "master",
     {
-      "name": "next",
+      "name": "new-compiler",
       "prerelease": "rc"
     }
   ],
@@ -14,19 +14,19 @@
       {
         "assets": [
           {
-            "path": "./cli/lib/release/memorix-macos-arm64.tar.gz",
+            "path": "./cli/target/memorix-macos-arm64.tar.gz",
             "label": "memorix-macos-arm64.tar.gz"
           },
           {
-            "path": "./cli/lib/release/memorix-macos-x64.tar.gz",
+            "path": "./cli/target/memorix-macos-x64.tar.gz",
             "label": "memorix-macos-x64.tar.gz"
           },
           {
-            "path": "./cli/lib/release/memorix-linux-x64.tar.gz",
+            "path": "./cli/target/memorix-linux-x64.tar.gz",
             "label": "memorix-linux-x64.tar.gz"
           },
           {
-            "path": "./cli/lib/release/memorix-win-x64.zip",
+            "path": "./cli/target/memorix-win-x64.zip",
             "label": "memorix-win-x64.zip"
           }
         ]
@@ -39,9 +39,9 @@
       }
     ],
     [
-      "@semantic-release/npm",
+      "@semantic-release/jsr",
       {
-        "pkgRoot": "./clients/redis/js"
+        "cwd": "./clients/redis/js"
       }
     ],
     [
@@ -83,7 +83,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "(cd ./cli && yarn install && VERSION=${nextRelease.version} ./scripts/update_package_version.sh && yarn build)",
+        "prepareCmd": "(cd ./cli && VERSION=${nextRelease.version} ./scripts/update_package_version.sh && make build)",
         "publishCmd": "(cd ./cli && VERSION=${nextRelease.version} ./scripts/publish_homebrew_version.sh)"
       }
     ],
