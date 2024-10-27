@@ -182,8 +182,8 @@ async def test_pubsub_async() -> None:
 
 def test_task_dequeue() -> None:
     memorix = Memorix()
-    memorix.task.runAlgo.clear()
-    memorix.task.runAlgo.queue(payload="send me dog")
+    memorix.task.runAlgo.empty()
+    memorix.task.runAlgo.enqueue(payload="send me dog")
     sleep(0.1)
     for payload in memorix.task.runAlgo.dequeue():
         assert payload == "send me dog"
@@ -192,7 +192,7 @@ def test_task_dequeue() -> None:
 
 def test_task() -> None:
     memorix = Memorix()
-    memorix.task.runAlgo.clear()
+    memorix.task.runAlgo.empty()
 
     task1 = multiprocessing.Process(target=listen_to_algo)
     task2 = multiprocessing.Process(target=listen_to_algo)
@@ -200,7 +200,7 @@ def test_task() -> None:
     task2.start()
 
     sleep(0.1)
-    queue = memorix.task.runAlgo.queue(payload="send me cat")
+    queue = memorix.task.runAlgo.enqueue(payload="send me cat")
 
     assert queue.queue_size == 1
 
@@ -212,32 +212,32 @@ def test_task() -> None:
 
 def test_task_clear() -> None:
     memorix = Memorix()
-    memorix.task.runAlgo.clear()
+    memorix.task.runAlgo.empty()
 
     try:
-        queue = memorix.task.runAlgo.queue(payload="send me cat")
-        queue = memorix.task.runAlgo.queue(payload="send me cat")
-        queue = memorix.task.runAlgo.queue(payload="send me cat")
+        queue = memorix.task.runAlgo.enqueue(payload="send me cat")
+        queue = memorix.task.runAlgo.enqueue(payload="send me cat")
+        queue = memorix.task.runAlgo.enqueue(payload="send me cat")
         assert queue.queue_size == 3
-        memorix.task.runAlgo.clear()
-        queue = memorix.task.runAlgo.queue(payload="send me cat")
+        memorix.task.runAlgo.empty()
+        queue = memorix.task.runAlgo.enqueue(payload="send me cat")
         assert queue.queue_size == 1
     finally:
-        memorix.task.runAlgo.clear()
+        memorix.task.runAlgo.empty()
 
 
 def test_task_options_schema() -> None:
     memorix = Memorix()
-    memorix.task.runAlgoNewest.clear()
+    memorix.task.runAlgoNewest.empty()
 
     try:
-        memorix.task.runAlgoNewest.queue(payload="send me cat")
-        memorix.task.runAlgoNewest.queue(payload="send me dog")
+        memorix.task.runAlgoNewest.enqueue(payload="send me cat")
+        memorix.task.runAlgoNewest.enqueue(payload="send me dog")
         for payload in memorix.task.runAlgoNewest.dequeue():
             assert payload == "send me dog"
             break
     finally:
-        memorix.task.runAlgo.clear()
+        memorix.task.runAlgo.empty()
 
 
 def test_cache_namespace() -> None:

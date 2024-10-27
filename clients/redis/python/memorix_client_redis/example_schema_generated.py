@@ -10,13 +10,9 @@ else:
 from enum import Enum
 from memorix_client_redis import (
     MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
+    MemorixCacheAll,
     MemorixPubSubAll,
-    MemorixTaskBase,
-    MemorixTaskItem,
-    MemorixTaskItemNoKey,
+    MemorixTaskAll,
 )
 
 
@@ -35,16 +31,16 @@ class InlineTypeUser(object):
 User = InlineTypeUser
 
 
-class MemorixCache(MemorixCacheBase):
+class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.favoriteAnimal = MemorixCacheItem[str, Animal](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTT[str, Animal](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixCacheItem[str, User](
+        self.user = MemorixCacheAll.ItemTTT[str, User](
             api=api,
             id="user",
             payload_class=User,
@@ -55,18 +51,18 @@ class MemorixPubSub(MemorixPubSubAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.message = MemorixPubSubAll.ItemNoKeyTT[str](
+        self.message = MemorixPubSubAll.ItemTTNoKey[str](
             api=api,
             id="message",
             payload_class=str,
         )
 
 
-class MemorixTask(MemorixTaskBase):
+class MemorixTask(MemorixTaskAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.runAlgo = MemorixTaskItemNoKey[str](
+        self.runAlgo = MemorixTaskAll.ItemTTTTNoKey[str](
             api=api,
             id="runAlgo",
             payload_class=str,

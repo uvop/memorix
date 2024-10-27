@@ -10,13 +10,9 @@ else:
 from enum import Enum
 from memorix_client_redis import (
     MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
+    MemorixCacheAll,
     MemorixPubSubAll,
-    MemorixTaskBase,
-    MemorixTaskItem,
-    MemorixTaskItemNoKey,
+    MemorixTaskAll,
 )
 
 
@@ -46,15 +42,15 @@ class Spaceship(object):
         name: str
 
     class Crew(object):
-        class MemorixCache(MemorixCacheBase):
+        class MemorixCache(MemorixCacheAll.Base):
             def __init__(self, api: MemorixBase) -> None:
                 super().__init__(api=api)
 
-                self.count = MemorixCacheItemNoKey[int](
+                self.count = MemorixCacheAll.ItemTTTNoKey[int](
                     api=api,
                     id="count",
                     payload_class=int,
-                    options=MemorixCacheItem.Options(
+                    options=MemorixCacheAll.Options(
                         ttl="1",
                     ),
                 )
@@ -66,15 +62,17 @@ class Spaceship(object):
                 self._namespace_name_tree = ["spaceship", "crew"]
                 self.cache = Spaceship.Crew.MemorixCache(self)
 
-    class MemorixCache(MemorixCacheBase):
+    class MemorixCache(MemorixCacheAll.Base):
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.pilot = MemorixCacheItemNoKey[Spaceship.InlineCachePayloadPilot](
+            self.pilot = MemorixCacheAll.ItemTTTNoKey[
+                Spaceship.InlineCachePayloadPilot
+            ](
                 api=api,
                 id="pilot",
                 payload_class=Spaceship.InlineCachePayloadPilot,
-                options=MemorixCacheItem.Options(
+                options=MemorixCacheAll.Options(
                     ttl="1",
                 ),
             )
@@ -89,70 +87,70 @@ class Spaceship(object):
             self.cache = Spaceship.MemorixCache(self)
 
 
-class MemorixCache(MemorixCacheBase):
+class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.bestStr = MemorixCacheItemNoKey[str](
+        self.bestStr = MemorixCacheAll.ItemTTTNoKey[str](
             api=api,
             id="bestStr",
             payload_class=str,
-            options=MemorixCacheItem.Options(
+            options=MemorixCacheAll.Options(
                 ttl="2",
             ),
         )
-        self.allUsers = MemorixCacheItemNoKey[
+        self.allUsers = MemorixCacheAll.ItemTTTNoKey[
             typing.List[typing.List[typing.Optional[User]]]
         ](
             api=api,
             id="allUsers",
             payload_class=typing.List[typing.List[typing.Optional[User]]],
-            options=MemorixCacheItem.Options(
+            options=MemorixCacheAll.Options(
                 ttl="2",
             ),
         )
-        self.favoriteAnimal = MemorixCacheItem[str, Animal](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTT[str, Animal](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
-            options=MemorixCacheItem.Options(
+            options=MemorixCacheAll.Options(
                 ttl="2",
             ),
         )
-        self.user = MemorixCacheItem[str, User](
+        self.user = MemorixCacheAll.ItemTTT[str, User](
             api=api,
             id="user",
             payload_class=User,
-            options=MemorixCacheItem.Options(
+            options=MemorixCacheAll.Options(
                 ttl="2",
             ),
         )
-        self.user2 = MemorixCacheItem[InlineCacheKeyUser2, User](
+        self.user2 = MemorixCacheAll.ItemTTT[InlineCacheKeyUser2, User](
             api=api,
             id="user2",
             payload_class=User,
-            options=MemorixCacheItem.Options(
+            options=MemorixCacheAll.Options(
                 ttl="2",
             ),
         )
-        self.userExpire = MemorixCacheItem[str, User](
+        self.userExpire = MemorixCacheAll.ItemTTT[str, User](
             api=api,
             id="userExpire",
             payload_class=User,
-            options=MemorixCacheItem.Options(
+            options=MemorixCacheAll.Options(
                 ttl="1",
             ),
         )
-        self.userExpire2 = MemorixCacheItem[str, User](
+        self.userExpire2 = MemorixCacheAll.ItemTTT[str, User](
             api=api,
             id="userExpire2",
             payload_class=User,
         )
-        self.userExpire3 = MemorixCacheItemNoKey[User](
+        self.userExpire3 = MemorixCacheAll.ItemTTTNoKey[User](
             api=api,
             id="userExpire3",
             payload_class=User,
-            options=MemorixCacheItem.Options(
+            options=MemorixCacheAll.Options(
                 ttl="2",
                 extend_on_get="true",
             ),
@@ -163,27 +161,27 @@ class MemorixPubSub(MemorixPubSubAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.message = MemorixPubSubAll.ItemNoKeyTT[str](
+        self.message = MemorixPubSubAll.ItemTTNoKey[str](
             api=api,
             id="message",
             payload_class=str,
         )
 
 
-class MemorixTask(MemorixTaskBase):
+class MemorixTask(MemorixTaskAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.runAlgo = MemorixTaskItemNoKey[str](
+        self.runAlgo = MemorixTaskAll.ItemTTTTNoKey[str](
             api=api,
             id="runAlgo",
             payload_class=str,
         )
-        self.runAlgoNewest = MemorixTaskItemNoKey[str](
+        self.runAlgoNewest = MemorixTaskAll.ItemTTTTNoKey[str](
             api=api,
             id="runAlgoNewest",
             payload_class=str,
-            options=MemorixTaskItem.Options(
+            options=MemorixTaskAll.Options(
                 queue_type="lifo",
             ),
         )

@@ -41,7 +41,7 @@ def start() -> None:
 
     for _num2 in (1, 2, 3, 4):
         sleep(0.1)
-        queue = memorix.task.runAlgo.queue(payload="Im a task!")
+        queue = memorix.task.runAlgo.enqueue(payload="Im a task!")
         print("queue_size:", queue.queue_size)
 
     sleep(0.2)

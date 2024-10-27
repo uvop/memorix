@@ -66,9 +66,9 @@ fn flat_type_item_to_code(
 
 fn value_to_code(value: &Value) -> String {
     match value {
-        Value::String(x) => format!("'{x}'"),
+        Value::String(x) => format!("\"{x}\""),
         Value::Env(x) => {
-            format!("os.environ['{x}']")
+            format!("os.environ[\"{x}\"]")
         }
     }
 }
@@ -173,10 +173,10 @@ fn namespace_to_code(
 {base_indent}            payload_class={payload},{options}
 {base_indent}        )"#,
                         key = match &item.key {
-                            None => format!("NoKey[{payload}, "),
+                            None => format!("NoKey[{payload}"),
                             Some(key) => {
                                 let key = flat_type_item_to_code(key, schema);
-                                format!("[{key}, {payload}, ")
+                                format!("[{key}, {payload}")
                             }
                         },
                         api = ALL_CACHE_OPERATIONS
@@ -244,10 +244,10 @@ fn namespace_to_code(
 {base_indent}            payload_class={payload},
 {base_indent}        )"#,
                         key = match &item.key {
-                            None => format!("NoKey[{payload}, "),
+                            None => format!("NoKey[{payload}"),
                             Some(key) => {
                                 let key = flat_type_item_to_code(key, schema);
-                                format!("[{key}, {payload}, ")
+                                format!("[{key}, {payload}")
                             }
                         },
                         api = ALL_PUBSUB_OPERATIONS
@@ -286,10 +286,10 @@ fn namespace_to_code(
 {base_indent}            payload_class={payload},{options}
 {base_indent}        )"#,
                         key = match &item.key {
-                            None => format!("NoKey[{payload}, "),
+                            None => format!("NoKey[{payload}"),
                             Some(key) => {
                                 let key = flat_type_item_to_code(key, schema);
-                                format!("[{key}, {payload}, ")
+                                format!("[{key}, {payload}")
                             }
                         },
                         api = ALL_TASK_OPERATIONS

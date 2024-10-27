@@ -139,7 +139,7 @@ class PubSubItemFF(PubSubItem[KT, PT]):
         return self._key(key)
 
 
-class PubSubItemNoKeyTT(PubSubItem[None, PT]):
+class PubSubItemTTNoKey(PubSubItem[None, PT]):
     def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
@@ -160,7 +160,7 @@ class PubSubItemNoKeyTT(PubSubItem[None, PT]):
         return PubSubItem._async_subscribe(self, key=None)
 
 
-class PubSubItemNoKeyTF(PubSubItem[None, PT]):
+class PubSubItemTFNoKey(PubSubItem[None, PT]):
     def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
@@ -175,7 +175,7 @@ class PubSubItemNoKeyTF(PubSubItem[None, PT]):
         return await PubSubItem._async_publish(self, key=None, payload=payload)
 
 
-class PubSubItemNoKeyFT(PubSubItem[None, PT]):
+class PubSubItemFTNoKey(PubSubItem[None, PT]):
     def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
@@ -190,7 +190,7 @@ class PubSubItemNoKeyFT(PubSubItem[None, PT]):
         return PubSubItem._async_subscribe(self, key=None)
 
 
-class PubSubItemNoKeyFF(PubSubItem[None, PT]):
+class PubSubItemFFNoKey(PubSubItem[None, PT]):
     def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
