@@ -39,7 +39,7 @@
       }
     ],
     [
-      "@semantic-release/jsr",
+      "@sebbo2002/semantic-release-jsr",
       {
         "cwd": "./clients/redis/js"
       }

@@ -15,7 +15,7 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^8.0.5",
-    "@semantic-release/jsr": "^2.0.1",
+    "@sebbo2002/semantic-release-jsr": "^2.0.1",
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@unimonkiez/semantic-release-python": "^2.5.35",
     "semantic-release": "^19.0.5"

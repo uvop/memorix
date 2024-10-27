@@ -38,7 +38,7 @@ jobs:
           echo "PATH=$PWD/target/bin:$PATH" >> $GITHUB_ENV
       - uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "20"
           cache: "yarn"
           cache-dependency-path: |
             ./yarn.lock
