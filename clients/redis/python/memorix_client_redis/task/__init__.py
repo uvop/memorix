@@ -1,3 +1,4 @@
+import typing
 import typing_extensions
 from .task_base import TaskBase
 from .task_options import TaskOptions
@@ -36,40 +37,43 @@ from .task_item import (
     TaskItemFFFFNoKey,
 )
 
+KT = typing.TypeVar("KT")
+PT = typing.TypeVar("PT")
+
 
 class All(object):
     Base: typing_extensions.TypeAlias = TaskBase
     Options: typing_extensions.TypeAlias = TaskOptions
 
-    ItemTTTT: typing_extensions.TypeAlias = TaskItemTTTT
-    ItemTTTF: typing_extensions.TypeAlias = TaskItemTTTF
-    ItemTTFT: typing_extensions.TypeAlias = TaskItemTTFT
-    ItemTTFF: typing_extensions.TypeAlias = TaskItemTTFF
-    ItemTFTT: typing_extensions.TypeAlias = TaskItemTFTT
-    ItemTFTF: typing_extensions.TypeAlias = TaskItemTFTF
-    ItemTFFT: typing_extensions.TypeAlias = TaskItemTFFT
-    ItemTFFF: typing_extensions.TypeAlias = TaskItemTFFF
-    ItemFTTT: typing_extensions.TypeAlias = TaskItemFTTT
-    ItemFTTF: typing_extensions.TypeAlias = TaskItemFTTF
-    ItemFTFT: typing_extensions.TypeAlias = TaskItemFTFT
-    ItemFTFF: typing_extensions.TypeAlias = TaskItemFTFF
-    ItemFFTT: typing_extensions.TypeAlias = TaskItemFFTT
-    ItemFFTF: typing_extensions.TypeAlias = TaskItemFFTF
-    ItemFFFT: typing_extensions.TypeAlias = TaskItemFFFT
-    ItemFFFF: typing_extensions.TypeAlias = TaskItemFFFF
-    ItemTTTTNoKey: typing_extensions.TypeAlias = TaskItemTTTTNoKey
-    ItemTTTFNoKey: typing_extensions.TypeAlias = TaskItemTTTFNoKey
-    ItemTTFTNoKey: typing_extensions.TypeAlias = TaskItemTTFTNoKey
-    ItemTTFFNoKey: typing_extensions.TypeAlias = TaskItemTTFFNoKey
-    ItemTFTTNoKey: typing_extensions.TypeAlias = TaskItemTFTTNoKey
-    ItemTFTFNoKey: typing_extensions.TypeAlias = TaskItemTFTFNoKey
-    ItemTFFTNoKey: typing_extensions.TypeAlias = TaskItemTFFTNoKey
-    ItemTFFFNoKey: typing_extensions.TypeAlias = TaskItemTFFFNoKey
-    ItemFTTTNoKey: typing_extensions.TypeAlias = TaskItemFTTTNoKey
-    ItemFTTFNoKey: typing_extensions.TypeAlias = TaskItemFTTFNoKey
-    ItemFTFTNoKey: typing_extensions.TypeAlias = TaskItemFTFTNoKey
-    ItemFTFFNoKey: typing_extensions.TypeAlias = TaskItemFTFFNoKey
-    ItemFFTTNoKey: typing_extensions.TypeAlias = TaskItemFFTTNoKey
-    ItemFFTFNoKey: typing_extensions.TypeAlias = TaskItemFFTFNoKey
-    ItemFFFTNoKey: typing_extensions.TypeAlias = TaskItemFFFTNoKey
-    ItemFFFFNoKey: typing_extensions.TypeAlias = TaskItemFFFFNoKey
+    ItemTTTT: typing_extensions.TypeAlias = TaskItemTTTT[KT, PT]
+    ItemTTTF: typing_extensions.TypeAlias = TaskItemTTTF[KT, PT]
+    ItemTTFT: typing_extensions.TypeAlias = TaskItemTTFT[KT, PT]
+    ItemTTFF: typing_extensions.TypeAlias = TaskItemTTFF[KT, PT]
+    ItemTFTT: typing_extensions.TypeAlias = TaskItemTFTT[KT, PT]
+    ItemTFTF: typing_extensions.TypeAlias = TaskItemTFTF[KT, PT]
+    ItemTFFT: typing_extensions.TypeAlias = TaskItemTFFT[KT, PT]
+    ItemTFFF: typing_extensions.TypeAlias = TaskItemTFFF[KT, PT]
+    ItemFTTT: typing_extensions.TypeAlias = TaskItemFTTT[KT, PT]
+    ItemFTTF: typing_extensions.TypeAlias = TaskItemFTTF[KT, PT]
+    ItemFTFT: typing_extensions.TypeAlias = TaskItemFTFT[KT, PT]
+    ItemFTFF: typing_extensions.TypeAlias = TaskItemFTFF[KT, PT]
+    ItemFFTT: typing_extensions.TypeAlias = TaskItemFFTT[KT, PT]
+    ItemFFTF: typing_extensions.TypeAlias = TaskItemFFTF[KT, PT]
+    ItemFFFT: typing_extensions.TypeAlias = TaskItemFFFT[KT, PT]
+    ItemFFFF: typing_extensions.TypeAlias = TaskItemFFFF[KT, PT]
+    ItemTTTTNoKey: typing_extensions.TypeAlias = TaskItemTTTTNoKey[PT]
+    ItemTTTFNoKey: typing_extensions.TypeAlias = TaskItemTTTFNoKey[PT]
+    ItemTTFTNoKey: typing_extensions.TypeAlias = TaskItemTTFTNoKey[PT]
+    ItemTTFFNoKey: typing_extensions.TypeAlias = TaskItemTTFFNoKey[PT]
+    ItemTFTTNoKey: typing_extensions.TypeAlias = TaskItemTFTTNoKey[PT]
+    ItemTFTFNoKey: typing_extensions.TypeAlias = TaskItemTFTFNoKey[PT]
+    ItemTFFTNoKey: typing_extensions.TypeAlias = TaskItemTFFTNoKey[PT]
+    ItemTFFFNoKey: typing_extensions.TypeAlias = TaskItemTFFFNoKey[PT]
+    ItemFTTTNoKey: typing_extensions.TypeAlias = TaskItemFTTTNoKey[PT]
+    ItemFTTFNoKey: typing_extensions.TypeAlias = TaskItemFTTFNoKey[PT]
+    ItemFTFTNoKey: typing_extensions.TypeAlias = TaskItemFTFTNoKey[PT]
+    ItemFTFFNoKey: typing_extensions.TypeAlias = TaskItemFTFFNoKey[PT]
+    ItemFFTTNoKey: typing_extensions.TypeAlias = TaskItemFFTTNoKey[PT]
+    ItemFFTFNoKey: typing_extensions.TypeAlias = TaskItemFFTFNoKey[PT]
+    ItemFFFTNoKey: typing_extensions.TypeAlias = TaskItemFFFTNoKey[PT]
+    ItemFFFFNoKey: typing_extensions.TypeAlias = TaskItemFFFFNoKey[PT]

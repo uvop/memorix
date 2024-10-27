@@ -419,7 +419,7 @@ class CacheItemNoKey(CacheItem[None, PT]):
         return CacheItem._get(self, key=None)
 
     async def _async_get_no_key(self) -> typing.Optional[PT]:
-        return await CacheItem._async_get(self, key=None) # type: ignore
+        return await CacheItem._async_get(self, key=None)  # type: ignore
 
     def _set_no_key(
         self,

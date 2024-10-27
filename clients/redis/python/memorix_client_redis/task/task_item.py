@@ -33,9 +33,7 @@ class TaskItem(typing.Generic[KT, PT]):
         return hash_key(api=self._api, id=self._id, key=key, has_key=self._has_key)
 
     def _enqueue(self, key: KT, payload: PT) -> TaskItemQueue:
-        wrapped_payload_json = to_json(
-            [payload],
-        )
+        wrapped_payload_json = to_json(payload)
 
         queue_size = self._api._connection.redis.rpush(
             self._key(key=key),
@@ -69,9 +67,7 @@ class TaskItem(typing.Generic[KT, PT]):
                     self._key(key=key),
                 )
 
-            data_str = bytes_to_str(data_bytes)
-
-            payload_str = data_str[1:-1]
+            payload_str = bytes_to_str(data_bytes)
             payload = from_json(payload_str, self._payload_class)
 
             yield payload
