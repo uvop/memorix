@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - next
+      - new-compiler
 
 jobs:
   release:
