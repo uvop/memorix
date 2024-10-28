@@ -23,8 +23,9 @@ jobs:
       - name: Get latest tag
         id: get_tag
         run: |
-          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "v0.0.0")
+          latest_tag=$(git tag -l | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n 1 || echo "v0.0.0")
           echo "latest_tag=${latest_tag}" >> $GITHUB_OUTPUT
+          echo "Latest non rc tag is: ${latest_tag}"
 
       - name: Determine version bump type
         id: bump_type
@@ -32,14 +33,17 @@ jobs:
           # Get commit messages since last tag
           messages=$(git log $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --pretty=format:"%s")
 
-          # Check commit messages for version bump indicators
-          if echo "$messages" | grep -q "^major:"; then
-            echo "type=major" >> $GITHUB_OUTPUT
-          elif echo "$messages" | grep -q "^minor:"; then
-            echo "type=minor" >> $GITHUB_OUTPUT
-          else
-            echo "type=patch" >> $GITHUB_OUTPUT
-          fi
+          bump_type="patch"
+          echo "$messages" | while read -r line; do
+            if [[ "$line" =~ ^major: ]]; then
+              bump_type="major"
+              break
+            elif [[ "$line" =~ ^minor: ]]; then
+              bump_type="minor"
+              break
+            fi
+          done
+          echo "type=$bump_type" >> $GITHUB_OUTPUT
 
       - name: Calculate new version
         id: version
@@ -65,10 +69,10 @@ jobs:
           esac
 
           if [[ "${{ github.ref }}" == "refs/heads/new-compiler" ]]; then
-            # Get current RC number if exists
             rc_num=1
-            if [[ $current_version == *-rc* ]]; then
-              old_rc=$(echo $current_version | grep -o 'rc[0-9]*' | grep -o '[0-9]*')
+            highest_rc=$(git tag -l "v${new_version}-rc*" | grep -E "^v${new_version}-rc[0-9]+$" | sort -V | tail -n 1 || echo "")
+            if [[ ! -z "$highest_rc" ]]; then
+              old_rc=$(echo $highest_rc | grep -o 'rc[0-9]*' | grep -o '[0-9]*')
               rc_num=$((old_rc + 1))
             fi
             new_version="${new_version}-rc${rc_num}"
@@ -98,7 +102,7 @@ jobs:
         run: |
           cd ./cli
           cargo build --release --target x86_64-unknown-linux-gnu
-          cargo build --release --target x86_64-pc-windows-gnu
+          # cargo build --release --target x86_64-pc-windows-gnu
 
       - name: Create tag
         run: |
@@ -117,7 +121,6 @@ jobs:
           name: "Release v${{ steps.version.outputs.new_version }}"
           files: |
             cli/target/x86_64-unknown-linux-gnu/release/memorix
-            cli/target/x86_64-pc-windows-gnu/release/memorix.exe
           draft: false
           prerelease: ${{ github.ref == 'refs/heads/new-compiler' }}
         env:
