@@ -130,43 +130,43 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # build-macos:
-  #   needs: version-and-release
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         ref: "v${{ needs.version-and-release.outputs.new_version }}"
+  build-macos:
+    needs: version-and-release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
 
-  #     - name: Install Rust
-  #       uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: stable
-  #         override: true
-  #         profile: minimal
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
 
-  #     - name: Add targets
-  #       run: |
-  #         rustup target add x86_64-apple-darwin
-  #         rustup target add aarch64-apple-darwin
+      - name: Add targets
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
 
-  #     - name: Build macOS targets
-  #       run: |
-  #         cd ./cli
-  #         cargo build --release --target x86_64-apple-darwin
-  #         mv target/x86_64-apple-darwin/release/memorix target/memorix-macos-x64
-  #         cargo build --release --target aarch64-apple-darwin
-  #         mv target/aarch64-apple-darwin/release/memorix target/memorix-macos-arm64
+      - name: Build macOS targets
+        run: |
+          cd ./cli
+          cargo build --release --target x86_64-apple-darwin
+          mv target/x86_64-apple-darwin/release/memorix target/memorix-macos-x64
+          cargo build --release --target aarch64-apple-darwin
+          mv target/aarch64-apple-darwin/release/memorix target/memorix-macos-arm64
 
-  #     - name: Update GitHub Release
-  #       uses: softprops/action-gh-release@v1
-  #       with:
-  #         tag_name: "v${{ needs.version-and-release.outputs.new_version }}"
-  #         files: |
-  #           cli/target/memorix-macos-x64
-  #           cli/target/memorix-macos-arm64
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ needs.version-and-release.outputs.new_version }}"
+          files: |
+            cli/target/memorix-macos-x64
+            cli/target/memorix-macos-arm64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-client-rust:
     needs: [version-and-release]
@@ -267,8 +267,7 @@ jobs:
           force_orphan: true
 
   publish-homebrew:
-    # needs: [version-and-release, build-macos]
-    needs: [version-and-release]
+    needs: [version-and-release, build-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Update Homebrew formula
