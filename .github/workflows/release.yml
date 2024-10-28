@@ -84,7 +84,6 @@ jobs:
         run: |
           cd ./cli
           sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ steps.version.outputs.new_version }}\"/" Cargo.toml
-          cargo update
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -115,11 +114,8 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add cli/Cargo.toml
-          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
           git tag -a "v${{ steps.version.outputs.new_version }}" -m "Release v${{ steps.version.outputs.new_version }}"
-          git push origin "v${{ steps.version.outputs.new_version }}"
-          git push
+          git push --tags
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -134,9 +130,47 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-macos:
-    needs: version-and-release
-    runs-on: macos-latest
+  # build-macos:
+  #   needs: version-and-release
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+  #     - name: Install Rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: stable
+  #         override: true
+  #         profile: minimal
+
+  #     - name: Add targets
+  #       run: |
+  #         rustup target add x86_64-apple-darwin
+  #         rustup target add aarch64-apple-darwin
+
+  #     - name: Build macOS targets
+  #       run: |
+  #         cd ./cli
+  #         cargo build --release --target x86_64-apple-darwin
+  #         mv target/x86_64-apple-darwin/release/memorix target/memorix-macos-x64
+  #         cargo build --release --target aarch64-apple-darwin
+  #         mv target/aarch64-apple-darwin/release/memorix target/memorix-macos-arm64
+
+  #     - name: Update GitHub Release
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         tag_name: "v${{ needs.version-and-release.outputs.new_version }}"
+  #         files: |
+  #           cli/target/memorix-macos-x64
+  #           cli/target/memorix-macos-arm64
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-client-rust:
+    needs: [version-and-release]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -149,31 +183,82 @@ jobs:
           override: true
           profile: minimal
 
-      - name: Add targets
+      - name: publish
         run: |
-          rustup target add x86_64-apple-darwin
-          rustup target add aarch64-apple-darwin
+          cd ./clients/redis/rust
+          sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
+          cargo publish --allow-dirty
 
-      - name: Build macOS targets
-        run: |
-          cd ./cli
-          cargo build --release --target x86_64-apple-darwin
-          mv target/x86_64-apple-darwin/release/memorix target/memorix-macos-x64
-          cargo build --release --target aarch64-apple-darwin
-          mv target/aarch64-apple-darwin/release/memorix target/memorix-macos-arm64
-
-      - name: Update GitHub Release
-        uses: softprops/action-gh-release@v1
+  publish-client-python:
+    needs: [version-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
         with:
-          tag_name: "v${{ needs.version-and-release.outputs.new_version }}"
-          files: |
-            cli/target/memorix-macos-x64
-            cli/target/memorix-macos-arm64
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - name: Install poetry
+        run: pipx install poetry==1.8.3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.6"
+          cache: "poetry"
+          cache-dependency-path: ./clients/redis/python/poetry.lock
+
+      - name: publish
+        run: |
+          cd ./clients/redis/js
+          sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" pyproject.toml
+          poetry publish
+
+  publish-client-deno:
+    needs: [version-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: "2.0.3"
+
+      - name: publish
+        run: |
+          cd ./clients/redis/js
+          sed -i "0,/\"version\"": \".*\"/s/\"version\"": \".*\"/\"version\"": \"${{ needs.version-and-release.outputs.new_version }}\"/" deno.json
+          deno publish
+
+  publish-docs:
+    needs: [version-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "./docs/package-lock.json"
+
+      - name: build
+        run: |
+          cd ./docs
+          npm install
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/public
+          force_orphan: true
 
   publish-homebrew:
-    needs: [version-and-release, build-macos]
+    # needs: [version-and-release, build-macos]
+    needs: [version-and-release]
     runs-on: ubuntu-latest
     steps:
       - name: Update Homebrew formula
