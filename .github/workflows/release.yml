@@ -33,7 +33,7 @@ jobs:
           messages=$(git log ${{ steps.get_tag.outputs.latest_tag }}..HEAD --pretty=format:"%s")
 
           bump_type="patch"
-          echo "$messages" | while read -r line; do
+          while read -r line; do
             if [[ "$line" =~ ^major: ]]; then
               bump_type="major"
               break
@@ -41,7 +41,7 @@ jobs:
               bump_type="minor"
               break
             fi
-          done
+          done <<< "$messages"
           echo "type=$bump_type" >> $GITHUB_OUTPUT
           echo "Bump type is: ${bump_type}"
 
@@ -107,7 +107,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add Cargo.toml
+          git add cli/Cargo.toml
           git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
           git tag -a "v${{ steps.version.outputs.new_version }}" -m "Release v${{ steps.version.outputs.new_version }}"
           git push origin "v${{ steps.version.outputs.new_version }}"
