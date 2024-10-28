@@ -139,7 +139,7 @@ fn validate_namespace(
                         key: x
                             .key
                             .as_ref()
-                            .and_then(|y| Some(validate_type_item(y, schema, namespace_indexes))),
+                            .map(|y| validate_type_item(y, schema, namespace_indexes)),
                         payload: validate_type_item(&x.payload, schema, namespace_indexes),
                         expose: x.expose.clone(),
                         ttl: x.ttl.clone(),
@@ -158,7 +158,7 @@ fn validate_namespace(
                         key: x
                             .key
                             .as_ref()
-                            .and_then(|y| Some(validate_type_item(y, schema, namespace_indexes))),
+                            .map(|y| validate_type_item(y, schema, namespace_indexes)),
                         payload: validate_type_item(&x.payload, schema, namespace_indexes),
                         expose: x.expose.clone(),
                     },
@@ -175,7 +175,7 @@ fn validate_namespace(
                         key: x
                             .key
                             .as_ref()
-                            .and_then(|y| Some(validate_type_item(y, schema, namespace_indexes))),
+                            .map(|y| validate_type_item(y, schema, namespace_indexes)),
                         payload: validate_type_item(&x.payload, schema, namespace_indexes),
                         expose: x.expose.clone(),
                         queue_type: x.queue_type.clone(),
@@ -208,6 +208,6 @@ fn validate_namespace(
 pub fn validate_schema(schema: &ExportSchema) -> ValidatedSchema {
     ValidatedSchema {
         engine: schema.engine.clone(),
-        global_namespace: validate_namespace(&schema.global_namespace, &schema, &vec![]),
+        global_namespace: validate_namespace(&schema.global_namespace, schema, &[]),
     }
 }

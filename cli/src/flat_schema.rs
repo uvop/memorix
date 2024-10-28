@@ -31,9 +31,9 @@ pub struct FlatValidatedReferenceTypeItem {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum FlatValidatedReferenceTypeItemKind {
-    ToTypeItem(usize),
-    ToEnum(usize),
-    ToTypeObjectItem(usize),
+    TypeItem(usize),
+    Enum(usize),
+    TypeObjectItem(usize),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -91,7 +91,7 @@ fn type_item_to_flat_type_items(
             type_item_objects.push((ctx.to_string(), TypeObjectItem { properties }));
             FlatValidatedTypeItem::Reference(FlatValidatedReferenceTypeItem {
                 namespace_indexes: namespace_indexes.to_vec(),
-                kind: FlatValidatedReferenceTypeItemKind::ToTypeObjectItem(
+                kind: FlatValidatedReferenceTypeItemKind::TypeObjectItem(
                     type_item_objects.len() - 1,
                 ),
             })
@@ -101,10 +101,10 @@ fn type_item_to_flat_type_items(
                 namespace_indexes: x.namespace_indexes.clone(),
                 kind: match x.kind {
                     ValidatedReferenceTypeItemKind::ToEnum(x) => {
-                        FlatValidatedReferenceTypeItemKind::ToEnum(x)
+                        FlatValidatedReferenceTypeItemKind::Enum(x)
                     }
                     ValidatedReferenceTypeItemKind::ToTypeItem(x) => {
-                        FlatValidatedReferenceTypeItemKind::ToTypeItem(x)
+                        FlatValidatedReferenceTypeItemKind::TypeItem(x)
                     }
                 },
             })
@@ -201,13 +201,13 @@ fn namespace_to_flat_namespace(
             (
                 k.clone(),
                 ExportTaskItem {
-                    key: x.key.as_ref().and_then(|y| {
-                        Some(type_item_to_flat_type_items(
+                    key: x.key.as_ref().map(|y| {
+                        type_item_to_flat_type_items(
                             &concat_with_key("InlineTaskKey", k),
                             y,
                             namespace_indexes,
                             &mut type_object_items,
-                        ))
+                        )
                     }),
                     payload: type_item_to_flat_type_items(
                         &concat_with_key("InlineTaskPayload", k),

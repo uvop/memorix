@@ -152,16 +152,16 @@ pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<(), PrettyError<Stri
 
 enum Command {
     Codegen,
-    Format
+    Format,
 }
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> Result<(), PrettyError<String>> {
     let args: Vec<String> = std::env::args().collect();
     if args[1] == "--version" {
-      println!("v{}", VERSION);
-      return Ok(())
+        println!("v{}", VERSION);
+        return Ok(());
     }
     if args.len() < 3 {
         return Err("Usage: [codegen/format] <path_to_sdl_file>"

@@ -299,7 +299,7 @@ pub fn codegen(schema: &ValidatedSchema) -> String {
 import {{ MemorixBase, getEnvVariable }} from "@memorix/client-redis";
 
 {}"#,
-        namespace_to_code(&schema.global_namespace, vec![], &schema)
+        namespace_to_code(&schema.global_namespace, vec![], schema)
     )
     .to_string()
 }

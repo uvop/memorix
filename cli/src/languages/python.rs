@@ -41,13 +41,13 @@ fn flat_type_item_to_code(
                     false => ".",
                 },
                 name = match x.kind {
-                    FlatValidatedReferenceTypeItemKind::ToTypeItem(i) => {
+                    FlatValidatedReferenceTypeItemKind::TypeItem(i) => {
                         namespace.flat_type_items[i].0.clone()
                     }
-                    FlatValidatedReferenceTypeItemKind::ToTypeObjectItem(i) => {
+                    FlatValidatedReferenceTypeItemKind::TypeObjectItem(i) => {
                         namespace.type_object_items[i].0.clone()
                     }
-                    FlatValidatedReferenceTypeItemKind::ToEnum(i) => {
+                    FlatValidatedReferenceTypeItemKind::Enum(i) => {
                         namespace.enum_items[i].0.clone()
                     }
                 }
@@ -356,7 +356,7 @@ fn namespace_to_code(
 {base_indent}        super().__init__(redis_url={redis_url})
 "#,
                 redis_url = match &schema.engine {
-                    Engine::Redis(x) => format!("{}", value_to_code(x)),
+                    Engine::Redis(x) => value_to_code(x),
                 }
             ),
             false => format!(
@@ -416,7 +416,7 @@ from memorix_client_redis import (
 )
 
 {}"#,
-        namespace_to_code(&schema.global_namespace, vec![], &schema)
+        namespace_to_code(&schema.global_namespace, vec![], schema)
     )
     .to_string()
 }

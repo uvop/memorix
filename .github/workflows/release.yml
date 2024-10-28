@@ -186,7 +186,13 @@ jobs:
       - name: publish
         run: |
           cd ./clients/redis/rust
+          cd macros
           sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
+          CARGO_REGISTRY_TOKEN=${{ secrets.CARGO_REGISTRY_TOKEN }} cargo publish --allow-dirty
+          sleep 30
+          cd ..
+          sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
+          sed -i "0,/memorix-client-redis-macros = { version = \"=.*\"/s/memorix-client-redis-macros = { version = \"=.*\"/memorix-client-redis-macros = { version = \"=${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
           CARGO_REGISTRY_TOKEN=${{ secrets.CARGO_REGISTRY_TOKEN }} cargo publish --allow-dirty
 
   publish-client-python:
@@ -231,7 +237,7 @@ jobs:
         run: |
           cd ./clients/redis/js
           sed -i "0,/\"version\": \".*\"/s/\"version\": \".*\"/\"version\": \"${{ needs.version-and-release.outputs.new_version }}\"/" deno.json
-          deno publish
+          deno publish --allow-dirty
 
   publish-docs:
     needs: [version-and-release]

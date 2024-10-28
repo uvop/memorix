@@ -31,13 +31,13 @@ fn flat_type_item_to_code(
                 .iter()
                 .fold(&schema.global_namespace, |acc, &i| &acc.namespaces[i].1);
             let name = match x.kind {
-                FlatValidatedReferenceTypeItemKind::ToTypeItem(i) => {
+                FlatValidatedReferenceTypeItemKind::TypeItem(i) => {
                     namespace.flat_type_items[i].0.clone()
                 }
-                FlatValidatedReferenceTypeItemKind::ToTypeObjectItem(i) => {
+                FlatValidatedReferenceTypeItemKind::TypeObjectItem(i) => {
                     namespace.type_object_items[i].0.clone()
                 }
-                FlatValidatedReferenceTypeItemKind::ToEnum(i) => namespace.enum_items[i].0.clone(),
+                FlatValidatedReferenceTypeItemKind::Enum(i) => namespace.enum_items[i].0.clone(),
             };
             format!(
                 "{super}{name}",
@@ -482,7 +482,7 @@ pub fn codegen(schema: &FlatValidatedSchema) -> String {
 extern crate memorix_client_redis;
 
 {}"#,
-        namespace_to_code(&schema.global_namespace, vec![], &schema,)
+        namespace_to_code(&schema.global_namespace, vec![], schema,)
     )
     .to_string()
 }
