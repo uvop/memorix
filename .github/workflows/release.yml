@@ -187,7 +187,7 @@ jobs:
         run: |
           cd ./clients/redis/rust
           sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
-          cargo publish --allow-dirty
+          CARGO_REGISTRY_TOKEN=${{ secrets.CARGO_REGISTRY_TOKEN }} cargo publish --allow-dirty
 
   publish-client-python:
     needs: [version-and-release]
@@ -207,9 +207,9 @@ jobs:
 
       - name: publish
         run: |
-          cd ./clients/redis/js
+          cd ./clients/redis/python
           sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" pyproject.toml
-          poetry publish
+          PYPI_TOKEN=${{ secrets.PYPI_TOKEN }} poetry publish
 
   publish-client-deno:
     needs: [version-and-release]
@@ -226,7 +226,7 @@ jobs:
       - name: publish
         run: |
           cd ./clients/redis/js
-          sed -i "0,/\"version\"": \".*\"/s/\"version\"": \".*\"/\"version\"": \"${{ needs.version-and-release.outputs.new_version }}\"/" deno.json
+          sed -i "0,/\"version\": \".*\"/s/\"version\": \".*\"/\"version\": \"${{ needs.version-and-release.outputs.new_version }}\"/" deno.json
           deno publish
 
   publish-docs:
