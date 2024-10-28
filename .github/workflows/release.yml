@@ -4,64 +4,165 @@ on:
   push:
     branches:
       - master
-      - next
       - new-compiler
 
 jobs:
-  release:
+  version-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: write
+      packages: write
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
+
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          persist-credentials: false
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=${latest_tag}" >> $GITHUB_OUTPUT
+
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          # Get commit messages since last tag
+          messages=$(git log $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --pretty=format:"%s")
+
+          # Check commit messages for version bump indicators
+          if echo "$messages" | grep -q "^major:"; then
+            echo "type=major" >> $GITHUB_OUTPUT
+          elif echo "$messages" | grep -q "^minor:"; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate new version
+        id: version
+        run: |
+          current_version=${latest_tag#v}
+
+          # Parse version components
+          major=$(echo $current_version | cut -d. -f1)
+          minor=$(echo $current_version | cut -d. -f2)
+          patch=$(echo $current_version | cut -d. -f3 | cut -d- -f1)
+
+          # Calculate new version based on bump type
+          case "${{ steps.bump_type.outputs.type }}" in
+            major)
+              new_version="$((major + 1)).0.0"
+              ;;
+            minor)
+              new_version="${major}.$((minor + 1)).0"
+              ;;
+            patch)
+              new_version="${major}.${minor}.$((patch + 1))"
+              ;;
+          esac
+
+          if [[ "${{ github.ref }}" == "refs/heads/new-compiler" ]]; then
+            # Get current RC number if exists
+            rc_num=1
+            if [[ $current_version == *-rc* ]]; then
+              old_rc=$(echo $current_version | grep -o 'rc[0-9]*' | grep -o '[0-9]*')
+              rc_num=$((old_rc + 1))
+            fi
+            new_version="${new_version}-rc${rc_num}"
+          fi
+
+          echo "new_version=${new_version}" >> $GITHUB_OUTPUT
+          echo "New version will be: ${new_version}"
+
+      - name: Update Cargo.toml version
+        run: |
+          cd ./cli
+          sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ steps.version.outputs.new_version }}\"/" Cargo.toml
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          targets: x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu, x86_64-apple-darwin
+          targets: x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu
           override: true
+
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64-x86-64 gcc-multilib clang
-      - name: Set up OSXCross
+          sudo apt-get install -y gcc-mingw-w64-x86-64 gcc-multilib
+
+      - name: Build all targets
         run: |
-          git clone https://github.com/tpoechtrager/osxcross
-          cd osxcross
-          wget -nc https://github.com/joseluisq/macosx-sdks/releases/download/12.3/MacOSX12.3.sdk.tar.xz
-          mv MacOSX12.3.sdk.tar.xz tarballs/
-          UNATTENDED=1 ./build.sh
-          echo "PATH=$PWD/target/bin:$PATH" >> $GITHUB_ENV
-      - uses: actions/setup-node@v3
+          cd ./cli
+          cargo build --release --target x86_64-unknown-linux-gnu
+          cargo build --release --target x86_64-pc-windows-gnu
+
+      - name: Create tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Cargo.toml
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+          git tag -a "v${{ steps.version.outputs.new_version }}" -m "Release v${{ steps.version.outputs.new_version }}"
+          git push origin "v${{ steps.version.outputs.new_version }}"
+          git push
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          node-version: "20"
-          cache: "yarn"
-          cache-dependency-path: |
-            ./yarn.lock
-            ./cli/yarn.lock
-            ./clients/redis/js/yarn.lock
-      - name: Install poetry
-        run: pipx install poetry==1.8.3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10.6"
-          cache: "poetry"
-          cache-dependency-path: ./clients/redis/python/poetry.lock
-      - name: Install dependencies
-        run: yarn install
-      - uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.GH_SSH_PRIVATE_KEY }}
-      - name: Create empty docs build dir
-        run: mkdir ./docs/public
-      - name: Semantic release
+          tag_name: "v${{ steps.version.outputs.new_version }}"
+          name: "Release v${{ steps.version.outputs.new_version }}"
+          files: |
+            cli/target/x86_64-unknown-linux-gnu/release/memorix
+            cli/target/x86_64-pc-windows-gnu/release/memorix.exe
+          draft: false
+          prerelease: ${{ github.ref == 'refs/heads/new-compiler' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: npx semantic-release
+
+  build-macos:
+    needs: version-and-release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          targets: x86_64-apple-darwin, aarch64-apple-darwin
+          override: true
+
+      - name: Build macOS targets
+        run: |
+          cd ./cli
+          cargo build --release --target x86_64-apple-darwin
+          cargo build --release --target aarch64-apple-darwin
+
+      - name: Update GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ needs.version-and-release.outputs.new_version }}"
+          files: |
+            cli/target/x86_64-apple-darwin/release/memorix
+            cli/target/aarch64-apple-darwin/release/memorix
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-homebrew:
+    needs: [version-and-release, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Homebrew formula
+        uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          formula-name: memorix
+          homebrew-tap: uvop/homebrew-memorix
+          tag-name: "v${{ needs.version-and-release.outputs.new_version }}"
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
