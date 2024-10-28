@@ -209,11 +209,14 @@ jobs:
         run: |
           cd ./clients/redis/python
           sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" pyproject.toml
-          PYPI_TOKEN=${{ secrets.PYPI_TOKEN }} poetry publish
+          PYPI_TOKEN=${{ secrets.PYPI_TOKEN }} poetry publish --build
 
   publish-client-deno:
     needs: [version-and-release]
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v3
         with:
