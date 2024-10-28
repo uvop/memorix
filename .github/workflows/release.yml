@@ -209,7 +209,8 @@ jobs:
         run: |
           cd ./clients/redis/python
           sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" pyproject.toml
-          PYPI_TOKEN=${{ secrets.PYPI_TOKEN }} poetry publish --build
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry publish --build
 
   publish-client-deno:
     needs: [version-and-release]

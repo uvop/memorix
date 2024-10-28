@@ -64,9 +64,7 @@ export class MemorixBase {
   }
 
   protected getNamespaceItem<T extends MemorixBase>(
-    NamespaceClass: new (
-      ...arg: ConstructorParameters<typeof MemorixBase>
-    ) => T,
+    NamespaceClass: new (...arg: ConstructorParameters<typeof MemorixBase>) => T
   ): T {
     return new NamespaceClass(this);
   }
@@ -76,11 +74,11 @@ export class MemorixBase {
     Payload,
     CanGet extends boolean,
     CanSet extends boolean,
-    CanDelete extends boolean,
+    CanDelete extends boolean
   >(
     identifier: string,
-    options: types.CacheOptions = {},
-  ) {
+    options: types.CacheOptions = {}
+  ): types.CacheItem<Key, Payload, CanGet, CanSet, CanDelete> {
     const { ttl: ttlStr = "0", extendOnGet: extendOnGetStr = "false" } =
       options;
 
@@ -96,7 +94,7 @@ export class MemorixBase {
       extendOnGet = false;
     } else {
       throw new Error(
-        `Exptected extendOnGet to be a boolean, got "${extendOnGetStr}"`,
+        `Exptected extendOnGet to be a boolean, got "${extendOnGetStr}"`
       );
     }
     const item = {
@@ -105,7 +103,7 @@ export class MemorixBase {
         return hashKey(
           (item as any).hasKey
             ? [...this.namespaceNameTree, identifier, key]
-            : [...this.namespaceNameTree, identifier],
+            : [...this.namespaceNameTree, identifier]
         );
       },
       extend: async (key: Key) => {
@@ -133,30 +131,22 @@ export class MemorixBase {
         await this.redis.set(
           hashedKey,
           JSON.stringify(payload),
-          ...(params as any),
+          ...(params as any)
         );
       },
       delete: async (key: Key) => {
         const hashedKey = item.key(key);
-        await this.redis.del(
-          hashedKey,
-        );
+        await this.redis.del(hashedKey);
       },
     };
-    return item as any as types.CacheItem<
-      Key,
-      Payload,
-      CanGet,
-      CanSet,
-      CanDelete
-    >;
+    return item as any;
   }
 
   protected getCacheItemNoKey<
     Payload,
     CanGet extends boolean,
     CanSet extends boolean,
-    CanDelete extends boolean,
+    CanDelete extends boolean
   >(
     ...itemArgs: any[]
   ): types.CacheItemNoKey<Payload, CanGet, CanSet, CanDelete> {
@@ -176,24 +166,24 @@ export class MemorixBase {
     Key,
     Payload,
     CanPublish extends boolean,
-    CanSubscribe extends boolean,
+    CanSubscribe extends boolean
   >(
-    identifier: string,
-  ) {
+    identifier: string
+  ): types.PubSubItem<Key, Payload, CanPublish, CanSubscribe> {
     const item = {
       hasKey: true,
       key: (key: Key | undefined) => {
         return hashKey(
           item.hasKey
             ? [...this.namespaceNameTree, identifier, key]
-            : [...this.namespaceNameTree, identifier],
+            : [...this.namespaceNameTree, identifier]
         );
       },
       publish: async (key: Key, payload: Payload) => {
         const hashedKey = item.key(key);
         const subscribersSize = await this.redis.publish(
           hashedKey,
-          JSON.stringify(payload),
+          JSON.stringify(payload)
         );
         return { subscribersSize };
       },
@@ -226,10 +216,10 @@ export class MemorixBase {
                 }
                 this.subscriptionCallbacks.set(
                   hashedKey,
-                  callbacks.filter((_, i) => i !== callbackIndex),
+                  callbacks.filter((_, i) => i !== callbackIndex)
                 );
               },
-            },
+            }
           );
           return {
             asyncIterator,
@@ -262,24 +252,19 @@ export class MemorixBase {
             }
             this.subscriptionCallbacks.set(
               hashedKey,
-              callbacks.filter((_, i) => i !== callbackIndex),
+              callbacks.filter((_, i) => i !== callbackIndex)
             );
           },
         } as any;
       },
     };
-    return item as any as types.PubSubItem<
-      Key,
-      Payload,
-      CanPublish,
-      CanSubscribe
-    >;
+    return item as any;
   }
 
   protected getPubsubItemNoKey<
     Payload,
     CanPublish extends boolean,
-    CanSubscribe extends boolean,
+    CanSubscribe extends boolean
   >(
     ...itemArgs: any[]
   ): types.PubSubItemNoKey<Payload, CanPublish, CanSubscribe> {
@@ -299,11 +284,11 @@ export class MemorixBase {
     CanEnqueue extends boolean,
     CanDequeue extends boolean,
     CanEmpty extends boolean,
-    CanGetLen extends boolean,
+    CanGetLen extends boolean
   >(
     identifier: string,
-    options: types.TaskOptions = {},
-  ) {
+    options: types.TaskOptions = {}
+  ): types.TaskItem<Key, Payload, CanEnqueue, CanDequeue, CanEmpty, CanGetLen> {
     const { queueType: queueTypeStr = "fifo" } = options;
     let queueType: QueueType;
     if (queueTypeStr === QueueType.FIFO) {
@@ -312,9 +297,9 @@ export class MemorixBase {
       queueType = QueueType.LIFO;
     } else {
       throw new Error(
-        `Exptected queueType to be a on of ${
-          Object.values(QueueType).join(", ")
-        }, got "${queueTypeStr}"`,
+        `Exptected queueType to be a on of ${Object.values(QueueType).join(
+          ", "
+        )}, got "${queueTypeStr}"`
       );
     }
 
@@ -324,7 +309,7 @@ export class MemorixBase {
         return hashKey(
           item.hasKey
             ? [...this.namespaceNameTree, identifier, key]
-            : [...this.namespaceNameTree, identifier],
+            : [...this.namespaceNameTree, identifier]
         );
       },
       enqueue: async (key: Key, payload: Payload) => {
@@ -332,7 +317,7 @@ export class MemorixBase {
 
         const queueSize = await this.redis.rpush(
           hashedKey,
-          JSON.stringify(payload),
+          JSON.stringify(payload)
         );
 
         return {
@@ -341,7 +326,7 @@ export class MemorixBase {
       },
       dequeue: async (
         key: Key,
-        callback?: types.TaskDequeueCallback<Payload>,
+        callback?: types.TaskDequeueCallback<Payload>
       ) => {
         const hashedKey = item.key(key);
         const redisClient = this.redis.duplicate();
@@ -350,31 +335,29 @@ export class MemorixBase {
         let isStopped = false;
 
         const pop = () =>
-          new Promise<{ value?: Payload }>(
-            (res, rej) => {
-              redisClient[queueType === QueueType.LIFO ? "brpop" : "blpop"](
-                hashedKey,
-                0,
-                (err, popValue) => {
-                  if (err) {
-                    if (isStopped) {
-                      res({ value: undefined });
-                    } else {
-                      rej(err);
-                    }
-                    return;
+          new Promise<{ value?: Payload }>((res, rej) => {
+            redisClient[queueType === QueueType.LIFO ? "brpop" : "blpop"](
+              hashedKey,
+              0,
+              (err, popValue) => {
+                if (err) {
+                  if (isStopped) {
+                    res({ value: undefined });
+                  } else {
+                    rej(err);
                   }
-                  if (!popValue) {
-                    return;
-                  }
-                  const [, payloadStr] = popValue;
-                  const payload: Payload = JSON.parse(payloadStr);
+                  return;
+                }
+                if (!popValue) {
+                  return;
+                }
+                const [, payloadStr] = popValue;
+                const payload: Payload = JSON.parse(payloadStr);
 
-                  res({ value: payload });
-                },
-              );
-            },
-          );
+                res({ value: payload });
+              }
+            );
+          });
         let currentPop: undefined | ReturnType<typeof pop>;
 
         if (callback === undefined) {
@@ -422,7 +405,7 @@ export class MemorixBase {
               redisClient[queueType === QueueType.LIFO ? "brpop" : "blpop"](
                 hashedKey,
                 0,
-                cb,
+                cb
               );
 
               const [, payloadStr] = blpop;
@@ -434,7 +417,7 @@ export class MemorixBase {
           redisClient[queueType === QueueType.LIFO ? "brpop" : "blpop"](
             hashedKey,
             0,
-            cb,
+            cb
           );
         });
 
@@ -460,14 +443,7 @@ export class MemorixBase {
       },
     };
 
-    return item as any as types.TaskItem<
-      Key,
-      Payload,
-      CanEnqueue,
-      CanDequeue,
-      CanEmpty,
-      CanGetLen
-    >;
+    return item as any;
   }
 
   protected getTaskItemNoKey<
@@ -475,7 +451,7 @@ export class MemorixBase {
     CanEnqueue extends boolean,
     CanDequeue extends boolean,
     CanEmpty extends boolean,
-    CanGetLen extends boolean,
+    CanGetLen extends boolean
   >(
     ...itemArgs: any[]
   ): types.TaskItemNoKey<Payload, CanEnqueue, CanDequeue, CanEmpty, CanGetLen> {
