@@ -106,9 +106,9 @@ jobs:
         run: |
           cd ./cli
           cargo build --release --target x86_64-unknown-linux-gnu
-          mv cli/target/x86_64-unknown-linux-gnu/release/memorix cli/target/memorix-linux-x64
+          mv target/x86_64-unknown-linux-gnu/release/memorix target/memorix-linux-x64
           cargo build --release --target x86_64-pc-windows-gnu
-          mv cli/target/x86_64-pc-windows-gnu/release/memorix.exe cli/target/memorix.exe
+          mv target/x86_64-pc-windows-gnu/release/memorix.exe target/memorix.exe
 
       - name: Create tag
         run: |
@@ -157,9 +157,9 @@ jobs:
         run: |
           cd ./cli
           cargo build --release --target x86_64-apple-darwin
-          mv cli/target/x86_64-apple-darwin/release/memorix cli/target/memorix-macos-x64
+          mv target/x86_64-apple-darwin/release/memorix target/memorix-macos-x64
           cargo build --release --target aarch64-apple-darwin
-          mv cli/target/aarch64-apple-darwin/release/memorix cli/target/memorix-macos-arm64
+          mv target/aarch64-apple-darwin/release/memorix target/memorix-macos-arm64
 
       - name: Update GitHub Release
         uses: softprops/action-gh-release@v1
