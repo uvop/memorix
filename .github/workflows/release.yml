@@ -84,6 +84,7 @@ jobs:
         run: |
           cd ./cli
           sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ steps.version.outputs.new_version }}\"/" Cargo.toml
+          cargo update
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -176,10 +177,74 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Update Homebrew formula
-        uses: mislav/bump-homebrew-formula-action@v3
-        with:
-          formula-name: memorix
-          homebrew-tap: uvop/homebrew-memorix
-          tag-name: "v${{ needs.version-and-release.outputs.new_version }}"
-        env:
-          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+        run: |
+          # Clone the tap repository
+          git clone https://github.com/uvop/homebrew-memorix.git
+          cd homebrew-memorix
+
+          # Configure git
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+
+          # Update formula version
+          VERSION="${{ needs.version-and-release.outputs.new_version }}"
+          
+          # Download and get SHA256 for each binary
+          ARM64_SHA=$(curl -sL https://github.com/uvop/memorix/releases/download/v${VERSION}/memorix-macos-arm64 | shasum -a 256 | cut -d' ' -f1)
+          X64_SHA=$(curl -sL https://github.com/uvop/memorix/releases/download/v${VERSION}/memorix-macos-x64 | shasum -a 256 | cut -d' ' -f1)
+          LINUX_SHA=$(curl -sL https://github.com/uvop/memorix/releases/download/v${VERSION}/memorix-linux-x64 | shasum -a 256 | cut -d' ' -f1)
+
+          # Create new formula content
+          cat > Formula/memorix.rb << "EOL"
+class Memorix < Formula
+  desc "Memorix - CLI"
+  homepage "https://github.com/uvop/memorix"
+  version "${VERSION}"
+  license "MIT"
+
+  on_macos do
+    if Hardware::CPU.arm?
+      url "https://github.com/uvop/memorix/releases/download/v#{version}/memorix-macos-arm64"
+      sha256 "${ARM64_SHA}"
+    else
+      url "https://github.com/uvop/memorix/releases/download/v#{version}/memorix-macos-x64"
+      sha256 "${X64_SHA}"
+    end
+  end
+  
+  on_linux do
+    url "https://github.com/uvop/memorix/releases/download/v#{version}/memorix-linux-x64"
+    sha256 "${LINUX_SHA}"
+  end
+
+  def install
+    # Rename the downloaded binary to 'memorix'
+    binary_name = if OS.mac?
+      if Hardware::CPU.arm?
+        "memorix-macos-arm64"
+      else
+        "memorix-macos-x64"
+      end
+    else
+      "memorix-linux-x64"
+    end
+
+    bin.install binary_name => "memorix"
+    chmod 0755, bin/"memorix"
+  end
+
+  test do
+    assert_match "v#{version}", shell_output("#{bin}/memorix --version")
+  end
+end
+EOL
+          # Fix variable substitution in the formula
+          sed -i "s/\${VERSION}/${VERSION}/g" Formula/memorix.rb
+          sed -i "s/\${ARM64_SHA}/${ARM64_SHA}/g" Formula/memorix.rb
+          sed -i "s/\${X64_SHA}/${X64_SHA}/g" Formula/memorix.rb
+          sed -i "s/\${LINUX_SHA}/${LINUX_SHA}/g" Formula/memorix.rb
+
+          # Commit and push changes
+          git add Formula/memorix.rb
+          git commit -m "memorix ${VERSION}"
+          git push https://x-access-token:${{ secrets.COMMITTER_TOKEN }}@github.com/uvop/homebrew-memorix.git HEAD:master
