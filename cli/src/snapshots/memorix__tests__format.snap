@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 535
+assertion_line: 538
 expression: formatted_schema
 ---
 Config {

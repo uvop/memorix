@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 420
+assertion_line: 426
 expression: typescript_code
 ---
 // deno-fmt-ignore-file

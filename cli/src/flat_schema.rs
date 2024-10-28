@@ -147,13 +147,13 @@ fn namespace_to_flat_namespace(
             (
                 k.clone(),
                 ExportCacheItem {
-                    key: x.key.as_ref().and_then(|y| {
-                        Some(type_item_to_flat_type_items(
+                    key: x.key.as_ref().map(|y| {
+                        type_item_to_flat_type_items(
                             &concat_with_key("InlineCacheKey", k),
                             y,
                             namespace_indexes,
                             &mut type_object_items,
-                        ))
+                        )
                     }),
                     payload: type_item_to_flat_type_items(
                         &concat_with_key("InlineCachePayload", k),
@@ -175,13 +175,13 @@ fn namespace_to_flat_namespace(
             (
                 k.clone(),
                 ExportPubSubItem {
-                    key: x.key.as_ref().and_then(|y| {
-                        Some(type_item_to_flat_type_items(
+                    key: x.key.as_ref().map(|y| {
+                        type_item_to_flat_type_items(
                             &concat_with_key("InlinePubSubKey", k),
                             y,
                             namespace_indexes,
                             &mut type_object_items,
-                        ))
+                        )
                     }),
                     payload: type_item_to_flat_type_items(
                         &concat_with_key("InlinePubSubPayload", k),

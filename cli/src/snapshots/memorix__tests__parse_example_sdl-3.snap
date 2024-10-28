@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 426
+assertion_line: 432
 expression: rust_code
 ---
 #![allow(dead_code)]
