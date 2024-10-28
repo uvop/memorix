@@ -1,7 +1,12 @@
 [package]
 name = "memorix-client-redis-macros"
 version = "1.0.0"
+repository = "https://github.com/uvop/memorix"
+authors = ["Yuval Saraf <unimonkiez@gmail.com>"]
+description = "Memorix is an open source next-generation in-memory ORM"
+readme = "../../../../README.md"
 edition = "2021"
+license = "MIT"
 
 [lib]
 proc-macro = true
