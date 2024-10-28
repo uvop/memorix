@@ -30,7 +30,6 @@ jobs:
       - name: Determine version bump type
         id: bump_type
         run: |
-          # Get commit messages since last tag
           messages=$(git log $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --pretty=format:"%s")
 
           bump_type="patch"
@@ -44,18 +43,18 @@ jobs:
             fi
           done
           echo "type=$bump_type" >> $GITHUB_OUTPUT
+          echo "Bump type is: ${bump_type}"
 
       - name: Calculate new version
         id: version
         run: |
           current_version=${latest_tag#v}
+          echo "Current version is: $current_version"
 
-          # Parse version components
           major=$(echo $current_version | cut -d. -f1)
           minor=$(echo $current_version | cut -d. -f2)
           patch=$(echo $current_version | cut -d. -f3 | cut -d- -f1)
 
-          # Calculate new version based on bump type
           case "${{ steps.bump_type.outputs.type }}" in
             major)
               new_version="$((major + 1)).0.0"
@@ -67,6 +66,7 @@ jobs:
               new_version="${major}.${minor}.$((patch + 1))"
               ;;
           esac
+          echo "New version is: $new_version"
 
           if [[ "${{ github.ref }}" == "refs/heads/new-compiler" ]]; then
             rc_num=1
