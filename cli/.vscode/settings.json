@@ -1,17 +1,10 @@
 {
   "editor.formatOnSave": true,
-  "eslint.format.enable": true,
-  "eslint.options": {
-    "extensions": [".js", ".jsx", ".ts", ".tsx"]
-  },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
+  "files.insertFinalNewline": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "[typescript]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  }
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer" // Makes the magic
+  },
+  "rust-analyzer.checkOnSave": true,
+  "rust-analyzer.check.command": "clippy"
 }

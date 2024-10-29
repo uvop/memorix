@@ -33,26 +33,15 @@ memorix --version
 ```
 
 Done!  
-if successful, you should see this in your terminal
-
-```bash
-
-@@@     @@@    @@@@@@&    @@     .@@      @@@@@     #@@@@@      @@    @&    &@
-@@@@   @@@@    @@         @@@   @@@@    @@    %@    #@&   @@    @@     @@@@@@
-@@ @@ @@ @@    @@^^^^^    @@ @@@@ @@    @@    @@    #@@@@@@     @@     @@@@@@
-@@  @@@  @@    @@@@@@&    @@ .@@  @@      @@@@      #@&  @@@    @@    @&    &@
-
-1.0.0
-```
+if successful, you should see the version installed in your terminal
 
 ### Manual installation
 
 This way also supports windows without WSL, but is a bit more tedious
 
 - Go to [memorix releases on github](https://github.com/uvop/memorix/releases).
-- Download the asset for your platform.
-- Extract the executable somewhere on your computer, like `~/.memorix/bin/*`.
-- Add the folder extracted to to your `PATH` environment variable.
+- Download the executable for your platform and place somewhere in your system (for instance, `~/.memorix`)
+- Add the folder where the executable is to your `PATH` environment variable.
 - Done!
 
 ## Client installation
@@ -63,16 +52,24 @@ At the moment, only Redis is supported
 ### Redis client
 
 {{< tabs >}}
-{{% tab name="Node.js" %}}
+{{% tab name="Javascript" %}}
+
+Deno
 
 ```bash
-npm install @memorix/client-redis
+deno add jsr:@memorix/client-redis
 ```
 
-or
+Bun
 
 ```bash
-yarn add @memorix/client-redis
+bunx jsr add @memorix/client-redis
+```
+
+npm
+
+```bash
+npx jsr add @memorix/client-redis
 ```
 
 {{% /tab %}}

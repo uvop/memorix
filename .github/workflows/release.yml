@@ -7,21 +7,202 @@ on:
       - next
 
 jobs:
-  release:
+  version-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
+
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-node@v3
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          latest_tag=$(git tag -l | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n 1 || echo "v0.0.0")
+          echo "latest_tag=${latest_tag}" >> $GITHUB_OUTPUT
+          echo "Latest non rc tag is: ${latest_tag}"
+
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          messages=$(git log ${{ steps.get_tag.outputs.latest_tag }}..HEAD --pretty=format:"%s")
+
+          bump_type="patch"
+          while read -r line; do
+            if [[ "$line" =~ ^major: ]]; then
+              bump_type="major"
+              break
+            elif [[ "$line" =~ ^minor: ]]; then
+              bump_type="minor"
+              break
+            fi
+          done <<< "$messages"
+          echo "type=$bump_type" >> $GITHUB_OUTPUT
+          echo "Bump type is: ${bump_type}"
+
+      - name: Calculate new version
+        id: version
+        run: |
+          latest_tag="${{ steps.get_tag.outputs.latest_tag }}"
+          current_version=${latest_tag#v}
+
+          major=$(echo $current_version | cut -d. -f1)
+          minor=$(echo $current_version | cut -d. -f2)
+          patch=$(echo $current_version | cut -d. -f3 | cut -d- -f1)
+
+          case "${{ steps.bump_type.outputs.type }}" in
+            major)
+              new_version="$((major + 1)).0.0"
+              ;;
+            minor)
+              new_version="${major}.$((minor + 1)).0"
+              ;;
+            patch)
+              new_version="${major}.${minor}.$((patch + 1))"
+              ;;
+          esac
+
+          if [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
+            rc_num=1
+            highest_rc=$(git tag -l "v${new_version}-rc*" | grep -E "^v${new_version}-rc[0-9]+$" | sort -V | tail -n 1 || echo "")
+            if [[ ! -z "$highest_rc" ]]; then
+              old_rc=$(echo $highest_rc | grep -o 'rc[0-9]*' | grep -o '[0-9]*')
+              rc_num=$((old_rc + 1))
+            fi
+            new_version="${new_version}-rc${rc_num}"
+          fi
+
+          echo "new_version=${new_version}" >> $GITHUB_OUTPUT
+          echo "New version will be: ${new_version}"
+
+      - name: Update Cargo.toml version
+        run: |
+          cd ./cli
+          sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ steps.version.outputs.new_version }}\"/" Cargo.toml
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
-          node-version: "16"
-          cache: "yarn"
-          cache-dependency-path: |
-            ./yarn.lock
-            ./cli/yarn.lock
-            ./clients/redis/js/yarn.lock
+          toolchain: stable
+          override: true
+          profile: minimal
+
+      - name: Add targets
+        run: |
+          rustup target add x86_64-unknown-linux-gnu
+          rustup target add x86_64-pc-windows-gnu
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64 gcc-multilib
+
+      - name: Build all targets
+        run: |
+          cd ./cli
+          cargo build --release --target x86_64-unknown-linux-gnu
+          mv target/x86_64-unknown-linux-gnu/release/memorix target/memorix-linux-x64
+          cargo build --release --target x86_64-pc-windows-gnu
+          mv target/x86_64-pc-windows-gnu/release/memorix.exe target/memorix.exe
+
+      - name: Create tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a "v${{ steps.version.outputs.new_version }}" -m "Release v${{ steps.version.outputs.new_version }}"
+          git push --tags
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ steps.version.outputs.new_version }}"
+          name: "Release v${{ steps.version.outputs.new_version }}"
+          files: |
+            cli/target/memorix-linux-x64
+            cli/target/memorix.exe
+          draft: false
+          prerelease: ${{ github.ref == 'refs/heads/next' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    needs: version-and-release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+
+      - name: Add targets
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
+
+      - name: Build macOS targets
+        run: |
+          cd ./cli
+          cargo build --release --target x86_64-apple-darwin
+          mv target/x86_64-apple-darwin/release/memorix target/memorix-macos-x64
+          cargo build --release --target aarch64-apple-darwin
+          mv target/aarch64-apple-darwin/release/memorix target/memorix-macos-arm64
+
+      - name: Update GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ needs.version-and-release.outputs.new_version }}"
+          files: |
+            cli/target/memorix-macos-x64
+            cli/target/memorix-macos-arm64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-client-rust:
+    needs: [version-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+
+      - name: publish
+        run: |
+          cd ./clients/redis/rust
+          cd macros
+          sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
+          CARGO_REGISTRY_TOKEN=${{ secrets.CARGO_REGISTRY_TOKEN }} cargo publish --allow-dirty
+          sleep 30
+          cd ..
+          sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
+          sed -i "0,/memorix-client-redis-macros = { version = \"=.*\"/s/memorix-client-redis-macros = { version = \"=.*\"/memorix-client-redis-macros = { version = \"=${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
+          CARGO_REGISTRY_TOKEN=${{ secrets.CARGO_REGISTRY_TOKEN }} cargo publish --allow-dirty
+
+  publish-client-python:
+    needs: [version-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
       - name: Install poetry
         run: pipx install poetry==1.8.3
       - uses: actions/setup-python@v4
@@ -29,17 +210,118 @@ jobs:
           python-version: "3.10.6"
           cache: "poetry"
           cache-dependency-path: ./clients/redis/python/poetry.lock
-      - name: Install dependencies
-        run: yarn install
-      - uses: webfactory/ssh-agent@v0.5.4
+
+      - name: publish
+        run: |
+          cd ./clients/redis/python
+          sed -i "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" pyproject.toml
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry publish --build
+
+  publish-client-deno:
+    needs: [version-and-release]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
         with:
-          ssh-private-key: ${{ secrets.GH_SSH_PRIVATE_KEY }}
-      - name: Create empty docs build dir
-        run: mkdir ./docs/public
-      - name: Semantic release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: npx semantic-release
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: "2.0.3"
+
+      - name: publish
+        run: |
+          cd ./clients/redis/js
+          sed -i "0,/\"version\": \".*\"/s/\"version\": \".*\"/\"version\": \"${{ needs.version-and-release.outputs.new_version }}\"/" deno.json
+          deno publish --allow-dirty
+
+  publish-docs:
+    needs: [version-and-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "./docs/package-lock.json"
+
+      - name: build
+        run: |
+          cd ./docs
+          npm install
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/public
+          force_orphan: true
+
+  publish-homebrew:
+    needs: [version-and-release, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Homebrew formula
+        run: |
+          git clone https://github.com/uvop/homebrew-memorix.git
+          cd homebrew-memorix
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          VERSION="${{ needs.version-and-release.outputs.new_version }}"
+          MACOS_ARM64_SHA=$(curl -sL https://github.com/uvop/memorix/releases/download/v${VERSION}/memorix-macos-arm64 | shasum -a 256 | cut -d' ' -f1)
+          MACOS_X64_SHA=$(curl -sL https://github.com/uvop/memorix/releases/download/v${VERSION}/memorix-macos-x64 | shasum -a 256 | cut -d' ' -f1)
+          LINUX_X64_SHA=$(curl -sL https://github.com/uvop/memorix/releases/download/v${VERSION}/memorix-linux-x64 | shasum -a 256 | cut -d' ' -f1)
+          cat > Formula/memorix.rb << EOF
+          class Memorix < Formula
+            desc "Memorix - CLI"
+            homepage "https://github.com/uvop/memorix"
+            version "$VERSION"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/uvop/memorix/releases/download/v#{version}/memorix-macos-arm64"
+                sha256 "$MACOS_ARM64_SHA"
+              else
+                url "https://github.com/uvop/memorix/releases/download/v#{version}/memorix-macos-x64"
+                sha256 "$MACOS_X64_SHA"
+              end
+            end
+            
+            on_linux do
+              url "https://github.com/uvop/memorix/releases/download/v#{version}/memorix-linux-x64"
+              sha256 "$LINUX_X64_SHA"
+            end
+
+            def install
+              binary_name = if OS.mac?
+                if Hardware::CPU.arm?
+                  "memorix-macos-arm64"
+                else
+                  "memorix-macos-x64"
+                end
+              else
+                "memorix-linux-x64"
+              end
+
+              bin.install binary_name => "memorix"
+              chmod 0755, bin/"memorix"
+            end
+
+            test do
+              assert_match "v#{version}", shell_output("#{bin}/memorix --version")
+            end
+          end
+          EOF
+          git add Formula/memorix.rb
+          git commit -m "memorix ${VERSION}"
+          git push https://x-access-token:${{ secrets.COMMITTER_TOKEN }}@github.com/uvop/homebrew-memorix.git HEAD:master

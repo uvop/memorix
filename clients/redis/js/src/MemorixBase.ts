@@ -1,19 +1,21 @@
+// deno-lint-ignore-file no-explicit-any
 // eslint-disable-next-line max-classes-per-file
-import Redis from "ioredis";
-import { v4 as uuidv4 } from "uuid";
-import callbackToAsyncIterator from "callback-to-async-iterator";
-import * as types from "./types";
-import { hashKey } from "./utils/hashKey";
+import { Redis } from "npm:ioredis@^5.4.1";
+// @deno-types="npm:@types/callback-to-async-iterator@1.1.7"
+import callbackToAsyncIteratorModule from "npm:callback-to-async-iterator@1.1.1";
+import type * as types from "./types.ts";
+import { hashKey } from "./utils/hashKey.ts";
+const callbackToAsyncIterator = callbackToAsyncIteratorModule.default;
 
-export type DefaultOptions = {
-  cache?: types.CacheOptions;
-  task?: types.TaskOptions;
-};
+enum QueueType {
+  FIFO = "fifo",
+  LIFO = "lifo",
+}
 
 export class MemorixBase {
-  protected namespaceNameTree: string[];
+  protected namespaceNameTree: string[] = [];
 
-  protected defaultOptions?: DefaultOptions;
+  protected redisUrl?: string;
 
   private redis: Redis;
 
@@ -23,14 +25,14 @@ export class MemorixBase {
 
   private subscriptionCallbacks: Map<string, ((payload: any) => void)[]>;
 
-  constructor({ redisUrl }: { redisUrl: string }, ref?: MemorixBase) {
+  constructor(ref?: MemorixBase) {
     if (ref) {
       this.redis = ref.redis;
       this.redisSub = ref.redisSub;
       this.redisTasks = ref.redisTasks;
       this.subscriptionCallbacks = ref.subscriptionCallbacks;
     } else {
-      this.redis = new Redis(redisUrl, { lazyConnect: true });
+      this.redis = new Redis(this.redisUrl!, { lazyConnect: true });
       this.redisSub = this.redis.duplicate();
       this.redisTasks = [];
       this.subscriptionCallbacks = new Map();
@@ -62,112 +64,133 @@ export class MemorixBase {
   }
 
   protected getNamespaceItem<T extends MemorixBase>(
-    NamespaceClass: new (...arg: ConstructorParameters<typeof MemorixBase>) => T
+    NamespaceClass: new (
+      ...arg: ConstructorParameters<typeof MemorixBase>
+    ) => T,
   ): T {
-    return new NamespaceClass({ redisUrl: "unused" }, this);
+    return new NamespaceClass(this);
   }
 
-  protected getCacheItem<Key, Payload>(
+  protected getCacheItem<
+    Key,
+    Payload,
+    CanGet extends boolean,
+    CanSet extends boolean,
+    CanDelete extends boolean,
+  >(
     identifier: string,
-    iOptions?: types.CacheOptions
-  ): types.CacheItem<Key, Payload> {
-    const hashCacheKey = (key: Key | undefined) => {
-      return hashKey(
-        key
-          ? [...this.namespaceNameTree, identifier, key]
-          : [...this.namespaceNameTree, identifier]
-      );
-    };
+    options: types.CacheOptions = {},
+  ): types.CacheItem<Key, Payload, CanGet, CanSet, CanDelete> {
+    const { ttl: ttlStr = "0", extendOnGet: extendOnGetStr = "false" } =
+      options;
 
-    const cacheItem: types.CacheItem<Key, Payload> = {
-      set: async (key, payload, options) => {
-        const { expire = undefined } = {
-          ...this.defaultOptions?.cache,
-          ...iOptions,
-          ...options,
-        };
-        const hashedKey = hashCacheKey(key);
-        const params = expire
-          ? [expire.isInMs ? "PX" : "EX", expire.value.toString()]
-          : [];
-        await this.redis.set(
-          hashedKey,
-          JSON.stringify(payload),
-          ...(params as any)
+    const ttl = Number(ttlStr);
+    if (Number.isNaN(ttl)) {
+      throw new Error(`Exptected ttl to be a number, git "${ttlStr}"`);
+    }
+
+    let extendOnGet: boolean;
+    if (extendOnGetStr === "true") {
+      extendOnGet = true;
+    } else if (extendOnGetStr === "false") {
+      extendOnGet = false;
+    } else {
+      throw new Error(
+        `Exptected extendOnGet to be a boolean, got "${extendOnGetStr}"`,
+      );
+    }
+    const item = {
+      hasKey: true,
+      key: (key: Key | undefined) => {
+        return hashKey(
+          (item as any).hasKey
+            ? [...this.namespaceNameTree, identifier, key]
+            : [...this.namespaceNameTree, identifier],
         );
       },
-      get: async (key, options) => {
-        const { expire } = {
-          ...this.defaultOptions?.cache,
-          ...iOptions,
-          ...options,
-        };
-        const hashedKey = hashCacheKey(key);
+      extend: async (key: Key) => {
+        if (ttl === 0) {
+          return;
+        }
+
+        const hashedKey = item.key(key);
+        await this.redis.expire(hashedKey, ttl.toString());
+      },
+      get: async (key: Key) => {
+        const hashedKey = item.key(key);
         const found = await this.redis.get(hashedKey);
         if (!found) {
           return null;
         }
-        if (expire?.extendOnGet) {
-          await cacheItem.extend(key);
+        if (extendOnGet) {
+          await item.extend(key);
         }
         return JSON.parse(found) as Payload;
       },
-      extend: async (key) => {
-        const { expire = undefined } = {
-          ...this.defaultOptions?.cache,
-          ...iOptions,
-        };
-
-        if (!expire) {
-          return;
-        }
-
-        const hashedKey = hashCacheKey(key);
-        if (expire.isInMs) {
-          await this.redis.pexpire(hashedKey, expire.value);
-        } else {
-          await this.redis.expire(hashedKey, expire.value);
-        }
+      set: async (key: Key, payload: Payload) => {
+        const hashedKey = item.key(key);
+        const params = ttl !== 0 ? ["EX", ttl.toString()] : [];
+        await this.redis.set(
+          hashedKey,
+          JSON.stringify(payload),
+          ...(params as any),
+        );
+      },
+      delete: async (key: Key) => {
+        const hashedKey = item.key(key);
+        await this.redis.del(hashedKey);
       },
     };
-    return cacheItem;
+    return item as any;
   }
 
-  protected getCacheItemNoKey<Payload>(
+  protected getCacheItemNoKey<
+    Payload,
+    CanGet extends boolean,
+    CanSet extends boolean,
+    CanDelete extends boolean,
+  >(
     ...itemArgs: any[]
-  ): types.CacheItemNoKey<Payload> {
+  ): types.CacheItemNoKey<Payload, CanGet, CanSet, CanDelete> {
     const item = (this.getCacheItem as any)(...itemArgs);
+    item.hasKey = false;
 
     return {
-      get: (...args) => item.get(undefined, ...args),
-      set: (...args) => item.set(undefined, ...args),
-      extend: (...args) => item.extend(undefined, ...args),
-    };
+      key: (...args: any[]) => item.key(undefined, ...args),
+      extend: (...args: any[]) => item.extend(undefined, ...args),
+      get: (...args: any[]) => item.get(undefined, ...args),
+      set: (...args: any[]) => item.set(undefined, ...args),
+      delete: (...args: any[]) => item.delete(undefined, ...args),
+    } as any;
   }
 
-  protected getPubsubItem<Key, Payload>(
+  protected getPubSubItem<
+    Key,
+    Payload,
+    CanPublish extends boolean,
+    CanSubscribe extends boolean,
+  >(
     identifier: string,
-    hasKey = true
-  ): types.PubsubItem<Key, Payload> {
-    const hashPubsubKey = (key: Key | undefined) => {
-      return hashKey(
-        hasKey
-          ? [...this.namespaceNameTree, identifier, key]
-          : [...this.namespaceNameTree, identifier]
-      );
-    };
-
-    return {
-      publish: async (key, payload) => {
-        const hashedKey = hashPubsubKey(key);
+  ): types.PubSubItem<Key, Payload, CanPublish, CanSubscribe> {
+    const item = {
+      hasKey: true,
+      key: (key: Key | undefined) => {
+        return hashKey(
+          item.hasKey
+            ? [...this.namespaceNameTree, identifier, key]
+            : [...this.namespaceNameTree, identifier],
+        );
+      },
+      publish: async (key: Key, payload: Payload) => {
+        const hashedKey = item.key(key);
         const subscribersSize = await this.redis.publish(
           hashedKey,
-          JSON.stringify(payload)
+          JSON.stringify(payload),
         );
         return { subscribersSize };
       },
       subscribe: async (key: Key, callback?: (payload: Payload) => void) => {
-        const hashedKey = hashPubsubKey(key);
+        const hashedKey = item.key(key);
         await this.redisSub.subscribe(hashedKey);
 
         if (!callback) {
@@ -175,6 +198,7 @@ export class MemorixBase {
             Payload,
             (payload: Payload) => void
           >(
+            // deno-lint-ignore require-await
             async (cb) => {
               this.subscriptionCallbacks.set(hashedKey, [
                 ...(this.subscriptionCallbacks.get(hashedKey) ?? []),
@@ -194,10 +218,10 @@ export class MemorixBase {
                 }
                 this.subscriptionCallbacks.set(
                   hashedKey,
-                  callbacks.filter((_, i) => i !== callbackIndex)
+                  callbacks.filter((_, i) => i !== callbackIndex),
                 );
               },
-            }
+            },
           );
           return {
             asyncIterator,
@@ -206,7 +230,7 @@ export class MemorixBase {
               if (asyncIterator.throw) {
                 try {
                   await asyncIterator.throw();
-                } catch (error) {
+                } catch (_error) {
                   // Ignore error
                 }
               }
@@ -230,174 +254,131 @@ export class MemorixBase {
             }
             this.subscriptionCallbacks.set(
               hashedKey,
-              callbacks.filter((_, i) => i !== callbackIndex)
+              callbacks.filter((_, i) => i !== callbackIndex),
             );
           },
         } as any;
       },
     };
+    return item as any;
   }
 
-  protected getPubsubItemNoKey<Payload>(
-    identifier: string
-  ): types.PubsubItemNoKey<Payload> {
-    const item = this.getPubsubItem(identifier, false);
+  protected getPubsubItemNoKey<
+    Payload,
+    CanPublish extends boolean,
+    CanSubscribe extends boolean,
+  >(
+    ...itemArgs: any[]
+  ): types.PubSubItemNoKey<Payload, CanPublish, CanSubscribe> {
+    const item = (this.getPubSubItem as any)(...itemArgs);
+    item.hasKey = false;
 
     return {
-      publish: (...args) => item.publish(undefined, ...args),
-      subscribe: (...args) => (item.subscribe as any)(undefined, ...args),
-    };
+      key: (...args: any[]) => item.key(undefined, ...args),
+      publish: (...args: any[]) => item.publish(undefined, ...args),
+      subscribe: (...args: any[]) => item.subscribe(undefined, ...args),
+    } as any;
   }
 
-  protected getTaskItem<Key, Payload, Returns>(
+  protected getTaskItem<
+    Key,
+    Payload,
+    CanEnqueue extends boolean,
+    CanDequeue extends boolean,
+    CanEmpty extends boolean,
+    CanGetLen extends boolean,
+  >(
     identifier: string,
-    hasReturns: Returns extends undefined ? false : true,
-    iOptions?: types.TaskOptions
-  ): types.TaskItem<Key, Payload, Returns> {
-    const hashPubsubKey = (key: Key | undefined) => {
-      return hashKey(
-        key
-          ? [...this.namespaceNameTree, identifier, key]
-          : [...this.namespaceNameTree, identifier]
+    options: types.TaskOptions = {},
+  ): types.TaskItem<Key, Payload, CanEnqueue, CanDequeue, CanEmpty, CanGetLen> {
+    const { queueType: queueTypeStr = "fifo" } = options;
+    let queueType: QueueType;
+    if (queueTypeStr === QueueType.FIFO) {
+      queueType = QueueType.FIFO;
+    } else if (queueTypeStr === QueueType.LIFO) {
+      queueType = QueueType.LIFO;
+    } else {
+      throw new Error(
+        `Exptected queueType to be a on of ${
+          Object.values(QueueType).join(
+            ", ",
+          )
+        }, got "${queueTypeStr}"`,
       );
-    };
+    }
 
-    const returnTask = hasReturns
-      ? this.getTaskItem<string, Returns, undefined>(
-          `${identifier}_returns`,
-          false
-        )
-      : undefined;
-
-    return {
-      queue: async (key, payload) => {
-        const hashedKey = hashPubsubKey(key);
-        const returnsId = hasReturns ? uuidv4() : undefined;
+    const item = {
+      hasKey: true,
+      key: (key: Key | undefined) => {
+        return hashKey(
+          item.hasKey
+            ? [...this.namespaceNameTree, identifier, key]
+            : [...this.namespaceNameTree, identifier],
+        );
+      },
+      enqueue: async (key: Key, payload: Payload) => {
+        const hashedKey = item.key(key);
 
         const queueSize = await this.redis.rpush(
           hashedKey,
-          JSON.stringify(hasReturns ? [returnsId, payload] : [payload])
+          JSON.stringify(payload),
         );
 
-        const returnsPromise = hasReturns
-          ? new Promise((res, rej) => {
-              let stop: () => Promise<void> | undefined;
-              returnTask!
-                .dequeue(returnsId!, (returns) => {
-                  stop();
-                  res(returns);
-                })
-                .then((dequeueObj) => {
-                  stop = dequeueObj.stop;
-                })
-                .catch(rej);
-            })
-          : undefined;
-
-        if (hasReturns) {
-          return {
-            queueSize,
-            getReturns: () => returnsPromise,
-          };
-        }
         return {
           queueSize,
-        } as any;
-      },
-      dequeue: async (...args) => {
-        let key: Key;
-        let callback: types.TaskDequeueCallback<Payload, Returns> | undefined;
-        let options: types.TaskOptions | undefined;
-        if (args.length === 1) {
-          [key] = args;
-        } else if (typeof args[1] === "function") {
-          [key, callback, options] = args;
-        } else {
-          [key, options] = args;
-        }
-        const hashedKey = hashPubsubKey(key);
-        const { takeNewest = false } = {
-          ...this.defaultOptions?.task,
-          ...iOptions,
-          ...options,
         };
-
+      },
+      dequeue: async (
+        key: Key,
+        callback?: types.TaskDequeueCallback<Payload>,
+      ) => {
+        const hashedKey = item.key(key);
         const redisClient = this.redis.duplicate();
         await redisClient.connect();
         this.redisTasks.push(redisClient);
         let isStopped = false;
 
         const pop = () =>
-          new Promise<{ value?: { payload: Payload; returnsId?: string } }>(
-            (res, rej) => {
-              redisClient[takeNewest ? "brpop" : "blpop"](
-                hashedKey,
-                0,
-                (err, popValue) => {
-                  if (err) {
-                    if (isStopped) {
-                      res({ value: undefined });
-                    } else {
-                      rej(err);
-                    }
-                    return;
-                  }
-                  if (!popValue) {
-                    return;
-                  }
-                  const [, wrapedPayloadStr] = popValue;
-                  const wrapedPayload = JSON.parse(wrapedPayloadStr);
-                  const payload: Payload = hasReturns
-                    ? wrapedPayload[1]
-                    : wrapedPayload[0];
-
-                  if (hasReturns) {
-                    const returnsId: string = wrapedPayload[0];
-                    res({ value: { payload, returnsId } });
+          new Promise<{ value?: Payload }>((res, rej) => {
+            redisClient[queueType === QueueType.LIFO ? "brpop" : "blpop"](
+              hashedKey,
+              0,
+              (err, popValue) => {
+                if (err) {
+                  if (isStopped) {
+                    res({ value: undefined });
                   } else {
-                    res({ value: { payload } });
+                    rej(err);
                   }
+                  return;
                 }
-              );
-            }
-          );
+                if (!popValue) {
+                  return;
+                }
+                const [, payloadStr] = popValue;
+                const payload: Payload = JSON.parse(payloadStr);
+
+                res({ value: payload });
+              },
+            );
+          });
         let currentPop: undefined | ReturnType<typeof pop>;
 
         if (callback === undefined) {
-          const asyncIterator: AsyncIterableIterator<{
-            payload: Payload;
-            returnValue: Returns extends undefined
-              ? undefined
-              : (value: Returns) => Promise<void>;
-          }> = {
+          const asyncIterator: AsyncIterableIterator<Payload> = {
             [Symbol.asyncIterator]() {
               return this;
             },
             next: async () => {
               currentPop = pop();
-              const { value } = await currentPop;
-              if (!value) {
+              const { value: payload } = await currentPop;
+              if (payload === undefined) {
                 return {
                   done: true,
                 };
               }
-              const { payload, returnsId } = value;
-              if (hasReturns && returnsId !== undefined) {
-                return {
-                  value: {
-                    payload,
-                    returnValue: async (returns) => {
-                      await returnTask!.queue(returnsId, returns);
-                    },
-                  },
-                  done: false,
-                };
-              }
               return {
-                value: {
-                  payload,
-                  returnValue: undefined,
-                },
+                value: payload,
                 done: false,
               } as any;
             },
@@ -419,31 +400,29 @@ export class MemorixBase {
           };
         }
         const stoppedPromise = new Promise((res) => {
+          // deno-lint-ignore require-await
           const cb = async (err: any, blpop: any) => {
             if (err) {
               res(err);
             }
             if (blpop) {
-              redisClient[takeNewest ? "brpop" : "blpop"](hashedKey, 0, cb);
+              redisClient[queueType === QueueType.LIFO ? "brpop" : "blpop"](
+                hashedKey,
+                0,
+                cb,
+              );
 
-              const [, wrapedPayloadStr] = blpop;
-              const wrapedPayload = JSON.parse(wrapedPayloadStr);
-              const payload: Payload = hasReturns
-                ? wrapedPayload[1]
-                : wrapedPayload[0];
-
-              const result = callback!(payload);
-              if (hasReturns) {
-                const returnsId: string = wrapedPayload[0];
-                const returns = (
-                  result instanceof Promise ? await result : result
-                ) as Returns;
-                await returnTask!.queue(returnsId, returns);
-              }
+              const [, payloadStr] = blpop;
+              const payload: Payload = JSON.parse(payloadStr);
+              callback!(payload);
             }
           };
 
-          redisClient[takeNewest ? "brpop" : "blpop"](hashedKey, 0, cb);
+          redisClient[queueType === QueueType.LIFO ? "brpop" : "blpop"](
+            hashedKey,
+            0,
+            cb,
+          );
         });
 
         return {
@@ -457,22 +436,38 @@ export class MemorixBase {
           },
         } as any;
       },
-      clear: async (key) => {
-        const hashedKey = hashPubsubKey(key);
+      empty: async (key: Key) => {
+        const hashedKey = item.key(key);
         await this.redis.del(hashedKey);
       },
+      getLen: async (key: Key) => {
+        const hashedKey = item.key(key);
+        const queueSize = await this.redis.llen(hashedKey);
+        return queueSize;
+      },
     };
+
+    return item as any;
   }
 
-  protected getTaskItemNoKey<Payload, Returns>(
+  protected getTaskItemNoKey<
+    Payload,
+    CanEnqueue extends boolean,
+    CanDequeue extends boolean,
+    CanEmpty extends boolean,
+    CanGetLen extends boolean,
+  >(
     ...itemArgs: any[]
-  ): types.TaskItemNoKey<Payload, Returns> {
+  ): types.TaskItemNoKey<Payload, CanEnqueue, CanDequeue, CanEmpty, CanGetLen> {
     const item = (this.getTaskItem as any)(...itemArgs);
+    item.hasKey = false;
 
     return {
-      queue: (...args) => item.queue(undefined, ...args),
-      dequeue: (...args) => item.dequeue(undefined, ...args),
-      clear: (...args) => item.clear(undefined, ...args),
-    };
+      key: (...args: any[]) => item.key(undefined, ...args),
+      enqueue: (...args: any[]) => item.enqueue(undefined, ...args),
+      dequeue: (...args: any[]) => item.dequeue(undefined, ...args),
+      empty: (...args: any[]) => item.empty(undefined, ...args),
+      getLen: (...args: any[]) => item.getLen(undefined, ...args),
+    } as any;
   }
 }
