@@ -19,7 +19,7 @@ Cache is the most basic use of an in-memory service, to use it simply add a line
 
 ```
 Cache {
-  adminUser {
+  adminUser: {
     payload: {
       email: string
       password: string
@@ -30,7 +30,7 @@ Cache {
 
 And to use it in your project
 {{< tabs >}}
-{{% tab name="Node.js" %}}
+{{% tab name="Javascript" %}}
 
 ```js
 await memorix.cache.adminUser.set({
@@ -86,7 +86,7 @@ Cache {
 
 And to use it in your project
 {{< tabs >}}
-{{% tab name="Node.js" %}}
+{{% tab name="Javascript" %}}
 
 ```js
 await memorix.cache.user.set(1, {
@@ -147,43 +147,27 @@ let me = memorix.cache.adminUser.get(&1).await?;
 
 ### Cache options
 
-You can define cache options globally or per cache item in your schema to change it's behaviour
+You can define cache options in your schema to change it's behaviour
 
 ```
-DefaultOptions {
-  cache: {
-    expire: {
-      value: 5
-    }
-  }
-}
-
 Cache {
     hello {
         payload: string
-        options: {
-          expire: {
-            value: 10
-          }
-        }
+        ttl: "10"
     }
     helloForever {
         payload: string
-        options: {
-          expire: null
-        }
+        ttl: "0"
     }
 }
 ```
 
 Here to defined that each cache item will expire in 5 seconds, but specifically `hello` will expire in 10 seconds and `helloForever` won't expire.
 
-| name   | Type                                | Default       | Description                                                                                    |
-| :----- | :---------------------------------- | :------------ | :--------------------------------------------------------------------------------------------- |
-| expire | `object` | `null` - No expiration | Expiration options for the cache item |
-| expire.value | `int` | Required | The numerical value of how many seconds (or milliseconds) until the data is expired and can be deleted from the cache |
-| expire.isInMs | `boolean` | `false` | Whatever the `expire.value` is in seconds or milliseconds, not setting this will make it in seconds |
-| expire.extendOnGet | `boolean` | `false` | If is set to true, the item's expiration will be reset |
+| name          | Type                  | Default               | Description                                                                                                                |
+| :------------ | :-------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| ttl           | `string or env value` | `"0"` - No expiration | The numerical value of how many seconds until the data is expired and can be deleted from the cache, `0` for no expiration |
+| extend_on_get | `string or env value` | `"false"`             | If is set to true, the item's expiration will be reset each time `get` api is called                                       |
 
 ## PubSub
 
@@ -193,7 +177,7 @@ To use it simply add a line to your PubSub scope in `schema.memorix`:
 
 ```
 PubSub {
-  message {
+  message: {
     payload: string
   }
 }
@@ -201,7 +185,7 @@ PubSub {
 
 And to use it in your project
 {{< tabs >}}
-{{% tab name="Node.js" %}}
+{{% tab name="Javascript" %}}
 
 ```js
 await { stop } = memorix.pubsub.message.subscribe(({ payload }) => {
@@ -218,7 +202,7 @@ You can also subscribe to an [`Async iterable`](https://developer.mozilla.org/en
 
 ```js
 const subscription = await memorix.pubsub.message.subscribe();
-for await (const { payload } of subscription.asyncIterator) {
+for await (const payload of subscription.asyncIterator) {
   console.log("Got payload: " + payload);
 }
 ```
@@ -231,9 +215,9 @@ To use python pubsub, you need to subscribe on a `Thread` or a `Process` since i
 import multiprocessing
 
 def listen_to_message() -> None:
-    for res in memorix.pubsub.message.subscribe():
+    for payload in memorix.pubsub.message.subscribe():
         # Will be called twice with "hello" then "world"
-        print("Got payload: ", res.payload)
+        print("Got payload: ", payload)
 
 process = multiprocessing.Process(target=listen_to_message)
 
@@ -259,8 +243,11 @@ async fn listen_to_message(
     mut memorix: example_schema_generated::Memorix,
 ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
   let subscription = memorix.pubsub.message.subscribe().await?
-  while let Some(res) = stream.next().await {
-    let payload = res?.payload;
+  loop {
+    let payload = subscription
+      .next()
+      .await
+      .expect("Subscription shouldn't end")?;
     println!("Got payload: {}", payload);
   }
   Ok(())
@@ -307,7 +294,7 @@ To use it simply add a line to your Task scope in `schema.memorix`:
 
 ```
 Task {
-  addMessage {
+  addMessage: {
     payload: string
   }
 }
@@ -315,12 +302,12 @@ Task {
 
 And to use it in your project
 {{< tabs >}}
-{{% tab name="Node.js" %}}
+{{% tab name="Javascript" %}}
 
 ```js
 await memorix.task.addMessage.queue("hello");
 await memorix.task.addMessage.queue("world");
-await { stop } = memorix.task.addMessage.dequeue(async ({ payload }) => {
+await { stop } = memorix.task.addMessage.dequeue(async (payload) => {
   // Will be called twice with "hello" then "world"
   console.log("Got payload: " + payload);
 
@@ -330,8 +317,8 @@ await { stop } = memorix.task.addMessage.dequeue(async ({ payload }) => {
   }
 });
 
-// Clears queue
-await memorix.task.addMessage.clear();
+// Emptys queue
+await memorix.task.addMessage.empty();
 ```
 
 {{% /tab %}}
@@ -352,8 +339,44 @@ for res in memorix.task.addMessage.dequeque():
     if res.payload == "world"
       break
 
-# Clears queue
-memorix.task.addMessage.clear()
+# Emptys queue
+memorix.task.addMessage.empty()
+```
+
+{{% /tab %}}
+{{% tab name="Rust" %}}
+
+```rust
+memorix
+        .task
+        .pass_ball
+        .addMessage
+        .enqueue(&"hello".to_string())
+        .await?;
+memorix
+        .task
+        .pass_ball
+        .addMessage
+        .enqueue(&"world".to_string())
+        .await?;
+
+let mut async_iterator = memorix
+    .task
+    .addMessage
+    .dequeue()
+    .await?;
+
+loop {
+    let payload = async_iterator
+        .next()
+        .await
+        .ok_or("Async Iterator shouldn't end")??;
+
+    if payload == "world" {
+      break;
+    }
+}
+memorix.task.addMessage.empty().await?;
 ```
 
 {{% /tab %}}
@@ -363,115 +386,59 @@ memorix.task.addMessage.clear()
 
 Task also supports key the same as [`Cache`](#cache) and [`PubSub`](#pubsub) support it, you can use put messages in different queues.
 
-### Task retuns
-
-Since Task sends a message from a single machine to another, we also support sending a response back to the original sender!
-To use it simply add `returns` to your specific `Task`
-
-```
-Task {
-  addMessage {
-    payload: string
-    returns: boolean
-  }
-}
-```
-
-And to use it in your project
-{{< tabs >}}
-{{% tab name="Node.js" %}}
-
-```js
-memorix.task.addMessage.dequeue(async ({ payload }) => {
-  console.log("Got payload: " + payload);
-
-  return true;
-});
-
-const { getReturns } = await memorix.task.addMessage.queue("hello");
-
-const isAddSuccessful = await getReturns();
-
-console.log(isAddSuccessful); // Should print "true"
-```
-
-{{% /tab %}}
-{{% tab name="Python" %}}
-
-```python
-def listen_to_message() -> None:
-    for res in memorix.task.addMessage.dequeque():
-        print("Got payload: ", res.payload)
-
-        res.send_returns(returns=True)
-
-process = multiprocessing.Process(target=listen_to_message)
-
-queue = memorix.task.addMessage.queue(payload="hello")
-
-res = queue.get_returns()
-
-print(res.value) # Should print "true"
-
-```
-
-{{% /tab %}}
-{{< /tabs >}}
-
 ### Task options
 
 You can define task options globally or per task item in your schema to change it's behaviour
 
 ```
-DefaultOptions {
-  task: {
-    takeNewest: false
-  }
-}
-
 Task {
   addMessage {
     payload: string
-    returns: boolean
-    options: {
-      takeNewest: true
-    }
+    queue_type: env(QUEUE_TYPE)
   }
 }
 ```
 
-| name       | Type      | Default | Description                                                              |
-| :--------- | :-------- | :------ | :----------------------------------------------------------------------- |
-| takeNewest | `boolean` | False   | By default dequeque is FIFO (first in first out), this option changes it |
+| name       | Type                  | Default  | Description                                           |
+| :--------- | :-------------------- | :------- | :---------------------------------------------------- |
+| queue_type | `string or env value` | `"fifo"` | fifo (first in first out) or lifo (last in first out) |
 
-## Namespace
+## Namespace and imports
 
 Namespaces are useful when using multiple schemas in order to avoid name collisions, also great for microservices to define their own schema.  
-To use it simply surround your desired scopes with a namespace scope  
+To use it simply surround your desired scopes with a namespace scope
 
 `messages-schema.memorix`
+
 ```
 Namespace messages {
   PubSub {
-    addItem {
+    addItem: {
       payload: int
+      public: [publish subscribe]
     }
   }
 }
 ```
-then you can import it in your main schema  
+
+then you can import it in your main schema
 
 `schema.memorix`
+
 ```
 Config {
-  output: {
-    language: "typescript"
-    file: "memorix.generated.ts"
-  }
-  extends: [
+  import: [
     "<path-to>/messages-schema.memorix"
     "<path-to>/another-schema.memorix"
   ]
+  export: {
+    files: [
+      {
+        language: typescript
+        path: "memorix.generated.ts"
+      }
+    ]
+  }
 }
 
 PubSub {
@@ -480,10 +447,11 @@ PubSub {
   }
 }
 ```
+
 Even though we defined `PubSub.addItem` twice, since one is in a namespace, they won't collide with each other.  
 To use it in your project
 {{< tabs >}}
-{{% tab name="Node.js" %}}
+{{% tab name="Javascript" %}}
 
 ```js
 await memorix.pubsub.addItem.publish(12);
@@ -493,13 +461,42 @@ await memorix.messages.pubsub.addItem.publish("in 'messages' namespace");
 {{% /tab %}}
 {{% tab name="Python" %}}
 
-> You might want to consider also using a `Thread` or a `Process` just like we did with [`PubSub`](#pubsub), this example won't do that
-
 ```python
 memorix.pubusb.addItem.publish(payload=12)
 memorix.messages.pubusb.addItem.publish(payload="woin 'messages' namespacerld")
 ```
 
 {{% /tab %}}
+{{% tab name="Rust" %}}
+
+```rust
+memorix.pubusb.addItem.publish(&12).await?;
+memorix.messages.pubusb.addItem.publish(&"woin 'messages' namespacerld").await?;
+```
+
+{{% /tab %}}
 {{< /tabs >}}
 
+You can also see we defined public in the imported `messages-schema.memorix`, by default, all imported API is private.
+Here is a list of methods which we can define as public
+
+- Cache methods (can be defined as private / public)
+  | name | Description |
+  | :----- | :------------------------ |
+  | get | Getting the stored value |
+  | set | Setting the stored value |
+  | delete | Deleting the stored value |
+
+- PubSub methods (can be defined as private / public)
+  | name | Description |
+  | :-------- | :---------------------------------- |
+  | publish | Publishing a value to all listeners |
+  | subscribe | Subscribing as a listener |
+
+- Task methods (can be defined as private / public)
+  | name | Description |
+  | :------ | :------------------------------ |
+  | enqueue | Adding a value to the queue |
+  | dequeue | Getting a value from the queue |
+  | empty | Clearing the queue |
+  | get_len | Get current length of the queue |

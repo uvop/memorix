@@ -18,8 +18,6 @@ jobs:
       #   with:
       #     redis-version: "7.x"
       #     auto-start: "true"
-      - name: Install
-        run: make install
       - name: Format
         run: make format-check
       - name: Lint

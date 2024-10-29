@@ -1,11 +1,7 @@
 install:
 	cargo build
 codegen:
-	(cd ../../../cli && yarn cli codegen ../clients/redis/rust/tests/example-schema.memorix) &&\
-	(cd ../../../cli && yarn cli codegen ../clients/redis/rust/examples/example-schema.memorix) &&\
-	 \
-	make format && \
-	echo "\n#[allow(dead_code)]\nfn main() {}" >> ./examples/example_schema_generated.rs
+	(cd ../../../cli && cargo run -- format ../clients/redis/rust/tests/example-schema.memorix && cargo run -- codegen ../clients/redis/rust/tests/example-schema.memorix)
 format:
 	cargo fmt
 format-check:

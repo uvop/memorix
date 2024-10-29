@@ -13,23 +13,19 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@v3
+      - uses: denoland/setup-deno@v2
         with:
-          node-version: "16"
-          cache: "yarn"
-          cache-dependency-path: "./clients/redis/js/yarn.lock"
+          deno-version: "2.0.3"
       - id: redis-step
         uses: shogo82148/actions-setup-redis@v1
         with:
-          redis-version: '7.x'
+          redis-version: "7.x"
           auto-start: "true"
-      - name: Install dependencies
-        run: yarn install
       - name: Format
-        run: yarn format:check
+        run: make format-check
       - name: Lint
-        run: yarn lint:err
+        run: make lint
       - name: Typecheck
-        run: yarn typecheck
+        run: make typecheck
       - name: Test
-        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 yarn test
+        run: REDIS_URL=redis://localhost:${{ steps.redis-step.outputs.redis-port }}/0 make test

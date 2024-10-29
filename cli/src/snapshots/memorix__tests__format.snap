@@ -1,0 +1,80 @@
+---
+source: src/main.rs
+assertion_line: 538
+expression: formatted_schema
+---
+Config {
+  export: {
+    engine: Redis(env(REDIS_URL))
+    files: [
+      {
+        language: typescript
+        path: "memorix.generated.ts"
+      }
+    ]
+  }
+}
+
+Type {
+  a: [
+    u64
+  ]
+}
+
+Namespace Science {
+  Cache {
+    how_many_atoms: {
+      key: u64
+      payload: u32
+      ttl: env(TTL_HOW_MANY_ATOMS)
+    }
+  }
+  PubSub {
+    how_many_atoms: {
+      payload: {
+        id: u32
+        number: u64
+      }
+    }
+    how_many_atoms_2: {
+      payload: [
+        {
+          id: u32
+          number: u64
+        }
+      ]
+    }
+  }
+}
+
+Namespace Rocket {
+  Enum {
+    Operation {
+      START
+      STOP
+    }
+    Color {
+      RED
+      GREEN
+      BLUE
+    }
+  }
+  Cache {
+    launched: {
+      payload: boolean
+    }
+  }
+  PubSub {
+    launched: {
+      payload: boolean?
+    }
+  }
+
+  Namespace aa {
+    Cache {
+      bb: {
+        payload: boolean
+      }
+    }
+  }
+}

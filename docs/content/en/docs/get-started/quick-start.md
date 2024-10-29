@@ -18,39 +18,44 @@ Now we have all the tools needed to create our schema and start using it!
 First, lets create a basic schema.
 
 - Create a file with name `schema.memorix` in the root of your project (remove unwanted output languages)
+
   ```
   Config {
-    output: [
-        {
-            language: "typescript"
-            file: "memorix.generated.ts"
-        }
-        {
-            language: "python"
-            file: "memorix_generated.py"
-        }
-        {
-            language: "rust"
-            file: "memorix_generated.rs"
-        }
-    ]
+    engine: Redis("redis://localhost:6379/0")
+    export: {
+        files: [
+            {
+                language: typescript
+                path: "memorix.generated.ts"
+            }
+            {
+                language: python
+                path: "memorix_generated.py"
+            }
+            {
+                language: rust
+                path: "memorix_generated.rs"
+            }
+        ]
+    }
   }
 
   Cache {
-      hello {
+      hello: {
           payload: string
       }
-      rating {
-          payload: int
+      rating: {
+          payload: u32
       }
   }
 
   PubSub {
-      message {
+      message: {
           payload: string
       }
   }
   ```
+
 - Now we can generate code for the schema we created using the `Memorix CLI` (and on future schema changes), simply un this in your terminal
 
   ```bash
@@ -59,6 +64,12 @@ First, lets create a basic schema.
 
   - Now API files have been generated in your source code folder, you can start using the API.
 
+    - To format the schema file and validate it, run
+
+    ```bash
+    memorix format ./schema.memorix
+    ```
+
 ## Using the schema API (redis)
 
 Here is a code example of how to use the schema we created
@@ -66,13 +77,13 @@ Here is a code example of how to use the schema we created
 - Note: you need a redis service running, this code example assumes you do
 
 {{< tabs >}}
-{{% tab name="Node.js" %}}
+{{% tab name="Javascript" %}}
 
 ```js
-import Memorix from "src/memorix.generated";
+import { Memorix } from "src/memorix.generated";
 
 const start = async () => {
-  const memorix = new Memorix({ redisUrl: "redis://localhost:6379/0" });
+  const memorix = new Memorix();
 
   await memorix.cache.hello.set("world");
   await memorix.cache.rating.set(10);
@@ -90,7 +101,7 @@ start();
 ```python
 from src.memorix_generated import Memorix
 
-memorix = Memorix(redis_url="redis://localhost:6379/0")
+memorix = Memorix()
 
 memorix.cache.hello.set("world")
 memorix.cache.rating.set(10)
@@ -105,9 +116,11 @@ print(hello_value) # Should print "world"
 ```rust
 mod memorix_generated;
 
+use memorix_generated as mx;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
-    let memorix = memorix_generated::Memorix::new("redis://localhost:6379/0").await?;
+    let memorix = mx::Memorix::new().await?;
 
     memorix.cache.hello.set(&"world".to_string()).await?;
     memorix.cache.rating.set(&10).await?;

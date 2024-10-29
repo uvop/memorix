@@ -1,12 +1,12 @@
 import asyncio
 import functools
-from memorix_client_redis.hash_key import hash_key_better
+from memorix_client_redis.hash_key import hash_key
 from memorix_client_redis.json import from_json, to_json, bytes_to_str
 from memorix_client_redis.memorix_base import MemorixBase
-from typing import AsyncGenerator, Dict, Generator, Generic, Type, TypeVar, Union, cast
+import typing
 
-KT = TypeVar("KT")
-PT = TypeVar("PT")
+KT = typing.TypeVar("KT")
+PT = typing.TypeVar("PT")
 
 
 class PubSubItemPublish(object):
@@ -17,40 +17,35 @@ class PubSubItemPublish(object):
         self.subscribers_size = subscribers_size
 
 
-class PubSubItemSubscribe(Generic[PT]):
-    def __init__(
-        self,
-        payload: PT,
-    ) -> None:
-        self.payload = payload
-
-
-class PubSubItem(Generic[KT, PT]):
+class PubSubItem(typing.Generic[KT, PT]):
     def __init__(
         self,
         api: MemorixBase,
         id: str,
-        payload_class: Type[PT],
+        payload_class: typing.Type[PT],
     ) -> None:
         self._api = api
         self._id = id
         self._payload_class = payload_class
         self._has_key = True
 
-    def publish(self, key: KT, payload: PT) -> PubSubItemPublish:
+    def _key(self, key: KT) -> str:
+        return hash_key(api=self._api, id=self._id, has_key=self._has_key, key=key)
+
+    def _publish(self, key: KT, payload: PT) -> PubSubItemPublish:
         payload_json = to_json(payload)
         subscribers_size = self._api._connection.redis.publish(
-            hash_key_better(api=self._api, id=self._id, has_key=self._has_key, key=key),
+            self._key(key=key),
             payload_json,
         )
         return PubSubItemPublish(subscribers_size=subscribers_size)
 
-    async def async_publish(self, key: KT, payload: PT) -> PubSubItemPublish:
+    async def _async_publish(self, key: KT, payload: PT) -> PubSubItemPublish:
         loop = asyncio.get_running_loop()
         res = await loop.run_in_executor(
             None,
             functools.partial(
-                PubSubItem.publish,
+                PubSubItem._publish,
                 self=self,
                 key=key,
                 payload=payload,
@@ -58,39 +53,25 @@ class PubSubItem(Generic[KT, PT]):
         )
         return res
 
-    def subscribe(self, key: KT) -> Generator[PubSubItemSubscribe[PT], None, None]:
+    def _subscribe(self, key: KT) -> typing.Generator[PT, None, None]:
         sub = self._api._connection.redis.pubsub()
-        sub.subscribe(
-            hash_key_better(
-                api=self._api,
-                id=self._id,
-                has_key=self._has_key,
-                key=key,
-            ),
-        )
-        for message in cast(
-            Generator[Dict[str, Union[int, bytes]], None, None],
+        sub.subscribe(self._key(key=key))
+        for message in typing.cast(
+            typing.Generator[typing.Dict[str, typing.Union[int, bytes]], None, None],
             sub.listen(),  # type: ignore
         ):
             data_bytes = message["data"]
             if isinstance(data_bytes, bytes):
                 data_str = bytes_to_str(data_bytes)
                 data = from_json(value=data_str, data_class=self._payload_class)
-                yield PubSubItemSubscribe(payload=data)
+                yield data
 
-    async def async_subscribe(
+    async def _async_subscribe(
         self,
         key: KT,
-    ) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:
+    ) -> typing.AsyncGenerator[PT, None]:
         sub = self._api._connection.redis.pubsub()
-        sub.subscribe(
-            hash_key_better(
-                api=self._api,
-                id=self._id,
-                has_key=self._has_key,
-                key=key,
-            ),
-        )
+        sub.subscribe(self._key(key=key))
         loop = asyncio.get_running_loop()
         while True:
             message = await loop.run_in_executor(
@@ -105,35 +86,114 @@ class PubSubItem(Generic[KT, PT]):
                 if isinstance(data_bytes, bytes):
                     data_str = bytes_to_str(data_bytes)
                     data = from_json(value=data_str, data_class=self._payload_class)
-                    yield PubSubItemSubscribe(payload=data)
+                    yield data
 
 
-class PubSubItemNoKey(PubSubItem[None, PT]):
-    def __init__(
+class PubSubItemTT(PubSubItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def publish(self, key: KT, payload: PT) -> PubSubItemPublish:
+        return self._publish(key=key, payload=payload)
+
+    async def async_publish(self, key: KT, payload: PT) -> PubSubItemPublish:
+        return await self._async_publish(key=key, payload=payload)
+
+    def subscribe(self, key: KT) -> typing.Generator[PT, None, None]:
+        return self._subscribe(key=key)
+
+    async def async_subscribe(
         self,
-        api: MemorixBase,
-        id: str,
-        payload_class: Type[PT],
-    ) -> None:
-        super().__init__(
-            api=api,
-            id=id,
-            payload_class=payload_class,
-        )
+        key: KT,
+    ) -> typing.AsyncGenerator[PT, None]:
+        return self._async_subscribe(key=key)
+
+
+class PubSubItemTF(PubSubItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def publish(self, key: KT, payload: PT) -> PubSubItemPublish:
+        return self._publish(key=key, payload=payload)
+
+    async def async_publish(self, key: KT, payload: PT) -> PubSubItemPublish:
+        return await self._async_publish(key=key, payload=payload)
+
+
+class PubSubItemFT(PubSubItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def subscribe(self, key: KT) -> typing.Generator[PT, None, None]:
+        return self._subscribe(key=key)
+
+    async def async_subscribe(
+        self,
+        key: KT,
+    ) -> typing.AsyncGenerator[PT, None]:
+        return self._async_subscribe(key=key)
+
+
+class PubSubItemFF(PubSubItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+
+class PubSubItemTTNoKey(PubSubItem[None, PT]):
+    def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
+        super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
 
-    # Different signature on purpose
-    def publish(self, payload: PT) -> PubSubItemPublish:  # type: ignore
-        return PubSubItem.publish(self, key=None, payload=payload)
+    def key(self) -> str:
+        return PubSubItem._key(self, key=None)
 
-    # Different signature on purpose
-    async def async_publish(self, payload: PT) -> PubSubItemPublish:  # type: ignore
-        return await PubSubItem.async_publish(self, key=None, payload=payload)
+    def publish(self, payload: PT) -> PubSubItemPublish:
+        return PubSubItem._publish(self, key=None, payload=payload)
 
-    # Different signature on purpose
-    def subscribe(self) -> Generator[PubSubItemSubscribe[PT], None, None]:  # type: ignore
-        return PubSubItem.subscribe(self, key=None)
+    async def async_publish(self, payload: PT) -> PubSubItemPublish:
+        return await PubSubItem._async_publish(self, key=None, payload=payload)
 
-    # Different signature on purpose
-    def async_subscribe(self) -> AsyncGenerator[PubSubItemSubscribe[PT], None]:  # type: ignore
-        return PubSubItem.async_subscribe(self, key=None)
+    def subscribe(self) -> typing.Generator[PT, None, None]:
+        return PubSubItem._subscribe(self, key=None)
+
+    def async_subscribe(self) -> typing.AsyncGenerator[PT, None]:
+        return PubSubItem._async_subscribe(self, key=None)
+
+
+class PubSubItemTFNoKey(PubSubItem[None, PT]):
+    def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
+        super().__init__(api=api, id=id, payload_class=payload_class)
+        self._has_key = False
+
+    def key(self) -> str:
+        return PubSubItem._key(self, key=None)
+
+    def publish(self, payload: PT) -> PubSubItemPublish:
+        return PubSubItem._publish(self, key=None, payload=payload)
+
+    async def async_publish(self, payload: PT) -> PubSubItemPublish:
+        return await PubSubItem._async_publish(self, key=None, payload=payload)
+
+
+class PubSubItemFTNoKey(PubSubItem[None, PT]):
+    def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
+        super().__init__(api=api, id=id, payload_class=payload_class)
+        self._has_key = False
+
+    def key(self) -> str:
+        return PubSubItem._key(self, key=None)
+
+    def subscribe(self) -> typing.Generator[PT, None, None]:
+        return PubSubItem._subscribe(self, key=None)
+
+    def async_subscribe(self) -> typing.AsyncGenerator[PT, None]:
+        return PubSubItem._async_subscribe(self, key=None)
+
+
+class PubSubItemFFNoKey(PubSubItem[None, PT]):
+    def __init__(self, api: MemorixBase, id: str, payload_class: type[PT]) -> None:
+        super().__init__(api=api, id=id, payload_class=payload_class)
+        self._has_key = False
+
+    def key(self) -> str:
+        return PubSubItem._key(self, key=None)

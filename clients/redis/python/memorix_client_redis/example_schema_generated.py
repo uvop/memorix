@@ -1,5 +1,6 @@
 # flake8: noqa
 import typing
+import os
 
 if typing.TYPE_CHECKING:
     from dataclasses import dataclass
@@ -9,17 +10,9 @@ else:
 from enum import Enum
 from memorix_client_redis import (
     MemorixBase,
-    MemorixCacheBase,
-    MemorixCacheItem,
-    MemorixCacheItemNoKey,
-    MemorixPubSubBase,
-    MemorixPubSubItem,
-    MemorixPubSubItemNoKey,
-    MemorixTaskBase,
-    MemorixTaskItem,
-    MemorixTaskItemNoKey,
-    MemorixTaskItemNoReturns,
-    MemorixTaskItemNoKeyNoReturns,
+    MemorixCacheAll,
+    MemorixPubSubAll,
+    MemorixTaskAll,
 )
 
 
@@ -30,60 +23,57 @@ class Animal(str, Enum):
 
 
 @dataclass
-class User(object):
+class InlineTypeUser(object):
     name: str
     age: typing.Optional[int]
 
 
-class MemorixCache(MemorixCacheBase):
+User = InlineTypeUser
+
+
+class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.favoriteAnimal = MemorixCacheItem[str, "Animal"](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTT[str, Animal](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixCacheItem[str, "User"](
+        self.user = MemorixCacheAll.ItemTTT[str, User](
             api=api,
             id="user",
             payload_class=User,
         )
 
 
-class MemorixPubSub(MemorixPubSubBase):
+class MemorixPubSub(MemorixPubSubAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.message = MemorixPubSubItemNoKey[str](
+        self.message = MemorixPubSubAll.ItemTTNoKey[str](
             api=api,
             id="message",
             payload_class=str,
         )
 
 
-class MemorixTask(MemorixTaskBase):
+class MemorixTask(MemorixTaskAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.runAlgo = MemorixTaskItemNoKey[str, "Animal"](
+        self.runAlgo = MemorixTaskAll.ItemTTTTNoKey[str](
             api=api,
             id="runAlgo",
             payload_class=str,
-            returns_class=Animal,
         )
 
 
 class Memorix(MemorixBase):
-    def __init__(
-        self,
-        redis_url: str,
-        ref: typing.Optional[MemorixBase] = None,
-    ) -> None:
-        super().__init__(redis_url=redis_url, ref=ref)
+    def __init__(self) -> None:
+        super().__init__(redis_url=os.environ["REDIS_URL"])
 
         self._namespace_name_tree = []
-
         self.cache = MemorixCache(self)
         self.pubsub = MemorixPubSub(self)
         self.task = MemorixTask(self)

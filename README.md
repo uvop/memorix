@@ -3,7 +3,7 @@
 </div>
 <br>
 <div align="center">
-  <a href="https://www.npmjs.com/package/@memorix/client-redis"><img src="https://img.shields.io/npm/v/@memorix%2Fclient-redis.svg?style=flat" /></a>
+  <a href="https://jsr.io/@memorix/client-redis"><img src="https://jsr.io/badges/@memorix/client-redis" alt="" /></a>
   <a href="https://pypi.org/project/memorix-client-redis"><img src="https://img.shields.io/pypi/v/memorix-client-redis.svg?style=flat" /></a>
   <a href="https://crates.io/crates/memorix-client-redis"><img src="https://img.shields.io/crates/v/memorix-client-redis.svg?style=flat" /></a>
   <a href="https://github.com/uvop/memorix/fork"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" /></a>

@@ -1,2 +1,0 @@
-schema: "./app/frontend/src/core/graphql/schema.graphql"
-documents: "./app/frontend/src/**/*.graphql"

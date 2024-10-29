@@ -1,0 +1,145 @@
+---
+source: src/main.rs
+assertion_line: 429
+expression: python_code
+---
+# flake8: noqa
+import typing
+import os
+
+if typing.TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from memorix_client_redis import dataclass
+
+from enum import Enum
+from memorix_client_redis import (
+    MemorixBase,
+    MemorixCacheAll,
+    MemorixPubSubAll,
+    MemorixTaskAll,
+)
+
+
+@dataclass
+class InlineCachePayloadUserProfile(object):
+    id: int
+    name: str
+    email: str
+
+
+@dataclass
+class InlineCachePayloadUserSession(object):
+    user_id: int
+    session_token: str
+    expiry: int
+
+abc = int
+
+class MessageService(object):
+
+    class Operation(str, Enum):
+        START = "START"
+        STOP = "STOP"
+
+
+    @dataclass
+    class InlineCachePayloadMessage(object):
+        id: str
+        sender_id: int
+        recipient_id: int
+        content: str
+        timestamp: int
+
+
+    @dataclass
+    class InlinePubSubPayloadNewMessage(object):
+        message_id: str
+        recipient_id: int
+
+
+    @dataclass
+    class InlineTaskPayloadMessageProcessingTasks(object):
+        message_id: str
+        processing_type: str
+        priority: int
+
+
+    class MemorixCache(MemorixCacheAll.Base):
+        def __init__(self, api: MemorixBase) -> None:
+            super().__init__(api=api)
+
+            self.message = MemorixCacheAll.ItemTTT[str, MessageService.InlineCachePayloadMessage](
+                api=api,
+                id="message",
+                payload_class=MessageService.InlineCachePayloadMessage,
+            )
+
+
+    class MemorixPubSub(MemorixPubSubAll.Base):
+        def __init__(self, api: MemorixBase) -> None:
+            super().__init__(api=api)
+
+            self.new_message = MemorixPubSubAll.ItemTT[int, MessageService.InlinePubSubPayloadNewMessage](
+                api=api,
+                id="new_message",
+                payload_class=MessageService.InlinePubSubPayloadNewMessage,
+            )
+
+
+    class MemorixTask(MemorixTaskAll.Base):
+        def __init__(self, api: MemorixBase) -> None:
+            super().__init__(api=api)
+
+            self.message_processing_tasks = MemorixTaskAll.ItemTTTTNoKey[MessageService.InlineTaskPayloadMessageProcessingTasks](
+                api=api,
+                id="message_processing_tasks",
+                payload_class=MessageService.InlineTaskPayloadMessageProcessingTasks,
+                options=MemorixTaskAll.Options(
+                    queue_type="Fifo",
+                )
+            )
+
+    class Memorix(MemorixBase):
+        def __init__(self, ref: MemorixBase) -> None:
+            super().__init__(ref=ref)
+
+
+            self._namespace_name_tree = ["MessageService"]
+            self.cache = MessageService.MemorixCache(self)
+            self.pubsub = MessageService.MemorixPubSub(self)
+            self.task = MessageService.MemorixTask(self)
+
+
+class MemorixCache(MemorixCacheAll.Base):
+    def __init__(self, api: MemorixBase) -> None:
+        super().__init__(api=api)
+
+        self.user_profile = MemorixCacheAll.ItemTTT[int, InlineCachePayloadUserProfile](
+            api=api,
+            id="user_profile",
+            payload_class=InlineCachePayloadUserProfile,
+        )
+        self.user_session = MemorixCacheAll.ItemTTT[str, InlineCachePayloadUserSession](
+            api=api,
+            id="user_session",
+            payload_class=InlineCachePayloadUserSession,
+            options=MemorixCacheAll.Options(
+                ttl=os.environ["USER_SESSION_TTL"],
+            )
+        )
+        self.number_of_messages = MemorixCacheAll.ItemTFFNoKey[int](
+            api=api,
+            id="number_of_messages",
+            payload_class=int,
+        )
+
+class Memorix(MemorixBase):
+    def __init__(self) -> None:
+        super().__init__(redis_url=os.environ["REDIS_URL"])
+
+
+        self._namespace_name_tree = []
+        self.MessageService = MessageService.Memorix(ref=self)
+
+        self.cache = MemorixCache(self)

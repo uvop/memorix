@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "$(cat package.json | sed -e """s|\"version\": \".*\"|\"version\": \"$VERSION\"|1""")" > package.json
+echo "$(cat cargo.toml | sed "1,/version = \".*\"/s/version = \".*\"/version = \"$VERSION\"/")" > cargo.toml

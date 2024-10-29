@@ -19,12 +19,16 @@ All the data transported through Memorix is parsed to and from JSON format, so t
 
 Here are the basic primities you can use in your schema
 
-| name    | Node.js type | Python  |
-| :------ | :----------- | :------ |
-| string  | `string`     | `str`   |
-| int     | `number`     | `int`   |
-| float   | `number`     | `float` |
-| boolean | `boolean`    | `bool`  |
+| name    | Javascript type | Python  | Rust      |
+| :------ | :-------------- | :------ | :-------- |
+| string  | `string`        | `str`   | `String`  |
+| u32     | `number`        | `int`   | `u32`     |
+| i32     | `number`        | `int`   | `i32`     |
+| f32     | `number`        | `float` | `f32`     |
+| u64     | `number`        | `int`   | `u64`     |
+| i64     | `number`        | `int`   | `i64`     |
+| f64     | `number`        | `float` | `f64`     |
+| boolean | `boolean`       | `bool`  | `boolean` |
 
 Example
 
@@ -39,7 +43,7 @@ Cache {
 }
 ```
 
-## Model
+## Type
 
 You can either define your objects inline or outside of your usage, for example
 
@@ -55,20 +59,22 @@ You can either define your objects inline or outside of your usage, for example
       }
   }
   ```
-- Using `Model`
+- Using `Type`
 
   ```
-  Model Person {
-    name: string
-    height: int
-    age: float
+  Type {
+    Person: {
+      name: string
+      height: int
+      age: float
+    }
   }
 
   Cache {
-      favoritePerson {
+      favoritePerson: {
           payload: Person
       }
-      secondFavoritePerson {
+      secondFavoritePerson: {
           payload: Person
       }
   }
@@ -79,19 +85,21 @@ You can either define your objects inline or outside of your usage, for example
 All fields are required by default, to make them nullable, Simply add `?` after the type
 
 ```
-Model Person {
-  name: string
-  height: int
-  age: float
-  hairColor: string?
+Type {
+  Person: {
+    name: string
+    height: int
+    age: float
+    hairColor: string?
+  }
 }
 
 Cache {
-    favoritePerson {
+    favoritePerson: {
         payload: Person
     }
-    secondFavoritePerson {
-        payload: Person? # Now can set a nullable value to "secondFavoritePerson"
+    secondFavoritePerson: {
+        payload: Person?
     }
 }
 ```
@@ -102,7 +110,7 @@ Simply add braces `[]` around your type
 
 ```
 Cache {
-    cultMembers {
+    cultMembers: {
         payload: [Person]
     }
 }
@@ -113,14 +121,16 @@ Cache {
 Can help make your schema much more readable!
 
 ```
-Enum Animal {
-  dog
-  cat
-  other
+Enum {
+  Animal {
+    dog
+    cat
+    other
+  }
 }
 
 Cache {
-    favoriteAnimal {
+    favoriteAnimal: {
         payload: Animal
     }
 }
@@ -131,32 +141,35 @@ Cache {
 Unions aren't supported, but you can use what we learned so far to define an object with different properties
 
 ```
-Enum AnimalType {
-  dog
-  cat
-  other
+Enum {
+  AnimalType {
+    dog
+    cat
+    other
+  }
 }
 
-Model AnimalDogData {
-  isAGoodBoy: boolean
-}
-Model AnimalCatData {
-  likesCatnip: boolean
-}
-Model AnimalOtherData {
-  tasty: boolean
-}
-
-Model Animal {
-  type: AnimalType
-  name: string
-  dogData: AnimalDogData?
-  catData: AnimalCatData?
-  otherData: AnimalOtherData?
+Type {
+  Animal: {
+    type: AnimalType
+    name: string
+    dogData: AnimalDogData?
+    catData: AnimalCatData?
+    otherData: AnimalOtherData?
+  }
+  AnimalDogData: {
+    isAGoodBoy: boolean
+  }
+  AnimalCatData: {
+    likesCatnip: boolean
+  }
+  AnimalOtherData: {
+    tasty: boolean
+  }
 }
 
 Cache {
-    favoriteAnimal {
+    favoriteAnimal: {
         payload: Animal
     }
 }

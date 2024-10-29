@@ -1,0 +1,65 @@
+Config {
+  import: [
+    "src/schema2.memorix"
+    "123"
+    "123"
+    "123"
+  ]
+  export: {
+    engine: Redis(env(REDIS_URL))
+    files: [
+      {
+        language: typescript
+        path: "memorix.generated.ts"
+      }
+      {
+        language: python
+        path: "memorix_generated.py"
+      }
+      {
+        language: rust
+        path: "memorix_generated.rs"
+      }
+    ]
+  }
+}
+
+Type {
+  ID: string?
+}
+Enum {
+  Operation {
+    START
+    STOP
+  }
+  Color {
+    RED
+    GREEN
+    BLUE
+  }
+}
+
+Namespace standalone {
+  Cache {
+    abc: {
+      key: u32
+      payload: {
+        id: u32
+        other_id: u64
+      }
+      ttl: env(ABC_TTL)
+      public: [
+        get
+        set
+      ]
+    }
+  }
+  PubSub {
+    abc: {
+      key: u32
+      payload: u64
+    }
+  }
+}
+
+

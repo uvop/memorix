@@ -1,11 +1,9 @@
 import typing
 import asyncio
 import pytest
-import os
 from .example_schema_generated import (
-    Animal,
-    CacheUser2Key,
-    CachePilotPayload,
+    InlineCacheKeyUser2,
+    Spaceship,
     Memorix,
     User,
 )
@@ -13,36 +11,21 @@ import multiprocessing
 from time import sleep
 from .timeout import with_timeout
 
-redis_url = os.environ["REDIS_URL"]
-
 
 def listen_to_message() -> None:
-    memorix = Memorix(redis_url=redis_url)
-    for res in memorix.pubsub.message.subscribe():
-        print("message:", res.payload)
+    memorix = Memorix()
+    for payload in memorix.pubsub.message.subscribe():
+        print("message:", payload)
 
 
 def listen_to_algo() -> None:
-    memorix = Memorix(redis_url=redis_url)
-    for res in memorix.task.runAlgo.dequeue():
-        print("task:", res.payload)
-        res.send_returns(
-            returns=Animal.cat if res.payload == "send me cat" else Animal.dog,
-        )
-
-
-def test_connect_should_fail() -> None:
-    memorix = Memorix(redis_url="redis://hello-world:6379/0")
-    try:
-        memorix.connect()
-    except AttributeError as err:  # noqa: WPS329
-        raise err
-    except Exception:  # noqa: S110
-        pass
+    memorix = Memorix()
+    for payload in memorix.task.runAlgo.dequeue():
+        print("task:", payload)
 
 
 def test_cache() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.cache.user.set("uv", User(name="uv", age=29))
 
@@ -54,7 +37,7 @@ def test_cache() -> None:
 
 @pytest.mark.asyncio
 async def test_cache_async() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     await memorix.cache.user.async_set(
         "uv",
@@ -69,16 +52,10 @@ async def test_cache_async() -> None:
 
 @pytest.mark.asyncio
 async def test_cache_async_no_key() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     await memorix.cache.bestStr.async_set(
         "uv",
-        Memorix.DefaultOptions.Cache(
-            expire=Memorix.DefaultOptions.Cache.Expire(
-                value=500,
-                is_in_ms=True,
-            ),
-        ),
     )
 
     best_str = await memorix.cache.bestStr.async_get()
@@ -88,7 +65,7 @@ async def test_cache_async_no_key() -> None:
 
 
 def test_cache_list() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.cache.allUsers.set(
         payload=[[User(name="uv", age=29), None], [None]],
@@ -106,46 +83,21 @@ def test_cache_list() -> None:
 
 
 def test_cache_complex_key() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.cache.user2.set(
-        key=CacheUser2Key(id="uv"),
+        key=InlineCacheKeyUser2(id="uv"),
         payload=User(name="uv", age=29),
     )
 
-    user = memorix.cache.user2.get(key=CacheUser2Key(id="uv"))
+    user = memorix.cache.user2.get(key=InlineCacheKeyUser2(id="uv"))
     if user is None:
         raise Exception("Didn't get user from redis")
     assert user.age == 29
 
 
-def test_cache_expire() -> None:
-    memorix = Memorix(redis_url=redis_url)
-
-    memorix.cache.user.set(
-        "uv",
-        User(name="uv", age=29),
-        Memorix.DefaultOptions.Cache(
-            expire=Memorix.DefaultOptions.Cache.Expire(
-                value=500,
-                is_in_ms=True,
-            ),
-        ),
-    )
-
-    user1 = memorix.cache.user.get("uv")
-    if user1 is None:
-        raise Exception("Didn't get user from redis")
-    assert user1.age == 29
-    sleep(0.7)
-    user2 = memorix.cache.user.get("uv")
-    assert user2 is None
-
-
 def test_cache_expire_schema() -> None:
-    memorix = Memorix(
-        redis_url=redis_url,
-    )
+    memorix = Memorix()
 
     memorix.cache.userExpire.set(
         "uv",
@@ -161,29 +113,8 @@ def test_cache_expire_schema() -> None:
     assert user2 is None
 
 
-def test_cache_expire_defaults_config() -> None:
-    memorix = Memorix(
-        redis_url=redis_url,
-    )
-
-    memorix.cache.user.set(
-        "uv",
-        User(name="uv", age=29),
-    )
-
-    user1 = memorix.cache.user.get("uv")
-    if user1 is None:
-        raise Exception("Didn't get user from redis")
-    assert user1.age == 29
-    sleep(2.5)
-    user2 = memorix.cache.user.get("uv")
-    assert user2 is None
-
-
 def test_cache_expire_none() -> None:
-    memorix = Memorix(
-        redis_url=redis_url,
-    )
+    memorix = Memorix()
 
     memorix.cache.userExpire2.set(
         "uv",
@@ -196,9 +127,7 @@ def test_cache_expire_none() -> None:
 
 
 def test_cache_expire_extending_on_get() -> None:
-    memorix = Memorix(
-        redis_url=redis_url,
-    )
+    memorix = Memorix()
 
     memorix.cache.userExpire3.set(
         User(name="uv", age=29),
@@ -213,7 +142,7 @@ def test_cache_expire_extending_on_get() -> None:
 
 
 def test_pubsub() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     process1 = multiprocessing.Process(target=listen_to_message)
     process2 = multiprocessing.Process(target=listen_to_message)
@@ -232,7 +161,7 @@ def test_pubsub() -> None:
 @pytest.mark.asyncio
 @with_timeout(3)
 async def test_pubsub_async() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     res = await memorix.pubsub.message.async_publish(payload="Heyy")
     assert res.subscribers_size == 0
@@ -244,26 +173,26 @@ async def test_pubsub_async() -> None:
     asyncio.create_task(publish_in_a_second())
 
     payload: typing.Optional[str] = None
-    async for message in memorix.pubsub.message.async_subscribe():
-        payload = message.payload
+    async for msg in memorix.pubsub.message.async_subscribe():
+        payload = msg
         break
 
     assert payload == "buddy"
 
 
 def test_task_dequeue() -> None:
-    memorix = Memorix(redis_url=redis_url)
-    memorix.task.runAlgo.clear()
-    memorix.task.runAlgo.queue(payload="send me dog")
+    memorix = Memorix()
+    memorix.task.runAlgo.empty()
+    memorix.task.runAlgo.enqueue(payload="send me dog")
     sleep(0.1)
-    for res in memorix.task.runAlgo.dequeue():
-        assert res.payload == "send me dog"
+    for payload in memorix.task.runAlgo.dequeue():
+        assert payload == "send me dog"
         break
 
 
 def test_task() -> None:
-    memorix = Memorix(redis_url=redis_url)
-    memorix.task.runAlgo.clear()
+    memorix = Memorix()
+    memorix.task.runAlgo.empty()
 
     task1 = multiprocessing.Process(target=listen_to_algo)
     task2 = multiprocessing.Process(target=listen_to_algo)
@@ -271,13 +200,9 @@ def test_task() -> None:
     task2.start()
 
     sleep(0.1)
-    queue = memorix.task.runAlgo.queue(payload="send me cat")
+    queue = memorix.task.runAlgo.enqueue(payload="send me cat")
 
     assert queue.queue_size == 1
-
-    res = queue.get_returns()
-
-    assert res.value == Animal.cat.value
 
     sleep(0.1)
 
@@ -286,39 +211,39 @@ def test_task() -> None:
 
 
 def test_task_clear() -> None:
-    memorix = Memorix(redis_url=redis_url)
-    memorix.task.runAlgo.clear()
+    memorix = Memorix()
+    memorix.task.runAlgo.empty()
 
     try:
-        queue = memorix.task.runAlgo.queue(payload="send me cat")
-        queue = memorix.task.runAlgo.queue(payload="send me cat")
-        queue = memorix.task.runAlgo.queue(payload="send me cat")
+        queue = memorix.task.runAlgo.enqueue(payload="send me cat")
+        queue = memorix.task.runAlgo.enqueue(payload="send me cat")
+        queue = memorix.task.runAlgo.enqueue(payload="send me cat")
         assert queue.queue_size == 3
-        memorix.task.runAlgo.clear()
-        queue = memorix.task.runAlgo.queue(payload="send me cat")
+        memorix.task.runAlgo.empty()
+        queue = memorix.task.runAlgo.enqueue(payload="send me cat")
         assert queue.queue_size == 1
     finally:
-        memorix.task.runAlgo.clear()
+        memorix.task.runAlgo.empty()
 
 
 def test_task_options_schema() -> None:
-    memorix = Memorix(redis_url=redis_url)
-    memorix.task.runAlgoNewest.clear()
+    memorix = Memorix()
+    memorix.task.runAlgoNewest.empty()
 
     try:
-        memorix.task.runAlgoNewest.queue(payload="send me cat")
-        memorix.task.runAlgoNewest.queue(payload="send me dog")
-        for res in memorix.task.runAlgoNewest.dequeue():
-            assert res.payload == "send me dog"
+        memorix.task.runAlgoNewest.enqueue(payload="send me cat")
+        memorix.task.runAlgoNewest.enqueue(payload="send me dog")
+        for payload in memorix.task.runAlgoNewest.dequeue():
+            assert payload == "send me dog"
             break
     finally:
-        memorix.task.runAlgo.clear()
+        memorix.task.runAlgo.empty()
 
 
 def test_cache_namespace() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
-    memorix.spaceship.cache.pilot.set(CachePilotPayload(name="uv"))
+    memorix.spaceship.cache.pilot.set(Spaceship.InlineCachePayloadPilot(name="uv"))
 
     pilot = memorix.spaceship.cache.pilot.get()
     if pilot is None:
@@ -332,7 +257,7 @@ def test_cache_namespace() -> None:
 
 
 def test_cache_recursive_namespace() -> None:
-    memorix = Memorix(redis_url=redis_url)
+    memorix = Memorix()
 
     memorix.spaceship.crew.cache.count.set(10)
 
