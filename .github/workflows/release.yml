@@ -141,7 +141,7 @@ jobs:
       - name: Update Cargo.toml version
         run: |
           cd ./cli
-          sed -i '' "0,/version = \".*\"/s/version = \".*\"/version = \"${{ needs.version-and-release.outputs.new_version }}\"/" Cargo.toml
+          sed -i '' 's/^version = ".*"/version = "${{ needs.version-and-release.outputs.new_version }}"/' Cargo.toml
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
