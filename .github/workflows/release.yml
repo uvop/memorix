@@ -330,3 +330,74 @@ jobs:
           git add Formula/memorix.rb
           git commit -m "memorix ${VERSION}"
           git push https://x-access-token:${{ secrets.COMMITTER_TOKEN }}@github.com/uvop/homebrew-memorix.git HEAD:master
+  publish-chocolatey:
+    needs: [version-and-release]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - name: Create Chocolatey package
+        shell: pwsh
+        run: |
+          $version = "${{ needs.version-and-release.outputs.new_version }}"
+          $url = "https://github.com/uvop/memorix/releases/download/v${version}/memorix.exe"
+
+          # Create package directory structure
+          New-Item -ItemType Directory -Path "choco-package"
+          New-Item -ItemType Directory -Path "choco-package/tools"
+
+          # Create nuspec file
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+            <metadata>
+              <id>memorix</id>
+              <version>$version</version>
+              <title>Memorix CLI</title>
+              <authors>uvop</authors>
+              <projectUrl>https://github.com/uvop/memorix</projectUrl>
+              <licenseUrl>https://github.com/uvop/memorix/blob/master/LICENSE</licenseUrl>
+              <requireLicenseAcceptance>false</requireLicenseAcceptance>
+              <description>Memorix CLI tool</description>
+              <tags>memorix cli</tags>
+            </metadata>
+          </package>
+          "@ | Set-Content "choco-package/memorix.nuspec"
+
+          # Create installation script
+          @"
+          `$ErrorActionPreference = 'Stop'
+          `$toolsDir = "`$(Split-Path -Parent `$MyInvocation.MyCommand.Definition)"
+          `$url = '$url'
+          `$packageArgs = @{
+            packageName    = 'memorix'
+            url           = `$url
+            fileFullPath  = Join-Path `$toolsDir 'memorix.exe'
+            checksum      = (Invoke-RestMethod -Uri "`$url" -OutFile "`$env:TEMP\memorix.exe" -PassThru | Get-FileHash).Hash
+            checksumType  = 'sha256'
+          }
+          Get-ChocolateyWebFile @packageArgs
+          "@ | Set-Content "choco-package/tools/chocolateyinstall.ps1"
+
+          # Create uninstallation script
+          @"
+          `$ErrorActionPreference = 'Stop'
+          `$toolsDir = "`$(Split-Path -Parent `$MyInvocation.MyCommand.Definition)"
+          Remove-Item "`$toolsDir\memorix.exe" -Force
+          "@ | Set-Content "choco-package/tools/chocolateyuninstall.ps1"
+
+      - name: Install Chocolatey
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Pack and Push to Chocolatey
+        shell: pwsh
+        working-directory: ./choco-package
+        run: |
+          choco pack
+          choco push memorix.${{ needs.version-and-release.outputs.new_version }}.nupkg --source https://push.chocolatey.org/ --api-key ${{ secrets.CHOCOLATEY_API_KEY }}
