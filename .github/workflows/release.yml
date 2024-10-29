@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - next
+      - 67-publish-exe-to-chocolatey
 
 jobs:
   version-and-release:
@@ -67,7 +67,7 @@ jobs:
               ;;
           esac
 
-          if [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
+          if [[ "${{ github.ref }}" == "refs/heads/67-publish-exe-to-chocolatey" ]]; then
             rc_num=1
             highest_rc=$(git tag -l "v${new_version}-rc*" | grep -E "^v${new_version}-rc[0-9]+$" | sort -V | tail -n 1 || echo "")
             if [[ ! -z "$highest_rc" ]]; then
@@ -126,52 +126,52 @@ jobs:
             cli/target/memorix-linux-x64
             cli/target/memorix.exe
           draft: false
-          prerelease: ${{ github.ref == 'refs/heads/next' }}
+          prerelease: ${{ github.ref == 'refs/heads/67-publish-exe-to-chocolatey' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-macos:
-    needs: version-and-release
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+  # build-macos:
+  #   needs: version-and-release
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         ref: "v${{ needs.version-and-release.outputs.new_version }}"
 
-      - name: Update Cargo.toml version
-        run: |
-          cd ./cli
-          sed -i '' 's/^version = ".*"/version = "${{ needs.version-and-release.outputs.new_version }}"/' Cargo.toml
+  #     - name: Update Cargo.toml version
+  #       run: |
+  #         cd ./cli
+  #         sed -i '' 's/^version = ".*"/version = "${{ needs.version-and-release.outputs.new_version }}"/' Cargo.toml
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          profile: minimal
+  #     - name: Install Rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: stable
+  #         override: true
+  #         profile: minimal
 
-      - name: Add targets
-        run: |
-          rustup target add x86_64-apple-darwin
-          rustup target add aarch64-apple-darwin
+  #     - name: Add targets
+  #       run: |
+  #         rustup target add x86_64-apple-darwin
+  #         rustup target add aarch64-apple-darwin
 
-      - name: Build macOS targets
-        run: |
-          cd ./cli
-          cargo build --release --target x86_64-apple-darwin
-          mv target/x86_64-apple-darwin/release/memorix target/memorix-macos-x64
-          cargo build --release --target aarch64-apple-darwin
-          mv target/aarch64-apple-darwin/release/memorix target/memorix-macos-arm64
+  #     - name: Build macOS targets
+  #       run: |
+  #         cd ./cli
+  #         cargo build --release --target x86_64-apple-darwin
+  #         mv target/x86_64-apple-darwin/release/memorix target/memorix-macos-x64
+  #         cargo build --release --target aarch64-apple-darwin
+  #         mv target/aarch64-apple-darwin/release/memorix target/memorix-macos-arm64
 
-      - name: Update GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: "v${{ needs.version-and-release.outputs.new_version }}"
-          files: |
-            cli/target/memorix-macos-x64
-            cli/target/memorix-macos-arm64
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Update GitHub Release
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         tag_name: "v${{ needs.version-and-release.outputs.new_version }}"
+  #         files: |
+  #           cli/target/memorix-macos-x64
+  #           cli/target/memorix-macos-arm64
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-client-rust:
     needs: [version-and-release]
@@ -272,7 +272,8 @@ jobs:
           force_orphan: true
 
   publish-homebrew:
-    needs: [version-and-release, build-macos]
+    # needs: [version-and-release, build-macos]
+    needs: [version-and-release]
     runs-on: ubuntu-latest
     steps:
       - name: Update Homebrew formula
@@ -330,3 +331,74 @@ jobs:
           git add Formula/memorix.rb
           git commit -m "memorix ${VERSION}"
           git push https://x-access-token:${{ secrets.COMMITTER_TOKEN }}@github.com/uvop/homebrew-memorix.git HEAD:master
+  publish-chocolatey:
+    needs: [version-and-release]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: "v${{ needs.version-and-release.outputs.new_version }}"
+
+      - name: Create Chocolatey package
+        shell: pwsh
+        run: |
+          $version = "${{ needs.version-and-release.outputs.new_version }}"
+          $url = "https://github.com/uvop/memorix/releases/download/v${version}/memorix.exe"
+
+          # Create package directory structure
+          New-Item -ItemType Directory -Path "choco-package"
+          New-Item -ItemType Directory -Path "choco-package/tools"
+
+          # Create nuspec file
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+            <metadata>
+              <id>memorix</id>
+              <version>$version</version>
+              <title>Memorix CLI</title>
+              <authors>uvop</authors>
+              <projectUrl>https://github.com/uvop/memorix</projectUrl>
+              <licenseUrl>https://github.com/uvop/memorix/blob/master/LICENSE</licenseUrl>
+              <requireLicenseAcceptance>false</requireLicenseAcceptance>
+              <description>Memorix CLI tool</description>
+              <tags>memorix cli</tags>
+            </metadata>
+          </package>
+          "@ | Set-Content "choco-package/memorix.nuspec"
+
+          # Create installation script
+          @"
+          `$ErrorActionPreference = 'Stop'
+          `$toolsDir = "`$(Split-Path -Parent `$MyInvocation.MyCommand.Definition)"
+          `$url = '$url'
+          `$packageArgs = @{
+            packageName    = 'memorix'
+            url           = `$url
+            fileFullPath  = Join-Path `$toolsDir 'memorix.exe'
+            checksum      = (Invoke-RestMethod -Uri "`$url" -OutFile "`$env:TEMP\memorix.exe" -PassThru | Get-FileHash).Hash
+            checksumType  = 'sha256'
+          }
+          Get-ChocolateyWebFile @packageArgs
+          "@ | Set-Content "choco-package/tools/chocolateyinstall.ps1"
+
+          # Create uninstallation script
+          @"
+          `$ErrorActionPreference = 'Stop'
+          `$toolsDir = "`$(Split-Path -Parent `$MyInvocation.MyCommand.Definition)"
+          Remove-Item "`$toolsDir\memorix.exe" -Force
+          "@ | Set-Content "choco-package/tools/chocolateyuninstall.ps1"
+
+      - name: Install Chocolatey
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Pack and Push to Chocolatey
+        shell: pwsh
+        working-directory: ./choco-package
+        run: |
+          choco pack
+          choco push memorix.${{ needs.version-and-release.outputs.new_version }}.nupkg --source https://push.chocolatey.org/ --api-key ${{ secrets.CHOCOLATEY_API_KEY }}
