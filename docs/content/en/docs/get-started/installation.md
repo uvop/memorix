@@ -15,7 +15,7 @@ toc: true
 
 Follow the instructions below to install `memorix-cli` on your machine depending on the platform you use
 
-### macOS, linux and WSL installation (recommended)
+### macOS, linux and WSL installation
 
 #### Requirements
 
@@ -35,9 +35,25 @@ memorix --version
 Done!  
 if successful, you should see the version installed in your terminal
 
-### Manual installation
+### Windows
 
-This way also supports windows without WSL, but is a bit more tedious
+#### Requirements
+
+- [choco](https://chocolatey.org/) — Package manager for Windows.
+
+#### Steps
+
+Run these in the cmd
+
+```bash
+choco install memorix
+memorix --version
+```
+
+Done!  
+if successful, you should see the version installed in your terminal
+
+### Manual installation
 
 - Go to [memorix releases on github](https://github.com/uvop/memorix/releases).
 - Download the executable for your platform and place somewhere in your system (for instance, `~/.memorix`)
