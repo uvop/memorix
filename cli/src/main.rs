@@ -169,7 +169,7 @@ fn main() -> Result<(), PrettyError<String>> {
             .into());
     }
     let command = match args[1].as_str() {
-        "format" => Ok(Command::Format),
+        "fmt" => Ok(Command::Format),
         "codegen" => Ok(Command::Codegen),
         x => Err(format!("Unknown command \"{}\"", x)),
     }?;

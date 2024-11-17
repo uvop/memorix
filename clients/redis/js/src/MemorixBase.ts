@@ -164,7 +164,7 @@ export class MemorixBase {
     } as any;
   }
 
-  protected getPubSubItem<
+  protected getPubsubItem<
     Key,
     Payload,
     CanPublish extends boolean,
@@ -270,7 +270,7 @@ export class MemorixBase {
   >(
     ...itemArgs: any[]
   ): types.PubSubItemNoKey<Payload, CanPublish, CanSubscribe> {
-    const item = (this.getPubSubItem as any)(...itemArgs);
+    const item = (this.getPubsubItem as any)(...itemArgs);
     item.hasKey = false;
 
     return {
