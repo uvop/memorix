@@ -17,7 +17,13 @@ export namespace messageService {
   }
 
   export class Memorix extends MemorixBase {
-    protected override namespaceNameTree = ["MessageService"];
+    constructor(ref: MemorixBase) {
+      super({
+        namespaceNameTree: ["MessageService"],
+      }, {
+        ref,
+      });
+    }
 
     cache = {
       message: this.getCacheItem<string, {
@@ -46,11 +52,15 @@ export namespace messageService {
   }
 }
 export class Memorix extends MemorixBase {
-  protected override redisUrl = getEnvVariable("REDIS_URL");
+  constructor() {
+    super({
+      namespaceNameTree: [],
+    }, {
+      redisUrl: getEnvVariable("REDIS_URL"),
+    });
+  }
 
-  protected override namespaceNameTree = [];
-
-  MessageService = this.getNamespaceItem(messageService.Memorix);
+  MessageService = new messageService.Memorix(this);
 
   cache = {
     user_profile: this.getCacheItem<number, {

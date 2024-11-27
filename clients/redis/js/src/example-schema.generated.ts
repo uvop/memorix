@@ -17,7 +17,13 @@ export type User = {
 export namespace spaceship {
   export namespace crew {
     export class Memorix extends MemorixBase {
-      protected override namespaceNameTree = ["spaceship", "crew"];
+      constructor(ref: MemorixBase) {
+        super({
+          namespaceNameTree: ["spaceship", "crew"],
+        }, {
+          ref,
+        });
+      }
 
       cache = {
         count: this.getCacheItemNoKey<number, true, true, true>("count", {
@@ -27,9 +33,15 @@ export namespace spaceship {
     }
   }
   export class Memorix extends MemorixBase {
-    protected override namespaceNameTree = ["spaceship"];
+    constructor(ref: MemorixBase) {
+      super({
+        namespaceNameTree: ["spaceship"],
+      }, {
+        ref,
+      });
+    }
 
-    crew = this.getNamespaceItem(crew.Memorix);
+    crew = new crew.Memorix(this);
 
     cache = {
       pilot: this.getCacheItemNoKey<{
@@ -41,11 +53,15 @@ export namespace spaceship {
   }
 }
 export class Memorix extends MemorixBase {
-  protected override redisUrl = getEnvVariable("REDIS_URL");
+  constructor() {
+    super({
+      namespaceNameTree: [],
+    }, {
+      redisUrl: getEnvVariable("REDIS_URL"),
+    });
+  }
 
-  protected override namespaceNameTree = [];
-
-  spaceship = this.getNamespaceItem(spaceship.Memorix);
+  spaceship = new spaceship.Memorix(this);
 
   cache = {
     favoriteAnimal: this.getCacheItem<string, Animal, true, true, true>("favoriteAnimal"),

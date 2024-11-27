@@ -117,18 +117,26 @@ fn namespace_to_code(
         ));
     }
     result.push_str(&format!(
-        r#"{base_indent}export class Memorix extends MemorixBase {{{start}
-{base_indent}  protected override namespaceNameTree = [{name_tree}];
+        r#"{base_indent}export class Memorix extends MemorixBase {{
+{base_indent}  constructor({constructor_input}) {{
+{base_indent}    super({{
+{base_indent}      namespaceNameTree: [{name_tree}],
+{base_indent}    }}, {{
+{base_indent}      {super_call}
+{base_indent}    }});
+{base_indent}  }}
 
 {class_content}
 {base_indent}}}"#,
-start= match name_tree.is_empty() {
-      true => format!(r#"
-{base_indent}  protected override redisUrl = {redis_url};
-"#, redis_url = match &schema.engine {
+constructor_input= match name_tree.is_empty() {
+    true => "".to_string(),
+  false => "ref: MemorixBase".to_string(),
+},
+super_call= match name_tree.is_empty() {
+      true => format!(r#"redisUrl: {redis_url},"#, redis_url = match &schema.engine {
     Engine::Redis(x) => value_to_code(x),
     }),
-    false => "".to_string(),
+    false => "ref,".to_string(),
 },
         name_tree = name_tree
             .iter()
@@ -140,7 +148,7 @@ start= match name_tree.is_empty() {
                 .namespaces
                 .iter()
                 .map(|(name, _)| format!(
-                    "{base_indent}  {name} = this.getNamespaceItem({namespace_name}.Memorix);",
+                    "{base_indent}  {name} = new {namespace_name}.Memorix(this);",
                     namespace_name = stringcase::camel_case(name)
                 ))
                 .collect::<Vec<_>>()

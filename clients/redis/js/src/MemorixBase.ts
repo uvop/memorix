@@ -13,9 +13,7 @@ enum QueueType {
 }
 
 export class MemorixBase {
-  protected namespaceNameTree: string[] = [];
-
-  protected redisUrl?: string;
+  private namespaceNameTree: string[];
 
   private redis: Redis;
 
@@ -25,14 +23,18 @@ export class MemorixBase {
 
   private subscriptionCallbacks: Map<string, ((payload: any) => void)[]>;
 
-  constructor(ref?: MemorixBase) {
+  constructor(
+    { namespaceNameTree }: { namespaceNameTree: string[] },
+    { redisUrl, ref }: { redisUrl?: string; ref?: MemorixBase },
+  ) {
+    this.namespaceNameTree = namespaceNameTree;
     if (ref) {
       this.redis = ref.redis;
       this.redisSub = ref.redisSub;
       this.redisTasks = ref.redisTasks;
       this.subscriptionCallbacks = ref.subscriptionCallbacks;
     } else {
-      this.redis = new Redis(this.redisUrl!, { lazyConnect: true });
+      this.redis = new Redis(redisUrl!, { lazyConnect: true });
       this.redisSub = this.redis.duplicate();
       this.redisTasks = [];
       this.subscriptionCallbacks = new Map();
@@ -61,14 +63,6 @@ export class MemorixBase {
     this.redisTasks.forEach((x) => {
       x.disconnect();
     });
-  }
-
-  protected getNamespaceItem<T extends MemorixBase>(
-    NamespaceClass: new (
-      ...arg: ConstructorParameters<typeof MemorixBase>
-    ) => T,
-  ): T {
-    return new NamespaceClass(this);
   }
 
   protected getCacheItem<

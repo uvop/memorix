@@ -67,7 +67,7 @@ First, lets create a basic schema.
     - To format the schema file and validate it, run
 
     ```bash
-    memorix format ./schema.memorix
+    memorix fmt ./schema.memorix
     ```
 
 ## Using the schema API (redis)
