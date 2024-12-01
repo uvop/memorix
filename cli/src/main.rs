@@ -114,7 +114,7 @@ pub fn format<F: FileSystem>(
 
 pub fn codegen<F: FileSystem>(fs: &F, path: &str) -> Result<(), PrettyError<String>> {
     let parsed_schema =
-        crate::imports::ImportedSchema::new(fs, path).map_err(|x| format!("{}", x))?;
+        crate::imports::ImportedSchema::new(fs, path, None).map_err(|x| format!("{}", x))?;
     let export_schema = crate::export_schema::ExportSchema::new(&parsed_schema);
     let validated_schema = crate::validate::validate_schema(&export_schema);
     let flat_validated_schema = crate::flat_schema::FlatValidatedSchema::new(&validated_schema);
@@ -207,7 +207,7 @@ fn main() -> Result<(), PrettyError<String>> {
 
 #[cfg(test)]
 mod tests {
-    use std::{cell::RefCell, collections::HashMap, io};
+    use std::{cell::RefCell, collections::HashMap, io, path::Path};
 
     use crate::{codegen, format, FileSystem};
 
@@ -216,19 +216,33 @@ mod tests {
     }
 
     impl FileSystem for MockFileSystem {
-        fn read_to_string(&self, path: &str) -> io::Result<String> {
-            self.files.borrow().get(path).cloned().ok_or_else(|| {
+        fn read_to_string(&self, path_str: &str) -> io::Result<String> {
+            let path = Path::new(path_str);
+            if !path.is_absolute() {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    format!("File \"{}\" is not absolute", path_str),
+                ));
+            }
+            self.files.borrow().get(path_str).cloned().ok_or_else(|| {
                 io::Error::new(
                     io::ErrorKind::NotFound,
-                    format!("File \"{}\" not found", path),
+                    format!("File \"{}\" not found", path_str),
                 )
             })
         }
 
-        fn write_string(&self, path: &str, content: &str) -> io::Result<()> {
+        fn write_string(&self, path_str: &str, content: &str) -> io::Result<()> {
+            let path = Path::new(path_str);
+            if !path.is_absolute() {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    format!("File \"{}\" is not absolute", path_str),
+                ));
+            }
             self.files
                 .borrow_mut()
-                .insert(path.to_string(), content.to_string());
+                .insert(path_str.to_string(), content.to_string());
             Ok(())
         }
     }
@@ -238,7 +252,7 @@ mod tests {
         let mock_fs = MockFileSystem {
             files: RefCell::new(HashMap::from([
                 (
-                    "output/another-schema.memorix".to_string(),
+                    "/output/another-schema.memorix".to_string(),
                     r#"
 Config {
   export: {
@@ -274,11 +288,12 @@ Cache {
                     .to_string(),
                 ),
                 (
-                    "output/schema.memorix".to_string(),
+                    "/output/schema.memorix".to_string(),
                     r#"
 Config {
   import: [
     "another-schema.memorix"
+    "/output/another-schema.memorix"
   ]
   export: {
     engine: Redis( env(REDIS_URL) )
@@ -420,14 +435,14 @@ Namespace UserService {
                 ),
             ])),
         };
-        codegen(&mock_fs, "output/schema.memorix")?;
-        let typescript_path = "output/memorix.generated.ts";
+        codegen(&mock_fs, "/output/schema.memorix")?;
+        let typescript_path = "/output/memorix.generated.ts";
         let typescript_code = mock_fs.read_to_string(typescript_path)?;
         insta::assert_snapshot!(typescript_code);
-        let python_path = "output/memorix_generated.py";
+        let python_path = "/output/memorix_generated.py";
         let python_code = mock_fs.read_to_string(python_path)?;
         insta::assert_snapshot!(python_code);
-        let rust_path = "output/memorix_generated.rs";
+        let rust_path = "/output/memorix_generated.rs";
         let rust_code = mock_fs.read_to_string(rust_path)?;
         insta::assert_snapshot!(rust_code);
         Ok(())
@@ -437,7 +452,7 @@ Namespace UserService {
     fn test_fail_nicely() -> Result<(), Box<dyn std::error::Error>> {
         let mock_fs = MockFileSystem {
             files: RefCell::new(HashMap::from([(
-                "schema.memorix".to_string(),
+                "/schema.memorix".to_string(),
                 r#"
 Config {
   export: {
@@ -458,7 +473,7 @@ Type {
             )])),
         };
 
-        let result = codegen(&mock_fs, "schema.memorix");
+        let result = codegen(&mock_fs, "/schema.memorix");
         let err = result.unwrap_err();
         insta::assert_snapshot!(err.to_string());
 
@@ -468,7 +483,7 @@ Type {
     fn test_format() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mock_fs = MockFileSystem {
             files: RefCell::new(HashMap::from([(
-                "schema.memorix".to_string(),
+                "/schema.memorix".to_string(),
                 r#"
     Config{
       export: {
@@ -533,8 +548,8 @@ Type {
                 .to_string(),
             )])),
         };
-        format(&mock_fs, "schema.memorix")?;
-        let formatted_schema = mock_fs.read_to_string("schema.memorix")?;
+        format(&mock_fs, "/schema.memorix")?;
+        let formatted_schema = mock_fs.read_to_string("/schema.memorix")?;
         insta::assert_snapshot!(formatted_schema);
 
         Ok(())

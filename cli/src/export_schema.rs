@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -154,11 +156,20 @@ fn namespace_to_export_namespace(namespace: &Namespace, expose_all: bool) -> Exp
 }
 
 impl ExportSchema {
-    fn new_global_namespace(import_schema: &ImportedSchema, is_import: bool) -> ExportNamespace {
+    fn new_global_namespace(
+        import_schema: &ImportedSchema,
+        parent_seen: Option<&mut HashSet<String>>,
+    ) -> ExportNamespace {
+        let expose_all = parent_seen.is_none();
+        let mut binding = HashSet::new();
+        let seen = parent_seen.unwrap_or(&mut binding);
         let import_export_schemas = import_schema
             .imports
             .iter()
-            .map(|x| Self::new_global_namespace(x, true))
+            .filter_map(|x| match seen.insert(x.path.clone()) {
+                true => Some(Self::new_global_namespace(x, Some(seen))),
+                false => None,
+            })
             .collect::<Vec<_>>();
 
         let global_namespaces = import_schema
@@ -166,7 +177,7 @@ impl ExportSchema {
             .global_namespace
             .namespaces
             .iter()
-            .map(|(k, x)| (k.clone(), namespace_to_export_namespace(x, !is_import)));
+            .map(|(k, x)| (k.clone(), namespace_to_export_namespace(x, expose_all)));
         let global_namespaces = global_namespaces
             .chain(
                 import_export_schemas
@@ -175,7 +186,7 @@ impl ExportSchema {
             )
             .collect::<Vec<_>>();
         let global_namespace =
-            namespace_to_export_namespace(&import_schema.schema.global_namespace, !is_import);
+            namespace_to_export_namespace(&import_schema.schema.global_namespace, expose_all);
         let global_namespace = ExportNamespace {
             type_items: global_namespace
                 .type_items
@@ -228,7 +239,7 @@ impl ExportSchema {
         global_namespace
     }
     pub fn new(import_schema: &ImportedSchema) -> Self {
-        let global_namespace = Self::new_global_namespace(import_schema, false);
+        let global_namespace = Self::new_global_namespace(import_schema, None);
         Self {
             global_namespace,
             engine: import_schema

@@ -1,9 +1,9 @@
 ---
 source: src/main.rs
-assertion_line: 463
+assertion_line: 477
 expression: err.to_string()
 ---
-parser feedback for file "schema.memorix":
+parser feedback for file "/schema.memorix":
 0: at line 13:
   a: [u64 u32]
           ^
