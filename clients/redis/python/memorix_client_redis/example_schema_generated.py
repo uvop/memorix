@@ -27,27 +27,26 @@ class InlineTypeUser(object):
     name: str
     age: typing.Optional[int]
 
-
 User = InlineTypeUser
 
 
-class MemorixCache(MemorixCacheAll.Base):
+class MemorixCache(MemorixCacheAll.Base): # type: ignore[misc]
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.favoriteAnimal = MemorixCacheAll.ItemTTT[str, Animal](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, Animal](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixCacheAll.ItemTTT[str, User](
+        self.user = MemorixCacheAll.ItemTTTT[str, 'User'](
             api=api,
             id="user",
-            payload_class=User,
+            payload_class='User',
         )
 
 
-class MemorixPubSub(MemorixPubSubAll.Base):
+class MemorixPubSub(MemorixPubSubAll.Base): # type: ignore[misc]
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
@@ -58,7 +57,7 @@ class MemorixPubSub(MemorixPubSubAll.Base):
         )
 
 
-class MemorixTask(MemorixTaskAll.Base):
+class MemorixTask(MemorixTaskAll.Base): # type: ignore[misc]
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
@@ -68,10 +67,10 @@ class MemorixTask(MemorixTaskAll.Base):
             payload_class=str,
         )
 
-
 class Memorix(MemorixBase):
     def __init__(self) -> None:
         super().__init__(redis_url=os.environ["REDIS_URL"])
+
 
         self._namespace_name_tree = []
         self.cache = MemorixCache(self)

@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 429
+assertion_line: 444
 expression: python_code
 ---
 # flake8: noqa
@@ -65,36 +65,36 @@ class MessageService(object):
         priority: int
 
 
-    class MemorixCache(MemorixCacheAll.Base):
+    class MemorixCache(MemorixCacheAll.Base): # type: ignore[misc]
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.message = MemorixCacheAll.ItemTTT[str, MessageService.InlineCachePayloadMessage](
+            self.message = MemorixCacheAll.ItemTTTT[str, 'MessageService.InlineCachePayloadMessage'](
                 api=api,
                 id="message",
-                payload_class=MessageService.InlineCachePayloadMessage,
+                payload_class='MessageService.InlineCachePayloadMessage',
             )
 
 
-    class MemorixPubSub(MemorixPubSubAll.Base):
+    class MemorixPubSub(MemorixPubSubAll.Base): # type: ignore[misc]
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.new_message = MemorixPubSubAll.ItemTT[int, MessageService.InlinePubSubPayloadNewMessage](
+            self.new_message = MemorixPubSubAll.ItemTT[int, 'MessageService.InlinePubSubPayloadNewMessage'](
                 api=api,
                 id="new_message",
-                payload_class=MessageService.InlinePubSubPayloadNewMessage,
+                payload_class='MessageService.InlinePubSubPayloadNewMessage',
             )
 
 
-    class MemorixTask(MemorixTaskAll.Base):
+    class MemorixTask(MemorixTaskAll.Base): # type: ignore[misc]
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.message_processing_tasks = MemorixTaskAll.ItemTTTTNoKey[MessageService.InlineTaskPayloadMessageProcessingTasks](
+            self.message_processing_tasks = MemorixTaskAll.ItemTTTTNoKey['MessageService.InlineTaskPayloadMessageProcessingTasks'](
                 api=api,
                 id="message_processing_tasks",
-                payload_class=MessageService.InlineTaskPayloadMessageProcessingTasks,
+                payload_class='MessageService.InlineTaskPayloadMessageProcessingTasks',
                 options=MemorixTaskAll.Options(
                     queue_type="Fifo",
                 )
@@ -111,24 +111,24 @@ class MessageService(object):
             self.task = MessageService.MemorixTask(self)
 
 
-class MemorixCache(MemorixCacheAll.Base):
+class MemorixCache(MemorixCacheAll.Base): # type: ignore[misc]
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.user_profile = MemorixCacheAll.ItemTTT[int, InlineCachePayloadUserProfile](
+        self.user_profile = MemorixCacheAll.ItemTTTT[int, 'InlineCachePayloadUserProfile'](
             api=api,
             id="user_profile",
-            payload_class=InlineCachePayloadUserProfile,
+            payload_class='InlineCachePayloadUserProfile',
         )
-        self.user_session = MemorixCacheAll.ItemTTT[str, InlineCachePayloadUserSession](
+        self.user_session = MemorixCacheAll.ItemTTTT[str, 'InlineCachePayloadUserSession'](
             api=api,
             id="user_session",
-            payload_class=InlineCachePayloadUserSession,
+            payload_class='InlineCachePayloadUserSession',
             options=MemorixCacheAll.Options(
                 ttl=os.environ["USER_SESSION_TTL"],
             )
         )
-        self.number_of_messages = MemorixCacheAll.ItemTFFNoKey[int](
+        self.number_of_messages = MemorixCacheAll.ItemTFFFNoKey[int](
             api=api,
             id="number_of_messages",
             payload_class=int,

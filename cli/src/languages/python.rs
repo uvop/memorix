@@ -12,15 +12,19 @@ fn indent(level: usize) -> String {
 fn flat_type_item_to_code(
     flat_type_item: &FlatValidatedTypeItem,
     schema: &FlatValidatedSchema,
-    no_squote: bool
+    no_squote: bool,
 ) -> String {
     match flat_type_item {
-        FlatValidatedTypeItem::Optional(x) => {
-            format!("typing.Optional[{}]", flat_type_item_to_code(x, schema, no_squote)).to_string()
-        }
-        FlatValidatedTypeItem::Array(x) => {
-            format!("typing.List[{}]", flat_type_item_to_code(x, schema, no_squote)).to_string()
-        }
+        FlatValidatedTypeItem::Optional(x) => format!(
+            "typing.Optional[{}]",
+            flat_type_item_to_code(x, schema, no_squote)
+        )
+        .to_string(),
+        FlatValidatedTypeItem::Array(x) => format!(
+            "typing.List[{}]",
+            flat_type_item_to_code(x, schema, no_squote)
+        )
+        .to_string(),
         FlatValidatedTypeItem::Reference(x) => {
             let (namespace, namespace_names) = x.namespace_indexes.iter().fold(
                 (&schema.global_namespace, Vec::<&str>::new()),
@@ -35,7 +39,7 @@ fn flat_type_item_to_code(
                 squote = match (no_squote, x.kind.clone()) {
                     (false, FlatValidatedReferenceTypeItemKind::TypeObjectItem(_)) => "'",
                     (false, FlatValidatedReferenceTypeItemKind::TypeItem(_)) => "'",
-                    _ => ""
+                    _ => "",
                 },
                 prefix = namespace_names
                     .iter()

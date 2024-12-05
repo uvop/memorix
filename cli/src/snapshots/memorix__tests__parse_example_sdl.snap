@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 426
+assertion_line: 441
 expression: typescript_code
 ---
 // deno-fmt-ignore-file
@@ -32,7 +32,7 @@ export namespace messageService {
         recipient_id: number;
         content: string;
         timestamp: number;
-      }, true, true, true>("message"),
+      }, true, true, true, true>("message"),
     };
     pubsub = {
       new_message: this.getPubsubItem<number, {
@@ -67,14 +67,14 @@ export class Memorix extends MemorixBase {
       id: number;
       name: string;
       email: string;
-    }, true, true, true>("user_profile"),
+    }, true, true, true, true>("user_profile"),
     user_session: this.getCacheItem<string, {
       user_id: number;
       session_token: string;
       expiry: number;
-    }, true, true, true>("user_session", {
+    }, true, true, true, true>("user_session", {
       ttl: getEnvVariable("USER_SESSION_TTL"),
     }),
-    number_of_messages: this.getCacheItemNoKey<number, true, false, false>("number_of_messages"),
+    number_of_messages: this.getCacheItemNoKey<number, true, false, false, false>("number_of_messages"),
   };
 }
