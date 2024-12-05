@@ -31,7 +31,7 @@ class InlineTypeUser(object):
 User = InlineTypeUser
 
 
-class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
+class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
@@ -43,11 +43,11 @@ class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
         self.user = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="user",
-            payload_class="User",
+            payload_class=User,
         )
 
 
-class MemorixPubSub(MemorixPubSubAll.Base):  # type: ignore[misc]
+class MemorixPubSub(MemorixPubSubAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
@@ -58,7 +58,7 @@ class MemorixPubSub(MemorixPubSubAll.Base):  # type: ignore[misc]
         )
 
 
-class MemorixTask(MemorixTaskAll.Base):  # type: ignore[misc]
+class MemorixTask(MemorixTaskAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 

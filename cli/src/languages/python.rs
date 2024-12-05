@@ -164,7 +164,7 @@ fn namespace_to_code(
     if !namespace.cache_items.is_empty() {
         result.push_str(&format!(
             r#"
-{base_indent}class MemorixCache(MemorixCacheAll.Base): # type: ignore[misc]
+{base_indent}class MemorixCache(MemorixCacheAll.Base):
 {base_indent}    def __init__(self, api: MemorixBase) -> None:
 {base_indent}        super().__init__(api=api)
 
@@ -180,7 +180,7 @@ fn namespace_to_code(
                         r#"{base_indent}        self.{name} = MemorixCacheAll.Item{api}{key}](
 {base_indent}            api=api,
 {base_indent}            id="{name}",
-{base_indent}            payload_class={payload},{options}
+{base_indent}            payload_class={payload_no_squote},{options}
 {base_indent}        )"#,
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
@@ -189,6 +189,7 @@ fn namespace_to_code(
                                 format!("[{key}, {payload}")
                             }
                         },
+                        payload_no_squote = flat_type_item_to_code(&item.payload, schema, true),
                         api = ALL_CACHE_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {
@@ -235,7 +236,7 @@ fn namespace_to_code(
     if !namespace.pubsub_items.is_empty() {
         result.push_str(&format!(
             r#"
-{base_indent}class MemorixPubSub(MemorixPubSubAll.Base): # type: ignore[misc]
+{base_indent}class MemorixPubSub(MemorixPubSubAll.Base):
 {base_indent}    def __init__(self, api: MemorixBase) -> None:
 {base_indent}        super().__init__(api=api)
 
@@ -251,7 +252,7 @@ fn namespace_to_code(
                         r#"{base_indent}        self.{name} = MemorixPubSubAll.Item{api}{key}](
 {base_indent}            api=api,
 {base_indent}            id="{name}",
-{base_indent}            payload_class={payload},
+{base_indent}            payload_class={payload_no_squote},
 {base_indent}        )"#,
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
@@ -260,6 +261,7 @@ fn namespace_to_code(
                                 format!("[{key}, {payload}")
                             }
                         },
+                        payload_no_squote = flat_type_item_to_code(&item.payload, schema, true),
                         api = ALL_PUBSUB_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {
@@ -277,7 +279,7 @@ fn namespace_to_code(
     if !namespace.task_items.is_empty() {
         result.push_str(&format!(
             r#"
-{base_indent}class MemorixTask(MemorixTaskAll.Base): # type: ignore[misc]
+{base_indent}class MemorixTask(MemorixTaskAll.Base):
 {base_indent}    def __init__(self, api: MemorixBase) -> None:
 {base_indent}        super().__init__(api=api)
 
@@ -293,7 +295,7 @@ fn namespace_to_code(
                         r#"{base_indent}        self.{name} = MemorixTaskAll.Item{api}{key}](
 {base_indent}            api=api,
 {base_indent}            id="{name}",
-{base_indent}            payload_class={payload},{options}
+{base_indent}            payload_class={payload_no_squote},{options}
 {base_indent}        )"#,
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
@@ -302,6 +304,7 @@ fn namespace_to_code(
                                 format!("[{key}, {payload}")
                             }
                         },
+                        payload_no_squote = flat_type_item_to_code(&item.payload, schema, true),
                         api = ALL_TASK_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {

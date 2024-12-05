@@ -42,7 +42,7 @@ class Spaceship(object):
         name: str
 
     class Crew(object):
-        class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
+        class MemorixCache(MemorixCacheAll.Base):
             def __init__(self, api: MemorixBase) -> None:
                 super().__init__(api=api)
 
@@ -62,7 +62,7 @@ class Spaceship(object):
                 self._namespace_name_tree = ["spaceship", "crew"]
                 self.cache = Spaceship.Crew.MemorixCache(self)
 
-    class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
+    class MemorixCache(MemorixCacheAll.Base):
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
@@ -71,7 +71,7 @@ class Spaceship(object):
             ](
                 api=api,
                 id="pilot",
-                payload_class="Spaceship.InlineCachePayloadPilot",
+                payload_class=Spaceship.InlineCachePayloadPilot,
                 options=MemorixCacheAll.Options(
                     ttl="1",
                 ),
@@ -87,7 +87,7 @@ class Spaceship(object):
             self.cache = Spaceship.MemorixCache(self)
 
 
-class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
+class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
@@ -104,7 +104,7 @@ class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
         ](
             api=api,
             id="allUsers",
-            payload_class=typing.List[typing.List[typing.Optional["User"]]],
+            payload_class=typing.List[typing.List[typing.Optional[User]]],
             options=MemorixCacheAll.Options(
                 ttl="2",
             ),
@@ -120,7 +120,7 @@ class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
         self.user = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="user",
-            payload_class="User",
+            payload_class=User,
             options=MemorixCacheAll.Options(
                 ttl="2",
             ),
@@ -128,7 +128,7 @@ class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
         self.user2 = MemorixCacheAll.ItemTTTT["InlineCacheKeyUser2", "User"](
             api=api,
             id="user2",
-            payload_class="User",
+            payload_class=User,
             options=MemorixCacheAll.Options(
                 ttl="2",
             ),
@@ -136,7 +136,7 @@ class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
         self.userExpire = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="userExpire",
-            payload_class="User",
+            payload_class=User,
             options=MemorixCacheAll.Options(
                 ttl="1",
             ),
@@ -144,12 +144,12 @@ class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
         self.userExpire2 = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="userExpire2",
-            payload_class="User",
+            payload_class=User,
         )
         self.userExpire3 = MemorixCacheAll.ItemTTTTNoKey["User"](
             api=api,
             id="userExpire3",
-            payload_class="User",
+            payload_class=User,
             options=MemorixCacheAll.Options(
                 ttl="2",
                 extend_on_get="true",
@@ -157,7 +157,7 @@ class MemorixCache(MemorixCacheAll.Base):  # type: ignore[misc]
         )
 
 
-class MemorixPubSub(MemorixPubSubAll.Base):  # type: ignore[misc]
+class MemorixPubSub(MemorixPubSubAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
@@ -168,7 +168,7 @@ class MemorixPubSub(MemorixPubSubAll.Base):  # type: ignore[misc]
         )
 
 
-class MemorixTask(MemorixTaskAll.Base):  # type: ignore[misc]
+class MemorixTask(MemorixTaskAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
