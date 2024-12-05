@@ -36,9 +36,11 @@ pub mod spaceship {
                 memorix_client_redis::Expose,
                 memorix_client_redis::Expose,
                 memorix_client_redis::Expose,
+                memorix_client_redis::Expose,
             >,
             pub another: memorix_client_redis::MemorixCacheItemNoKey<
                 super::super::User,
+                memorix_client_redis::Expose,
                 memorix_client_redis::Expose,
                 memorix_client_redis::Expose,
                 memorix_client_redis::Expose,
@@ -98,6 +100,7 @@ pub mod spaceship {
             memorix_client_redis::Expose,
             memorix_client_redis::Expose,
             memorix_client_redis::Expose,
+            memorix_client_redis::Expose,
         >,
     }
 
@@ -151,6 +154,7 @@ pub struct MemorixCache {
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
+        memorix_client_redis::Expose,
     >,
     pub user: memorix_client_redis::MemorixCacheItem<
         String,
@@ -158,9 +162,11 @@ pub struct MemorixCache {
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
+        memorix_client_redis::Expose,
     >,
     pub userNoKey: memorix_client_redis::MemorixCacheItemNoKey<
         User,
+        memorix_client_redis::Expose,
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
@@ -171,6 +177,7 @@ pub struct MemorixCache {
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
+        memorix_client_redis::Expose,
     >,
     pub userExpire2: memorix_client_redis::MemorixCacheItem<
         String,
@@ -178,10 +185,12 @@ pub struct MemorixCache {
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
+        memorix_client_redis::Expose,
     >,
     pub userExpire3: memorix_client_redis::MemorixCacheItem<
         String,
         User,
+        memorix_client_redis::Expose,
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,

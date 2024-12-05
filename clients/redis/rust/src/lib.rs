@@ -119,19 +119,21 @@ impl MemorixBase {
 pub trait CanCacheGet {}
 pub trait CanCacheSet {}
 pub trait CanCacheDelete {}
+pub trait CanCacheExpire {}
 
 impl CanCacheGet for Expose {}
 impl CanCacheSet for Expose {}
 impl CanCacheDelete for Expose {}
+impl CanCacheExpire for Expose {}
 
-pub struct MemorixCacheItem<K, P, G, S, D> {
+pub struct MemorixCacheItem<K, P, G, S, D, E> {
     memorix_base: MemorixBase,
     id: String,
     has_key: bool,
     options: MemorixCacheOptionsInner,
-    _marker: std::marker::PhantomData<(K, P, G, S, D)>,
+    _marker: std::marker::PhantomData<(K, P, G, S, D, E)>,
 }
-impl<K, P, G, S, D> Clone for MemorixCacheItem<K, P, G, S, D> {
+impl<K, P, G, S, D, E> Clone for MemorixCacheItem<K, P, G, S, D, E> {
     fn clone(&self) -> Self {
         Self {
             memorix_base: self.memorix_base.clone(),
@@ -143,8 +145,8 @@ impl<K, P, G, S, D> Clone for MemorixCacheItem<K, P, G, S, D> {
     }
 }
 
-impl<K: serde::Serialize, P: serde::Serialize + serde::de::DeserializeOwned, G, S, D>
-    MemorixCacheItem<K, P, G, S, D>
+impl<K: serde::Serialize, P: serde::Serialize + serde::de::DeserializeOwned, G, S, D, E>
+    MemorixCacheItem<K, P, G, S, D, E>
 {
     pub fn new(
         memorix_base: MemorixBase,
@@ -210,7 +212,8 @@ impl<
         G: CanCacheGet,
         S,
         D,
-    > MemorixCacheItem<K, P, G, S, D>
+        E,
+    > MemorixCacheItem<K, P, G, S, D, E>
 {
     pub async fn get(
         &mut self,
@@ -241,7 +244,8 @@ impl<
         G,
         S: CanCacheSet,
         D,
-    > MemorixCacheItem<K, P, G, S, D>
+        E,
+    > MemorixCacheItem<K, P, G, S, D, E>
 {
     pub async fn set(
         &mut self,
@@ -276,7 +280,8 @@ impl<
         G,
         S,
         D: CanCacheDelete,
-    > MemorixCacheItem<K, P, G, S, D>
+        E,
+    > MemorixCacheItem<K, P, G, S, D, E>
 {
     pub async fn delete(
         &mut self,
@@ -288,10 +293,31 @@ impl<
     }
 }
 
-pub struct MemorixCacheItemNoKey<P, G, S, D> {
-    base_item: MemorixCacheItem<std::marker::PhantomData<std::marker::PhantomData<u8>>, P, G, S, D>,
+impl<
+        K: serde::Serialize,
+        P: serde::Serialize + serde::de::DeserializeOwned,
+        G,
+        S,
+        D,
+        E: CanCacheExpire,
+    > MemorixCacheItem<K, P, G, S, D, E>
+{
+    pub async fn expire(
+        &mut self,
+        key: &K,
+        ttl: usize,
+    ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
+        let _: Value = self.memorix_base.redis.expire(self.key(key)?, ttl).await?;
+
+        Ok(())
+    }
 }
-impl<P, G, S, D> Clone for MemorixCacheItemNoKey<P, G, S, D> {
+
+pub struct MemorixCacheItemNoKey<P, G, S, D, E> {
+    base_item:
+        MemorixCacheItem<std::marker::PhantomData<std::marker::PhantomData<u8>>, P, G, S, D, E>,
+}
+impl<P, G, S, D, E> Clone for MemorixCacheItemNoKey<P, G, S, D, E> {
     fn clone(&self) -> Self {
         Self {
             base_item: self.base_item.clone(),
@@ -299,7 +325,9 @@ impl<P, G, S, D> Clone for MemorixCacheItemNoKey<P, G, S, D> {
     }
 }
 
-impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S, D> MemorixCacheItemNoKey<P, G, S, D> {
+impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S, D, E>
+    MemorixCacheItemNoKey<P, G, S, D, E>
+{
     pub fn new(
         memorix_base: MemorixBase,
         id: String,
@@ -310,15 +338,15 @@ impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S, D> MemorixCacheIte
         })
     }
 }
-impl<P: serde::de::DeserializeOwned + serde::Serialize, G: CanCacheGet, S, D>
-    MemorixCacheItemNoKey<P, G, S, D>
+impl<P: serde::de::DeserializeOwned + serde::Serialize, G: CanCacheGet, S, D, E>
+    MemorixCacheItemNoKey<P, G, S, D, E>
 {
     pub async fn get(&mut self) -> Result<Option<P>, Box<dyn std::error::Error + Sync + Send>> {
         self.base_item.get(&std::marker::PhantomData).await
     }
 }
-impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S: CanCacheSet, D>
-    MemorixCacheItemNoKey<P, G, S, D>
+impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S: CanCacheSet, D, E>
+    MemorixCacheItemNoKey<P, G, S, D, E>
 {
     pub async fn set(
         &mut self,
@@ -327,8 +355,8 @@ impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S: CanCacheSet, D>
         self.base_item.set(&std::marker::PhantomData, payload).await
     }
 }
-impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S, D: CanCacheDelete>
-    MemorixCacheItemNoKey<P, G, S, D>
+impl<P: serde::de::DeserializeOwned + serde::Serialize, G, S, D: CanCacheDelete, E>
+    MemorixCacheItemNoKey<P, G, S, D, E>
 {
     pub async fn delete(&mut self) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         self.base_item.delete(&std::marker::PhantomData).await

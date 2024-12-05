@@ -12,6 +12,7 @@ export type CacheItem<
   CanGet extends boolean,
   CanSet extends boolean,
   CanDelete extends boolean,
+  CanExpire extends boolean,
 > =
   & {
     key(key: Key): string;
@@ -28,6 +29,10 @@ export type CacheItem<
   & (CanDelete extends true ? {
       delete(key: Key): Promise<void>;
     }
+    : Record<string | number | symbol, never>)
+  & (CanExpire extends true ? {
+      expire(key: Key, ttl: number): Promise<void>;
+    }
     : Record<string | number | symbol, never>);
 
 export type CacheItemNoKey<
@@ -35,6 +40,7 @@ export type CacheItemNoKey<
   CanGet extends boolean,
   CanSet extends boolean,
   CanDelete extends boolean,
+  CanExpire extends boolean,
 > =
   & {
     extend(): Promise<void>;
@@ -49,6 +55,10 @@ export type CacheItemNoKey<
     : Record<string | number | symbol, never>)
   & (CanDelete extends true ? {
       delete(): Promise<void>;
+    }
+    : Record<string | number | symbol, never>)
+  & (CanExpire extends true ? {
+      expire(ttl: number): Promise<void>;
     }
     : Record<string | number | symbol, never>);
 

@@ -26,7 +26,7 @@ export namespace spaceship {
       }
 
       cache = {
-        count: this.getCacheItemNoKey<number, true, true, true>("count", {
+        count: this.getCacheItemNoKey<number, true, true, true, true>("count", {
           ttl: "2",
         }),
       };
@@ -46,7 +46,7 @@ export namespace spaceship {
     cache = {
       pilot: this.getCacheItemNoKey<{
         name: string;
-      }, true, true, true>("pilot", {
+      }, true, true, true, true>("pilot", {
         ttl: "2",
       }),
     };
@@ -64,16 +64,16 @@ export class Memorix extends MemorixBase {
   spaceship = new spaceship.Memorix(this);
 
   cache = {
-    favoriteAnimal: this.getCacheItem<string, Animal, true, true, true>("favoriteAnimal"),
-    user: this.getCacheItem<string, User, true, true, true>("user"),
-    userNoKey: this.getCacheItemNoKey<User, true, true, true>("userNoKey"),
-    userExpire: this.getCacheItem<string, User, true, true, true>("userExpire", {
+    favoriteAnimal: this.getCacheItem<string, Animal, true, true, true, true>("favoriteAnimal"),
+    user: this.getCacheItem<string, User, true, true, true, true>("user"),
+    userNoKey: this.getCacheItemNoKey<User, true, true, true, true>("userNoKey"),
+    userExpire: this.getCacheItem<string, User, true, true, true, true>("userExpire", {
       ttl: "1",
     }),
-    userExpire2: this.getCacheItem<string, User, true, true, true>("userExpire2", {
+    userExpire2: this.getCacheItem<string, User, true, true, true, true>("userExpire2", {
       ttl: "0",
     }),
-    userExpire3: this.getCacheItem<string, User, true, true, true>("userExpire3", {
+    userExpire3: this.getCacheItem<string, User, true, true, true, true>("userExpire3", {
       ttl: "2",
       extendOnGet: "true",
     }),

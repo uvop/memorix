@@ -12,13 +12,14 @@ fn indent(level: usize) -> String {
 fn flat_type_item_to_code(
     flat_type_item: &FlatValidatedTypeItem,
     schema: &FlatValidatedSchema,
+    no_squote: bool
 ) -> String {
     match flat_type_item {
         FlatValidatedTypeItem::Optional(x) => {
-            format!("typing.Optional[{}]", flat_type_item_to_code(x, schema)).to_string()
+            format!("typing.Optional[{}]", flat_type_item_to_code(x, schema, no_squote)).to_string()
         }
         FlatValidatedTypeItem::Array(x) => {
-            format!("typing.List[{}]", flat_type_item_to_code(x, schema)).to_string()
+            format!("typing.List[{}]", flat_type_item_to_code(x, schema, no_squote)).to_string()
         }
         FlatValidatedTypeItem::Reference(x) => {
             let (namespace, namespace_names) = x.namespace_indexes.iter().fold(
@@ -30,7 +31,12 @@ fn flat_type_item_to_code(
                 },
             );
             format!(
-                "{prefix}{seperator}{name}",
+                "{squote}{prefix}{seperator}{name}{squote}",
+                squote = match (no_squote, x.kind.clone()) {
+                    (false, FlatValidatedReferenceTypeItemKind::TypeObjectItem(_)) => "'",
+                    (false, FlatValidatedReferenceTypeItemKind::TypeItem(_)) => "'",
+                    _ => ""
+                },
                 prefix = namespace_names
                     .iter()
                     .map(|x| stringcase::pascal_case(x))
@@ -91,7 +97,7 @@ fn type_item_object_to_code(
             .iter()
             .map(|(property_name, flat_type_item)| format!(
                 "{base_indent}    {property_name}: {}",
-                flat_type_item_to_code(flat_type_item, schema)
+                flat_type_item_to_code(flat_type_item, schema, false)
             )
             .to_string())
             .collect::<Vec<_>>()
@@ -131,7 +137,7 @@ fn namespace_to_code(
     for (name, flat_type_item) in &namespace.flat_type_items {
         result.push_str(&format!(
             "{base_indent}{name} = {}\n\n",
-            flat_type_item_to_code(flat_type_item, schema)
+            flat_type_item_to_code(flat_type_item, schema, true)
         ));
     }
     for (name, sub_namespace) in &namespace.namespaces {
@@ -154,7 +160,7 @@ fn namespace_to_code(
     if !namespace.cache_items.is_empty() {
         result.push_str(&format!(
             r#"
-{base_indent}class MemorixCache(MemorixCacheAll.Base):
+{base_indent}class MemorixCache(MemorixCacheAll.Base): # type: ignore[misc]
 {base_indent}    def __init__(self, api: MemorixBase) -> None:
 {base_indent}        super().__init__(api=api)
 
@@ -165,7 +171,7 @@ fn namespace_to_code(
                 .cache_items
                 .iter()
                 .map(|(name, item)| {
-                    let payload = flat_type_item_to_code(&item.payload, schema);
+                    let payload = flat_type_item_to_code(&item.payload, schema, false);
                     format!(
                         r#"{base_indent}        self.{name} = MemorixCacheAll.Item{api}{key}](
 {base_indent}            api=api,
@@ -175,7 +181,7 @@ fn namespace_to_code(
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key, schema);
+                                let key = flat_type_item_to_code(key, schema, false);
                                 format!("[{key}, {payload}")
                             }
                         },
@@ -225,7 +231,7 @@ fn namespace_to_code(
     if !namespace.pubsub_items.is_empty() {
         result.push_str(&format!(
             r#"
-{base_indent}class MemorixPubSub(MemorixPubSubAll.Base):
+{base_indent}class MemorixPubSub(MemorixPubSubAll.Base): # type: ignore[misc]
 {base_indent}    def __init__(self, api: MemorixBase) -> None:
 {base_indent}        super().__init__(api=api)
 
@@ -236,7 +242,7 @@ fn namespace_to_code(
                 .pubsub_items
                 .iter()
                 .map(|(name, item)| {
-                    let payload = flat_type_item_to_code(&item.payload, schema);
+                    let payload = flat_type_item_to_code(&item.payload, schema, false);
                     format!(
                         r#"{base_indent}        self.{name} = MemorixPubSubAll.Item{api}{key}](
 {base_indent}            api=api,
@@ -246,7 +252,7 @@ fn namespace_to_code(
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key, schema);
+                                let key = flat_type_item_to_code(key, schema, false);
                                 format!("[{key}, {payload}")
                             }
                         },
@@ -267,7 +273,7 @@ fn namespace_to_code(
     if !namespace.task_items.is_empty() {
         result.push_str(&format!(
             r#"
-{base_indent}class MemorixTask(MemorixTaskAll.Base):
+{base_indent}class MemorixTask(MemorixTaskAll.Base): # type: ignore[misc]
 {base_indent}    def __init__(self, api: MemorixBase) -> None:
 {base_indent}        super().__init__(api=api)
 
@@ -278,7 +284,7 @@ fn namespace_to_code(
                 .task_items
                 .iter()
                 .map(|(name, item)| {
-                    let payload = flat_type_item_to_code(&item.payload, schema);
+                    let payload = flat_type_item_to_code(&item.payload, schema, false);
                     format!(
                         r#"{base_indent}        self.{name} = MemorixTaskAll.Item{api}{key}](
 {base_indent}            api=api,
@@ -288,7 +294,7 @@ fn namespace_to_code(
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key, schema);
+                                let key = flat_type_item_to_code(key, schema, false);
                                 format!("[{key}, {payload}")
                             }
                         },

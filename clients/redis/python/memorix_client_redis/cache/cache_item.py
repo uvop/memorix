@@ -147,245 +147,31 @@ class CacheItem(typing.Generic[KT, PT]):
             ),
         )
 
-
-class CacheItemTTT(CacheItem[KT, PT]):
-    def key(self, key: KT) -> str:
-        return self._key(key)
-
-    def extend(self, key: KT) -> None:
-        self._extend(key)
-
-    async def async_extend(self, key: KT) -> None:
-        await self._async_extend(key)
-
-    def get(
+    def _expire(
         self,
         key: KT,
-    ) -> typing.Optional[PT]:
-        return self._get(key=key)
-
-    async def async_get(
-        self,
-        key: KT,
-    ) -> typing.Optional[PT]:
-        return await self._async_get(key=key)
-
-    def set(
-        self,
-        key: KT,
-        payload: PT,
-    ) -> typing.Optional[bool]:
-        return self._set(key=key, payload=payload)
-
-    async def async_set(
-        self,
-        key: KT,
-        payload: PT,
-    ) -> typing.Optional[bool]:
-        return await self._async_set(key=key, payload=payload)
-
-    def delete(
-        self,
-        key: KT,
+        ttl: int,
     ) -> None:
-        self._delete(key=key)
+        self._api._connection.redis.expire(
+            self._key(key=key),
+            ttl,
+        )
 
-    async def async_delete(
+    async def _async_expire(
         self,
         key: KT,
+        ttl: int,
     ) -> None:
-        await self._async_delete(key=key)
-
-
-class CacheItemTTF(CacheItem[KT, PT]):
-    def key(self, key: KT) -> str:
-        return self._key(key)
-
-    def extend(self, key: KT) -> None:
-        self._extend(key)
-
-    async def async_extend(self, key: KT) -> None:
-        await self._async_extend(key)
-
-    def get(
-        self,
-        key: KT,
-    ) -> typing.Optional[PT]:
-        return self._get(key=key)
-
-    async def async_get(
-        self,
-        key: KT,
-    ) -> typing.Optional[PT]:
-        return await self._async_get(key=key)
-
-    def set(
-        self,
-        key: KT,
-        payload: PT,
-    ) -> typing.Optional[bool]:
-        return self._set(key=key, payload=payload)
-
-    async def async_set(
-        self,
-        key: KT,
-        payload: PT,
-    ) -> typing.Optional[bool]:
-        return await self._async_set(key=key, payload=payload)
-
-
-class CacheItemTFT(CacheItem[KT, PT]):
-    def key(self, key: KT) -> str:
-        return self._key(key)
-
-    def extend(self, key: KT) -> None:
-        self._extend(key)
-
-    async def async_extend(self, key: KT) -> None:
-        await self._async_extend(key)
-
-    def get(
-        self,
-        key: KT,
-    ) -> typing.Optional[PT]:
-        return self._get(key=key)
-
-    async def async_get(
-        self,
-        key: KT,
-    ) -> typing.Optional[PT]:
-        return await self._async_get(key=key)
-
-    def delete(
-        self,
-        key: KT,
-    ) -> None:
-        self._delete(key=key)
-
-    async def async_delete(
-        self,
-        key: KT,
-    ) -> None:
-        await self._async_delete(key=key)
-
-
-class CacheItemTFF(CacheItem[KT, PT]):
-    def key(self, key: KT) -> str:
-        return self._key(key)
-
-    def extend(self, key: KT) -> None:
-        self._extend(key)
-
-    async def async_extend(self, key: KT) -> None:
-        await self._async_extend(key)
-
-    def get(
-        self,
-        key: KT,
-    ) -> typing.Optional[PT]:
-        return self._get(key=key)
-
-    async def async_get(
-        self,
-        key: KT,
-    ) -> typing.Optional[PT]:
-        return await self._async_get(key=key)
-
-
-class CacheItemFTT(CacheItem[KT, PT]):
-    def key(self, key: KT) -> str:
-        return self._key(key)
-
-    def extend(self, key: KT) -> None:
-        self._extend(key)
-
-    async def async_extend(self, key: KT) -> None:
-        await self._async_extend(key)
-
-    def set(
-        self,
-        key: KT,
-        payload: PT,
-    ) -> typing.Optional[bool]:
-        return self._set(key=key, payload=payload)
-
-    async def async_set(
-        self,
-        key: KT,
-        payload: PT,
-    ) -> typing.Optional[bool]:
-        return await self._async_set(key=key, payload=payload)
-
-    def delete(
-        self,
-        key: KT,
-    ) -> None:
-        self._delete(key=key)
-
-    async def async_delete(
-        self,
-        key: KT,
-    ) -> None:
-        await self._async_delete(key=key)
-
-
-class CacheItemFTF(CacheItem[KT, PT]):
-    def key(self, key: KT) -> str:
-        return self._key(key)
-
-    def extend(self, key: KT) -> None:
-        self._extend(key)
-
-    async def async_extend(self, key: KT) -> None:
-        await self._async_extend(key)
-
-    def set(
-        self,
-        key: KT,
-        payload: PT,
-    ) -> typing.Optional[bool]:
-        return self._set(key=key, payload=payload)
-
-    async def async_set(
-        self,
-        key: KT,
-        payload: PT,
-    ) -> typing.Optional[bool]:
-        return await self._async_set(key=key, payload=payload)
-
-
-class CacheItemFFT(CacheItem[KT, PT]):
-    def key(self, key: KT) -> str:
-        return self._key(key)
-
-    def extend(self, key: KT) -> None:
-        self._extend(key)
-
-    async def async_extend(self, key: KT) -> None:
-        await self._async_extend(key)
-
-    def delete(
-        self,
-        key: KT,
-    ) -> None:
-        self._delete(key=key)
-
-    async def async_delete(
-        self,
-        key: KT,
-    ) -> None:
-        await self._async_delete(key=key)
-
-
-class CacheItemFFF(CacheItem[KT, PT]):
-    def key(self, key: KT) -> str:
-        return self._key(key)
-
-    def extend(self, key: KT) -> None:
-        self._extend(key)
-
-    async def async_extend(self, key: KT) -> None:
-        await self._async_extend(key)
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(
+            None,
+            functools.partial(
+                CacheItem._expire,
+                self=self,
+                key=key,
+                ttl=ttl,
+            ),
+        )
 
 
 class CacheItemNoKey(CacheItem[None, PT]):
@@ -454,8 +240,925 @@ class CacheItemNoKey(CacheItem[None, PT]):
             key=None,
         )
 
+    def _expire_no_key(
+        self,
+        ttl: int,
+    ) -> None:
+        CacheItem._expire(self, key=None, ttl=ttl)
 
-class CacheItemTTTNoKey(CacheItemNoKey[PT]):
+    async def _async_expire_no_key(
+        self,
+        ttl: int,
+    ) -> None:
+        await CacheItem._async_expire(
+            self,
+            key=None,
+            ttl=ttl,
+        )
+
+class CacheItemTTTT(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return self._get(key=key)
+
+    async def async_get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return await self._async_get(key=key)
+
+    def set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set(key=key, payload=payload)
+
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set(key=key, payload=payload)
+
+    def delete(
+        self,
+        key: KT,
+    ) -> None:
+        self._delete(key=key)
+
+    async def async_delete(
+        self,
+        key: KT,
+    ) -> None:
+        await self._async_delete(key=key)
+
+    def expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        self._expire(key=key, ttl=ttl)
+
+    async def async_expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        await self._async_expire(key=key, ttl=ttl)
+
+
+class CacheItemTTFT(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return self._get(key=key)
+
+    async def async_get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return await self._async_get(key=key)
+
+    def set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set(key=key, payload=payload)
+
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set(key=key, payload=payload)
+    
+    def expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        self._expire(key=key, ttl=ttl)
+
+    async def async_expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        await self._async_expire(key=key, ttl=ttl)
+
+
+class CacheItemTFTT(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return self._get(key=key)
+
+    async def async_get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return await self._async_get(key=key)
+
+    def delete(
+        self,
+        key: KT,
+    ) -> None:
+        self._delete(key=key)
+
+    async def async_delete(
+        self,
+        key: KT,
+    ) -> None:
+        await self._async_delete(key=key)
+
+    def expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        self._expire(key=key, ttl=ttl)
+
+    async def async_expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        await self._async_expire(key=key, ttl=ttl)
+
+
+class CacheItemTFFT(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return self._get(key=key)
+
+    async def async_get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return await self._async_get(key=key)
+    
+    def expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        self._expire(key=key, ttl=ttl)
+
+    async def async_expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        await self._async_expire(key=key, ttl=ttl)
+
+
+class CacheItemFTTT(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set(key=key, payload=payload)
+
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set(key=key, payload=payload)
+
+    def delete(
+        self,
+        key: KT,
+    ) -> None:
+        self._delete(key=key)
+
+    async def async_delete(
+        self,
+        key: KT,
+    ) -> None:
+        await self._async_delete(key=key)
+
+    def expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        self._expire(key=key, ttl=ttl)
+
+    async def async_expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        await self._async_expire(key=key, ttl=ttl)
+
+
+class CacheItemFTFT(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set(key=key, payload=payload)
+
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set(key=key, payload=payload)
+    
+    def expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        self._expire(key=key, ttl=ttl)
+
+    async def async_expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        await self._async_expire(key=key, ttl=ttl)
+
+
+class CacheItemFFTT(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def delete(
+        self,
+        key: KT,
+    ) -> None:
+        self._delete(key=key)
+
+    async def async_delete(
+        self,
+        key: KT,
+    ) -> None:
+        await self._async_delete(key=key)
+
+    def expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        self._expire(key=key, ttl=ttl)
+
+    async def async_expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        await self._async_expire(key=key, ttl=ttl)
+
+
+class CacheItemFFFT(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        self._expire(key=key, ttl=ttl)
+
+    async def async_expire(
+        self,
+        key: KT,
+        ttl: int,
+    ) -> None:
+        await self._async_expire(key=key, ttl=ttl)
+
+class CacheItemTTTTNoKey(CacheItemNoKey[PT]):
+    def key(self) -> str:
+        return self._key_no_key()
+
+    def extend(self) -> None:
+        self._extend_no_key()
+
+    async def async_extend(self) -> None:
+        await self._async_extend_no_key()
+
+    def get(
+        self,
+    ) -> typing.Optional[PT]:
+        return self._get_no_key()
+
+    async def async_get(
+        self,
+    ) -> typing.Optional[PT]:
+        return await self._async_get_no_key()
+
+    def set(
+        self,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set_no_key(payload=payload)
+
+    async def async_set(
+        self,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set_no_key(payload=payload)
+
+    def delete(
+        self,
+    ) -> None:
+        self._delete_no_key()
+
+    async def async_delete(
+        self,
+    ) -> None:
+        await self._async_delete_no_key()
+
+    def expire(
+        self,
+        ttl: int,
+    ) -> None:
+        self._expire_no_key(ttl=ttl)
+
+    async def async_expire(
+        self,
+        ttl: int,
+    ) -> None:
+        await self._async_expire_no_key(ttl=ttl)
+
+
+class CacheItemTTFTNoKey(CacheItemNoKey[PT]):
+    def key(self) -> str:
+        return self._key_no_key()
+
+    def extend(self) -> None:
+        self._extend_no_key()
+
+    async def async_extend(self) -> None:
+        await self._async_extend_no_key()
+
+    def get(
+        self,
+    ) -> typing.Optional[PT]:
+        return self._get_no_key()
+
+    async def async_get(
+        self,
+    ) -> typing.Optional[PT]:
+        return await self._async_get_no_key()
+
+    def set(
+        self,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set_no_key(payload=payload)
+
+    async def async_set(
+        self,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set_no_key(payload=payload)
+
+    def expire(
+        self,
+        ttl: int,
+    ) -> None:
+        self._expire_no_key(ttl=ttl)
+
+    async def async_expire(
+        self,
+        ttl: int,
+    ) -> None:
+        await self._async_expire_no_key(ttl=ttl)
+
+
+class CacheItemTFTTNoKey(CacheItemNoKey[PT]):
+    def key(self) -> str:
+        return self._key_no_key()
+
+    def extend(self) -> None:
+        self._extend_no_key()
+
+    async def async_extend(self) -> None:
+        await self._async_extend_no_key()
+
+    def get(
+        self,
+    ) -> typing.Optional[PT]:
+        return self._get_no_key()
+
+    async def async_get(
+        self,
+    ) -> typing.Optional[PT]:
+        return await self._async_get_no_key()
+
+    def delete(
+        self,
+    ) -> None:
+        self._delete_no_key()
+
+    async def async_delete(
+        self,
+    ) -> None:
+        await self._async_delete_no_key()
+
+    def expire(
+        self,
+        ttl: int,
+    ) -> None:
+        self._expire_no_key(ttl=ttl)
+
+    async def async_expire(
+        self,
+        ttl: int,
+    ) -> None:
+        await self._async_expire_no_key(ttl=ttl)
+
+
+class CacheItemTFFTNoKey(CacheItemNoKey[PT]):
+    def key(self) -> str:
+        return self._key_no_key()
+
+    def extend(self) -> None:
+        self._extend_no_key()
+
+    async def async_extend(self) -> None:
+        await self._async_extend_no_key()
+
+    def get(
+        self,
+    ) -> typing.Optional[PT]:
+        return self._get_no_key()
+
+    async def async_get(
+        self,
+    ) -> typing.Optional[PT]:
+        return await self._async_get_no_key()
+
+    def expire(
+        self,
+        ttl: int,
+    ) -> None:
+        self._expire_no_key(ttl=ttl)
+
+    async def async_expire(
+        self,
+        ttl: int,
+    ) -> None:
+        await self._async_expire_no_key(ttl=ttl)
+
+
+class CacheItemFTTTNoKey(CacheItemNoKey[PT]):
+    def key(self) -> str:
+        return self._key_no_key()
+
+    def extend(self) -> None:
+        self._extend_no_key()
+
+    async def async_extend(self) -> None:
+        await self._async_extend_no_key()
+
+    def set(
+        self,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set_no_key(payload=payload)
+
+    async def async_set(
+        self,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set_no_key(payload=payload)
+
+    def delete(
+        self,
+    ) -> None:
+        self._delete_no_key()
+
+    async def async_delete(
+        self,
+    ) -> None:
+        await self._async_delete_no_key()
+
+    def expire(
+        self,
+        ttl: int,
+    ) -> None:
+        self._expire_no_key(ttl=ttl)
+
+    async def async_expire(
+        self,
+        ttl: int,
+    ) -> None:
+        await self._async_expire_no_key(ttl=ttl)
+
+
+class CacheItemFTFTNoKey(CacheItemNoKey[PT]):
+    def key(self) -> str:
+        return self._key_no_key()
+
+    def extend(self) -> None:
+        self._extend_no_key()
+
+    async def async_extend(self) -> None:
+        await self._async_extend_no_key()
+
+    def set(
+        self,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set_no_key(payload=payload)
+
+    async def async_set(
+        self,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set_no_key(payload=payload)
+
+    def expire(
+        self,
+        ttl: int,
+    ) -> None:
+        self._expire_no_key(ttl=ttl)
+
+    async def async_expire(
+        self,
+        ttl: int,
+    ) -> None:
+        await self._async_expire_no_key(ttl=ttl)
+
+
+class CacheItemFFTTNoKey(CacheItemNoKey[PT]):
+    def key(self) -> str:
+        return self._key_no_key()
+
+    def extend(self) -> None:
+        self._extend_no_key()
+
+    async def async_extend(self) -> None:
+        await self._async_extend_no_key()
+
+    def delete(
+        self,
+    ) -> None:
+        self._delete_no_key()
+
+    async def async_delete(
+        self,
+    ) -> None:
+        await self._async_delete_no_key()
+
+    def expire(
+        self,
+        ttl: int,
+    ) -> None:
+        self._expire_no_key(ttl=ttl)
+
+    async def async_expire(
+        self,
+        ttl: int,
+    ) -> None:
+        await self._async_expire_no_key(ttl=ttl)
+
+
+class CacheItemFFFTNoKey(CacheItemNoKey[PT]):
+    def key(self) -> str:
+        return self._key_no_key()
+
+    def extend(self) -> None:
+        self._extend_no_key()
+
+    async def async_extend(self) -> None:
+        await self._async_extend_no_key()
+
+    def expire(
+        self,
+        ttl: int,
+    ) -> None:
+        self._expire_no_key(ttl=ttl)
+
+    async def async_expire(
+        self,
+        ttl: int,
+    ) -> None:
+        await self._async_expire_no_key(ttl=ttl)
+
+class CacheItemTTTF(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return self._get(key=key)
+
+    async def async_get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return await self._async_get(key=key)
+
+    def set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set(key=key, payload=payload)
+
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set(key=key, payload=payload)
+
+    def delete(
+        self,
+        key: KT,
+    ) -> None:
+        self._delete(key=key)
+
+    async def async_delete(
+        self,
+        key: KT,
+    ) -> None:
+        await self._async_delete(key=key)
+
+
+class CacheItemTTFF(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return self._get(key=key)
+
+    async def async_get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return await self._async_get(key=key)
+
+    def set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set(key=key, payload=payload)
+
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set(key=key, payload=payload)
+
+
+class CacheItemTFTF(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return self._get(key=key)
+
+    async def async_get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return await self._async_get(key=key)
+
+    def delete(
+        self,
+        key: KT,
+    ) -> None:
+        self._delete(key=key)
+
+    async def async_delete(
+        self,
+        key: KT,
+    ) -> None:
+        await self._async_delete(key=key)
+
+
+class CacheItemTFFF(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return self._get(key=key)
+
+    async def async_get(
+        self,
+        key: KT,
+    ) -> typing.Optional[PT]:
+        return await self._async_get(key=key)
+
+
+class CacheItemFTTF(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set(key=key, payload=payload)
+
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set(key=key, payload=payload)
+
+    def delete(
+        self,
+        key: KT,
+    ) -> None:
+        self._delete(key=key)
+
+    async def async_delete(
+        self,
+        key: KT,
+    ) -> None:
+        await self._async_delete(key=key)
+
+
+class CacheItemFTFF(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return self._set(key=key, payload=payload)
+
+    async def async_set(
+        self,
+        key: KT,
+        payload: PT,
+    ) -> typing.Optional[bool]:
+        return await self._async_set(key=key, payload=payload)
+
+
+class CacheItemFFTF(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+    def delete(
+        self,
+        key: KT,
+    ) -> None:
+        self._delete(key=key)
+
+    async def async_delete(
+        self,
+        key: KT,
+    ) -> None:
+        await self._async_delete(key=key)
+
+
+class CacheItemFFFF(CacheItem[KT, PT]):
+    def key(self, key: KT) -> str:
+        return self._key(key)
+
+    def extend(self, key: KT) -> None:
+        self._extend(key)
+
+    async def async_extend(self, key: KT) -> None:
+        await self._async_extend(key)
+
+
+class CacheItemTTTFNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
         return self._key_no_key()
 
@@ -498,7 +1201,7 @@ class CacheItemTTTNoKey(CacheItemNoKey[PT]):
         await self._async_delete_no_key()
 
 
-class CacheItemTTFNoKey(CacheItemNoKey[PT]):
+class CacheItemTTFFNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
         return self._key_no_key()
 
@@ -531,7 +1234,7 @@ class CacheItemTTFNoKey(CacheItemNoKey[PT]):
         return await self._async_set_no_key(payload=payload)
 
 
-class CacheItemTFTNoKey(CacheItemNoKey[PT]):
+class CacheItemTFTFNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
         return self._key_no_key()
 
@@ -562,7 +1265,7 @@ class CacheItemTFTNoKey(CacheItemNoKey[PT]):
         await self._async_delete_no_key()
 
 
-class CacheItemTFFNoKey(CacheItemNoKey[PT]):
+class CacheItemTFFFNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
         return self._key_no_key()
 
@@ -583,7 +1286,7 @@ class CacheItemTFFNoKey(CacheItemNoKey[PT]):
         return await self._async_get_no_key()
 
 
-class CacheItemFTTNoKey(CacheItemNoKey[PT]):
+class CacheItemFTTFNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
         return self._key_no_key()
 
@@ -616,7 +1319,7 @@ class CacheItemFTTNoKey(CacheItemNoKey[PT]):
         await self._async_delete_no_key()
 
 
-class CacheItemFTFNoKey(CacheItemNoKey[PT]):
+class CacheItemFTFFNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
         return self._key_no_key()
 
@@ -639,7 +1342,7 @@ class CacheItemFTFNoKey(CacheItemNoKey[PT]):
         return await self._async_set_no_key(payload=payload)
 
 
-class CacheItemFFTNoKey(CacheItemNoKey[PT]):
+class CacheItemFFTFNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
         return self._key_no_key()
 
@@ -660,7 +1363,7 @@ class CacheItemFFTNoKey(CacheItemNoKey[PT]):
         await self._async_delete_no_key()
 
 
-class CacheItemFFFNoKey(CacheItemNoKey[PT]):
+class CacheItemFFFFNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
         return self._key_no_key()
 
