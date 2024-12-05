@@ -140,7 +140,9 @@ class PubSubItemFF(PubSubItem[KT, PT]):
 
 
 class PubSubItemTTNoKey(PubSubItem[None, PT]):
-    def __init__(self, api: MemorixBase, id: str, payload_class: typing.Type[PT]) -> None:
+    def __init__(
+        self, api: MemorixBase, id: str, payload_class: typing.Type[PT]
+    ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
 
@@ -161,7 +163,9 @@ class PubSubItemTTNoKey(PubSubItem[None, PT]):
 
 
 class PubSubItemTFNoKey(PubSubItem[None, PT]):
-    def __init__(self, api: MemorixBase, id: str, payload_class: typing.Type[PT]) -> None:
+    def __init__(
+        self, api: MemorixBase, id: str, payload_class: typing.Type[PT]
+    ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
 
@@ -176,7 +180,9 @@ class PubSubItemTFNoKey(PubSubItem[None, PT]):
 
 
 class PubSubItemFTNoKey(PubSubItem[None, PT]):
-    def __init__(self, api: MemorixBase, id: str, payload_class: typing.Type[PT]) -> None:
+    def __init__(
+        self, api: MemorixBase, id: str, payload_class: typing.Type[PT]
+    ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
 
@@ -191,7 +197,9 @@ class PubSubItemFTNoKey(PubSubItem[None, PT]):
 
 
 class PubSubItemFFNoKey(PubSubItem[None, PT]):
-    def __init__(self, api: MemorixBase, id: str, payload_class: typing.Type[PT]) -> None:
+    def __init__(
+        self, api: MemorixBase, id: str, payload_class: typing.Type[PT]
+    ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
 

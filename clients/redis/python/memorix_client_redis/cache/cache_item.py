@@ -256,6 +256,7 @@ class CacheItemNoKey(CacheItem[None, PT]):
             ttl=ttl,
         )
 
+
 class CacheItemTTTT(CacheItem[KT, PT]):
     def key(self, key: KT) -> str:
         return self._key(key)
@@ -354,7 +355,7 @@ class CacheItemTTFT(CacheItem[KT, PT]):
         payload: PT,
     ) -> typing.Optional[bool]:
         return await self._async_set(key=key, payload=payload)
-    
+
     def expire(
         self,
         key: KT,
@@ -440,7 +441,7 @@ class CacheItemTFFT(CacheItem[KT, PT]):
         key: KT,
     ) -> typing.Optional[PT]:
         return await self._async_get(key=key)
-    
+
     def expire(
         self,
         key: KT,
@@ -530,7 +531,7 @@ class CacheItemFTFT(CacheItem[KT, PT]):
         payload: PT,
     ) -> typing.Optional[bool]:
         return await self._async_set(key=key, payload=payload)
-    
+
     def expire(
         self,
         key: KT,
@@ -606,6 +607,7 @@ class CacheItemFFFT(CacheItem[KT, PT]):
         ttl: int,
     ) -> None:
         await self._async_expire(key=key, ttl=ttl)
+
 
 class CacheItemTTTTNoKey(CacheItemNoKey[PT]):
     def key(self) -> str:
@@ -917,6 +919,7 @@ class CacheItemFFFTNoKey(CacheItemNoKey[PT]):
         ttl: int,
     ) -> None:
         await self._async_expire_no_key(ttl=ttl)
+
 
 class CacheItemTTTF(CacheItem[KT, PT]):
     def key(self, key: KT) -> str:
