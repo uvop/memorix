@@ -204,6 +204,7 @@ pub enum CacheOperation {
     Get,
     Set,
     Delete,
+    Expire,
 }
 pub ALL_CACHE_OPERATIONS
 }
@@ -212,7 +213,8 @@ impl_from_and_to_sdl_for_enum!(
     CacheOperation,
     Get => "get",
     Set => "set",
-    Delete => "delete"
+    Delete => "delete",
+    Expire => "expire"
 );
 
 create_enum_with_const_slice! {

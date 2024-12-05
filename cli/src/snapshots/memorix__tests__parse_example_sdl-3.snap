@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 432
+assertion_line: 447
 expression: rust_code
 ---
 #![allow(dead_code)]
@@ -67,7 +67,7 @@ pub mod message_service {
     #[derive(Clone)]
     #[allow(non_snake_case)]
     pub struct MemorixCache {
-        pub message: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadMessage, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+        pub message: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadMessage, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
     }
 
     impl MemorixCache {
@@ -152,9 +152,9 @@ pub mod message_service {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub user_profile: memorix_client_redis::MemorixCacheItem<u32, InlineCachePayloadUserProfile, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
-    pub user_session: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadUserSession, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
-    pub number_of_messages: memorix_client_redis::MemorixCacheItemNoKey<u32, memorix_client_redis::Expose, memorix_client_redis::Hide, memorix_client_redis::Hide>,
+    pub user_profile: memorix_client_redis::MemorixCacheItem<u32, InlineCachePayloadUserProfile, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+    pub user_session: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadUserSession, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+    pub number_of_messages: memorix_client_redis::MemorixCacheItemNoKey<u32, memorix_client_redis::Expose, memorix_client_redis::Hide, memorix_client_redis::Hide, memorix_client_redis::Hide>,
 }
 
 impl MemorixCache {

@@ -65,6 +65,8 @@ per-file-ignores =
         WPS113,
         # module with logic, only for exporting
         WPS412,
+        # all helps a bit
+        WPS410,
 exclude =
     .git,
     __pycache__,

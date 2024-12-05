@@ -71,10 +71,11 @@ export class MemorixBase {
     CanGet extends boolean,
     CanSet extends boolean,
     CanDelete extends boolean,
+    CanExpire extends boolean,
   >(
     identifier: string,
     options: types.CacheOptions = {},
-  ): types.CacheItem<Key, Payload, CanGet, CanSet, CanDelete> {
+  ): types.CacheItem<Key, Payload, CanGet, CanSet, CanDelete, CanExpire> {
     const { ttl: ttlStr = "0", extendOnGet: extendOnGetStr = "false" } =
       options;
 
@@ -134,6 +135,10 @@ export class MemorixBase {
         const hashedKey = item.key(key);
         await this.redis.del(hashedKey);
       },
+      expire: async (key: Key, ttl: number) => {
+        const hashedKey = item.key(key);
+        await this.redis.expire(hashedKey, ttl.toString());
+      },
     };
     return item as any;
   }
@@ -143,9 +148,10 @@ export class MemorixBase {
     CanGet extends boolean,
     CanSet extends boolean,
     CanDelete extends boolean,
+    CanExpire extends boolean,
   >(
     ...itemArgs: any[]
-  ): types.CacheItemNoKey<Payload, CanGet, CanSet, CanDelete> {
+  ): types.CacheItemNoKey<Payload, CanGet, CanSet, CanDelete, CanExpire> {
     const item = (this.getCacheItem as any)(...itemArgs);
     item.hasKey = false;
 
@@ -155,6 +161,7 @@ export class MemorixBase {
       get: (...args: any[]) => item.get(undefined, ...args),
       set: (...args: any[]) => item.set(undefined, ...args),
       delete: (...args: any[]) => item.delete(undefined, ...args),
+      expire: (...args: any[]) => item.expire(undefined, ...args),
     } as any;
   }
 

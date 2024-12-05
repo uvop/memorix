@@ -46,7 +46,7 @@ class Spaceship(object):
             def __init__(self, api: MemorixBase) -> None:
                 super().__init__(api=api)
 
-                self.count = MemorixCacheAll.ItemTTTNoKey[int](
+                self.count = MemorixCacheAll.ItemTTTTNoKey[int](
                     api=api,
                     id="count",
                     payload_class=int,
@@ -66,8 +66,8 @@ class Spaceship(object):
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.pilot = MemorixCacheAll.ItemTTTNoKey[
-                Spaceship.InlineCachePayloadPilot
+            self.pilot = MemorixCacheAll.ItemTTTTNoKey[
+                "Spaceship.InlineCachePayloadPilot"
             ](
                 api=api,
                 id="pilot",
@@ -91,7 +91,7 @@ class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.bestStr = MemorixCacheAll.ItemTTTNoKey[str](
+        self.bestStr = MemorixCacheAll.ItemTTTTNoKey[str](
             api=api,
             id="bestStr",
             payload_class=str,
@@ -99,8 +99,8 @@ class MemorixCache(MemorixCacheAll.Base):
                 ttl="2",
             ),
         )
-        self.allUsers = MemorixCacheAll.ItemTTTNoKey[
-            typing.List[typing.List[typing.Optional[User]]]
+        self.allUsers = MemorixCacheAll.ItemTTTTNoKey[
+            typing.List[typing.List[typing.Optional["User"]]]
         ](
             api=api,
             id="allUsers",
@@ -109,7 +109,7 @@ class MemorixCache(MemorixCacheAll.Base):
                 ttl="2",
             ),
         )
-        self.favoriteAnimal = MemorixCacheAll.ItemTTT[str, Animal](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, Animal](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
@@ -117,7 +117,7 @@ class MemorixCache(MemorixCacheAll.Base):
                 ttl="2",
             ),
         )
-        self.user = MemorixCacheAll.ItemTTT[str, User](
+        self.user = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="user",
             payload_class=User,
@@ -125,7 +125,7 @@ class MemorixCache(MemorixCacheAll.Base):
                 ttl="2",
             ),
         )
-        self.user2 = MemorixCacheAll.ItemTTT[InlineCacheKeyUser2, User](
+        self.user2 = MemorixCacheAll.ItemTTTT["InlineCacheKeyUser2", "User"](
             api=api,
             id="user2",
             payload_class=User,
@@ -133,7 +133,7 @@ class MemorixCache(MemorixCacheAll.Base):
                 ttl="2",
             ),
         )
-        self.userExpire = MemorixCacheAll.ItemTTT[str, User](
+        self.userExpire = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="userExpire",
             payload_class=User,
@@ -141,12 +141,12 @@ class MemorixCache(MemorixCacheAll.Base):
                 ttl="1",
             ),
         )
-        self.userExpire2 = MemorixCacheAll.ItemTTT[str, User](
+        self.userExpire2 = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="userExpire2",
             payload_class=User,
         )
-        self.userExpire3 = MemorixCacheAll.ItemTTTNoKey[User](
+        self.userExpire3 = MemorixCacheAll.ItemTTTTNoKey["User"](
             api=api,
             id="userExpire3",
             payload_class=User,

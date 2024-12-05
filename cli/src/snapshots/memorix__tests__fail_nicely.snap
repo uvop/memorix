@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 477
+assertion_line: 478
 expression: err.to_string()
 ---
 parser feedback for file "/schema.memorix":

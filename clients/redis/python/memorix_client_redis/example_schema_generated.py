@@ -35,12 +35,12 @@ class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.favoriteAnimal = MemorixCacheAll.ItemTTT[str, Animal](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, Animal](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixCacheAll.ItemTTT[str, User](
+        self.user = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="user",
             payload_class=User,
