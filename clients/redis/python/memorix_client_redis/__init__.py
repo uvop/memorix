@@ -5,9 +5,9 @@ from .task import All as MemorixTaskAll
 from dataclasses import dataclass as dataclass
 
 __all__ = [
-    'MemorixBase',
-    'MemorixCacheAll',
-    'MemorixPubSubAll',
-    'MemorixTaskAll',
-    'dataclass'
+    "MemorixBase",
+    "MemorixCacheAll",
+    "MemorixPubSubAll",
+    "MemorixTaskAll",
+    "dataclass",
 ]
