@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - next
+      - expire_and_fixes
 
 jobs:
   version-and-release:
@@ -67,7 +67,7 @@ jobs:
               ;;
           esac
 
-          if [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
+          if [[ "${{ github.ref }}" == "refs/heads/expire_and_fixes" ]]; then
             rc_num=1
             highest_rc=$(git tag -l "v${new_version}-rc*" | grep -E "^v${new_version}-rc[0-9]+$" | sort -V | tail -n 1 || echo "")
             if [[ ! -z "$highest_rc" ]]; then
@@ -126,7 +126,7 @@ jobs:
             cli/target/memorix-linux-x64
             cli/target/memorix.exe
           draft: false
-          prerelease: ${{ github.ref == 'refs/heads/next' }}
+          prerelease: ${{ github.ref == 'refs/heads/expire_and_fixes' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
