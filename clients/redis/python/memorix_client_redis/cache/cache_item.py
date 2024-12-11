@@ -21,7 +21,11 @@ class CacheItem(typing.Generic[KT, PT]):
         self._api = api
         self._id = id
         self._payload_class = payload_class
-        self._options = options
+        self._options = (
+            options
+            if options is not None
+            else CacheOptions(ttl=None, extend_on_get=None)
+        )
         self._has_key = True
 
     def _key(self, key: KT) -> str:
@@ -31,13 +35,9 @@ class CacheItem(typing.Generic[KT, PT]):
         self,
         key: KT,
     ) -> None:
-        if (
-            self._options is None
-            or self._options.ttl is None
-            or self._options.ttl == "0"
-        ):
+        ttl = self._options.get_ttl()
+        if ttl == 0:
             return
-        ttl = int(self._options.ttl)
 
         hashed_key = self._key(key=key)
 
@@ -69,11 +69,7 @@ class CacheItem(typing.Generic[KT, PT]):
         )
         if data_bytes is None:
             return None
-        if (
-            self._options is not None
-            and self._options.extend_on_get is not None
-            and self._options.extend_on_get == "true"
-        ):
+        if self._options.get_extend_on_get():
             CacheItem._extend(self=self, key=key)
 
         data_str = bytes_to_str(data_bytes)
@@ -98,14 +94,11 @@ class CacheItem(typing.Generic[KT, PT]):
         payload: PT,
     ) -> typing.Optional[bool]:
         payload_json = to_json(payload)
+        ttl = self._options.get_ttl()
         return self._api._connection.redis.set(
             self._key(key=key),
             payload_json,
-            ex=int(self._options.ttl)
-            if self._options is not None
-            and self._options.ttl is not None
-            and self._options.ttl != "0"
-            else None,
+            ex=ttl if ttl != 0 else None,
         )
 
     async def _async_set(

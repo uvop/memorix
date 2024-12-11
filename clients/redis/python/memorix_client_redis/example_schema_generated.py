@@ -13,6 +13,7 @@ from memorix_client_redis import (
     MemorixCacheAll,
     MemorixPubSubAll,
     MemorixTaskAll,
+    Value,
 )
 
 
@@ -71,7 +72,7 @@ class MemorixTask(MemorixTaskAll.Base):
 
 class Memorix(MemorixBase):
     def __init__(self) -> None:
-        super().__init__(redis_url=os.environ["REDIS_URL"])
+        super().__init__(redis_url=Value.from_env_variable("REDIS_URL"))
 
         self._namespace_name_tree = []
         self.cache = MemorixCache(self)

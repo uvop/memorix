@@ -6,7 +6,7 @@ expression: typescript_code
 // deno-fmt-ignore-file
 // deno-lint-ignore-file
 /* eslint-disable */
-import { MemorixBase, getEnvVariable } from "@memorix/client-redis";
+import { MemorixBase, getStringValue, getEnvVariableValue } from "@memorix/client-redis";
 
 export type abc = number;
 
@@ -46,7 +46,7 @@ export namespace messageService {
       processing_type: string;
       priority: number;
     }, true, true, true, true>("message_processing_tasks", {
-        queueType: "Fifo",
+        queueType: getStringValue("Fifo"),
       }),
     };
   }
@@ -56,7 +56,7 @@ export class Memorix extends MemorixBase {
     super({
       namespaceNameTree: [],
     }, {
-      redisUrl: getEnvVariable("REDIS_URL"),
+      redisUrl: getEnvVariableValue("REDIS_URL"),
     });
   }
 
@@ -73,7 +73,7 @@ export class Memorix extends MemorixBase {
       session_token: string;
       expiry: number;
     }, true, true, true, true>("user_session", {
-      ttl: getEnvVariable("USER_SESSION_TTL"),
+      ttl: getEnvVariableValue("USER_SESSION_TTL"),
     }),
     number_of_messages: this.getCacheItemNoKey<number, true, false, false, false>("number_of_messages"),
   };

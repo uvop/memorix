@@ -12,7 +12,7 @@ use redis::AsyncCommands;
 
 pub use futures_util::StreamExt;
 pub use memorix_client_redis_macros::serialization;
-use redis::Value;
+use redis::Value as RedisValue;
 
 #[doc(hidden)]
 pub mod __private {
@@ -23,9 +23,33 @@ pub struct Expose;
 pub struct Hide;
 
 #[derive(Clone)]
+pub enum Value {
+    String { value: String },
+    EnvVariable { name: String, value: Option<String> },
+}
+
+impl Value {
+    pub fn from_string(value: String) -> Self {
+        Self::String { value }
+    }
+    pub fn from_env_variable(name: String) -> Self {
+        let value = std::env::var(&name).ok();
+        Self::EnvVariable { name, value }
+    }
+    fn require(&self) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
+        match self {
+            Self::String { value } => Ok(value.clone()),
+            Self::EnvVariable { name, value } => Ok(value
+                .clone()
+                .ok_or(format!("Environment variable \"{name}\" is not set"))?),
+        }
+    }
+}
+
+#[derive(Clone, Default)]
 pub struct MemorixCacheOptions {
-    pub ttl: Option<String>,
-    pub extend_on_get: Option<String>,
+    pub ttl: Option<Value>,
+    pub extend_on_get: Option<Value>,
 }
 #[derive(Clone)]
 pub struct MemorixCacheOptionsInner {
@@ -33,25 +57,26 @@ pub struct MemorixCacheOptionsInner {
     pub extend_on_get: bool,
 }
 
-impl TryFrom<Option<MemorixCacheOptions>> for MemorixCacheOptionsInner {
-    type Error = Box<dyn std::error::Error + Send + Sync>;
-    fn try_from(value: Option<MemorixCacheOptions>) -> Result<Self, Self::Error> {
-        Ok(Self {
-            ttl: match value.as_ref().and_then(|x| x.ttl.as_ref()) {
-                Some(x) => x.parse()?,
-                None => 0,
-            },
-            extend_on_get: match value.as_ref().and_then(|x| x.extend_on_get.as_ref()) {
-                Some(x) => x.parse()?,
-                None => false,
-            },
+impl MemorixCacheOptions {
+    fn get_ttl(&self) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(match self.ttl.as_ref() {
+            Some(x) => x.require()?.parse()?,
+            None => 0,
+        })
+    }
+}
+impl MemorixCacheOptions {
+    fn get_extend_on_get(&self) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(match self.extend_on_get.as_ref() {
+            Some(x) => x.require()?.parse()?,
+            None => false,
         })
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct MemorixTaskOptions {
-    pub queue_type: Option<String>,
+    pub queue_type: Option<Value>,
 }
 
 #[derive(Clone)]
@@ -59,26 +84,23 @@ pub enum QueueType {
     Fifo,
     Lifo,
 }
-#[derive(Clone)]
-pub struct MemorixTaskOptionsInner {
-    pub queue_type: QueueType,
-}
-impl TryFrom<Option<MemorixTaskOptions>> for MemorixTaskOptionsInner {
-    type Error = Box<dyn std::error::Error + Send + Sync>;
-    fn try_from(value: Option<MemorixTaskOptions>) -> Result<Self, Self::Error> {
-        Ok(Self {
-            queue_type: match value.as_ref().and_then(|x| x.queue_type.as_ref()) {
-                Some(x) => match x.as_str() {
+impl MemorixTaskOptions {
+    fn get_queue_type(&self) -> Result<QueueType, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(match &self.queue_type {
+            Some(x) => {
+                let value_str = x.require()?;
+                match value_str.as_str() {
                     "lifo" => QueueType::Lifo,
                     "fifo" => QueueType::Fifo,
                     _ => {
-                        return Err(
-                            format!("no valid option for \"queue_type\", given \"{x}\"").into()
+                        return Err(format!(
+                            "no valid option for \"queue_type\", given \"{value_str}\""
                         )
+                        .into())
                     }
-                },
-                None => QueueType::Fifo,
-            },
+                }
+            }
+            None => QueueType::Fifo,
         })
     }
 }
@@ -130,7 +152,7 @@ pub struct MemorixCacheItem<K, P, G, S, D, E> {
     memorix_base: MemorixBase,
     id: String,
     has_key: bool,
-    options: MemorixCacheOptionsInner,
+    options: MemorixCacheOptions,
     _marker: std::marker::PhantomData<(K, P, G, S, D, E)>,
 }
 impl<K, P, G, S, D, E> Clone for MemorixCacheItem<K, P, G, S, D, E> {
@@ -157,7 +179,7 @@ impl<K: serde::Serialize, P: serde::Serialize + serde::de::DeserializeOwned, G, 
             memorix_base,
             id,
             has_key: true,
-            options: options.try_into()?,
+            options: options.unwrap_or_default(),
             _marker: std::marker::PhantomData,
         })
     }
@@ -170,7 +192,7 @@ impl<K: serde::Serialize, P: serde::Serialize + serde::de::DeserializeOwned, G, 
             memorix_base,
             id,
             has_key: false,
-            options: options.try_into()?,
+            options: options.unwrap_or_default(),
             _marker: std::marker::PhantomData,
         })
     }
@@ -197,11 +219,11 @@ impl<K: serde::Serialize, P: serde::Serialize + serde::de::DeserializeOwned, G, 
         key: &K,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let hashed_key = self.key(key)?;
-        let ttl = match self.options.ttl {
+        let ttl = match self.options.get_ttl()? {
             0 => return Err("Called extend with no ttl".into()),
             x => x,
         };
-        let _: Value = self.memorix_base.redis.expire(hashed_key, ttl).await?;
+        let _: RedisValue = self.memorix_base.redis.expire(hashed_key, ttl).await?;
         Ok(())
     }
 }
@@ -230,7 +252,7 @@ impl<
 
         let payload: P = serde_json::from_str(&payload_str)?;
 
-        if self.options.extend_on_get {
+        if self.options.get_extend_on_get()? {
             self.extend(key).await?;
         }
 
@@ -253,16 +275,16 @@ impl<
         payload: &P,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let payload_str = serde_json::to_string(&payload)?;
-        match self.options.ttl {
+        match self.options.get_ttl()? {
             0 => {
-                let _: Value = self
+                let _: RedisValue = self
                     .memorix_base
                     .redis
                     .set(self.key(key)?, payload_str)
                     .await?;
             }
             ttl => {
-                let _: Value = self
+                let _: RedisValue = self
                     .memorix_base
                     .redis
                     .set_ex(self.key(key)?, payload_str, ttl)
@@ -287,7 +309,7 @@ impl<
         &mut self,
         key: &K,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
-        let _: Value = self.memorix_base.redis.del(self.key(key)?).await?;
+        let _: RedisValue = self.memorix_base.redis.del(self.key(key)?).await?;
 
         Ok(())
     }
@@ -307,7 +329,7 @@ impl<
         key: &K,
         ttl: usize,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
-        let _: Value = self.memorix_base.redis.expire(self.key(key)?, ttl).await?;
+        let _: RedisValue = self.memorix_base.redis.expire(self.key(key)?, ttl).await?;
 
         Ok(())
     }
@@ -446,7 +468,7 @@ impl<
         payload: &P,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let payload_str = serde_json::to_string(&payload)?;
-        let _: Value = self
+        let _: RedisValue = self
             .memorix_base
             .redis
             .publish(self.key(key)?, payload_str)
@@ -560,7 +582,7 @@ pub struct MemorixTaskItem<K, P, E, D, EM, G> {
     memorix_base: MemorixBase,
     id: String,
     has_key: bool,
-    options: MemorixTaskOptionsInner,
+    options: MemorixTaskOptions,
     _marker: std::marker::PhantomData<(K, P, E, D, EM, G)>,
 }
 impl<K, P, E, D, EM, G> Clone for MemorixTaskItem<K, P, E, D, EM, G> {
@@ -587,7 +609,7 @@ impl<K: serde::Serialize, P: serde::Serialize + serde::de::DeserializeOwned, E, 
             memorix_base: memorix_base.clone(),
             id: id.clone(),
             has_key: true,
-            options: options.try_into()?,
+            options: options.unwrap_or_default(),
             _marker: std::marker::PhantomData,
         })
     }
@@ -600,7 +622,7 @@ impl<K: serde::Serialize, P: serde::Serialize + serde::de::DeserializeOwned, E, 
             memorix_base: memorix_base.clone(),
             id: id.clone(),
             has_key: false,
-            options: options.try_into()?,
+            options: options.unwrap_or_default(),
             _marker: std::marker::PhantomData,
         })
     }
@@ -677,7 +699,7 @@ impl<
 
         Ok(Box::pin(async_stream::stream! {
             loop {
-                let (_, payload): (Value, String) = (match self.options.queue_type {
+                let (_, payload): (RedisValue, String) = (match self.options.get_queue_type()? {
                     QueueType::Fifo => redis.blpop(key_str.to_string(), 0),
                     QueueType::Lifo => redis.brpop(key_str.to_string(), 0),
                 })
@@ -700,7 +722,7 @@ impl<
     > MemorixTaskItem<K, P, E, D, EM, G>
 {
     pub async fn empty(&mut self, key: &K) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
-        let _: Value = self.memorix_base.redis.del(self.key(key)?).await?;
+        let _: RedisValue = self.memorix_base.redis.del(self.key(key)?).await?;
         Ok(())
     }
 }

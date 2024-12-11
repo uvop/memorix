@@ -76,10 +76,8 @@ fn flat_type_item_to_code(
 
 fn value_to_code(value: &Value) -> String {
     match value {
-        Value::String(x) => format!("\"{x}\""),
-        Value::Env(x) => {
-            format!("os.environ[\"{x}\"]")
-        }
+        Value::String(x) => format!("Value.from_string(\"{x}\")"),
+        Value::Env(x) => format!("Value.from_env_variable(\"{x}\")"),
     }
 }
 
@@ -426,6 +424,7 @@ from memorix_client_redis import (
     MemorixCacheAll,
     MemorixPubSubAll,
     MemorixTaskAll,
+    Value,
 )
 
 {}"#,

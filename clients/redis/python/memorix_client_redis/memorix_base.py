@@ -2,16 +2,17 @@ import typing
 import asyncio
 import functools
 from .redis_connection import RedisConnection
+from .value import Value
 
 
 class MemorixBase(object):
     def __init__(
         self,
-        redis_url: typing.Optional[str] = None,
+        redis_url: typing.Optional[Value] = None,
         ref: typing.Optional["MemorixBase"] = None,
     ) -> None:
         if ref is None and redis_url is not None:
-            self._connection = RedisConnection(redis_url=redis_url)
+            self._connection = RedisConnection(redis_url=redis_url.require())
         elif ref is not None:
             self._connection = ref._connection
         else:

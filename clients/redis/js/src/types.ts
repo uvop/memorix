@@ -1,9 +1,11 @@
+import type { Value } from "./value.ts";
+
 export type CacheOptions = {
-  ttl?: string;
-  extendOnGet?: string;
+  ttl?: Value;
+  extendOnGet?: Value;
 };
 export type TaskOptions = {
-  queueType?: string;
+  queueType?: Value;
 };
 
 export type CacheItem<
@@ -108,17 +110,13 @@ export type PubSubItemNoKey<
         asyncIterator: AsyncIterableIterator<Payload>;
         unsubscribe: () => Promise<void>;
       }>;
-      subscribe(
-        cb: (payload: Payload) => void,
-      ): Promise<{
+      subscribe(cb: (payload: Payload) => void): Promise<{
         unsubscribe: () => Promise<void>;
       }>;
     }
     : Record<string | number | symbol, never>);
 
-export type TaskDequeueCallback<Payload> = (
-  payload: Payload,
-) => void;
+export type TaskDequeueCallback<Payload> = (payload: Payload) => void;
 type TaskDequeue = Promise<{ stop: () => Promise<void> }>;
 type TaskDequeueAsyncIterator<Payload> = Promise<{
   stop: () => Promise<void>;
@@ -141,13 +139,8 @@ export type TaskItem<
     }
     : Record<string | number | symbol, never>)
   & (CanDequeue extends true ? {
-      dequeue(
-        key: Key,
-        callback: TaskDequeueCallback<Payload>,
-      ): TaskDequeue;
-      dequeue(
-        key: Key,
-      ): TaskDequeueAsyncIterator<Payload>;
+      dequeue(key: Key, callback: TaskDequeueCallback<Payload>): TaskDequeue;
+      dequeue(key: Key): TaskDequeueAsyncIterator<Payload>;
     }
     : Record<string | number | symbol, never>)
   & (CanEmpty extends true ? {
@@ -174,9 +167,7 @@ export type TaskItemNoKey<
     }
     : Record<string | number | symbol, never>)
   & (CanDequeue extends true ? {
-      dequeue(
-        callback: TaskDequeueCallback<Payload>,
-      ): TaskDequeue;
+      dequeue(callback: TaskDequeueCallback<Payload>): TaskDequeue;
       dequeue(): TaskDequeueAsyncIterator<Payload>;
     }
     : Record<string | number | symbol, never>)

@@ -57,10 +57,8 @@ fn flat_type_item_to_code(
 
 fn value_to_code(value: &Value) -> String {
     match value {
-        Value::String(x) => format!("\"{x}\".to_string()"),
-        Value::Env(x) => {
-            format!("std::env::var(\"{x}\").expect(\"missing environment variable {x}\")")
-        }
+        Value::String(x) => format!("memorix_client_redis::Value::from_string(\"{x}\")"),
+        Value::Env(x) => format!("memorix_client_redis::Value::from_env_variable(\"{x}\")"),
     }
 }
 

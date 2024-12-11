@@ -62,9 +62,11 @@ fn type_item_to_code(
 
 fn value_to_code(value: &Value) -> String {
     match value {
-        Value::String(x) => format!("\"{x}\""),
+        Value::String(x) => {
+            format!("getStringValue(\"{x}\")")
+        }
         Value::Env(x) => {
-            format!("getEnvVariable(\"{x}\")")
+            format!("getEnvVariableValue(\"{x}\")")
         }
     }
 }
@@ -304,7 +306,7 @@ pub fn codegen(schema: &ValidatedSchema) -> String {
         r#"// deno-fmt-ignore-file
 // deno-lint-ignore-file
 /* eslint-disable */
-import {{ MemorixBase, getEnvVariable }} from "@memorix/client-redis";
+import {{ MemorixBase, getStringValue, getEnvVariableValue }} from "@memorix/client-redis";
 
 {}"#,
         namespace_to_code(&schema.global_namespace, vec![], schema)

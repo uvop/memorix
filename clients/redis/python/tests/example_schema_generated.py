@@ -13,6 +13,7 @@ from memorix_client_redis import (
     MemorixCacheAll,
     MemorixPubSubAll,
     MemorixTaskAll,
+    Value,
 )
 
 
@@ -51,7 +52,7 @@ class Spaceship(object):
                     id="count",
                     payload_class=int,
                     options=MemorixCacheAll.Options(
-                        ttl="1",
+                        ttl=Value.from_string("1"),
                     ),
                 )
 
@@ -73,7 +74,7 @@ class Spaceship(object):
                 id="pilot",
                 payload_class=Spaceship.InlineCachePayloadPilot,
                 options=MemorixCacheAll.Options(
-                    ttl="1",
+                    ttl=Value.from_string("1"),
                 ),
             )
 
@@ -96,7 +97,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="bestStr",
             payload_class=str,
             options=MemorixCacheAll.Options(
-                ttl="2",
+                ttl=Value.from_string("2"),
             ),
         )
         self.allUsers = MemorixCacheAll.ItemTTTTNoKey[
@@ -106,7 +107,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="allUsers",
             payload_class=typing.List[typing.List[typing.Optional[User]]],
             options=MemorixCacheAll.Options(
-                ttl="2",
+                ttl=Value.from_string("2"),
             ),
         )
         self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, Animal](
@@ -114,7 +115,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="favoriteAnimal",
             payload_class=Animal,
             options=MemorixCacheAll.Options(
-                ttl="2",
+                ttl=Value.from_string("2"),
             ),
         )
         self.user = MemorixCacheAll.ItemTTTT[str, "User"](
@@ -122,7 +123,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="user",
             payload_class=User,
             options=MemorixCacheAll.Options(
-                ttl="2",
+                ttl=Value.from_string("2"),
             ),
         )
         self.user2 = MemorixCacheAll.ItemTTTT["InlineCacheKeyUser2", "User"](
@@ -130,7 +131,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="user2",
             payload_class=User,
             options=MemorixCacheAll.Options(
-                ttl="2",
+                ttl=Value.from_string("2"),
             ),
         )
         self.userExpire = MemorixCacheAll.ItemTTTT[str, "User"](
@@ -138,7 +139,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="userExpire",
             payload_class=User,
             options=MemorixCacheAll.Options(
-                ttl="1",
+                ttl=Value.from_string("1"),
             ),
         )
         self.userExpire2 = MemorixCacheAll.ItemTTTT[str, "User"](
@@ -151,8 +152,8 @@ class MemorixCache(MemorixCacheAll.Base):
             id="userExpire3",
             payload_class=User,
             options=MemorixCacheAll.Options(
-                ttl="2",
-                extend_on_get="true",
+                ttl=Value.from_string("2"),
+                extend_on_get=Value.from_string("true"),
             ),
         )
 
@@ -182,14 +183,14 @@ class MemorixTask(MemorixTaskAll.Base):
             id="runAlgoNewest",
             payload_class=str,
             options=MemorixTaskAll.Options(
-                queue_type="lifo",
+                queue_type=Value.from_string("lifo"),
             ),
         )
 
 
 class Memorix(MemorixBase):
     def __init__(self) -> None:
-        super().__init__(redis_url=os.environ["REDIS_URL"])
+        super().__init__(redis_url=Value.from_env_variable("REDIS_URL"))
 
         self._namespace_name_tree = []
         self.spaceship = Spaceship.Memorix(ref=self)

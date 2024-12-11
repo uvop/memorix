@@ -115,7 +115,7 @@ pub mod message_service {
                     memorix_base.clone(),
                 "message_processing_tasks".to_string(),
                     Some(memorix_client_redis::MemorixTaskOptions {
-                        queue_type: Some("Fifo".to_string()),
+                        queue_type: Some(memorix_client_redis::Value::from_string("Fifo")),
                     }),
                 )?,
             })
@@ -172,7 +172,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "user_session".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(std::env::var("USER_SESSION_TTL").expect("missing environment variable USER_SESSION_TTL")),
+                    ttl: Some(memorix_client_redis::Value::from_env_variable("USER_SESSION_TTL")),
                     extend_on_get: None,
                 }),
             )?,
@@ -201,7 +201,7 @@ const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 impl Memorix {
     pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
         let memorix_base = memorix_client_redis::MemorixBase::new(
-            &std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL"),
+            &memorix_client_redis::Value::from_env_variable("REDIS_URL"),
             MEMORIX_NAMESPACE_NAME_TREE,
         )
         .await?;
