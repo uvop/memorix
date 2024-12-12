@@ -84,10 +84,10 @@ pub mod spaceship {
             pub fn new(
                 other: memorix_client_redis::MemorixBase,
             ) -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
-                let memorix_base =
+                let _memorix_base =
                     memorix_client_redis::MemorixBase::from(other, MEMORIX_NAMESPACE_NAME_TREE);
                 Ok(Self {
-                    cache: MemorixCache::new(memorix_base.clone())?,
+                    cache: MemorixCache::new(_memorix_base.clone())?,
                 })
             }
         }
@@ -135,12 +135,12 @@ pub mod spaceship {
         pub fn new(
             other: memorix_client_redis::MemorixBase,
         ) -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
-            let memorix_base =
+            let _memorix_base =
                 memorix_client_redis::MemorixBase::from(other, MEMORIX_NAMESPACE_NAME_TREE);
             Ok(Self {
-                crew: crew::Memorix::new(memorix_base.clone())?,
+                crew: crew::Memorix::new(_memorix_base.clone())?,
 
-                cache: MemorixCache::new(memorix_base.clone())?,
+                cache: MemorixCache::new(_memorix_base.clone())?,
             })
         }
     }
@@ -343,17 +343,17 @@ const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
-        let memorix_base = memorix_client_redis::MemorixBase::new(
+        let _memorix_base = memorix_client_redis::MemorixBase::new(
             &memorix_client_redis::Value::from_env_variable("REDIS_URL"),
             MEMORIX_NAMESPACE_NAME_TREE,
         )
         .await?;
         Ok(Self {
-            spaceship: spaceship::Memorix::new(memorix_base.clone())?,
+            spaceship: spaceship::Memorix::new(_memorix_base.clone())?,
 
-            cache: MemorixCache::new(memorix_base.clone())?,
-            pubsub: MemorixPubSub::new(memorix_base.clone())?,
-            task: MemorixTask::new(memorix_base.clone())?,
+            cache: MemorixCache::new(_memorix_base.clone())?,
+            pubsub: MemorixPubSub::new(_memorix_base.clone())?,
+            task: MemorixTask::new(_memorix_base.clone())?,
         })
     }
 }

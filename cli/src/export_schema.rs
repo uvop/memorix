@@ -58,7 +58,18 @@ fn namespace_to_export_namespace(namespace: &Namespace, expose_all: bool) -> Exp
         namespaces: namespace
             .namespaces
             .iter()
-            .map(|(k, n)| (k.clone(), namespace_to_export_namespace(n, expose_all)))
+            .filter_map(|(k, n)| {
+                let sub_namespace = namespace_to_export_namespace(n, expose_all);
+                match sub_namespace.cache_items.len()
+                    + sub_namespace.pubsub_items.len()
+                    + sub_namespace.task_items.len()
+                    + sub_namespace.enum_items.len()
+                    + sub_namespace.type_items.len()
+                {
+                    0 => None,
+                    _ => Some((k.clone(), sub_namespace)),
+                }
+            })
             .collect(),
         type_items: namespace
             .type_items

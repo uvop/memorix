@@ -424,7 +424,7 @@ fn namespace_to_code(
         .join("\n\n"),
         impl_new = match name_tree.is_empty() {
             true => format!(r#"{base_indent}    pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {{
-{base_indent}        let memorix_base = memorix_client_redis::MemorixBase::new(
+{base_indent}        let _memorix_base = memorix_client_redis::MemorixBase::new(
 {base_indent}            {redis_url},
 {base_indent}            MEMORIX_NAMESPACE_NAME_TREE,
 {base_indent}        )
@@ -435,7 +435,7 @@ fn namespace_to_code(
                 r#"{base_indent}    pub fn new(
 {base_indent}        other: memorix_client_redis::MemorixBase,
 {base_indent}    ) -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {{
-{base_indent}        let memorix_base = memorix_client_redis::MemorixBase::from(
+{base_indent}        let _memorix_base = memorix_client_redis::MemorixBase::from(
 {base_indent}            other,
 {base_indent}            MEMORIX_NAMESPACE_NAME_TREE,
 {base_indent}        );"#),
@@ -445,20 +445,20 @@ fn namespace_to_code(
                 .namespaces
                 .iter()
                 .map(|(name, _)| format!(
-                    "{base_indent}            {name}: {namespace_name}::Memorix::new(memorix_base.clone())?,",
+                    "{base_indent}            {name}: {namespace_name}::Memorix::new(_memorix_base.clone())?,",
                     namespace_name = stringcase::snake_case(name),
                 ))
                 .collect::<Vec<_>>()
                 .join("\n"),
             [
                 (!namespace.cache_items.is_empty()).then(|| format!(
-                    "{base_indent}            cache: MemorixCache::new(memorix_base.clone())?,"
+                    "{base_indent}            cache: MemorixCache::new(_memorix_base.clone())?,"
                 )),
                 (!namespace.pubsub_items.is_empty()).then(|| format!(
-                    "{base_indent}            pubsub: MemorixPubSub::new(memorix_base.clone())?,"
+                    "{base_indent}            pubsub: MemorixPubSub::new(_memorix_base.clone())?,"
                 )),
                 (!namespace.task_items.is_empty()).then(|| format!(
-                    "{base_indent}            task: MemorixTask::new(memorix_base.clone())?,"
+                    "{base_indent}            task: MemorixTask::new(_memorix_base.clone())?,"
                 )),
             ]
             .into_iter()
