@@ -1,6 +1,6 @@
 ---
 source: src/main.rs
-assertion_line: 432
+assertion_line: 447
 expression: rust_code
 ---
 #![allow(dead_code)]
@@ -67,7 +67,7 @@ pub mod message_service {
     #[derive(Clone)]
     #[allow(non_snake_case)]
     pub struct MemorixCache {
-        pub message: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadMessage, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+        pub message: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadMessage, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
     }
 
     impl MemorixCache {
@@ -115,7 +115,7 @@ pub mod message_service {
                     memorix_base.clone(),
                 "message_processing_tasks".to_string(),
                     Some(memorix_client_redis::MemorixTaskOptions {
-                        queue_type: Some("Fifo".to_string()),
+                        queue_type: Some(memorix_client_redis::Value::from_string("Fifo")),
                     }),
                 )?,
             })
@@ -136,14 +136,14 @@ pub mod message_service {
         pub fn new(
             other: memorix_client_redis::MemorixBase,
         ) -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
-            let memorix_base = memorix_client_redis::MemorixBase::from(
+            let _memorix_base = memorix_client_redis::MemorixBase::from(
                 other,
                 MEMORIX_NAMESPACE_NAME_TREE,
             );
             Ok(Self {
-                cache: MemorixCache::new(memorix_base.clone())?,
-                pubsub: MemorixPubSub::new(memorix_base.clone())?,
-                task: MemorixTask::new(memorix_base.clone())?,
+                cache: MemorixCache::new(_memorix_base.clone())?,
+                pubsub: MemorixPubSub::new(_memorix_base.clone())?,
+                task: MemorixTask::new(_memorix_base.clone())?,
             })
         }
     }
@@ -152,9 +152,9 @@ pub mod message_service {
 #[derive(Clone)]
 #[allow(non_snake_case)]
 pub struct MemorixCache {
-    pub user_profile: memorix_client_redis::MemorixCacheItem<u32, InlineCachePayloadUserProfile, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
-    pub user_session: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadUserSession, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
-    pub number_of_messages: memorix_client_redis::MemorixCacheItemNoKey<u32, memorix_client_redis::Expose, memorix_client_redis::Hide, memorix_client_redis::Hide>,
+    pub user_profile: memorix_client_redis::MemorixCacheItem<u32, InlineCachePayloadUserProfile, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+    pub user_session: memorix_client_redis::MemorixCacheItem<String, InlineCachePayloadUserSession, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose, memorix_client_redis::Expose>,
+    pub number_of_messages: memorix_client_redis::MemorixCacheItemNoKey<u32, memorix_client_redis::Expose, memorix_client_redis::Hide, memorix_client_redis::Hide, memorix_client_redis::Hide>,
 }
 
 impl MemorixCache {
@@ -172,7 +172,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "user_session".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(std::env::var("USER_SESSION_TTL").expect("missing environment variable USER_SESSION_TTL")),
+                    ttl: Some(memorix_client_redis::Value::from_env_variable("USER_SESSION_TTL")),
                     extend_on_get: None,
                 }),
             )?,
@@ -200,15 +200,15 @@ const MEMORIX_NAMESPACE_NAME_TREE: &[&str] = &[];
 
 impl Memorix {
     pub async fn new() -> Result<Memorix, Box<dyn std::error::Error + Sync + Send>> {
-        let memorix_base = memorix_client_redis::MemorixBase::new(
-            &std::env::var("REDIS_URL").expect("missing environment variable REDIS_URL"),
+        let _memorix_base = memorix_client_redis::MemorixBase::new(
+            &memorix_client_redis::Value::from_env_variable("REDIS_URL"),
             MEMORIX_NAMESPACE_NAME_TREE,
         )
         .await?;
         Ok(Self {
-            MessageService: message_service::Memorix::new(memorix_base.clone())?,
+            MessageService: message_service::Memorix::new(_memorix_base.clone())?,
 
-            cache: MemorixCache::new(memorix_base.clone())?,
+            cache: MemorixCache::new(_memorix_base.clone())?,
         })
     }
 }

@@ -1,7 +1,7 @@
 // deno-fmt-ignore-file
 // deno-lint-ignore-file
 /* eslint-disable */
-import { MemorixBase, getEnvVariable } from "./index.ts";
+import { MemorixBase, getStringValue, getEnvVariableValue } from "./index.ts";
 
 export enum Animal {
   dog = "dog",
@@ -26,8 +26,8 @@ export namespace spaceship {
       }
 
       cache = {
-        count: this.getCacheItemNoKey<number, true, true, true>("count", {
-          ttl: "2",
+        count: this.getCacheItemNoKey<number, true, true, true, true>("count", {
+          ttl: getStringValue("2"),
         }),
       };
     }
@@ -46,8 +46,8 @@ export namespace spaceship {
     cache = {
       pilot: this.getCacheItemNoKey<{
         name: string;
-      }, true, true, true>("pilot", {
-        ttl: "2",
+      }, true, true, true, true>("pilot", {
+        ttl: getStringValue("2"),
       }),
     };
   }
@@ -57,25 +57,25 @@ export class Memorix extends MemorixBase {
     super({
       namespaceNameTree: [],
     }, {
-      redisUrl: getEnvVariable("REDIS_URL"),
+      redisUrl: getEnvVariableValue("REDIS_URL"),
     });
   }
 
   spaceship = new spaceship.Memorix(this);
 
   cache = {
-    favoriteAnimal: this.getCacheItem<string, Animal, true, true, true>("favoriteAnimal"),
-    user: this.getCacheItem<string, User, true, true, true>("user"),
-    userNoKey: this.getCacheItemNoKey<User, true, true, true>("userNoKey"),
-    userExpire: this.getCacheItem<string, User, true, true, true>("userExpire", {
-      ttl: "1",
+    favoriteAnimal: this.getCacheItem<string, Animal, true, true, true, true>("favoriteAnimal"),
+    user: this.getCacheItem<string, User, true, true, true, true>("user"),
+    userNoKey: this.getCacheItemNoKey<User, true, true, true, true>("userNoKey"),
+    userExpire: this.getCacheItem<string, User, true, true, true, true>("userExpire", {
+      ttl: getStringValue("1"),
     }),
-    userExpire2: this.getCacheItem<string, User, true, true, true>("userExpire2", {
-      ttl: "0",
+    userExpire2: this.getCacheItem<string, User, true, true, true, true>("userExpire2", {
+      ttl: getStringValue("0"),
     }),
-    userExpire3: this.getCacheItem<string, User, true, true, true>("userExpire3", {
-      ttl: "2",
-      extendOnGet: "true",
+    userExpire3: this.getCacheItem<string, User, true, true, true, true>("userExpire3", {
+      ttl: getStringValue("2"),
+      extendOnGet: getStringValue("true"),
     }),
   };
   pubsub = {
@@ -84,7 +84,7 @@ export class Memorix extends MemorixBase {
   task = {
     runAlgo: this.getTaskItemNoKey<string, true, true, true, true>("runAlgo"),
     runAlgoNewest: this.getTaskItemNoKey<string, true, true, true, true>("runAlgoNewest", {
-      queueType: "lifo",
+      queueType: getStringValue("lifo"),
     }),
   };
 }

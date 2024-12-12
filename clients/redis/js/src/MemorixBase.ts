@@ -5,6 +5,7 @@ import { Redis } from "npm:ioredis@^5.4.1";
 import callbackToAsyncIteratorModule from "npm:callback-to-async-iterator@1.1.1";
 import type * as types from "./types.ts";
 import { hashKey } from "./utils/hashKey.ts";
+import { requireValue, type Value } from "./value.ts";
 const callbackToAsyncIterator = callbackToAsyncIteratorModule.default;
 
 enum QueueType {
@@ -25,7 +26,7 @@ export class MemorixBase {
 
   constructor(
     { namespaceNameTree }: { namespaceNameTree: string[] },
-    { redisUrl, ref }: { redisUrl?: string; ref?: MemorixBase },
+    { redisUrl, ref }: { redisUrl?: Value; ref?: MemorixBase },
   ) {
     this.namespaceNameTree = namespaceNameTree;
     if (ref) {
@@ -34,7 +35,7 @@ export class MemorixBase {
       this.redisTasks = ref.redisTasks;
       this.subscriptionCallbacks = ref.subscriptionCallbacks;
     } else {
-      this.redis = new Redis(redisUrl!, { lazyConnect: true });
+      this.redis = new Redis(requireValue(redisUrl!), { lazyConnect: true });
       this.redisSub = this.redis.duplicate();
       this.redisTasks = [];
       this.subscriptionCallbacks = new Map();
@@ -71,28 +72,41 @@ export class MemorixBase {
     CanGet extends boolean,
     CanSet extends boolean,
     CanDelete extends boolean,
+    CanExpire extends boolean,
   >(
     identifier: string,
     options: types.CacheOptions = {},
-  ): types.CacheItem<Key, Payload, CanGet, CanSet, CanDelete> {
-    const { ttl: ttlStr = "0", extendOnGet: extendOnGetStr = "false" } =
-      options;
+  ): types.CacheItem<Key, Payload, CanGet, CanSet, CanDelete, CanExpire> {
+    const {
+      ttl: ttlValue = { type: "string", string: { value: "0" } },
+      extendOnGet: extendOnGetValue = {
+        type: "string",
+        string: { value: "false" },
+      },
+    } = options;
+    const getTtl = () => {
+      const ttlStr = requireValue(ttlValue);
+      const ttl = Number(ttlStr);
+      if (Number.isNaN(ttl)) {
+        throw new Error(`Exptected ttl to be a number, git "${ttlStr}"`);
+      }
+      return ttl;
+    };
+    const getExtendOnGet = () => {
+      const extendOnGetStr = requireValue(extendOnGetValue);
+      let extendOnGet: boolean;
+      if (extendOnGetStr === "true") {
+        extendOnGet = true;
+      } else if (extendOnGetStr === "false") {
+        extendOnGet = false;
+      } else {
+        throw new Error(
+          `Exptected extendOnGet to be a boolean, got "${extendOnGetStr}"`,
+        );
+      }
+      return extendOnGet;
+    };
 
-    const ttl = Number(ttlStr);
-    if (Number.isNaN(ttl)) {
-      throw new Error(`Exptected ttl to be a number, git "${ttlStr}"`);
-    }
-
-    let extendOnGet: boolean;
-    if (extendOnGetStr === "true") {
-      extendOnGet = true;
-    } else if (extendOnGetStr === "false") {
-      extendOnGet = false;
-    } else {
-      throw new Error(
-        `Exptected extendOnGet to be a boolean, got "${extendOnGetStr}"`,
-      );
-    }
     const item = {
       hasKey: true,
       key: (key: Key | undefined) => {
@@ -103,6 +117,7 @@ export class MemorixBase {
         );
       },
       extend: async (key: Key) => {
+        const ttl = getTtl();
         if (ttl === 0) {
           return;
         }
@@ -111,6 +126,7 @@ export class MemorixBase {
         await this.redis.expire(hashedKey, ttl.toString());
       },
       get: async (key: Key) => {
+        const extendOnGet = getExtendOnGet();
         const hashedKey = item.key(key);
         const found = await this.redis.get(hashedKey);
         if (!found) {
@@ -122,6 +138,7 @@ export class MemorixBase {
         return JSON.parse(found) as Payload;
       },
       set: async (key: Key, payload: Payload) => {
+        const ttl = getTtl();
         const hashedKey = item.key(key);
         const params = ttl !== 0 ? ["EX", ttl.toString()] : [];
         await this.redis.set(
@@ -134,6 +151,10 @@ export class MemorixBase {
         const hashedKey = item.key(key);
         await this.redis.del(hashedKey);
       },
+      expire: async (key: Key, ttl: number) => {
+        const hashedKey = item.key(key);
+        await this.redis.expire(hashedKey, ttl.toString());
+      },
     };
     return item as any;
   }
@@ -143,9 +164,10 @@ export class MemorixBase {
     CanGet extends boolean,
     CanSet extends boolean,
     CanDelete extends boolean,
+    CanExpire extends boolean,
   >(
     ...itemArgs: any[]
-  ): types.CacheItemNoKey<Payload, CanGet, CanSet, CanDelete> {
+  ): types.CacheItemNoKey<Payload, CanGet, CanSet, CanDelete, CanExpire> {
     const item = (this.getCacheItem as any)(...itemArgs);
     item.hasKey = false;
 
@@ -155,6 +177,7 @@ export class MemorixBase {
       get: (...args: any[]) => item.get(undefined, ...args),
       set: (...args: any[]) => item.set(undefined, ...args),
       delete: (...args: any[]) => item.delete(undefined, ...args),
+      expire: (...args: any[]) => item.expire(undefined, ...args),
     } as any;
   }
 
@@ -285,21 +308,27 @@ export class MemorixBase {
     identifier: string,
     options: types.TaskOptions = {},
   ): types.TaskItem<Key, Payload, CanEnqueue, CanDequeue, CanEmpty, CanGetLen> {
-    const { queueType: queueTypeStr = "fifo" } = options;
-    let queueType: QueueType;
-    if (queueTypeStr === QueueType.FIFO) {
-      queueType = QueueType.FIFO;
-    } else if (queueTypeStr === QueueType.LIFO) {
-      queueType = QueueType.LIFO;
-    } else {
-      throw new Error(
-        `Exptected queueType to be a on of ${
-          Object.values(QueueType).join(
-            ", ",
-          )
-        }, got "${queueTypeStr}"`,
-      );
-    }
+    const {
+      queueType: queueTypeValue = { type: "string", string: { value: "fifo" } },
+    } = options;
+    const getQueueType = () => {
+      const queueTypeStr = requireValue(queueTypeValue);
+      let queueType: QueueType;
+      if (queueTypeStr === QueueType.FIFO) {
+        queueType = QueueType.FIFO;
+      } else if (queueTypeStr === QueueType.LIFO) {
+        queueType = QueueType.LIFO;
+      } else {
+        throw new Error(
+          `Exptected queueType to be a on of ${
+            Object.values(QueueType).join(
+              ", ",
+            )
+          }, got "${queueTypeStr}"`,
+        );
+      }
+      return queueType;
+    };
 
     const item = {
       hasKey: true,
@@ -331,6 +360,7 @@ export class MemorixBase {
         await redisClient.connect();
         this.redisTasks.push(redisClient);
         let isStopped = false;
+        const queueType = getQueueType();
 
         const pop = () =>
           new Promise<{ value?: Payload }>((res, rej) => {

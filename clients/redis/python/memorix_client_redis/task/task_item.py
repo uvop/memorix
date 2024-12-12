@@ -26,7 +26,7 @@ class TaskItem(typing.Generic[KT, PT]):
         self._api = api
         self._id = id
         self._payload_class = payload_class
-        self._options = options
+        self._options = options if options is not None else TaskOptions(queue_type=None)
         self._has_key = True
 
     def _key(self, key: KT) -> str:
@@ -58,7 +58,7 @@ class TaskItem(typing.Generic[KT, PT]):
     ) -> typing.Generator[PT, None, None]:
 
         while True:
-            if self._options is not None and self._options.queue_type == "lifo":
+            if self._options.get_queue_type() == "lifo":
                 [channel_bytes, data_bytes] = self._api._connection.redis.brpop(
                     self._key(key=key),
                 )

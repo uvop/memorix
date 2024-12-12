@@ -13,6 +13,7 @@ from memorix_client_redis import (
     MemorixCacheAll,
     MemorixPubSubAll,
     MemorixTaskAll,
+    Value,
 )
 
 
@@ -35,12 +36,12 @@ class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.favoriteAnimal = MemorixCacheAll.ItemTTT[str, Animal](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, Animal](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixCacheAll.ItemTTT[str, User](
+        self.user = MemorixCacheAll.ItemTTTT[str, "User"](
             api=api,
             id="user",
             payload_class=User,
@@ -71,7 +72,7 @@ class MemorixTask(MemorixTaskAll.Base):
 
 class Memorix(MemorixBase):
     def __init__(self) -> None:
-        super().__init__(redis_url=os.environ["REDIS_URL"])
+        super().__init__(redis_url=Value.from_env_variable("REDIS_URL"))
 
         self._namespace_name_tree = []
         self.cache = MemorixCache(self)

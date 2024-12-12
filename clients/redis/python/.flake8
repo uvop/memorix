@@ -56,7 +56,8 @@ ignore =
     WPS235, # Complicated library
     WPS115, # Upper case constants for classes
     WPS337, # Multiline condition
-    WPS219, # Deep baby!
+    WPS219, # Deep baby!    
+    WPS615, # I hate the python way
 per-file-ignores =
     __init__.py: 
         # import unused, for exporting
@@ -65,6 +66,8 @@ per-file-ignores =
         WPS113,
         # module with logic, only for exporting
         WPS412,
+        # all helps a bit
+        WPS410,
 exclude =
     .git,
     __pycache__,
