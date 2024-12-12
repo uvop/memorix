@@ -24,21 +24,26 @@ pub struct Hide;
 
 #[derive(Clone)]
 pub enum Value {
-    String { value: String },
-    EnvVariable { name: String, value: Option<String> },
+    String {
+        value: &'static str,
+    },
+    EnvVariable {
+        name: &'static str,
+        value: Option<String>,
+    },
 }
 
 impl Value {
-    pub fn from_string(value: String) -> Self {
+    pub fn from_string(value: &'static str) -> Self {
         Self::String { value }
     }
-    pub fn from_env_variable(name: String) -> Self {
+    pub fn from_env_variable(name: &'static str) -> Self {
         let value = std::env::var(&name).ok();
         Self::EnvVariable { name, value }
     }
     fn require(&self) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
         match self {
-            Self::String { value } => Ok(value.clone()),
+            Self::String { value } => Ok((*value).to_string()),
             Self::EnvVariable { name, value } => Ok(value
                 .clone()
                 .ok_or(format!("Environment variable \"{name}\" is not set"))?),
@@ -115,10 +120,10 @@ pub struct MemorixBase {
 
 impl MemorixBase {
     pub async fn new(
-        redis_url: &str,
+        redis_url: &Value,
         namespace_name_tree: &'static [&'static str],
     ) -> Result<MemorixBase, Box<dyn std::error::Error + Sync + Send>> {
-        let client = redis::Client::open(redis_url)?;
+        let client = redis::Client::open(redis_url.require()?)?;
         let redis = client.get_multiplexed_async_connection().await?;
         let task_redis = client.get_multiplexed_async_connection().await?;
         Ok(Self {
