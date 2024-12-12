@@ -17,13 +17,26 @@ jobs:
         run: |
           $version = "2.1.0"
           $url = "https://github.com/uvop/memorix/releases/download/v${version}/memorix.exe"
+          
+          # Get checksum first
+          $checksum = Get-RemoteChecksum -Url $url -Algorithm sha256
 
           # Create package directory structure
           New-Item -ItemType Directory -Path "choco-package"
           New-Item -ItemType Directory -Path "choco-package/tools"
 
-          # Create nuspec file
-          @"
+          # Create nuspec file with properly escaped description
+          $description = @"
+          Memorix is a powerful command-line interface (CLI) tool designed to help users manage and organize their memories efficiently. It provides a suite of commands for creating, searching, and maintaining personal memory records.
+
+          Key Features:
+          - Intuitive command-line interface
+          - Efficient memory storage and retrieval
+          - Customizable organization system
+          - Cross-platform compatibility
+          "@
+
+          $nuspecContent = @"
           <?xml version="1.0" encoding="utf-8"?>
           <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
             <metadata>
@@ -31,36 +44,45 @@ jobs:
               <version>$version</version>
               <title>Memorix CLI</title>
               <authors>uvop</authors>
+              <owners>uvop</owners>
               <projectUrl>https://github.com/uvop/memorix</projectUrl>
-              <licenseUrl>https://github.com/uvop/memorix/blob/master/LICENSE</licenseUrl>
+              <packageSourceUrl>https://github.com/uvop/memorix</packageSourceUrl>
+              <licenseUrl>https://raw.githubusercontent.com/uvop/memorix/master/LICENSE</licenseUrl>
+              <projectSourceUrl>https://github.com/uvop/memorix</projectSourceUrl>
+              <docsUrl>https://github.com/uvop/memorix/blob/master/README.md</docsUrl>
+              <bugTrackerUrl>https://github.com/uvop/memorix/issues</bugTrackerUrl>
               <requireLicenseAcceptance>false</requireLicenseAcceptance>
-              <description>Memorix CLI tool</description>
-              <tags>memorix cli</tags>
+              <summary>A command-line interface tool for managing and organizing memories</summary>
+              <description>$($description)</description>
+              <releaseNotes>https://github.com/uvop/memorix/releases/tag/v$version</releaseNotes>
+              <tags>memorix cli memory-management</tags>
             </metadata>
           </package>
-          "@ | Set-Content "choco-package/memorix.nuspec"
+          "@
+          $nuspecContent | Set-Content "choco-package/memorix.nuspec"
 
-          # Create installation script
+          # Create installation script with the checksum already included
           @"
           `$ErrorActionPreference = 'Stop'
           `$toolsDir = "`$(Split-Path -Parent `$MyInvocation.MyCommand.Definition)"
-          `$url = '$url'
+
           `$packageArgs = @{
-            packageName    = 'memorix'
-            url           = `$url
-            fileFullPath  = Join-Path `$toolsDir 'memorix.exe'
-            checksum      = (Invoke-RestMethod -Uri "`$url" -OutFile "`$env:TEMP\memorix.exe" -PassThru | Get-FileHash).Hash
-            checksumType  = 'sha256'
+              packageName    = 'memorix'
+              url           = '$url'
+              checksum      = '$checksum'
+              checksumType  = 'sha256'
+              fileFullPath  = Join-Path `$toolsDir 'memorix.exe'
           }
+
           Get-ChocolateyWebFile @packageArgs
           "@ | Set-Content "choco-package/tools/chocolateyinstall.ps1"
 
           # Create uninstallation script
-          @"
-          `$ErrorActionPreference = 'Stop'
-          `$toolsDir = "`$(Split-Path -Parent `$MyInvocation.MyCommand.Definition)"
-          Remove-Item "`$toolsDir\memorix.exe" -Force
-          "@ | Set-Content "choco-package/tools/chocolateyuninstall.ps1"
+          @'
+          $ErrorActionPreference = 'Stop'
+          $toolsDir = "$(Split-Path -Parent $MyInvocation.MyCommand.Definition)"
+          Remove-Item "$toolsDir\memorix.exe" -Force
+          '@ | Set-Content "choco-package/tools/chocolateyuninstall.ps1"
 
       - name: Install Chocolatey
         run: |
