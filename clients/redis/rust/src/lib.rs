@@ -38,7 +38,7 @@ impl Value {
         Self::String { value }
     }
     pub fn from_env_variable(name: &'static str) -> Self {
-        let value = std::env::var(&name).ok();
+        let value = std::env::var(name).ok();
         Self::EnvVariable { name, value }
     }
     fn require(&self) -> Result<String, Box<dyn std::error::Error + Sync + Send>> {
