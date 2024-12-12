@@ -16,11 +16,9 @@ jobs:
         shell: pwsh
         run: |
           $version = "2.1.0"
+          $checksum = "6683c0fd32c7061d06ba988ca988742e8a0bc5c145d13ec0c9852b593f15def3"
           $url = "https://github.com/uvop/memorix/releases/download/v${version}/memorix.exe"
           
-          # Get checksum first
-          $checksum = Get-RemoteChecksum -Url $url -Algorithm sha256
-
           # Create package directory structure
           New-Item -ItemType Directory -Path "choco-package"
           New-Item -ItemType Directory -Path "choco-package/tools"
@@ -47,6 +45,7 @@ jobs:
               <owners>uvop</owners>
               <projectUrl>https://github.com/uvop/memorix</projectUrl>
               <packageSourceUrl>https://github.com/uvop/memorix</packageSourceUrl>
+              <iconUrl>https://raw.githubusercontent.com/uvop/memorix/master/docs/static/doks.png</iconUrl>
               <licenseUrl>https://raw.githubusercontent.com/uvop/memorix/master/LICENSE</licenseUrl>
               <projectSourceUrl>https://github.com/uvop/memorix</projectSourceUrl>
               <docsUrl>https://github.com/uvop/memorix/blob/master/README.md</docsUrl>
