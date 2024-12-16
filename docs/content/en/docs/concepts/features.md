@@ -153,11 +153,11 @@ You can define cache options in your schema to change it's behaviour
 Cache {
     hello {
         payload: string
-        ttl: "10"
+        ttl_ms: "10000"
     }
     helloForever {
         payload: string
-        ttl: "0"
+        ttl_ms: "0"
     }
 }
 ```
@@ -166,7 +166,7 @@ Here to defined that each cache item will expire in 5 seconds, but specifically 
 
 | name          | Type                  | Default               | Description                                                                                                                |
 | :------------ | :-------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------------------------- |
-| ttl           | `string or env value` | `"0"` - No expiration | The numerical value of how many seconds until the data is expired and can be deleted from the cache, `0` for no expiration |
+| ttl_ms           | `string or env value` | `"0"` - No expiration | The numerical value of how many milliseconds until the data is expired and can be deleted from the cache, `0` for no expiration |
 | extend_on_get | `string or env value` | `"false"`             | If is set to true, the item's expiration will be reset each time `get` api is called                                       |
 
 ## PubSub
