@@ -15,7 +15,7 @@ class CacheItem(typing.Generic[KT, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
         options: typing.Optional[CacheOptions] = None,
     ) -> None:
         self._api = api
@@ -73,7 +73,7 @@ class CacheItem(typing.Generic[KT, PT]):
             CacheItem._extend(self=self, key=key)
 
         data_str = bytes_to_str(data_bytes)
-        payload = from_json(value=data_str, data_class=self._payload_class)
+        payload = typing.cast(PT, from_json(value=data_str, data_class=self._payload_class))
         return payload
 
     async def _async_get(self, key: KT) -> typing.Optional[PT]:
@@ -172,7 +172,7 @@ class CacheItemNoKey(CacheItem[None, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
         options: typing.Optional[CacheOptions] = None,
     ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class, options=options)

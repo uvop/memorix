@@ -44,7 +44,7 @@ def to_json(value: TT, sort_dict: bool = False) -> str:
     return json.dumps(dict["value"], separators=(",", ":"))
 
 
-def from_json(value: str, data_class: typing.Type[TT]) -> TT:
+def from_json(value: str, data_class: typing.Any) -> typing.Any:
     data_class_any: typing.Any = data_class
 
     @dataclass
@@ -59,4 +59,4 @@ def from_json(value: str, data_class: typing.Type[TT]) -> TT:
         config=Config(cast=[Enum]),
     )
 
-    return typing.cast(TT, typing.cast(typing.Any, json_obj).value)
+    return typing.cast(typing.Any, json_obj).value

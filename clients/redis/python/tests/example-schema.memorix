@@ -77,6 +77,9 @@ Task {
   runAlgo: {
     payload: string
   }
+  runAlgoOptional: {
+    payload: string?
+  }
   runAlgoNewest: {
     payload: string
     queue_type: "lifo"

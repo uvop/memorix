@@ -28,7 +28,6 @@ class InlineTypeUser(object):
     name: str
     age: typing.Optional[int]
 
-
 User = InlineTypeUser
 
 
@@ -41,7 +40,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="favoriteAnimal",
             payload_class=Animal,
         )
-        self.user = MemorixCacheAll.ItemTTTT[str, "User"](
+        self.user = MemorixCacheAll.ItemTTTT[str, 'User'](
             api=api,
             id="user",
             payload_class=User,
@@ -69,10 +68,10 @@ class MemorixTask(MemorixTaskAll.Base):
             payload_class=str,
         )
 
-
 class Memorix(MemorixBase):
     def __init__(self) -> None:
         super().__init__(redis_url=Value.from_env_variable("REDIS_URL"))
+
 
         self._namespace_name_tree = []
         self.cache = MemorixCache(self)
