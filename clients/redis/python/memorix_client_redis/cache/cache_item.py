@@ -73,7 +73,9 @@ class CacheItem(typing.Generic[KT, PT]):
             CacheItem._extend(self=self, key=key)
 
         data_str = bytes_to_str(data_bytes)
-        payload = typing.cast(PT, from_json(value=data_str, data_class=self._payload_class))
+        payload = typing.cast(
+            PT, from_json(value=data_str, data_class=self._payload_class)
+        )
         return payload
 
     async def _async_get(self, key: KT) -> typing.Optional[PT]:
