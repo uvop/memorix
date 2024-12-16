@@ -69,7 +69,8 @@ class TaskItem(typing.Generic[KT, PT]):
 
             payload_str = bytes_to_str(data_bytes)
             payload = typing.cast(
-                PT, from_json(value=payload_str, data_class=self._payload_class)
+                PT,
+                from_json(value=payload_str, data_class=self._payload_class),
             )
 
             yield payload
