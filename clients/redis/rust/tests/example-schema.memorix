@@ -27,31 +27,31 @@ Cache {
   favoriteAnimal: {
     key: string
     payload: Animal
-    ttl: "2"
+    ttl_ms: "2000"
   }
   user: {
     key: string
     payload: User
-    ttl: "2"
+    ttl_ms: "2000"
   }
   userNoKey: {
     payload: User
-    ttl: "2"
+    ttl_ms: "2000"
   }
   userExpire: {
     key: string
     payload: User
-    ttl: "1"
+    ttl_ms: "1000"
   }
   userExpire2: {
     key: string
     payload: User
-    ttl: "10"
+    ttl_ms: "10000"
   }
   userExpire3: {
     key: string
     payload: User
-    ttl: "2"
+    ttl_ms: "2000"
     extend_on_get: "true"
   }
 }

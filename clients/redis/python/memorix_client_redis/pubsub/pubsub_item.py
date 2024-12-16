@@ -22,7 +22,7 @@ class PubSubItem(typing.Generic[KT, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
     ) -> None:
         self._api = api
         self._id = id
@@ -62,9 +62,12 @@ class PubSubItem(typing.Generic[KT, PT]):
         ):
             data_bytes = message["data"]
             if isinstance(data_bytes, bytes):
-                data_str = bytes_to_str(data_bytes)
-                data = from_json(value=data_str, data_class=self._payload_class)
-                yield data
+                payload_str = bytes_to_str(data_bytes)
+                payload = typing.cast(
+                    PT,
+                    from_json(value=payload_str, data_class=self._payload_class),
+                )
+                yield payload
 
     async def _async_subscribe(
         self,
@@ -84,9 +87,12 @@ class PubSubItem(typing.Generic[KT, PT]):
             if message is not None:
                 data_bytes = message["data"]
                 if isinstance(data_bytes, bytes):
-                    data_str = bytes_to_str(data_bytes)
-                    data = from_json(value=data_str, data_class=self._payload_class)
-                    yield data
+                    payload_str = bytes_to_str(data_bytes)
+                    payload = typing.cast(
+                        PT,
+                        from_json(value=payload_str, data_class=self._payload_class),
+                    )
+                    yield payload
 
 
 class PubSubItemTT(PubSubItem[KT, PT]):
@@ -144,7 +150,7 @@ class PubSubItemTTNoKey(PubSubItem[None, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
     ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
@@ -170,7 +176,7 @@ class PubSubItemTFNoKey(PubSubItem[None, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
     ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
@@ -190,7 +196,7 @@ class PubSubItemFTNoKey(PubSubItem[None, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
     ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False
@@ -210,7 +216,7 @@ class PubSubItemFFNoKey(PubSubItem[None, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
     ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class)
         self._has_key = False

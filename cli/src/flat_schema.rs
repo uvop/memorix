@@ -162,7 +162,7 @@ fn namespace_to_flat_namespace(
                         &mut type_object_items,
                     ),
                     expose: x.expose.clone(),
-                    ttl: x.ttl.clone(),
+                    ttl_ms: x.ttl_ms.clone(),
                     extend_on_get: x.extend_on_get.clone(),
                 },
             )

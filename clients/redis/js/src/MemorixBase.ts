@@ -78,19 +78,19 @@ export class MemorixBase {
     options: types.CacheOptions = {},
   ): types.CacheItem<Key, Payload, CanGet, CanSet, CanDelete, CanExpire> {
     const {
-      ttl: ttlValue = { type: "string", string: { value: "0" } },
+      ttl_ms: ttlMsValue = { type: "string", string: { value: "0" } },
       extendOnGet: extendOnGetValue = {
         type: "string",
         string: { value: "false" },
       },
     } = options;
-    const getTtl = () => {
-      const ttlStr = requireValue(ttlValue);
-      const ttl = Number(ttlStr);
-      if (Number.isNaN(ttl)) {
-        throw new Error(`Exptected ttl to be a number, git "${ttlStr}"`);
+    const getTtlMs = () => {
+      const ttlMsStr = requireValue(ttlMsValue);
+      const ttlMs = Number(ttlMsStr);
+      if (Number.isNaN(ttlMs)) {
+        throw new Error(`Exptected ttl_ms to be a number, git "${ttlMsStr}"`);
       }
-      return ttl;
+      return ttlMs;
     };
     const getExtendOnGet = () => {
       const extendOnGetStr = requireValue(extendOnGetValue);
@@ -117,13 +117,13 @@ export class MemorixBase {
         );
       },
       extend: async (key: Key) => {
-        const ttl = getTtl();
-        if (ttl === 0) {
+        const ttlMs = getTtlMs();
+        if (ttlMs === 0) {
           return;
         }
 
         const hashedKey = item.key(key);
-        await this.redis.expire(hashedKey, ttl.toString());
+        await this.redis.pexpire(hashedKey, ttlMs.toString());
       },
       get: async (key: Key) => {
         const extendOnGet = getExtendOnGet();
@@ -138,9 +138,9 @@ export class MemorixBase {
         return JSON.parse(found) as Payload;
       },
       set: async (key: Key, payload: Payload) => {
-        const ttl = getTtl();
+        const ttlMs = getTtlMs();
         const hashedKey = item.key(key);
-        const params = ttl !== 0 ? ["EX", ttl.toString()] : [];
+        const params = ttlMs !== 0 ? ["PX", ttlMs.toString()] : [];
         await this.redis.set(
           hashedKey,
           JSON.stringify(payload),
@@ -151,9 +151,9 @@ export class MemorixBase {
         const hashedKey = item.key(key);
         await this.redis.del(hashedKey);
       },
-      expire: async (key: Key, ttl: number) => {
+      expire: async (key: Key, ttlMs: number) => {
         const hashedKey = item.key(key);
-        await this.redis.expire(hashedKey, ttl.toString());
+        await this.redis.pexpire(hashedKey, ttlMs.toString());
       },
     };
     return item as any;

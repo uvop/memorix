@@ -184,8 +184,8 @@ super_call= match name_tree.is_empty() {
                                     .join(", "),
                                     options = {
                                         let content = [
-                                            item.ttl.as_ref().map(|x| format!(
-                                                "{base_indent}      ttl: {},",value_to_code(x))),
+                                            item.ttl_ms.as_ref().map(|x| format!(
+                                                "{base_indent}      ttl_ms: {},",value_to_code(x))),
                                             item.extend_on_get.as_ref().map(|x| format!(
                                                     "{base_indent}      extendOnGet: {},",value_to_code(x))),
                                         ]

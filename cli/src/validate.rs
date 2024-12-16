@@ -142,7 +142,7 @@ fn validate_namespace(
                             .map(|y| validate_type_item(y, schema, namespace_indexes)),
                         payload: validate_type_item(&x.payload, schema, namespace_indexes),
                         expose: x.expose.clone(),
-                        ttl: x.ttl.clone(),
+                        ttl_ms: x.ttl_ms.clone(),
                         extend_on_get: x.extend_on_get.clone(),
                     },
                 )

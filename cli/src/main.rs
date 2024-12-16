@@ -375,7 +375,7 @@ Cache {
       session_token: string
       expiry: u64
     }
-    ttl: env(USER_SESSION_TTL)
+    ttl_ms: env(USER_SESSION_TTL_MS)
   }
 }
   
@@ -401,7 +401,7 @@ Namespace UserService {
         session_token: string
         expiry: u64
       }
-      ttl: env(USER_SESSION_TTL)
+      ttl_ms: env(USER_SESSION_TTL_MS)
     }
   }
 
@@ -499,7 +499,7 @@ Type {
         how_many_atoms: {
           payload: u32
           key: u64
-          ttl:   env(  TTL_HOW_MANY_ATOMS  )
+          ttl_ms:   env(  TTL_MS_HOW_MANY_ATOMS  )
         }
       }
       PubSub {

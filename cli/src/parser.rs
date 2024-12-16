@@ -135,7 +135,7 @@ pub struct EnumItem {
 pub struct CacheItem {
     pub key: Option<TypeItem>,
     pub payload: TypeItem,
-    pub ttl: Option<Value>,
+    pub ttl_ms: Option<Value>,
     pub extend_on_get: Option<Value>,
     pub public: Option<Vec<CacheOperation>>,
 }
@@ -143,7 +143,7 @@ impl_from_and_to_sdl_for_struct! {
     (CacheItem, 5),
     (key: TypeItem, 0, false),
     (payload: TypeItem, 1, true),
-    (ttl: Value, 2, false),
+    (ttl_ms: Value, 2, false),
     (extend_on_get: Value, 3, false),
     (public: Vec<CacheOperation>, 4, false),
 }

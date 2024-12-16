@@ -27,7 +27,7 @@ export namespace spaceship {
 
       cache = {
         count: this.getCacheItemNoKey<number, true, true, true, true>("count", {
-          ttl: getStringValue("2"),
+          ttl_ms: getStringValue("2000"),
         }),
       };
     }
@@ -47,7 +47,7 @@ export namespace spaceship {
       pilot: this.getCacheItemNoKey<{
         name: string;
       }, true, true, true, true>("pilot", {
-        ttl: getStringValue("2"),
+        ttl_ms: getStringValue("2000"),
       }),
     };
   }
@@ -68,13 +68,13 @@ export class Memorix extends MemorixBase {
     user: this.getCacheItem<string, User, true, true, true, true>("user"),
     userNoKey: this.getCacheItemNoKey<User, true, true, true, true>("userNoKey"),
     userExpire: this.getCacheItem<string, User, true, true, true, true>("userExpire", {
-      ttl: getStringValue("1"),
+      ttl_ms: getStringValue("1000"),
     }),
     userExpire2: this.getCacheItem<string, User, true, true, true, true>("userExpire2", {
-      ttl: getStringValue("0"),
+      ttl_ms: getStringValue("0"),
     }),
     userExpire3: this.getCacheItem<string, User, true, true, true, true>("userExpire3", {
-      ttl: getStringValue("2"),
+      ttl_ms: getStringValue("2000"),
       extendOnGet: getStringValue("true"),
     }),
   };

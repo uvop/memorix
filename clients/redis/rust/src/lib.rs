@@ -53,18 +53,18 @@ impl Value {
 
 #[derive(Clone, Default)]
 pub struct MemorixCacheOptions {
-    pub ttl: Option<Value>,
+    pub ttl_ms: Option<Value>,
     pub extend_on_get: Option<Value>,
 }
 #[derive(Clone)]
 pub struct MemorixCacheOptionsInner {
-    pub ttl: usize,
+    pub ttl_ms: usize,
     pub extend_on_get: bool,
 }
 
 impl MemorixCacheOptions {
-    fn get_ttl(&self) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
-        Ok(match self.ttl.as_ref() {
+    fn get_ttl_ms(&self) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(match self.ttl_ms.as_ref() {
             Some(x) => x.require()?.parse()?,
             None => 0,
         })
@@ -224,11 +224,15 @@ impl<K: serde::Serialize, P: serde::Serialize + serde::de::DeserializeOwned, G, 
         key: &K,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let hashed_key = self.key(key)?;
-        let ttl = match self.options.get_ttl()? {
-            0 => return Err("Called extend with no ttl".into()),
+        let ttl_ms = match self.options.get_ttl_ms()? {
+            0 => return Err("Called extend with no ttl_ms".into()),
             x => x,
         };
-        let _: RedisValue = self.memorix_base.redis.expire(hashed_key, ttl).await?;
+        let _: RedisValue = self
+            .memorix_base
+            .redis
+            .pexpire(hashed_key, ttl_ms.try_into()?)
+            .await?;
         Ok(())
     }
 }
@@ -280,22 +284,19 @@ impl<
         payload: &P,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         let payload_str = serde_json::to_string(&payload)?;
-        match self.options.get_ttl()? {
-            0 => {
-                let _: RedisValue = self
-                    .memorix_base
-                    .redis
-                    .set(self.key(key)?, payload_str)
-                    .await?;
-            }
-            ttl => {
-                let _: RedisValue = self
-                    .memorix_base
-                    .redis
-                    .set_ex(self.key(key)?, payload_str, ttl)
-                    .await?;
-            }
-        }
+        let _: RedisValue = self
+            .memorix_base
+            .redis
+            .set_options(
+                self.key(key)?,
+                payload_str,
+                match self.options.get_ttl_ms()? {
+                    0 => redis::SetOptions::default(),
+                    ttl_ms => redis::SetOptions::default()
+                        .with_expiration(redis::SetExpiry::PX(ttl_ms.try_into()?)),
+                },
+            )
+            .await?;
 
         Ok(())
     }
@@ -332,9 +333,13 @@ impl<
     pub async fn expire(
         &mut self,
         key: &K,
-        ttl: usize,
+        ttl_ms: usize,
     ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
-        let _: RedisValue = self.memorix_base.redis.expire(self.key(key)?, ttl).await?;
+        let _: RedisValue = self
+            .memorix_base
+            .redis
+            .pexpire(self.key(key)?, ttl_ms.try_into()?)
+            .await?;
 
         Ok(())
     }
@@ -502,12 +507,7 @@ impl<
         >,
         Box<dyn std::error::Error + Sync + Send>,
     > {
-        let mut pubsub = self
-            .memorix_base
-            .client
-            .get_async_connection()
-            .await?
-            .into_pubsub();
+        let mut pubsub = self.memorix_base.client.get_async_pubsub().await?;
         pubsub.subscribe(self.key(key)?).await?;
         let stream = pubsub
             .into_on_message()
@@ -705,8 +705,8 @@ impl<
         Ok(Box::pin(async_stream::stream! {
             loop {
                 let (_, payload): (RedisValue, String) = (match self.options.get_queue_type()? {
-                    QueueType::Fifo => redis.blpop(key_str.to_string(), 0),
-                    QueueType::Lifo => redis.brpop(key_str.to_string(), 0),
+                    QueueType::Fifo => redis.blpop(key_str.to_string(), 0.0),
+                    QueueType::Lifo => redis.brpop(key_str.to_string(), 0.0),
                 })
                 .await
                 .unwrap();

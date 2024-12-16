@@ -30,7 +30,7 @@ pub struct ExportNamespace {
 pub struct ExportCacheItem<T> {
     pub key: Option<T>,
     pub payload: T,
-    pub ttl: Option<Value>,
+    pub ttl_ms: Option<Value>,
     pub extend_on_get: Option<Value>,
     pub expose: Vec<CacheOperation>,
 }
@@ -105,7 +105,7 @@ fn namespace_to_export_namespace(namespace: &Namespace, expose_all: bool) -> Exp
                             key: x.key,
                             payload: x.payload,
                             expose: v,
-                            ttl: x.ttl,
+                            ttl_ms: x.ttl_ms,
                             extend_on_get: x.extend_on_get,
                         },
                     )

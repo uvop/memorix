@@ -26,7 +26,7 @@ Namespace Science {
     how_many_atoms: {
       key: u64
       payload: u32
-      ttl: env(TTL_HOW_MANY_ATOMS)
+      ttl_ms: env(TTL_MS_HOW_MANY_ATOMS)
     }
   }
   PubSub {

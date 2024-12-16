@@ -56,7 +56,7 @@ pub mod spaceship {
                         memorix_base.clone(),
                         "count".to_string(),
                         Some(memorix_client_redis::MemorixCacheOptions {
-                            ttl: None,
+                            ttl_ms: None,
                             extend_on_get: None,
                         }),
                     )?,
@@ -64,7 +64,7 @@ pub mod spaceship {
                         memorix_base.clone(),
                         "another".to_string(),
                         Some(memorix_client_redis::MemorixCacheOptions {
-                            ttl: None,
+                            ttl_ms: None,
                             extend_on_get: None,
                         }),
                     )?,
@@ -113,7 +113,7 @@ pub mod spaceship {
                     memorix_base.clone(),
                     "pilot".to_string(),
                     Some(memorix_client_redis::MemorixCacheOptions {
-                        ttl: None,
+                        ttl_ms: None,
                         extend_on_get: None,
                     }),
                 )?,
@@ -206,7 +206,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "favoriteAnimal".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(memorix_client_redis::Value::from_string("2")),
+                    ttl_ms: Some(memorix_client_redis::Value::from_string("2000")),
                     extend_on_get: None,
                 }),
             )?,
@@ -214,7 +214,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "user".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(memorix_client_redis::Value::from_string("2")),
+                    ttl_ms: Some(memorix_client_redis::Value::from_string("2000")),
                     extend_on_get: None,
                 }),
             )?,
@@ -222,7 +222,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "userNoKey".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(memorix_client_redis::Value::from_string("2")),
+                    ttl_ms: Some(memorix_client_redis::Value::from_string("2000")),
                     extend_on_get: None,
                 }),
             )?,
@@ -230,7 +230,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "userExpire".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(memorix_client_redis::Value::from_string("1")),
+                    ttl_ms: Some(memorix_client_redis::Value::from_string("1000")),
                     extend_on_get: None,
                 }),
             )?,
@@ -238,7 +238,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "userExpire2".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(memorix_client_redis::Value::from_string("10")),
+                    ttl_ms: Some(memorix_client_redis::Value::from_string("10000")),
                     extend_on_get: None,
                 }),
             )?,
@@ -246,7 +246,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "userExpire3".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(memorix_client_redis::Value::from_string("2")),
+                    ttl_ms: Some(memorix_client_redis::Value::from_string("2000")),
                     extend_on_get: Some(memorix_client_redis::Value::from_string("true")),
                 }),
             )?,

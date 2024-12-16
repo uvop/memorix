@@ -38,17 +38,17 @@ Cache {
   userExpire: {
     key: string
     payload: User
-    ttl: "1"
+    ttl_ms: "1000"
   }
   userExpire2: {
     key: string
     payload: User
-    ttl: "0"
+    ttl_ms: "0"
   }
   userExpire3: {
     key: string
     payload: User
-    ttl: "2"
+    ttl_ms: "2000"
     extend_on_get: "true"
   }
 }
@@ -73,7 +73,7 @@ Namespace spaceship {
       payload: {
         name: string
       }
-      ttl: "2"
+      ttl_ms: "2000"
     }
   }
 
@@ -81,7 +81,7 @@ Namespace spaceship {
     Cache {
       count: {
         payload: u32
-        ttl: "2"
+        ttl_ms: "2000"
       }
     }
   }

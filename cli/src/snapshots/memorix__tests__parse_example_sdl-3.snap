@@ -77,7 +77,7 @@ pub mod message_service {
                     memorix_base.clone(),
                     "message".to_string(),
                     Some(memorix_client_redis::MemorixCacheOptions {
-                        ttl: None,
+                        ttl_ms: None,
                         extend_on_get: None,
                     }),
                 )?,
@@ -164,7 +164,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "user_profile".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: None,
+                    ttl_ms: None,
                     extend_on_get: None,
                 }),
             )?,
@@ -172,7 +172,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "user_session".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: Some(memorix_client_redis::Value::from_env_variable("USER_SESSION_TTL")),
+                    ttl_ms: Some(memorix_client_redis::Value::from_env_variable("USER_SESSION_TTL_MS")),
                     extend_on_get: None,
                 }),
             )?,
@@ -180,7 +180,7 @@ impl MemorixCache {
                 memorix_base.clone(),
                 "number_of_messages".to_string(),
                 Some(memorix_client_redis::MemorixCacheOptions {
-                    ttl: None,
+                    ttl_ms: None,
                     extend_on_get: None,
                 }),
             )?,

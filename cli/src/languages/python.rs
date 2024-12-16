@@ -198,9 +198,9 @@ fn namespace_to_code(
                             .join(""),
                         options = {
                             let content = [
-                                item.ttl.as_ref().map(|x| {
+                                item.ttl_ms.as_ref().map(|x| {
                                     format!(
-                                        "{base_indent}                ttl={},",
+                                        "{base_indent}                ttl_ms={},",
                                         value_to_code(x)
                                     )
                                 }),

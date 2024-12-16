@@ -20,7 +20,7 @@ class TaskItem(typing.Generic[KT, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
         options: typing.Optional[TaskOptions] = None,
     ) -> None:
         self._api = api
@@ -68,7 +68,10 @@ class TaskItem(typing.Generic[KT, PT]):
                 )
 
             payload_str = bytes_to_str(data_bytes)
-            payload = from_json(payload_str, self._payload_class)
+            payload = typing.cast(
+                PT,
+                from_json(value=payload_str, data_class=self._payload_class),
+            )
 
             yield payload
 
@@ -389,7 +392,7 @@ class TaskItemNoKey(TaskItem[None, PT]):
         self,
         api: MemorixBase,
         id: str,
-        payload_class: typing.Type[PT],
+        payload_class: typing.Any,
         options: typing.Optional[TaskOptions] = None,
     ) -> None:
         super().__init__(api=api, id=id, payload_class=payload_class, options=options)
