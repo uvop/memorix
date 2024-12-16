@@ -201,8 +201,8 @@ fn namespace_to_code(
 {base_indent}                }})"#,
                         content = [
                             format!(
-                                "{base_indent}                    ttl: {},",
-                                item.ttl.as_ref().map_or("None".to_string(), |x| format!(
+                                "{base_indent}                    ttl_ms: {},",
+                                item.ttl_ms.as_ref().map_or("None".to_string(), |x| format!(
                                     "Some({})",
                                     value_to_code(x)
                                 ))

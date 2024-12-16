@@ -73,7 +73,7 @@ export class Memorix extends MemorixBase {
       session_token: string;
       expiry: number;
     }, true, true, true, true>("user_session", {
-      ttl: getEnvVariableValue("USER_SESSION_TTL"),
+      ttl_ms: getEnvVariableValue("USER_SESSION_TTL_MS"),
     }),
     number_of_messages: this.getCacheItemNoKey<number, true, false, false, false>("number_of_messages"),
   };

@@ -47,7 +47,7 @@ Namespace standalone {
         id: u32
         other_id: u64
       }
-      ttl: env(ABC_TTL)
+      ttl_ms: env(ABC_TTL)
       public: [
         get
         set
