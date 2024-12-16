@@ -5,16 +5,16 @@ from ..value import Value
 class CacheOptions(object):
     def __init__(
         self,
-        ttl: typing.Optional[Value] = None,
+        ttl_ms: typing.Optional[Value] = None,
         extend_on_get: typing.Optional[Value] = None,
     ) -> None:
-        self.ttl = ttl
+        self.ttl_ms = ttl_ms
         self.extend_on_get = extend_on_get
 
-    def get_ttl(self) -> int:
-        if self.ttl is None:
+    def get_ttl_ms(self) -> int:
+        if self.ttl_ms is None:
             return 0
-        return int(self.ttl.require())
+        return int(self.ttl_ms.require())
 
     def get_extend_on_get(self) -> bool:
         if self.extend_on_get is None:

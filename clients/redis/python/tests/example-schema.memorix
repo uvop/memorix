@@ -26,7 +26,7 @@ Enum {
 Cache {
   bestStr: {
     payload: string
-    ttl: "2"
+    ttl_ms: "2000"
   }
   allUsers: {
     payload: [
@@ -34,29 +34,29 @@ Cache {
         User?
       ]
     ]
-    ttl: "2"
+    ttl_ms: "2000"
   }
   favoriteAnimal: {
     key: string
     payload: Animal
-    ttl: "2"
+    ttl_ms: "2000"
   }
   user: {
     key: string
     payload: User
-    ttl: "2"
+    ttl_ms: "2000"
   }
   user2: {
     key: {
       id: string
     }
     payload: User
-    ttl: "2"
+    ttl_ms: "2000"
   }
   userExpire: {
     key: string
     payload: User
-    ttl: "1"
+    ttl_ms: "1000"
   }
   userExpire2: {
     key: string
@@ -64,7 +64,7 @@ Cache {
   }
   userExpire3: {
     payload: User
-    ttl: "2"
+    ttl_ms: "2000"
     extend_on_get: "true"
   }
 }
@@ -92,7 +92,7 @@ Namespace spaceship {
       payload: {
         name: string
       }
-      ttl: "1"
+      ttl_ms: "1000"
     }
   }
 
@@ -100,7 +100,7 @@ Namespace spaceship {
     Cache {
       count: {
         payload: u32
-        ttl: "1"
+        ttl_ms: "1000"
       }
     }
   }

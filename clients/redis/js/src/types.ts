@@ -1,7 +1,7 @@
 import type { Value } from "./value.ts";
 
 export type CacheOptions = {
-  ttl?: Value;
+  ttl_ms?: Value;
   extendOnGet?: Value;
 };
 export type TaskOptions = {
@@ -33,7 +33,7 @@ export type CacheItem<
     }
     : Record<string | number | symbol, never>)
   & (CanExpire extends true ? {
-      expire(key: Key, ttl: number): Promise<void>;
+      expire(key: Key, ttl_ms: number): Promise<void>;
     }
     : Record<string | number | symbol, never>);
 
@@ -60,7 +60,7 @@ export type CacheItemNoKey<
     }
     : Record<string | number | symbol, never>)
   & (CanExpire extends true ? {
-      expire(ttl: number): Promise<void>;
+      expire(ttl_ms: number): Promise<void>;
     }
     : Record<string | number | symbol, never>);
 

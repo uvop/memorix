@@ -52,7 +52,7 @@ class Spaceship(object):
                     id="count",
                     payload_class=int,
                     options=MemorixCacheAll.Options(
-                        ttl=Value.from_string("1"),
+                        ttl_ms=Value.from_string("1000"),
                     )
                 )
 
@@ -74,7 +74,7 @@ class Spaceship(object):
                 id="pilot",
                 payload_class=Spaceship.InlineCachePayloadPilot,
                 options=MemorixCacheAll.Options(
-                    ttl=Value.from_string("1"),
+                    ttl_ms=Value.from_string("1000"),
                 )
             )
 
@@ -98,7 +98,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="bestStr",
             payload_class=str,
             options=MemorixCacheAll.Options(
-                ttl=Value.from_string("2"),
+                ttl_ms=Value.from_string("2000"),
             )
         )
         self.allUsers = MemorixCacheAll.ItemTTTTNoKey[typing.List[typing.List[typing.Optional['User']]]](
@@ -106,7 +106,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="allUsers",
             payload_class=typing.List[typing.List[typing.Optional[User]]],
             options=MemorixCacheAll.Options(
-                ttl=Value.from_string("2"),
+                ttl_ms=Value.from_string("2000"),
             )
         )
         self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, Animal](
@@ -114,7 +114,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="favoriteAnimal",
             payload_class=Animal,
             options=MemorixCacheAll.Options(
-                ttl=Value.from_string("2"),
+                ttl_ms=Value.from_string("2000"),
             )
         )
         self.user = MemorixCacheAll.ItemTTTT[str, 'User'](
@@ -122,7 +122,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="user",
             payload_class=User,
             options=MemorixCacheAll.Options(
-                ttl=Value.from_string("2"),
+                ttl_ms=Value.from_string("2000"),
             )
         )
         self.user2 = MemorixCacheAll.ItemTTTT['InlineCacheKeyUser2', 'User'](
@@ -130,7 +130,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="user2",
             payload_class=User,
             options=MemorixCacheAll.Options(
-                ttl=Value.from_string("2"),
+                ttl_ms=Value.from_string("2000"),
             )
         )
         self.userExpire = MemorixCacheAll.ItemTTTT[str, 'User'](
@@ -138,7 +138,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="userExpire",
             payload_class=User,
             options=MemorixCacheAll.Options(
-                ttl=Value.from_string("1"),
+                ttl_ms=Value.from_string("1000"),
             )
         )
         self.userExpire2 = MemorixCacheAll.ItemTTTT[str, 'User'](
@@ -151,7 +151,7 @@ class MemorixCache(MemorixCacheAll.Base):
             id="userExpire3",
             payload_class=User,
             options=MemorixCacheAll.Options(
-                ttl=Value.from_string("2"),
+                ttl_ms=Value.from_string("2000"),
                 extend_on_get=Value.from_string("true"),
             )
         )

@@ -24,7 +24,7 @@ class CacheItem(typing.Generic[KT, PT]):
         self._options = (
             options
             if options is not None
-            else CacheOptions(ttl=None, extend_on_get=None)
+            else CacheOptions(ttl_ms=None, extend_on_get=None)
         )
         self._has_key = True
 
@@ -35,15 +35,15 @@ class CacheItem(typing.Generic[KT, PT]):
         self,
         key: KT,
     ) -> None:
-        ttl = self._options.get_ttl()
-        if ttl == 0:
+        ttl_ms = self._options.get_ttl_ms()
+        if ttl_ms == 0:
             return
 
         hashed_key = self._key(key=key)
 
         self._api._connection.redis.expire(
             hashed_key,
-            ttl,
+            ttl_ms,
         )
 
     async def _async_extend(
@@ -94,11 +94,11 @@ class CacheItem(typing.Generic[KT, PT]):
         payload: PT,
     ) -> typing.Optional[bool]:
         payload_json = to_json(payload)
-        ttl = self._options.get_ttl()
+        ttl_ms = self._options.get_ttl_ms()
         return self._api._connection.redis.set(
             self._key(key=key),
             payload_json,
-            ex=ttl if ttl != 0 else None,
+            px=ttl_ms if ttl_ms != 0 else None,
         )
 
     async def _async_set(
@@ -143,17 +143,17 @@ class CacheItem(typing.Generic[KT, PT]):
     def _expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._api._connection.redis.expire(
+        self._api._connection.redis.pexpire(
             self._key(key=key),
-            ttl,
+            ttl_ms,
         )
 
     async def _async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(
@@ -162,7 +162,7 @@ class CacheItem(typing.Generic[KT, PT]):
                 CacheItem._expire,
                 self=self,
                 key=key,
-                ttl=ttl,
+                ttl_ms=ttl_ms,
             ),
         )
 
@@ -235,18 +235,18 @@ class CacheItemNoKey(CacheItem[None, PT]):
 
     def _expire_no_key(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        CacheItem._expire(self, key=None, ttl=ttl)
+        CacheItem._expire(self, key=None, ttl_ms=ttl_ms)
 
     async def _async_expire_no_key(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
         await CacheItem._async_expire(
             self,
             key=None,
-            ttl=ttl,
+            ttl_ms=ttl_ms,
         )
 
 
@@ -301,16 +301,16 @@ class CacheItemTTTT(CacheItem[KT, PT]):
     def expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire(key=key, ttl=ttl)
+        self._expire(key=key, ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire(key=key, ttl=ttl)
+        await self._async_expire(key=key, ttl_ms=ttl_ms)
 
 
 class CacheItemTTFT(CacheItem[KT, PT]):
@@ -352,16 +352,16 @@ class CacheItemTTFT(CacheItem[KT, PT]):
     def expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire(key=key, ttl=ttl)
+        self._expire(key=key, ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire(key=key, ttl=ttl)
+        await self._async_expire(key=key, ttl_ms=ttl_ms)
 
 
 class CacheItemTFTT(CacheItem[KT, PT]):
@@ -401,16 +401,16 @@ class CacheItemTFTT(CacheItem[KT, PT]):
     def expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire(key=key, ttl=ttl)
+        self._expire(key=key, ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire(key=key, ttl=ttl)
+        await self._async_expire(key=key, ttl_ms=ttl_ms)
 
 
 class CacheItemTFFT(CacheItem[KT, PT]):
@@ -438,16 +438,16 @@ class CacheItemTFFT(CacheItem[KT, PT]):
     def expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire(key=key, ttl=ttl)
+        self._expire(key=key, ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire(key=key, ttl=ttl)
+        await self._async_expire(key=key, ttl_ms=ttl_ms)
 
 
 class CacheItemFTTT(CacheItem[KT, PT]):
@@ -489,16 +489,16 @@ class CacheItemFTTT(CacheItem[KT, PT]):
     def expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire(key=key, ttl=ttl)
+        self._expire(key=key, ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire(key=key, ttl=ttl)
+        await self._async_expire(key=key, ttl_ms=ttl_ms)
 
 
 class CacheItemFTFT(CacheItem[KT, PT]):
@@ -528,16 +528,16 @@ class CacheItemFTFT(CacheItem[KT, PT]):
     def expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire(key=key, ttl=ttl)
+        self._expire(key=key, ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire(key=key, ttl=ttl)
+        await self._async_expire(key=key, ttl_ms=ttl_ms)
 
 
 class CacheItemFFTT(CacheItem[KT, PT]):
@@ -565,16 +565,16 @@ class CacheItemFFTT(CacheItem[KT, PT]):
     def expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire(key=key, ttl=ttl)
+        self._expire(key=key, ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire(key=key, ttl=ttl)
+        await self._async_expire(key=key, ttl_ms=ttl_ms)
 
 
 class CacheItemFFFT(CacheItem[KT, PT]):
@@ -590,16 +590,16 @@ class CacheItemFFFT(CacheItem[KT, PT]):
     def expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire(key=key, ttl=ttl)
+        self._expire(key=key, ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
         key: KT,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire(key=key, ttl=ttl)
+        await self._async_expire(key=key, ttl_ms=ttl_ms)
 
 
 class CacheItemTTTTNoKey(CacheItemNoKey[PT]):
@@ -646,15 +646,15 @@ class CacheItemTTTTNoKey(CacheItemNoKey[PT]):
 
     def expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire_no_key(ttl=ttl)
+        self._expire_no_key(ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire_no_key(ttl=ttl)
+        await self._async_expire_no_key(ttl_ms=ttl_ms)
 
 
 class CacheItemTTFTNoKey(CacheItemNoKey[PT]):
@@ -691,15 +691,15 @@ class CacheItemTTFTNoKey(CacheItemNoKey[PT]):
 
     def expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire_no_key(ttl=ttl)
+        self._expire_no_key(ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire_no_key(ttl=ttl)
+        await self._async_expire_no_key(ttl_ms=ttl_ms)
 
 
 class CacheItemTFTTNoKey(CacheItemNoKey[PT]):
@@ -734,15 +734,15 @@ class CacheItemTFTTNoKey(CacheItemNoKey[PT]):
 
     def expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire_no_key(ttl=ttl)
+        self._expire_no_key(ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire_no_key(ttl=ttl)
+        await self._async_expire_no_key(ttl_ms=ttl_ms)
 
 
 class CacheItemTFFTNoKey(CacheItemNoKey[PT]):
@@ -767,15 +767,15 @@ class CacheItemTFFTNoKey(CacheItemNoKey[PT]):
 
     def expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire_no_key(ttl=ttl)
+        self._expire_no_key(ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire_no_key(ttl=ttl)
+        await self._async_expire_no_key(ttl_ms=ttl_ms)
 
 
 class CacheItemFTTTNoKey(CacheItemNoKey[PT]):
@@ -812,15 +812,15 @@ class CacheItemFTTTNoKey(CacheItemNoKey[PT]):
 
     def expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire_no_key(ttl=ttl)
+        self._expire_no_key(ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire_no_key(ttl=ttl)
+        await self._async_expire_no_key(ttl_ms=ttl_ms)
 
 
 class CacheItemFTFTNoKey(CacheItemNoKey[PT]):
@@ -847,15 +847,15 @@ class CacheItemFTFTNoKey(CacheItemNoKey[PT]):
 
     def expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire_no_key(ttl=ttl)
+        self._expire_no_key(ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire_no_key(ttl=ttl)
+        await self._async_expire_no_key(ttl_ms=ttl_ms)
 
 
 class CacheItemFFTTNoKey(CacheItemNoKey[PT]):
@@ -880,15 +880,15 @@ class CacheItemFFTTNoKey(CacheItemNoKey[PT]):
 
     def expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire_no_key(ttl=ttl)
+        self._expire_no_key(ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire_no_key(ttl=ttl)
+        await self._async_expire_no_key(ttl_ms=ttl_ms)
 
 
 class CacheItemFFFTNoKey(CacheItemNoKey[PT]):
@@ -903,15 +903,15 @@ class CacheItemFFFTNoKey(CacheItemNoKey[PT]):
 
     def expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        self._expire_no_key(ttl=ttl)
+        self._expire_no_key(ttl_ms=ttl_ms)
 
     async def async_expire(
         self,
-        ttl: int,
+        ttl_ms: int,
     ) -> None:
-        await self._async_expire_no_key(ttl=ttl)
+        await self._async_expire_no_key(ttl_ms=ttl_ms)
 
 
 class CacheItemTTTF(CacheItem[KT, PT]):
