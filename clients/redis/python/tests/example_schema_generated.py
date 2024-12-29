@@ -34,13 +34,15 @@ class InlineCacheKeyUser2(object):
     id: str
 
 
-User = InlineTypeUser
+User: typing.TypeAlias = InlineTypeUser
 
 
 class Spaceship(object):
     @dataclass
-    class InlineCachePayloadPilot(object):
+    class InlineTypePilotData(object):
         name: str
+
+    PilotData: typing.TypeAlias = InlineTypePilotData
 
     class Crew(object):
         class MemorixCache(MemorixCacheAll.Base):
@@ -67,12 +69,10 @@ class Spaceship(object):
         def __init__(self, api: MemorixBase) -> None:
             super().__init__(api=api)
 
-            self.pilot = MemorixCacheAll.ItemTTTTNoKey[
-                "Spaceship.InlineCachePayloadPilot"
-            ](
+            self.pilot = MemorixCacheAll.ItemTTTTNoKey["Spaceship.PilotData"](
                 api=api,
                 id="pilot",
-                payload_class=Spaceship.InlineCachePayloadPilot,
+                payload_class=Spaceship.PilotData,
                 options=MemorixCacheAll.Options(
                     ttl_ms=Value.from_string("1000"),
                 ),
@@ -110,7 +110,7 @@ class MemorixCache(MemorixCacheAll.Base):
                 ttl_ms=Value.from_string("2000"),
             ),
         )
-        self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, Animal](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, "Animal"](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,

@@ -87,11 +87,14 @@ Task {
 }
 
 Namespace spaceship {
+  Type {
+    PilotData: {
+      name: string
+    }
+  }
   Cache {
     pilot: {
-      payload: {
-        name: string
-      }
+      payload: PilotData
       ttl_ms: "1000"
     }
   }

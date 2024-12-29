@@ -13,16 +13,17 @@ fn flat_type_item_to_code(
     flat_type_item: &FlatValidatedTypeItem,
     schema: &FlatValidatedSchema,
     no_squote: bool,
+    no_namespace: bool,
 ) -> String {
     match flat_type_item {
         FlatValidatedTypeItem::Optional(x) => format!(
             "typing.Optional[{}]",
-            flat_type_item_to_code(x, schema, no_squote)
+            flat_type_item_to_code(x, schema, no_squote, no_namespace)
         )
         .to_string(),
         FlatValidatedTypeItem::Array(x) => format!(
             "typing.List[{}]",
-            flat_type_item_to_code(x, schema, no_squote)
+            flat_type_item_to_code(x, schema, no_squote, no_namespace)
         )
         .to_string(),
         FlatValidatedTypeItem::Reference(x) => {
@@ -35,20 +36,25 @@ fn flat_type_item_to_code(
                 },
             );
             format!(
-                "{squote}{prefix}{seperator}{name}{squote}",
-                squote = match (no_squote, x.kind.clone()) {
-                    (false, FlatValidatedReferenceTypeItemKind::TypeObjectItem(_)) => "'",
-                    (false, FlatValidatedReferenceTypeItemKind::TypeItem(_)) => "'",
-                    _ => "",
-                },
-                prefix = namespace_names
-                    .iter()
-                    .map(|x| stringcase::pascal_case(x))
-                    .collect::<Vec<_>>()
-                    .join("."),
-                seperator = match namespace_names.is_empty() {
+                "{squote}{prefix}{name}{squote}",
+                squote = match no_squote {
+                    false => "'",
                     true => "",
-                    false => ".",
+                },
+                prefix = match no_namespace {
+                    true => "".to_string(),
+                    false => format!(
+                        "{namespace}{seperator}",
+                        namespace = namespace_names
+                            .iter()
+                            .map(|x| stringcase::pascal_case(x))
+                            .collect::<Vec<_>>()
+                            .join("."),
+                        seperator = match namespace_names.is_empty() {
+                            true => "",
+                            false => ".",
+                        },
+                    ),
                 },
                 name = match x.kind {
                     FlatValidatedReferenceTypeItemKind::TypeItem(i) => {
@@ -99,7 +105,7 @@ fn type_item_object_to_code(
             .iter()
             .map(|(property_name, flat_type_item)| format!(
                 "{base_indent}    {property_name}: {}",
-                flat_type_item_to_code(flat_type_item, schema, false)
+                flat_type_item_to_code(flat_type_item, schema, false, false)
             )
             .to_string())
             .collect::<Vec<_>>()
@@ -138,8 +144,8 @@ fn namespace_to_code(
     }
     for (name, flat_type_item) in &namespace.flat_type_items {
         result.push_str(&format!(
-            "{base_indent}{name} = {}\n\n",
-            flat_type_item_to_code(flat_type_item, schema, true)
+            "{base_indent}{name}: typing.TypeAlias = {}\n\n",
+            flat_type_item_to_code(flat_type_item, schema, true, true)
         ));
     }
     for (name, sub_namespace) in &namespace.namespaces {
@@ -173,7 +179,7 @@ fn namespace_to_code(
                 .cache_items
                 .iter()
                 .map(|(name, item)| {
-                    let payload = flat_type_item_to_code(&item.payload, schema, false);
+                    let payload = flat_type_item_to_code(&item.payload, schema, false, false);
                     format!(
                         r#"{base_indent}        self.{name} = MemorixCacheAll.Item{api}{key}](
 {base_indent}            api=api,
@@ -183,11 +189,12 @@ fn namespace_to_code(
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key, schema, false);
+                                let key = flat_type_item_to_code(key, schema, false, false);
                                 format!("[{key}, {payload}")
                             }
                         },
-                        payload_no_squote = flat_type_item_to_code(&item.payload, schema, true),
+                        payload_no_squote =
+                            flat_type_item_to_code(&item.payload, schema, true, false),
                         api = ALL_CACHE_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {
@@ -245,7 +252,7 @@ fn namespace_to_code(
                 .pubsub_items
                 .iter()
                 .map(|(name, item)| {
-                    let payload = flat_type_item_to_code(&item.payload, schema, false);
+                    let payload = flat_type_item_to_code(&item.payload, schema, false, false);
                     format!(
                         r#"{base_indent}        self.{name} = MemorixPubSubAll.Item{api}{key}](
 {base_indent}            api=api,
@@ -255,11 +262,12 @@ fn namespace_to_code(
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key, schema, false);
+                                let key = flat_type_item_to_code(key, schema, false, false);
                                 format!("[{key}, {payload}")
                             }
                         },
-                        payload_no_squote = flat_type_item_to_code(&item.payload, schema, true),
+                        payload_no_squote =
+                            flat_type_item_to_code(&item.payload, schema, true, false),
                         api = ALL_PUBSUB_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {
@@ -288,7 +296,7 @@ fn namespace_to_code(
                 .task_items
                 .iter()
                 .map(|(name, item)| {
-                    let payload = flat_type_item_to_code(&item.payload, schema, false);
+                    let payload = flat_type_item_to_code(&item.payload, schema, false, false);
                     format!(
                         r#"{base_indent}        self.{name} = MemorixTaskAll.Item{api}{key}](
 {base_indent}            api=api,
@@ -298,11 +306,12 @@ fn namespace_to_code(
                         key = match &item.key {
                             None => format!("NoKey[{payload}"),
                             Some(key) => {
-                                let key = flat_type_item_to_code(key, schema, false);
+                                let key = flat_type_item_to_code(key, schema, false, false);
                                 format!("[{key}, {payload}")
                             }
                         },
-                        payload_no_squote = flat_type_item_to_code(&item.payload, schema, true),
+                        payload_no_squote =
+                            flat_type_item_to_code(&item.payload, schema, true, false),
                         api = ALL_TASK_OPERATIONS
                             .iter()
                             .map(|x| match item.expose.contains(x) {

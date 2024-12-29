@@ -35,7 +35,7 @@ class InlineCachePayloadUserSession(object):
     session_token: str
     expiry: int
 
-abc = int
+abc: typing.TypeAlias = int
 
 class MessageService(object):
 

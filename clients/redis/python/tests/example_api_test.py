@@ -243,7 +243,7 @@ def test_task_options_schema() -> None:
 def test_cache_namespace() -> None:
     memorix = Memorix()
 
-    memorix.spaceship.cache.pilot.set(Spaceship.InlineCachePayloadPilot(name="uv"))
+    memorix.spaceship.cache.pilot.set(Spaceship.PilotData(name="uv"))
 
     pilot = memorix.spaceship.cache.pilot.get()
     if pilot is None:

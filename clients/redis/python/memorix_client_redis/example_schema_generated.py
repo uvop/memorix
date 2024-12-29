@@ -29,14 +29,14 @@ class InlineTypeUser(object):
     age: typing.Optional[int]
 
 
-User = InlineTypeUser
+User: typing.TypeAlias = InlineTypeUser
 
 
 class MemorixCache(MemorixCacheAll.Base):
     def __init__(self, api: MemorixBase) -> None:
         super().__init__(api=api)
 
-        self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, Animal](
+        self.favoriteAnimal = MemorixCacheAll.ItemTTTT[str, "Animal"](
             api=api,
             id="favoriteAnimal",
             payload_class=Animal,
