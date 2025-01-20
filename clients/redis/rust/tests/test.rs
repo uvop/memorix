@@ -145,25 +145,13 @@ mod tests {
         assert_eq!(user, None);
         Ok(())
     }
-    // #[tokio::test]
-    // #[ntest::timeout(2_000)]
-    // async fn task_returns() -> Result<(), Box<dyn std::error::Error + Send>> {
-    //     let mut memorix = crate::get_memorix().await.unwrap();
-    //     let futures_v: Vec<
-    //         std::pin::Pin<
-    //             Box<dyn std::future::Future<Output = Result<(), Box<dyn std::error::Error+Sync+Send>>>>,
-    //         >,
-    //     > = vec![
-    //         Box::pin(crate::dequeue_and_return(memorix.clone())),
-    //         Box::pin(async move {
-    //             let mut res = memorix.task.runAlgo.queue(&"123".to_string()).await?;
-    //             let returns = res.get_returns().await?;
-    //             assert_eq!(returns, crate::example_schema_generated::Animal::dog);
-    //             Ok(())
-    //         }),
-    //     ];
+    #[tokio::test]
+    async fn optional_payload() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
+        let mut memorix = crate::get_memorix().await?;
+        memorix.cache.optionalPayload.set(&None).await?;
+        let optional_payload = memorix.cache.optionalPayload.get().await?;
 
-    //     futures::future::select_all(futures_v).await.0.unwrap();
-    //     Ok(())
-    // }
+        assert_eq!(optional_payload, Some(None));
+        Ok(())
+    }
 }

@@ -17,6 +17,12 @@ pub struct InlineTypeUser {
     pub age: Option<i32>,
 }
 
+#[memorix_client_redis::serialization]
+#[derive(Clone, PartialEq, std::fmt::Debug)]
+pub struct InlineCachePayloadOptionalPayload {
+    pub id: String,
+}
+
 pub type User = InlineTypeUser;
 
 pub mod spaceship {
@@ -195,6 +201,13 @@ pub struct MemorixCache {
         memorix_client_redis::Expose,
         memorix_client_redis::Expose,
     >,
+    pub optionalPayload: memorix_client_redis::MemorixCacheItemNoKey<
+        Option<InlineCachePayloadOptionalPayload>,
+        memorix_client_redis::Expose,
+        memorix_client_redis::Expose,
+        memorix_client_redis::Expose,
+        memorix_client_redis::Expose,
+    >,
 }
 
 impl MemorixCache {
@@ -248,6 +261,14 @@ impl MemorixCache {
                 Some(memorix_client_redis::MemorixCacheOptions {
                     ttl_ms: Some(memorix_client_redis::Value::from_string("2000")),
                     extend_on_get: Some(memorix_client_redis::Value::from_string("true")),
+                }),
+            )?,
+            optionalPayload: memorix_client_redis::MemorixCacheItemNoKey::new(
+                memorix_base.clone(),
+                "optionalPayload".to_string(),
+                Some(memorix_client_redis::MemorixCacheOptions {
+                    ttl_ms: Some(memorix_client_redis::Value::from_string("2000")),
+                    extend_on_get: None,
                 }),
             )?,
         })

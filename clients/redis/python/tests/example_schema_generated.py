@@ -34,6 +34,11 @@ class InlineCacheKeyUser2(object):
     id: str
 
 
+@dataclass
+class InlineCachePayloadOptionalPayload(object):
+    id: str
+
+
 User: typing.TypeAlias = InlineTypeUser
 
 
@@ -154,6 +159,16 @@ class MemorixCache(MemorixCacheAll.Base):
             options=MemorixCacheAll.Options(
                 ttl_ms=Value.from_string("2000"),
                 extend_on_get=Value.from_string("true"),
+            ),
+        )
+        self.optionalPayload = MemorixCacheAll.ItemTTTTNoKey[
+            typing.Optional["InlineCachePayloadOptionalPayload"]
+        ](
+            api=api,
+            id="optionalPayload",
+            payload_class=typing.Optional[InlineCachePayloadOptionalPayload],
+            options=MemorixCacheAll.Options(
+                ttl_ms=Value.from_string("2000"),
             ),
         )
 

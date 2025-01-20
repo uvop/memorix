@@ -212,3 +212,8 @@ Deno.test("namespace works for recursive cache item", async () => {
   const count = await memorix.spaceship.crew.cache.count.get();
   assertEquals(count, 10);
 });
+Deno.test("cache with optional payload", async () => {
+  await memorix.cache.optionalPayload.set(undefined);
+  const payload = await memorix.cache.optionalPayload.get();
+  assertEquals(payload, null);
+});

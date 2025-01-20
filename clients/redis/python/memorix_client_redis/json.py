@@ -28,6 +28,9 @@ def _order_dict(value: TT) -> TT:
 
 
 def to_json(value: TT, sort_dict: bool = False) -> str:
+    if value is None:
+        return "null"
+
     @dataclass
     class JSON(object):
         value: TT

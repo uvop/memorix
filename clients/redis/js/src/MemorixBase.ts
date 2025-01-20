@@ -8,6 +8,10 @@ import { hashKey } from "./utils/hashKey.ts";
 import { requireValue, type Value } from "./value.ts";
 const callbackToAsyncIterator = callbackToAsyncIteratorModule.default;
 
+const strigifyPayload = (payload: unknown) => {
+  return payload === undefined ? "null" : JSON.stringify(payload);
+};
+
 enum QueueType {
   FIFO = "fifo",
   LIFO = "lifo",
@@ -143,7 +147,7 @@ export class MemorixBase {
         const params = ttlMs !== 0 ? ["PX", ttlMs.toString()] : [];
         await this.redis.set(
           hashedKey,
-          JSON.stringify(payload),
+          strigifyPayload(payload),
           ...(params as any),
         );
       },
@@ -202,7 +206,7 @@ export class MemorixBase {
         const hashedKey = item.key(key);
         const subscribersSize = await this.redis.publish(
           hashedKey,
-          JSON.stringify(payload),
+          strigifyPayload(payload),
         );
         return { subscribersSize };
       },
@@ -344,7 +348,7 @@ export class MemorixBase {
 
         const queueSize = await this.redis.rpush(
           hashedKey,
-          JSON.stringify(payload),
+          strigifyPayload(payload),
         );
 
         return {

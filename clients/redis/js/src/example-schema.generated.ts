@@ -77,6 +77,11 @@ export class Memorix extends MemorixBase {
       ttl_ms: getStringValue("2000"),
       extendOnGet: getStringValue("true"),
     }),
+    optionalPayload: this.getCacheItemNoKey<undefined | {
+      id: string;
+    }, true, true, true, true>("optionalPayload", {
+      ttl_ms: getStringValue("2000"),
+    }),
   };
   pubsub = {
     message: this.getPubsubItemNoKey<string, true, true>("message"),

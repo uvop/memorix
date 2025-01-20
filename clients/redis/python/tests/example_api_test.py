@@ -263,3 +263,12 @@ def test_cache_recursive_namespace() -> None:
 
     count = memorix.spaceship.crew.cache.count.get()
     assert count == 10
+
+
+def test_optional_payload() -> None:
+    memorix = Memorix()
+
+    memorix.cache.optionalPayload.set(None)
+
+    payload = memorix.cache.optionalPayload.get()
+    assert payload is None

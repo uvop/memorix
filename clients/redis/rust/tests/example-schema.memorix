@@ -54,6 +54,12 @@ Cache {
     ttl_ms: "2000"
     extend_on_get: "true"
   }
+  optionalPayload: {
+    payload: {
+      id: string
+    }?
+    ttl_ms: "2000"
+  }
 }
 PubSub {
   message: {
