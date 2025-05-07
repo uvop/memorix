@@ -41,7 +41,7 @@ class CacheItem(typing.Generic[KT, PT]):
 
         hashed_key = self._key(key=key)
 
-        self._api._connection.redis.expire(
+        self._api._connection.redis.pexpire(
             hashed_key,
             ttl_ms,
         )
