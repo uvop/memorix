@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Get started on</title><link>https://uvop.github.io/memorix/docs/get-started/</link><description>Recent content in Get started on</description><generator>Hugo -- gohugo.io</generator><lastBuildDate>Tue, 06 Oct 2020 08:48:45 +0000</lastBuildDate><atom:link href="https://uvop.github.io/memorix/docs/get-started/index.xml" rel="self" type="application/rss+xml"/><item><title>Introduction</title><link>https://uvop.github.io/memorix/docs/get-started/introduction/</link><pubDate>Tue, 06 Oct 2020 08:48:57 +0000</pubDate><guid>https://uvop.github.io/memorix/docs/get-started/introduction/</guid><description>What is Memorix #
+Memorix is an open source next-generation in-memory ORM.
+It has the following parts:
+Memorix CLI - A command line interface tool to generate code from your schema, regardless of language your code is written in. Memorix clients - Runtime dependencies to the projects you use Memorix in. Why Memorix #
+Memorix was heavily inspired by GraphQL and Prisma.
+Both of them cover the persistent memory and messaging layers, and they do it great.</description></item><item><title>Installation</title><link>https://uvop.github.io/memorix/docs/get-started/installation/</link><pubDate>Mon, 16 Nov 2020 13:59:39 +0100</pubDate><guid>https://uvop.github.io/memorix/docs/get-started/installation/</guid><description>CLI installation #
+Follow the instructions below to install memorix-cli on your machine depending on the platform you use
+macOS, linux and WSL installation #
+Requirements #
+brew — Package manager for macOS and linux. To install on Linux or WSL, couple of commands are required after the install script. Steps #
+Run these in the terminal
+brew tap uvop/memorix brew install memorix memorix --version Done!
+if successful, you should see the version installed in your terminal</description></item><item><title>Quick start</title><link>https://uvop.github.io/memorix/docs/get-started/quick-start/</link><pubDate>Mon, 16 Nov 2020 13:59:39 +0100</pubDate><guid>https://uvop.github.io/memorix/docs/get-started/quick-start/</guid><description>Now we have all the tools needed to create our schema and start using it!
+Creating schema #
+First, lets create a basic schema.
+Create a file with name schema.memorix in the root of your project (remove unwanted output languages)
+Config { engine: Redis(&amp;quot;redis://localhost:6379/0&amp;quot;) export: { files: [ { language: typescript path: &amp;quot;memorix.generated.ts&amp;quot; } { language: python path: &amp;quot;memorix_generated.py&amp;quot; } { language: rust path: &amp;quot;memorix_generated.rs&amp;quot; } ] } } Cache { hello: { payload: string } rating: { payload: u32 } } PubSub { message: { payload: string } } Now we can generate code for the schema we created using the Memorix CLI (and on future schema changes), simply un this in your terminal</description></item></channel></rss>
